@@ -207,48 +207,59 @@ impl TDigest {
 
     // See
     // https://github.com/protivinsky/pytdigest/blob/main/pytdigest/tdigest.c#L300-L336
-    pub fn estimate_cdf(&self, val: f64) -> f64 {
-        if self.centroids.is_empty() {
-            return f64::NAN;
+    pub fn estimate_cdf(&self, vals: &[f64]) -> Vec<f64> {
+        let n = self.centroids.len();
+        if n == 0 {
+            return vec![f64::NAN; vals.len()];
         }
-
-        let mut running_total_weight = 0.0;
-        let mut matched_centroid: Option<(usize, &Centroid)> = None;
-
-        for (index, centroid) in self.centroids.iter().enumerate() {
-            if centroid.mean() >= val {
-                matched_centroid = Some((index, centroid));
-                break;
-            }
-            running_total_weight += centroid.weight();
+        let mut means: Vec<f64> = Vec::with_capacity(n);
+        let mut weights: Vec<f64> = Vec::with_capacity(n);
+        for c in &self.centroids {
+            means.push(c.mean());
+            weights.push(c.weight());
         }
-
-        match matched_centroid {
-            Some((centroid_index, current_centroid)) => {
-                if val == current_centroid.mean() {
-                    let mut weight_at_value = current_centroid.weight();
-                    for centroid in &self.centroids[centroid_index + 1..] {
-                        if centroid.mean() == current_centroid.mean() {
-                            weight_at_value += centroid.weight();
+        // Precompute running total weights
+        let mut running_total_weights: Vec<f64> = Vec::with_capacity(n);
+        let mut total = 0.0;
+        for &w in &weights {
+            running_total_weights.push(total);
+            total += w;
+        }
+        let count = self.count();
+        vals.iter()
+            .map(|&val| {
+                // Binary search for the first centroid with mean >= val
+                match means.binary_search_by(|m| m.partial_cmp(&val).unwrap()) {
+                    Ok(centroid_index) => {
+                        // val exactly matches a centroid mean, sum all centroids with this mean
+                        let mut weight_at_value = weights[centroid_index];
+                        let mut i = centroid_index + 1;
+                        while i < n && means[i] == val {
+                            weight_at_value += weights[i];
+                            i += 1;
+                        }
+                        (running_total_weights[centroid_index] + (weight_at_value / 2.0)) / count
+                    }
+                    Err(centroid_index) => {
+                        if centroid_index == 0 {
+                            0.0
+                        } else if centroid_index >= n {
+                            1.0
                         } else {
-                            break;
+                            let cr_mean = means[centroid_index];
+                            let cl_mean = means[centroid_index - 1];
+                            let cr_weight = weights[centroid_index];
+                            let cl_weight = weights[centroid_index - 1];
+                            let mut running_total_weight = running_total_weights[centroid_index];
+                            running_total_weight -= cl_weight / 2.0;
+                            let m = (cr_mean - cl_mean) / (cl_weight / 2.0 + cr_weight / 2.0);
+                            let x = (val - cl_mean) / m;
+                            (running_total_weight + x) / count
                         }
                     }
-                    return (running_total_weight + (weight_at_value / 2.0)) / self.count();
-                } else if centroid_index == 0 {
-                    return 0.0;
                 }
-
-                let cr = current_centroid;
-                let cl = &self.centroids[centroid_index - 1];
-                running_total_weight -= cl.weight() / 2.0;
-
-                let m = (cr.mean() - cl.mean()) / (cl.weight() / 2.0 + cr.weight() / 2.0);
-                let x = (val - cl.mean()) / m;
-                (running_total_weight + x) / self.count()
-            }
-            None => 1.0, // No centroid matched the condition, meaning `val` is greater than all centroids
-        }
+            })
+            .collect()
     }
 
     pub fn merge_unsorted(&self, unsorted_values: Vec<f64>) -> TDigest {
@@ -814,20 +825,21 @@ mod tests {
         let values: Vec<f64> = vec![1.0, 2.0, 3.0, 4.0, 5.0];
         let t = t.merge_sorted(values);
 
+        let cdf_vals = t.estimate_cdf(&[3.0, 1.0, 5.0, 0.0, 6.0]);
         assert!(
-            (t.estimate_cdf(3.0) - 0.5).abs() < 0.0001,
+            (cdf_vals[0] - 0.5).abs() < 0.0001,
             "CDF(3.0) deviates from 0.5"
         );
         assert!(
-            (t.estimate_cdf(1.0) - 0.1).abs() < 0.0001,
+            (cdf_vals[1] - 0.1).abs() < 0.0001,
             "CDF(1.0) deviates from 0.1"
         );
         assert!(
-            (t.estimate_cdf(5.0) - 0.9).abs() < 0.0001,
+            (cdf_vals[2] - 0.9).abs() < 0.0001,
             "CDF(5.0) deviates from 0.9"
         );
-        assert_eq!(t.estimate_cdf(0.0), 0.0, "CDF(0.0) should be 0.0");
-        assert_eq!(t.estimate_cdf(6.0), 1.0, "CDF(6.0) should be 1.0");
+        assert_eq!(cdf_vals[3], 0.0, "CDF(0.0) should be 0.0");
+        assert_eq!(cdf_vals[4], 1.0, "CDF(6.0) should be 1.0");
     }
 
     #[test]
@@ -836,10 +848,10 @@ mod tests {
         let values: Vec<f64> = vec![1.0, 2.0, 3.0, 4.0, 5.0];
         let t = t.merge_sorted(values);
 
+        let cdf_vals = t.estimate_cdf(&[0.0, 6.0]);
         // Test when the value is less than the minimum element
-        assert_eq!(t.estimate_cdf(0.0), 0.0, "CDF(0.0) should be 0.0");
-
+        assert_eq!(cdf_vals[0], 0.0, "CDF(0.0) should be 0.0");
         // Test when the value is greater than the maximum element
-        assert_eq!(t.estimate_cdf(6.0), 1.0, "CDF(6.0) should be 1.0");
+        assert_eq!(cdf_vals[1], 1.0, "CDF(6.0) should be 1.0");
     }
 }

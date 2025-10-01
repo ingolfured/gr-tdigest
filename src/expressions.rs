@@ -25,11 +25,6 @@ struct QuantileKwargs {
 }
 
 #[derive(Debug, Deserialize)]
-struct CDFKwargs {
-    x: f64,
-}
-
-#[derive(Debug, Deserialize)]
 struct TDigestKwargs {
     max_size: usize,
 }
@@ -128,15 +123,36 @@ fn estimate_quantile(inputs: &[Series], kwargs: QuantileKwargs) -> PolarsResult<
 }
 
 #[polars_expr(output_type=Float64)]
-fn estimate_cdf(inputs: &[Series], kwargs: CDFKwargs) -> PolarsResult<Series> {
-    let tdigest = parse_tdigest(inputs);
+fn estimate_cdf(inputs: &[Series]) -> PolarsResult<Series> {
+    let tdigest = parse_tdigest(&inputs[..1]);
     if tdigest.is_empty() {
         let v: &[Option<f64>] = &[None];
-        Ok(Series::new("", v))
-    } else {
-        let ans = tdigest.estimate_cdf(kwargs.x);
-        Ok(Series::new("", vec![ans]))
+        return Ok(Series::new("", v));
     }
+
+    let x_series = &inputs[1];
+    let x_values = x_series.f64()?;
+
+    let mut x_vec = Vec::with_capacity(x_values.len());
+    for v in x_values {
+        x_vec.push(v);
+    }
+
+    let cdfs: Vec<Option<f64>> = if x_vec.iter().any(|v| v.is_none()) {
+        x_vec
+            .iter()
+            .map(|opt_x| opt_x.map(|x| tdigest.estimate_cdf(&[x])[0]))
+            .collect()
+    } else {
+        let x_vals: Vec<f64> = x_vec.iter().map(|v| v.unwrap()).collect();
+        tdigest
+            .estimate_cdf(&x_vals)
+            .into_iter()
+            .map(Some)
+            .collect()
+    };
+
+    Ok(Series::new("", cdfs))
 }
 
 #[polars_expr(output_type=Float64)]
@@ -170,8 +186,10 @@ mod tests {
             let series = [Series::new("n", [1, 2, 3]).cast(t).unwrap()];
             let td = tdigest_from_series(&series, 200).unwrap();
             assert!(td.estimate_median() == 2.0);
-            assert!(td.estimate_cdf(2.0) == 0.5);
-            assert!((td.estimate_cdf(2.5) - 0.66666).abs() < 0.0001);
+            let cdf_2 = td.estimate_cdf(&[2.0])[0];
+            let cdf_25 = td.estimate_cdf(&[2.5])[0];
+            assert!(cdf_2 == 0.5);
+            assert!((cdf_25 - 0.66666).abs() < 0.0001);
         });
 
         unsupported_types.iter().for_each(|t| {
