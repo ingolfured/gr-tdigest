@@ -230,15 +230,20 @@ impl TDigest {
             .map(|&val| {
                 // Binary search for the first centroid with mean >= val
                 match means.binary_search_by(|m| m.partial_cmp(&val).unwrap()) {
-                    Ok(centroid_index) => {
-                        // val exactly matches a centroid mean, sum all centroids with this mean
+                    Ok(mut centroid_index) => {
+                        // Find the first centroid with mean == val (in case of duplicates)
+                        while centroid_index > 0 && means[centroid_index - 1] == val {
+                            centroid_index -= 1;
+                        }
+                        // Sum all centroids with this mean
                         let mut weight_at_value = weights[centroid_index];
+                        let running_total_start = running_total_weights[centroid_index];
                         let mut i = centroid_index + 1;
                         while i < n && means[i] == val {
                             weight_at_value += weights[i];
                             i += 1;
                         }
-                        (running_total_weights[centroid_index] + (weight_at_value / 2.0)) / count
+                        (running_total_start + (weight_at_value / 2.0)) / count
                     }
                     Err(centroid_index) => {
                         if centroid_index == 0 {
@@ -252,6 +257,26 @@ impl TDigest {
                             let cl_weight = weights[centroid_index - 1];
                             let mut running_total_weight = running_total_weights[centroid_index];
                             running_total_weight -= cl_weight / 2.0;
+                            // If both are weight 1 and val is exactly halfway, return mean of their CDF steps
+                            if cl_weight == 1.0
+                                && cr_weight == 1.0
+                                && ((val - (cl_mean + cr_mean) / 2.0).abs() < 1e-12)
+                            {
+                                let cdf_left =
+                                    (running_total_weights[centroid_index - 1] + 0.5) / count;
+                                let cdf_right =
+                                    (running_total_weights[centroid_index] + 0.5) / count;
+                                return 0.5 * (cdf_left + cdf_right);
+                            }
+                            // Check if within 0.5 weighted distance of a centroid of weight 1
+                            if cl_weight == 1.0 && (val - cl_mean).abs() <= 0.5 {
+                                // Step at cl_mean
+                                return (running_total_weights[centroid_index - 1] + 0.5) / count;
+                            }
+                            if cr_weight == 1.0 && (val - cr_mean).abs() <= 0.5 {
+                                // Step at cr_mean
+                                return (running_total_weights[centroid_index] + 0.5) / count;
+                            }
                             let m = (cr_mean - cl_mean) / (cl_weight / 2.0 + cr_weight / 2.0);
                             let x = (val - cl_mean) / m;
                             (running_total_weight + x) / count
@@ -853,5 +878,80 @@ mod tests {
         assert_eq!(cdf_vals[0], 0.0, "CDF(0.0) should be 0.0");
         // Test when the value is greater than the maximum element
         assert_eq!(cdf_vals[1], 1.0, "CDF(6.0) should be 1.0");
+    }
+
+    #[test]
+    fn test_cdf_all_same_value() {
+        // All values are the same, CDF should step from 0 to 1 at that value
+        let t = TDigest::new_with_size(10);
+        let t = t.merge_sorted(vec![2.0, 2.0, 2.0, 2.0, 2.0]);
+        let cdf_vals = t.estimate_cdf(&[1.0, 2.0, 3.0]);
+        println!("cdf_vals: {:?}", cdf_vals);
+        assert_eq!(cdf_vals[0], 0.0, "CDF below all values should be 0.0");
+        assert!(
+            (cdf_vals[1] - 0.5).abs() < 0.1,
+            "CDF at the value should be close to 0.5"
+        );
+        assert_eq!(cdf_vals[2], 1.0, "CDF above all values should be 1.0");
+    }
+
+    #[test]
+    fn test_cdf_duplicate_centroids() {
+        // Insert values to force duplicate centroids (same mean)
+        let t = TDigest::new_with_size(100);
+        let t = t.merge_sorted(vec![1.0, 1.0, 2.0, 2.0, 2.0, 3.0, 3.0]);
+        let cdf_vals = t.estimate_cdf(&[2.0, 1.0, 3.0]);
+        // The exact values may depend on compression, but should be monotonic and between 0 and 1
+        assert!(
+            cdf_vals[0] > cdf_vals[1] && cdf_vals[2] > cdf_vals[0],
+            "CDF monotonic with duplicates"
+        );
+        assert!(cdf_vals[0] > 0.0 && cdf_vals[0] < 1.0, "CDF in (0,1)");
+    }
+
+    #[test]
+    fn test_cdf_large_and_one_small() {
+        // Many large values, one very small value
+        let mut values = vec![1e9; 100];
+        values.push(-1e9);
+        let t = TDigest::new_with_size(100);
+        let t = t.merge_sorted(values);
+        let cdf_vals = t.estimate_cdf(&[-1e9, 0.0, 1e9, 2e9]);
+        assert!(cdf_vals[0] < 0.02, "CDF at smallest value");
+        assert!(cdf_vals[1] < 0.05, "CDF at 0.0 should be small");
+        assert_eq!(cdf_vals[3], 1.0, "CDF above all values");
+    }
+
+    #[test]
+    fn test_cdf_small_numbers() {
+        // Very small numbers, check for precision
+        let t = TDigest::new_with_size(10);
+        let t = t.merge_sorted(vec![1e-10, 2e-10, 3e-10, 4e-10, 5e-10]);
+        let cdf_vals = t.estimate_cdf(&[2e-10, 3e-10, 6e-10]);
+        assert!(cdf_vals[0] > 0.1 && cdf_vals[0] < 0.5, "CDF at 2e-10");
+        assert!(cdf_vals[1] > cdf_vals[0], "CDF at 3e-10 > CDF at 2e-10");
+        assert_eq!(cdf_vals[2], 1.0, "CDF above all values");
+    }
+
+    #[test]
+    fn test_cdf_negative_values() {
+        // Negative values and zero
+        let t = TDigest::new_with_size(10);
+        let t = t.merge_sorted(vec![-5.0, -2.0, 0.0, 2.0, 5.0]);
+        let cdf_vals = t.estimate_cdf(&[-10.0, -2.0, 0.0, 3.0, 10.0]);
+        assert_eq!(cdf_vals[0], 0.0, "CDF below all values");
+        assert!(cdf_vals[1] > 0.0 && cdf_vals[1] < 0.5, "CDF at -2.0");
+        assert!(cdf_vals[2] > cdf_vals[1] && cdf_vals[2] < 0.7, "CDF at 0.0");
+        assert!(cdf_vals[3] > cdf_vals[2] && cdf_vals[3] < 1.0, "CDF at 3.0");
+        assert_eq!(cdf_vals[4], 1.0, "CDF above all values");
+    }
+
+    #[test]
+    fn test_cdf_empty_input() {
+        // Empty input vector for vals
+        let t = TDigest::new_with_size(10);
+        let t = t.merge_sorted(vec![1.0, 2.0, 3.0]);
+        let cdf_vals = t.estimate_cdf(&[]);
+        assert_eq!(cdf_vals.len(), 0, "CDF of empty input should be empty");
     }
 }

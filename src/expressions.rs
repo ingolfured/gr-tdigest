@@ -187,9 +187,13 @@ mod tests {
             let td = tdigest_from_series(&series, 200).unwrap();
             assert!(td.estimate_median() == 2.0);
             let cdf_2 = td.estimate_cdf(&[2.0])[0];
+            let cdf_24 = td.estimate_cdf(&[2.4])[0];
             let cdf_25 = td.estimate_cdf(&[2.5])[0];
+            let cdf_26 = td.estimate_cdf(&[2.6])[0];
             assert!(cdf_2 == 0.5);
+            assert!((cdf_24 - 0.5).abs() < 0.0001);
             assert!((cdf_25 - 0.66666).abs() < 0.0001);
+            assert!((cdf_26 - 0.83333).abs() < 0.0001);
         });
 
         unsupported_types.iter().for_each(|t| {
