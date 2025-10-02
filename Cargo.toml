@@ -18,6 +18,7 @@ serde_json = "1.0.117"
 polars-io = { version = "0.40.0", features=["json"] }
 pyo3 = { version = "0.21.2", features = ["extension-module", "abi3-py38"] }
 pyo3-polars = { version = "0.14.0", features = ["derive"] }
+rand = "0.8"
 
 [dev-dependencies]
 criterion = "0.5.1"
