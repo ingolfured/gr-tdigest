@@ -1,7 +1,8 @@
+// src/tdigest/quantile.rs
 use super::TDigest;
 
 impl TDigest {
-    /// To estimate the value located at `q` quantile
+    /// Estimate the value located at quantile `q` (0..=1).
     pub fn estimate_quantile(&self, q: f64) -> f64 {
         if self.centroids.is_empty() {
             return 0.0;
@@ -88,12 +89,8 @@ impl TDigest {
         Option::None
     }
 
+    /// Median with an even-count special case to avoid over-interpolation.
     pub fn estimate_median(&self) -> f64 {
-        /*
-         * If the number of elements is even, median is average of two adjacent observation.
-         * Interpolation algorithm used in `estimate_quantile` often positions estimated median too far away from the middle point.
-         * So let's detect the case when the median is exactly between two centroids.
-         */
         self.find_median_between_centroids()
             .unwrap_or(self.estimate_quantile(0.5))
     }
@@ -101,8 +98,10 @@ impl TDigest {
 
 #[cfg(test)]
 mod tests {
-    use crate::tdigest::test_helpers::*;
     use crate::tdigest::TDigest;
+
+    // =============================== Helpers (for quantile tests) ===============================
+    use crate::tdigest::test_helpers::*;
 
     // =============================== Quantiles ===============================
     #[test]
