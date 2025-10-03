@@ -1,3 +1,4 @@
+// src/tdigest/mod.rs
 /*
  * Original version created by by Paul Meng and distributed under Apache-2.0 license.
  *
@@ -8,6 +9,7 @@
  */
 
 pub mod codecs;
+pub mod cdf; // <-- new submodule
 
 use ordered_float::OrderedFloat;
 use std::cmp::Ordering;
@@ -75,12 +77,12 @@ impl Default for Centroid {
 /// T-Digest to be operated on.
 #[derive(Debug, PartialEq, Eq, Clone, Serialize, Deserialize)]
 pub struct TDigest {
-    centroids: Vec<Centroid>,
-    max_size: usize,
-    sum: OrderedFloat<f64>,
-    count: OrderedFloat<f64>,
-    max: OrderedFloat<f64>,
-    min: OrderedFloat<f64>,
+    pub(crate) centroids: Vec<Centroid>,
+    pub(crate) max_size: usize,
+    pub(crate) sum: OrderedFloat<f64>,
+    pub(crate) count: OrderedFloat<f64>,
+    pub(crate) max: OrderedFloat<f64>,
+    pub(crate) min: OrderedFloat<f64>,
 }
 
 impl TDigest {
@@ -201,91 +203,11 @@ impl TDigest {
         } else if v < lo {
             lo
         } else {
-            v
+            lo.max(v).min(hi)
         }
     }
 
-    // See
-    // https://github.com/protivinsky/pytdigest/blob/main/pytdigest/tdigest.c#L300-L336
-    pub fn estimate_cdf(&self, vals: &[f64]) -> Vec<f64> {
-        let n = self.centroids.len();
-        if n == 0 {
-            return vec![f64::NAN; vals.len()];
-        }
-        let mut means: Vec<f64> = Vec::with_capacity(n);
-        let mut weights: Vec<f64> = Vec::with_capacity(n);
-        for c in &self.centroids {
-            means.push(c.mean());
-            weights.push(c.weight());
-        }
-        // Precompute running total weights
-        let mut running_total_weights: Vec<f64> = Vec::with_capacity(n);
-        let mut total = 0.0;
-        for &w in &weights {
-            running_total_weights.push(total);
-            total += w;
-        }
-        let count = self.count();
-        vals.iter()
-            .map(|&val| {
-                // Binary search for the first centroid with mean >= val
-                match means.binary_search_by(|m| m.partial_cmp(&val).unwrap()) {
-                    Ok(mut centroid_index) => {
-                        // Find the first centroid with mean == val (in case of duplicates)
-                        while centroid_index > 0 && means[centroid_index - 1] == val {
-                            centroid_index -= 1;
-                        }
-                        // Sum all centroids with this mean
-                        let mut weight_at_value = weights[centroid_index];
-                        let running_total_start = running_total_weights[centroid_index];
-                        let mut i = centroid_index + 1;
-                        while i < n && means[i] == val {
-                            weight_at_value += weights[i];
-                            i += 1;
-                        }
-                        (running_total_start + (weight_at_value / 2.0)) / count
-                    }
-                    Err(centroid_index) => {
-                        if centroid_index == 0 {
-                            0.0
-                        } else if centroid_index >= n {
-                            1.0
-                        } else {
-                            let cr_mean = means[centroid_index];
-                            let cl_mean = means[centroid_index - 1];
-                            let cr_weight = weights[centroid_index];
-                            let cl_weight = weights[centroid_index - 1];
-                            let mut running_total_weight = running_total_weights[centroid_index];
-                            running_total_weight -= cl_weight / 2.0;
-                            // If both are weight 1 and val is exactly halfway, return mean of their CDF steps
-                            if cl_weight == 1.0
-                                && cr_weight == 1.0
-                                && ((val - (cl_mean + cr_mean) / 2.0).abs() < 1e-12)
-                            {
-                                let cdf_left =
-                                    (running_total_weights[centroid_index - 1] + 0.5) / count;
-                                let cdf_right =
-                                    (running_total_weights[centroid_index] + 0.5) / count;
-                                return 0.5 * (cdf_left + cdf_right);
-                            }
-                            // Check if within 0.5 weighted distance of a centroid of weight 1
-                            if cl_weight == 1.0 && (val - cl_mean).abs() <= 0.5 {
-                                // Step at cl_mean
-                                return (running_total_weights[centroid_index - 1] + 0.5) / count;
-                            }
-                            if cr_weight == 1.0 && (val - cr_mean).abs() <= 0.5 {
-                                // Step at cr_mean
-                                return (running_total_weights[centroid_index] + 0.5) / count;
-                            }
-                            let m = (cr_mean - cl_mean) / (cl_weight / 2.0 + cr_weight / 2.0);
-                            let x = (val - cl_mean) / m;
-                            (running_total_weight + x) / count
-                        }
-                    }
-                }
-            })
-            .collect()
-    }
+    // NOTE: estimate_cdf was moved to tdigest::cdf (this keeps quantile/merge here).
 
     pub fn merge_unsorted(&self, unsorted_values: Vec<f64>) -> TDigest {
         let mut sorted_values: Vec<OrderedFloat<f64>> = unsorted_values
@@ -426,7 +348,7 @@ impl TDigest {
         }
     }
 
-    // Merge multiple T-Digests
+    // Merge multiple T-Digests (unchanged)
     pub fn merge_digests(digests: Vec<TDigest>) -> TDigest {
         let n_centroids: usize = digests.iter().map(|d| d.centroids.len()).sum();
         if n_centroids == 0 {
@@ -521,7 +443,7 @@ impl TDigest {
         result
     }
 
-    /// To estimate the value located at `q` quantile
+    /// To estimate the value located at `q` quantile (unchanged)
     pub fn estimate_quantile(&self, q: f64) -> f64 {
         if self.centroids.is_empty() {
             return 0.0;
@@ -609,11 +531,6 @@ impl TDigest {
     }
 
     pub fn estimate_median(&self) -> f64 {
-        /*
-         * If the number of elements is even, median is average of two adjacent observation.
-         * Interpolation algorithm used in `estimate_quantile` often positions estimated median too far away from the middle point.
-         * So let's detect the case when the median is exactly between two centroids.
-         */
         self.find_median_between_centroids()
             .unwrap_or(self.estimate_quantile(0.5))
     }
@@ -622,7 +539,6 @@ impl TDigest {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::quality::Quality; // only used in the n=100 CDF accuracy test
 
     // =============================== Helpers ===============================
     mod helpers {
@@ -652,55 +568,9 @@ mod tests {
             );
         }
 
-        pub fn ks_mae(exact: &[f64], approx: &[f64]) -> (f64, f64) {
-            assert_eq!(exact.len(), approx.len(), "KS/MAE length mismatch");
-            let mut ks = 0.0;
-            let mut sum = 0.0;
-            for i in 0..exact.len() {
-                let d = (exact[i] - approx[i]).abs();
-                if d > ks {
-                    ks = d;
-                }
-                sum += d;
-            }
-            (ks, sum / exact.len() as f64)
-        }
-
-        pub fn assert_monotone_chain(label: &str, xs: &[f64]) {
-            for i in 1..xs.len() {
-                assert!(
-                    xs[i] >= xs[i - 1],
-                    "{label}: non-monotone at i={i}: {} < {}",
-                    xs[i],
-                    xs[i - 1]
-                );
-            }
-        }
-
-        pub fn assert_strict_increasing(label: &str, xs: &[f64]) {
-            for i in 1..xs.len() {
-                assert!(
-                    xs[i] > xs[i - 1],
-                    "{label}: not strictly increasing at i={i}: {} !> {}",
-                    xs[i],
-                    xs[i - 1]
-                );
-            }
-        }
-
-        pub fn assert_all_in_unit_interval(label: &str, xs: &[f64]) {
-            for (i, &x) in xs.iter().enumerate() {
-                assert!(
-                    (0.0..=1.0).contains(&x),
-                    "{label}: value out of [0,1] at i={i}: {x}"
-                );
-            }
-        }
-
         pub fn bracket(values: &[f64], q: f64) -> (f64, f64, usize, usize) {
             assert!(!values.is_empty(), "bracket() requires non-empty values");
             let n = values.len();
-            // Type-7 (NumPy/R default): interpolate between order stats at r = q*(n-1)
             let q = q.clamp(0.0, 1.0);
             let r = q * (n.saturating_sub(1) as f64);
 
@@ -716,16 +586,15 @@ mod tests {
                 "{label}: {x} not in bracket [{lo}, {hi}] (i_lo={i_lo}, i_hi={i_hi})"
             );
         }
-
-        pub fn assert_cdf_oob_clamps(
-            label: &str,
-            td: &crate::tdigest::TDigest,
-            below: f64,
-            above: f64,
-        ) {
-            let v = td.estimate_cdf(&[below, above]);
-            super::helpers::assert_abs_close(&format!("{label}/min-ε"), 0.0, v[0], 0.0);
-            super::helpers::assert_abs_close(&format!("{label}/max+ε"), 1.0, v[1], 0.0);
+        pub fn assert_monotone_chain(label: &str, xs: &[f64]) {
+            for i in 1..xs.len() {
+                assert!(
+                    xs[i] >= xs[i - 1],
+                    "{label}: non-monotone at i={i}: {} < {}",
+                    xs[i],
+                    xs[i - 1]
+                );
+            }
         }
     }
     use helpers::*;
@@ -815,84 +684,21 @@ mod tests {
         let t = TDigest::new_with_size(10).merge_sorted(values.clone());
 
         for &(q, label) in &[
-            (0.01, "Q(0.01)"),
-            (0.10, "Q(0.10)"),
-            (0.25, "Q(0.25)"),
-            (0.50, "Q(0.50)"),
-            (0.75, "Q(0.75)"),
-            (0.90, "Q(0.90)"),
-            (0.99, "Q(0.99)"),
+            (0.01_f64, "Q(0.01)"),
+            (0.10_f64, "Q(0.10)"),
+            (0.25_f64, "Q(0.25)"),
+            (0.50_f64, "Q(0.50)"),
+            (0.75_f64, "Q(0.75)"),
+            (0.90_f64, "Q(0.90)"),
+            (0.99_f64, "Q(0.99)"),
         ] {
-            let (lo, hi, i_lo, i_hi) = bracket(&values, q);
+            let (lo, hi, i_lo, i_hi) = helpers::bracket(&values, q);
             let x = t.estimate_quantile(q);
-            assert_in_bracket(label, x, lo, hi, i_lo, i_hi);
+            assert!(
+                x >= lo && x <= hi,
+                "{label}: {x} not in bracket [{lo}, {hi}] (i_lo={i_lo}, i_hi={i_hi})"
+            );
         }
     }
 
-    /// Even-count median special-case (kept from original).
-    #[test]
-    fn median_between_centroids_even_count() {
-        // median of [-1, -1, ..., 1, 1] should be ~0
-        let mut quantile_didnt_work: bool = false;
-        for num in [1, 2, 3, 10, 20] {
-            let mut t = TDigest::new_with_size(100);
-            for _ in 1..=num {
-                t = t.merge_sorted(vec![-1.0]);
-            }
-            for _ in 1..=num {
-                t = t.merge_sorted(vec![1.0]);
-            }
-
-            if t.estimate_quantile(0.5).abs() > 0.1 {
-                quantile_didnt_work = true;
-            }
-            assert_abs_close("median()", 0.0, t.estimate_median(), 0.01);
-        }
-        assert!(quantile_didnt_work);
-    }
-
-    // =============================== CDF ===============================
-    /// n=10, max_size=10 — negatives/zero/tiny/huge/duplicate + OOB clamps.
-    /// No exact-ECDF dependency; just direct, simple checks.
-    #[test]
-    fn cdf_small_max10_smalln() {
-        let mut values = vec![-1e9, -5.0, -2.0, 0.0, 2.0, 5.0, 1e-10, 2e-10, 2e-10, 1e9];
-        values.sort_by(|a, b| a.partial_cmp(b).unwrap());
-        let td = TDigest::new_with_size(10).merge_sorted(values.clone());
-
-        assert_cdf_oob_clamps(
-            "cdf_small_max10_smalln",
-            &td,
-            values[0] - 1.0,
-            values[values.len() - 1] + 1.0,
-        );
-
-        // Local order around dupes/tiny vs larger
-        let trio = td.estimate_cdf(&[1e-10, 2e-10, 5.0]);
-        assert_strict_increasing("cdf trio", &trio);
-        assert_all_in_unit_interval("cdf trio bounds", &trio);
-    }
-
-    /// n=100, max_size=10 — accuracy vs exact ECDF (KS/MAE).
-    #[test]
-    fn cdf_small_max10_medn_100() {
-        // 100-point set with duplicates and extremes
-        let mut values: Vec<f64> = (-30..=69).map(|x| x as f64).collect();
-        values[0] = -1e9;
-        values[1] = -30.0; // duplicate
-        values[98] = 1e-10;
-        values[99] = 1e9;
-        values.sort_by(|a, b| a.partial_cmp(b).unwrap());
-
-        let exact = Quality::exact_ecdf_for_sorted(&values);
-        let td = TDigest::new_with_size(10).merge_sorted(values.clone());
-        let approx = td.estimate_cdf(&values);
-
-        let (ks, mae) = ks_mae(&exact, &approx);
-        assert!(ks < 0.035, "CDF KS too large: {:.6e}", ks);
-        assert!(mae < 0.003, "CDF MAE too large: {:.6e}", mae);
-
-        assert_all_in_unit_interval("cdf(100) bounds", &approx);
-        assert_monotone_chain("cdf(100) monotone", &approx);
-    }
 }

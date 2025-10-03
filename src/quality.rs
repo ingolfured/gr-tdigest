@@ -1,3 +1,4 @@
+// src/quality.rs
 use crate::tdigest::TDigest;
 
 #[derive(Debug, Clone)]
@@ -15,7 +16,7 @@ pub struct QualityReport {
 }
 
 impl QualityReport {
-    /// Half-lives chosen so base lands around ~0.7
+    /// Half-lives chosen so base lands around ~0.7 for max_size=1000, seed=42.
     pub fn quality_score(&self) -> f64 {
         // Derived from observed KS≈1.478685e-3 and MAE≈3.493082e-5
         // so that each subscore is ~0.70 ⇒ geometric mean is ~0.70.
@@ -62,6 +63,7 @@ impl Quality {
 
     pub fn run(&self) -> QualityReport {
         use rand::{rngs::StdRng, Rng, SeedableRng};
+        use crate::tdigest::cdf::exact_ecdf_for_sorted; // <-- moved here
 
         let mut rng = StdRng::seed_from_u64(self.seed);
         let mut values: Vec<f64> = Vec::with_capacity(self.n);
@@ -88,18 +90,14 @@ impl Quality {
                 // 10% very large magnitudes: 10^U(3,9) with random sign
                 let exp = rng.gen_range(3.0..9.0);
                 let mag = 10f64.powf(exp);
-                if rng.gen_bool(0.5) {
-                    mag
-                } else {
-                    -mag
-                }
+                if rng.gen_bool(0.5) { mag } else { -mag }
             };
             values.push(x);
         }
 
         // Exact ECDF at each sorted sample (midpoint convention on ties)
         values.sort_by(|a, b| a.partial_cmp(b).unwrap());
-        let exact_cdf = Self::exact_ecdf_for_sorted(&values);
+        let exact_cdf = exact_ecdf_for_sorted(&values);
 
         let t0 = TDigest::new_with_size(self.max_size);
         let digest = t0.merge_sorted(values.clone()); // taking-ownership API => clone
@@ -109,46 +107,12 @@ impl Quality {
         let mut sum_abs = 0.0;
         for (a, b) in exact_cdf.iter().zip(td_cdf.iter()) {
             let d = (a - b).abs();
-            if d > ks {
-                ks = d;
-            }
+            if d > ks { ks = d; }
             sum_abs += d;
         }
         let mae = sum_abs / (self.n as f64);
 
-        QualityReport {
-            n: self.n,
-            max_abs_err: ks,
-            mean_abs_err: mae,
-        }
-    }
-
-    pub(crate) fn exact_ecdf_for_sorted(sorted: &[f64]) -> Vec<f64> {
-        let n = sorted.len();
-        if n == 0 {
-            return Vec::new();
-        }
-
-        let nf = n as f64;
-        let mut out = Vec::with_capacity(n);
-
-        let mut i = 0usize;
-        while i < n {
-            // advance to end of the run of equal values
-            let mut j = i + 1;
-            while j < n && sorted[j] == sorted[i] {
-                j += 1;
-            }
-
-            // midpoint convention on ties
-            let mid = (i + j) as f64 / 2.0;
-            let val = mid / nf;
-            out.extend(std::iter::repeat(val).take(j - i));
-
-            i = j;
-        }
-
-        out
+        QualityReport { n: self.n, max_abs_err: ks, mean_abs_err: mae }
     }
 }
 
