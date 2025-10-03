@@ -1,7 +1,9 @@
 #![allow(clippy::unused_unit)]
+use crate::tdigest::codecs::tdigest_to_series_f32;
 use polars::prelude::*;
 
-use crate::tdigest::{codecs::parse_tdigests, codecs::tdigest_to_series, TDigest};
+use crate::tdigest::codecs::parse_tdigests_any;
+use crate::tdigest::{codecs::tdigest_to_series, TDigest};
 
 use polars_core::export::rayon::prelude::*;
 use polars_core::utils::arrow::array::Array;
@@ -29,26 +31,75 @@ struct TDigestKwargs {
     max_size: usize,
 }
 
-fn tdigest_output(_: &[Field]) -> PolarsResult<Field> {
-    Ok(Field::new("tdigest", DataType::Struct(tdigest_fields())))
-}
-
-fn tdigest_fields() -> Vec<Field> {
+fn tdigest_fields_cfg(
+    mean_dt: DataType,
+    weight_dt: DataType,
+    minmax_dt: DataType,
+    sum_dt: DataType,
+) -> Vec<Field> {
     vec![
         Field::new(
             "centroids",
             DataType::List(Box::new(DataType::Struct(vec![
-                Field::new("mean", DataType::Float64),
-                Field::new("weight", DataType::Int64),
+                Field::new("mean", mean_dt),
+                Field::new("weight", weight_dt),
             ]))),
         ),
-        Field::new("sum", DataType::Float64),
-        Field::new("min", DataType::Float64),
-        Field::new("max", DataType::Float64),
-        Field::new("count", DataType::Int64),
+        Field::new("sum", sum_dt),
+        Field::new("min", minmax_dt.clone()),
+        Field::new("max", minmax_dt),
+        Field::new("count", DataType::Int64), // keep as-is for now
         Field::new("max_size", DataType::Int64),
     ]
 }
+
+fn tdigest_fields() -> Vec<Field> {
+    // current f64 payload (existing behavior)
+    tdigest_fields_cfg(
+        DataType::Float64, // mean
+        DataType::Int64,   // weight (we’ll flip to Float64 later if you want)
+        DataType::Float64, // min/max
+        DataType::Float64, // sum
+    )
+}
+
+fn tdigest_fields_f32() -> Vec<Field> {
+    // compact payload: f32 centroids + min/max, keep sum f64
+    tdigest_fields_cfg(
+        DataType::Float32, // mean
+        DataType::Float32, // weight
+        DataType::Float32, // min/max
+        DataType::Float64, // sum (precision)
+    )
+}
+
+fn tdigest_output(_: &[Field]) -> PolarsResult<Field> {
+    Ok(Field::new("tdigest", DataType::Struct(tdigest_fields())))
+}
+
+fn tdigest_output_f32(_: &[Field]) -> PolarsResult<Field> {
+    Ok(Field::new(
+        "tdigest",
+        DataType::Struct(tdigest_fields_f32()),
+    ))
+}
+
+// fn tdigest_fields() -> Vec<Field> {
+//     vec![
+//         Field::new(
+//             "centroids",
+//             DataType::List(Box::new(DataType::Struct(vec![
+//                 Field::new("mean", DataType::Float64),
+//                 Field::new("weight", DataType::Int64),
+//             ]))),
+//         ),
+//         Field::new("sum", DataType::Float64),
+//         Field::new("min", DataType::Float64),
+//         Field::new("max", DataType::Float64),
+//         Field::new("count", DataType::Int64),
+//         Field::new("max_size", DataType::Int64),
+//     ]
+// }
 
 // ------------------------------- core helpers -------------------------------
 
@@ -84,7 +135,7 @@ fn tdigest_from_series(inputs: &[Series], max_size: usize) -> PolarsResult<TDige
 }
 
 fn parse_tdigest(inputs: &[Series]) -> TDigest {
-    let tdigests: Vec<TDigest> = parse_tdigests(&inputs[0]);
+    let tdigests: Vec<TDigest> = parse_tdigests_any(&inputs[0]);
     TDigest::merge_digests(tdigests)
 }
 
@@ -106,7 +157,12 @@ pub(crate) fn estimate_quantile_impl(inputs: &[Series], q: f64) -> PolarsResult<
     let out = if td.is_empty() {
         [None]
     } else {
-        [Some(td.estimate_quantile(q))]
+        let val = td.estimate_quantile(q);
+        if val.is_nan() {
+            [None]
+        } else {
+            [Some(val)]
+        }
     };
     Ok(Series::new("", out))
 }
@@ -141,15 +197,36 @@ pub(crate) fn tdigest(inputs: &[Series], kwargs: TDigestKwargs) -> PolarsResult<
     tdigest_impl(inputs, kwargs.max_size)
 }
 
-#[polars_expr(output_type_func=tdigest_output)]
-pub(crate) fn tdigest_cast(inputs: &[Series], kwargs: TDigestKwargs) -> PolarsResult<Series> {
-    let td = tdigest_from_series(inputs, kwargs.max_size)?;
-    Ok(tdigest_to_series(td, inputs[0].name()))
+// testable impl
+pub(crate) fn tdigest_f32_impl(inputs: &[Series], max_size: usize) -> PolarsResult<Series> {
+    let mut td = tdigest_from_series(inputs, max_size)?;
+    if td.is_empty() {
+        td = TDigest::new(Vec::new(), 100.0, 0.0, 0.0, 0.0, 0);
+    }
+    Ok(tdigest_to_series_f32(td, inputs[0].name()))
 }
+
+// expr forwarder
+#[polars_expr(output_type_func=tdigest_output_f32)]
+pub(crate) fn tdigest_f32(inputs: &[Series], kwargs: TDigestKwargs) -> PolarsResult<Series> {
+    tdigest_f32_impl(inputs, kwargs.max_size)
+}
+
+// #[polars_expr(output_type_func=tdigest_output)]
+// pub(crate) fn tdigest_f32(inputs: &[Series], kwargs: TDigestKwargs) -> PolarsResult<Series> {
+//     // Phase 1: behavior-identical to `tdigest` so this compiles and ships safely.
+//     // Next phase will switch this to an f32 payload (new schema + serializer).
+//     let td = tdigest_from_series(inputs, kwargs.max_size)?;
+//     Ok(tdigest_to_series(td, inputs[0].name()))
+// }
 
 #[polars_expr(output_type_func=tdigest_output)]
 fn merge_tdigests(inputs: &[Series]) -> PolarsResult<Series> {
-    let td = parse_tdigest(inputs);
+    merge_tdigests_impl(inputs)
+}
+
+pub(crate) fn merge_tdigests_impl(inputs: &[Series]) -> PolarsResult<Series> {
+    let td = parse_tdigest(inputs); // uses parse_tdigests_any under the hood
     Ok(tdigest_to_series(td, inputs[0].name()))
 }
 
@@ -176,31 +253,18 @@ pub(crate) fn estimate_median(inputs: &[Series]) -> PolarsResult<Series> {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::tdigest::test_helpers::{assert_abs_close, assert_exact, assert_rel_close};
 
-    /// Minimal smoke: build digest (impl), then query via quantile + cdf (impls).
     #[test]
     fn expr_impl_smoke_minimal() {
-        // Keep it lean: one supported dtype.
         let inputs = [Series::new("n", [1, 2, 3]).cast(&DataType::Int32).unwrap()];
-
-        // Build digest via impl
         let td_ser = tdigest_impl(&inputs, 100).unwrap();
-
-        // Quantile impl: median should be exactly 2.0
         let q_ser = estimate_quantile_impl(&[td_ser.clone()], 0.5).unwrap();
         let q = q_ser.f64().unwrap().get(0).unwrap();
-        assert!(
-            (q - 2.0).abs() < 1e-12,
-            "estimate_quantile_impl median = {q}, expected 2.0"
-        );
-
-        // CDF impl: midpoint convention ⇒ CDF(2.0) = 0.5
+        assert_exact("estimate_quantile_impl median = {q}, expected 2.0", 2.0, q);
         let cdf_ser = estimate_cdf_impl(&[td_ser, Series::new("", &[2.0_f64])]).unwrap();
         let cdf = cdf_ser.f64().unwrap().get(0).unwrap();
-        assert!(
-            (cdf - 0.5).abs() < 1e-12,
-            "estimate_cdf_impl CDF(2.0) = {cdf}, expected 0.5"
-        );
+        assert_exact("estimate_cdf_impl CDF(2.0) = {cdf}, expected 0.5", 0.5, cdf);
     }
 
     /// Empty input ⇒ empty digest ⇒ quantile impl returns None.
@@ -215,5 +279,64 @@ mod tests {
             q_ser.f64().unwrap().get(0).is_none(),
             "expected None for empty digest"
         );
+    }
+
+    // -----------------------------------------------------------------------------
+    // 32-bit payload (f32) compatibility tests
+    // - Ensures tolerant parser reads both schemas
+    // - Verifies core merge works for mixed-origin digests
+    // - Verifies expr merge works once container schema is homogeneous (Polars rule)
+    // -----------------------------------------------------------------------------
+
+    #[test]
+    fn f32_vs_f64_parser_equivalence() {
+        let inputs = [Series::new("n", (1..=1000).collect::<Vec<i32>>())
+            .cast(&DataType::Int32)
+            .unwrap()];
+
+        let s64 = super::tdigest_impl(&inputs, 100).unwrap(); // f64 schema Series
+        let s32 = super::tdigest_f32_impl(&inputs, 100).unwrap(); // f32 schema Series
+
+        let td64 = parse_tdigests_any(&s64).into_iter().next().unwrap();
+        let td32 = parse_tdigests_any(&s32).into_iter().next().unwrap();
+
+        // f32 has ~7 sig figs → 1e-6 relative is appropriate and stable
+        let tol = 1e-6;
+        assert_rel_close(
+            "p50 f32 vs f64",
+            td64.estimate_quantile(0.5),
+            td32.estimate_quantile(0.5),
+            tol,
+        );
+        assert_rel_close(
+            "CDF(500) f32 vs f64",
+            td64.estimate_cdf(&[500.0])[0],
+            td32.estimate_cdf(&[500.0])[0],
+            tol,
+        );
+    }
+
+    #[test]
+    fn mixed_origin_core_merge() {
+        let inputs = [Series::new("n", (1..=1000).collect::<Vec<i32>>())
+            .cast(&DataType::Int32)
+            .unwrap()];
+
+        let td64 = parse_tdigests_any(&super::tdigest_impl(&inputs, 100).unwrap())
+            .into_iter()
+            .next()
+            .unwrap();
+        let td32 = parse_tdigests_any(&super::tdigest_f32_impl(&inputs, 100).unwrap())
+            .into_iter()
+            .next()
+            .unwrap();
+
+        let merged = TDigest::merge_digests(vec![td64, td32]);
+
+        let p50 = merged.estimate_quantile(0.5);
+        assert_abs_close("mixed_origin_core_merge p50", 500.0, p50, 100.0);
+
+        let cdf_500 = merged.estimate_cdf(&[500.0])[0];
+        assert_rel_close("mixed_origin_core_merge cdf_500", 0.5, cdf_500, 0.2);
     }
 }

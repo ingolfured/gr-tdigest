@@ -448,35 +448,34 @@ impl TDigest {
 #[cfg(test)]
 mod tests {
     use super::*;
-
-    // =============================== Helpers (only what this file needs) ===============================
-    use crate::tdigest::test_helpers::*;
+    use crate::tdigest::test_helpers::{assert_exact, assert_rel_close};
 
     // =============================== Merge-digest (exercises external_merge) ===============================
     #[test]
     fn merge_digests_uniform_100x1000() {
-        let mut digests: Vec<TDigest> = Vec::new();
+        // Build 100 digests over 1..=1000 and merge them
+        let mut digests: Vec<TDigest> = Vec::with_capacity(100);
         for _ in 1..=100 {
             let t = TDigest::new_with_size(100).merge_sorted((1..=1_000).map(f64::from).collect());
-            digests.push(t)
+            digests.push(t);
         }
         let t = TDigest::merge_digests(digests);
 
-        assert_rel_close("Q(1.00)", 1000.0, t.estimate_quantile(1.0), 0.01);
-        assert_rel_close("Q(0.99)", 990.0, t.estimate_quantile(0.99), 0.01);
+        // Endpoints: these should be exact for this construction
+        assert_exact("Q(1.00)", 1000.0, t.estimate_quantile(1.0));
+        assert_exact("Q(0.00)", 1.0, t.estimate_quantile(0.0));
 
-        let got = t.estimate_quantile(0.01);
-        let expected = 10.0;
-        let rel = ((expected - got).abs()) / expected;
-        assert!(
-            rel < 0.2,
-            "Q(0.01): expected ~= {:.9}, got {:.9}, rel_err={:.6e}, rtol=2.0e-1",
-            expected,
-            got,
-            rel
-        );
+        // High quantile: tight tolerance
+        let q99 = t.estimate_quantile(0.99);
+        assert_rel_close("Q(0.99)", 990.0, q99, 7e-4);
 
-        assert_rel_close("Q(0.00)", 1.0, t.estimate_quantile(0.0), 0.01);
-        assert_rel_close("Q(0.50)", 500.0, t.estimate_quantile(0.5), 0.01);
+        // Low quantile: looser tolerance (tails are harder)
+        let q01 = t.estimate_quantile(0.01);
+        // relative tolerance 0.2 matches prior intent (<= 20% rel error)
+        assert_rel_close("Q(0.01)", 10.0, q01, 2e-1);
+
+        // Median: modest tolerance
+        let q50 = t.estimate_quantile(0.5);
+        assert_rel_close("Q(0.50)", 500.0, q50, 2e-3);
     }
 }

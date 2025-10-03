@@ -181,7 +181,7 @@ mod tests {
             if t.estimate_quantile(0.5).abs() > 0.1 {
                 quantile_didnt_work = true;
             }
-            assert_abs_close("median()", 0.0, t.estimate_median(), 0.01);
+            assert_exact("median()", 0.0, t.estimate_median());
         }
         assert!(quantile_didnt_work);
     }

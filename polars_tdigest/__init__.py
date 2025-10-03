@@ -14,10 +14,16 @@ if TYPE_CHECKING:
 lib = Path(__file__).parent
 
 
-def tdigest(expr: IntoExpr, max_size: int = 100) -> pl.Expr:
+
+def tdigest(expr: 'IntoExpr', max_size: int = 100, f32: bool = False) -> pl.Expr:
+    """
+    Compute a TDigest or TDigest (f32) depending on the f32 flag.
+    If f32 is True, use the f32-optimized implementation.
+    """
+    function_name = "tdigest_f32" if f32 else "tdigest"
     return register_plugin_function(
         plugin_path=Path(__file__).parent,
-        function_name="tdigest",
+        function_name=function_name,
         args=expr,
         is_elementwise=False,
         returns_scalar=True,
@@ -60,15 +66,7 @@ def estimate_median(expr: IntoExpr) -> pl.Expr:
     )
 
 
-def tdigest_cast(expr: IntoExpr, max_size: int = 100) -> pl.Expr:
-    return register_plugin_function(
-        plugin_path=Path(__file__).parent,
-        function_name="tdigest_cast",
-        args=expr,
-        is_elementwise=False,
-        returns_scalar=True,
-        kwargs={"max_size": max_size},
-    )
+
 
 
 def merge_tdigests(expr: IntoExpr) -> pl.Expr:
