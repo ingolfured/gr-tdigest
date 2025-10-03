@@ -52,7 +52,7 @@ fn create_series() -> Series {
             .append(&tdigest_to_series(create_tdigest(100, 0.0), "name"))
             .unwrap();
     });
-    return series;
+    series
 }
 
 fn reading_tdigests_directly_benchmark(c: &mut Criterion) {

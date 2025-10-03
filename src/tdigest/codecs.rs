@@ -152,7 +152,7 @@ mod tests {
             Series::new("min", [10.0]),
             Series::new("max", [30.0]),
             Series::new("count", [3.0]),
-            Series::new("max_size", [300 as i64]),
+            Series::new("max_size", [300_i64]),
         ])
         .unwrap()
         .into_struct("n")

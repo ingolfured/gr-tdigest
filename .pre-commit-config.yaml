@@ -1,0 +1,27 @@
+repos:
+  - repo: local
+    hooks:
+      - id: ruff-fix
+        name: ruff check (auto-fix Python)
+        entry: python -m ruff check . --fix --exit-non-zero-on-fix
+        language: system
+        pass_filenames: false
+      - id: cargo-build
+        name: cargo build
+        entry: cargo build
+        language: system
+        pass_filenames: false
+      - id: cargo-test
+        name: cargo test (src only)
+        entry: cargo test -- src/
+        language: system
+      - id: cargo-fmt
+        name: cargo fmt --all (auto-fix)
+        entry: cargo fmt --all
+        language: system
+        pass_filenames: false
+      - id: cargo-clippy
+        name: cargo clippy --all-features --fix
+        entry: cargo clippy --all-features --fix --allow-dirty --allow-staged
+        language: system
+        pass_filenames: false
