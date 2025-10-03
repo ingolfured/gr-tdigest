@@ -623,482 +623,199 @@ impl TDigest {
 mod tests {
 
     use super::*;
+    mod helpers {
+        pub fn assert_rel_close(label: &str, expected: f64, got: f64, rtol: f64) {
+            let denom = expected.abs().max(1e-300);
+            let rel = ((expected - got).abs()) / denom;
+            assert!(
+                rel < rtol,
+                "{}: expected ~= {:.9}, got {:.9}, rel_err={:.6e}, rtol={:.6e}",
+                label, expected, got, rel, rtol
+            );
+        }
+        // in your test helpers (tdigest/mod.rs test module or shared utils)
+        pub fn assert_abs_close(label: &str, expected: f64, got: f64, atol: f64) {
+            let abs = (expected - got).abs();
+            assert!(
+                abs <= atol, // <-- non-strict
+                "{}: expected ~= {:.9}, got {:.9}, abs_err={:.6e}, atol={:.6e}",
+                label, expected, got, abs, atol
+            );
+        }
+
+    }
+
+    use helpers::*;
 
     #[test]
-    fn test_centroid_addition_regression() {
-        //https://github.com/MnO2/t-digest/pull/1
-
+    fn centroid_addition_regression_pr_1() {
+        // https://github.com/MnO2/t-digest/pull/1
         let vals = vec![1.0, 1.0, 1.0, 2.0, 1.0, 1.0];
         let mut t = TDigest::new_with_size(10);
+        for v in vals { t = t.merge_unsorted(vec![v]); }
 
-        for v in vals {
-            t = t.merge_unsorted(vec![v]);
-        }
-
-        let ans = t.estimate_quantile(0.5);
-        let expected: f64 = 1.0;
-        let percentage: f64 = (expected - ans).abs() / expected;
-        assert!(percentage < 0.01);
-
-        let ans = t.estimate_quantile(0.95);
-        let expected: f64 = 2.0;
-        let percentage: f64 = (expected - ans).abs() / expected;
-        assert!(percentage < 0.01);
+        assert_rel_close("median", 1.0, t.estimate_quantile(0.5), 0.01);
+        assert_rel_close("q=0.95", 2.0, t.estimate_quantile(0.95), 0.01);
     }
 
     #[test]
-    fn test_merge_sorted_against_uniform_distro() {
-        let t = TDigest::new_with_size(100);
-        let values: Vec<f64> = (1..=1_000_000).map(f64::from).collect();
+    fn quantiles_uniform_sorted() {
+        let t = TDigest::new_with_size(100)
+            .merge_sorted((1..=1_000_000).map(f64::from).collect());
 
-        let t = t.merge_sorted(values);
+        assert_rel_close("Q(1.00)", 1_000_000.0, t.estimate_quantile(1.0), 0.01);
+        assert_rel_close("Q(0.99)",   990_000.0, t.estimate_quantile(0.99), 0.01);
+        assert_rel_close("Q(0.01)",    10_000.0, t.estimate_quantile(0.01), 0.01);
+        assert_rel_close("Q(0.00)",         1.0, t.estimate_quantile(0.0), 0.01);
+        assert_rel_close("Q(0.50)",    500_000.0, t.estimate_quantile(0.5), 0.01);
+    }
 
-        let ans = t.estimate_quantile(1.0);
-        let expected: f64 = 1_000_000.0;
 
-        let percentage: f64 = (expected - ans).abs() / expected;
-        assert!(percentage < 0.01);
+    #[test]
+    fn quantiles_uniform_unsorted() {
+        let t = TDigest::new_with_size(100)
+            .merge_unsorted((1..=1_000_000).map(f64::from).collect());
 
-        let ans = t.estimate_quantile(0.99);
-        let expected: f64 = 990_000.0;
-
-        let percentage: f64 = (expected - ans).abs() / expected;
-        assert!(percentage < 0.01);
-
-        let ans = t.estimate_quantile(0.01);
-        let expected: f64 = 10_000.0;
-
-        let percentage: f64 = (expected - ans).abs() / expected;
-        assert!(percentage < 0.01);
-
-        let ans = t.estimate_quantile(0.0);
-        let expected: f64 = 1.0;
-
-        let percentage: f64 = (expected - ans).abs() / expected;
-        assert!(percentage < 0.01);
-
-        let ans = t.estimate_quantile(0.5);
-        let expected: f64 = 500_000.0;
-
-        let percentage: f64 = (expected - ans).abs() / expected;
-        assert!(percentage < 0.01);
+        assert_rel_close("Q(1.00)", 1_000_000.0, t.estimate_quantile(1.0), 0.01);
+        assert_rel_close("Q(0.99)",   990_000.0, t.estimate_quantile(0.99), 0.01);
+        assert_rel_close("Q(0.01)",    10_000.0, t.estimate_quantile(0.01), 0.01);
+        assert_rel_close("Q(0.00)",         1.0, t.estimate_quantile(0.0), 0.01);
+        assert_rel_close("Q(0.50)",    500_000.0, t.estimate_quantile(0.5), 0.01);
     }
 
     #[test]
-    fn test_merge_unsorted_against_uniform_distro() {
-        let t = TDigest::new_with_size(100);
-        let values: Vec<f64> = (1..=1_000_000).map(f64::from).collect();
-
-        let t = t.merge_unsorted(values);
-
-        let ans = t.estimate_quantile(1.0);
-        let expected: f64 = 1_000_000.0;
-
-        let percentage: f64 = (expected - ans).abs() / expected;
-        assert!(percentage < 0.01);
-
-        let ans = t.estimate_quantile(0.99);
-        let expected: f64 = 990_000.0;
-
-        let percentage: f64 = (expected - ans).abs() / expected;
-        assert!(percentage < 0.01);
-
-        let ans = t.estimate_quantile(0.01);
-        let expected: f64 = 10_000.0;
-
-        let percentage: f64 = (expected - ans).abs() / expected;
-        assert!(percentage < 0.01);
-
-        let ans = t.estimate_quantile(0.0);
-        let expected: f64 = 1.0;
-
-        let percentage: f64 = (expected - ans).abs() / expected;
-        assert!(percentage < 0.01);
-
-        let ans = t.estimate_quantile(0.5);
-        let expected: f64 = 500_000.0;
-
-        let percentage: f64 = (expected - ans).abs() / expected;
-        assert!(percentage < 0.01);
-    }
-
-    #[test]
-    fn test_merge_sorted_against_skewed_distro() {
-        let t = TDigest::new_with_size(100);
+    fn quantiles_skewed_sorted() {
         let mut values: Vec<f64> = (1..=600_000).map(f64::from).collect();
-        for _ in 0..400_000 {
-            values.push(1_000_000.0);
-        }
+        for _ in 0..400_000 { values.push(1_000_000.0); }
+        let t = TDigest::new_with_size(100).merge_sorted(values);
 
-        let t = t.merge_sorted(values);
-
-        let ans = t.estimate_quantile(0.99);
-        let expected: f64 = 1_000_000.0;
-        let percentage: f64 = (expected - ans).abs() / expected;
-        assert!(percentage < 0.01);
-
-        let ans = t.estimate_quantile(0.01);
-        let expected: f64 = 10_000.0;
-
-        let percentage: f64 = (expected - ans).abs() / expected;
-        assert!(percentage < 0.01);
-
-        let ans = t.estimate_quantile(0.5);
-        let expected: f64 = 500_000.0;
-
-        let percentage: f64 = (expected - ans).abs() / expected;
-        assert!(percentage < 0.01);
+        assert_rel_close("Q(0.99)", 1_000_000.0, t.estimate_quantile(0.99), 0.01);
+        assert_rel_close("Q(0.01)",    10_000.0, t.estimate_quantile(0.01), 0.01);
+        assert_rel_close("Q(0.50)",   500_000.0, t.estimate_quantile(0.5),  0.01);
     }
 
     #[test]
-    fn test_merge_unsorted_against_skewed_distro() {
-        let t = TDigest::new_with_size(100);
-        let mut values: Vec<f64> = (1..=600_000).map(f64::from).collect();
-        for _ in 0..400_000 {
-            values.push(1_000_000.0);
-        }
-
-        let t = t.merge_unsorted(values);
-
-        let ans = t.estimate_quantile(0.99);
-        let expected: f64 = 1_000_000.0;
-        let percentage: f64 = (expected - ans).abs() / expected;
-        assert!(percentage < 0.01);
-
-        let ans = t.estimate_quantile(0.01);
-        let expected: f64 = 10_000.0;
-
-        let percentage: f64 = (expected - ans).abs() / expected;
-        assert!(percentage < 0.01);
-
-        let ans = t.estimate_quantile(0.5);
-        let expected: f64 = 500_000.0;
-
-        let percentage: f64 = (expected - ans).abs() / expected;
-        assert!(percentage < 0.01);
-    }
-
-    #[test]
-    fn test_merge_digests() {
+    fn merge_digests_uniform_100x1000() {
         let mut digests: Vec<TDigest> = Vec::new();
-
         for _ in 1..=100 {
-            let t = TDigest::new_with_size(100);
-            let values: Vec<f64> = (1..=1_000).map(f64::from).collect();
-            let t = t.merge_sorted(values);
+            let t = TDigest::new_with_size(100)
+                .merge_sorted((1..=1_000).map(f64::from).collect());
             digests.push(t)
         }
-
         let t = TDigest::merge_digests(digests);
 
-        let ans = t.estimate_quantile(1.0);
-        let expected: f64 = 1000.0;
+        assert_rel_close("Q(1.00)", 1000.0, t.estimate_quantile(1.0), 0.01);
+        assert_rel_close("Q(0.99)",  990.0, t.estimate_quantile(0.99), 0.01);
 
-        let percentage: f64 = (expected - ans).abs() / expected;
-        assert!(percentage < 0.01);
+        // original had 0.2 here; keep same tolerance but with message
+        let got = t.estimate_quantile(0.01);
+        let expected = 10.0;
+        let rel = ((expected - got).abs()) / expected;
+        assert!(
+            rel < 0.2,
+            "Q(0.01): expected ~= {:.9}, got {:.9}, rel_err={:.6e}, rtol=2.0e-1",
+            expected, got, rel
+        );
 
-        let ans = t.estimate_quantile(0.99);
-        let expected: f64 = 990.0;
-
-        let percentage: f64 = (expected - ans).abs() / expected;
-        assert!(percentage < 0.01);
-
-        let ans = t.estimate_quantile(0.01);
-        let expected: f64 = 10.0;
-
-        let percentage: f64 = (expected - ans).abs() / expected;
-        assert!(percentage < 0.2);
-
-        let ans = t.estimate_quantile(0.0);
-        let expected: f64 = 1.0;
-
-        let percentage: f64 = (expected - ans).abs() / expected;
-        assert!(percentage < 0.01);
-
-        let ans = t.estimate_quantile(0.5);
-        let expected: f64 = 500.0;
-
-        let percentage: f64 = (expected - ans).abs() / expected;
-        assert!(percentage < 0.01);
+        assert_rel_close("Q(0.00)",   1.0, t.estimate_quantile(0.0), 0.01);
+        assert_rel_close("Q(0.50)", 500.0, t.estimate_quantile(0.5), 0.01);
     }
 
     #[test]
-    fn test_median_between_centroids() {
+    fn median_between_centroids_even_count() {
         // median of [-1, -1, ..., 1, 1] should be ~0
         let mut quantile_didnt_work: bool = false;
         for num in [1, 2, 3, 10, 20] {
             let mut t = TDigest::new_with_size(100);
-            for _ in 1..=num {
-                t = t.merge_sorted(vec![-1.0]);
-            }
-            for _ in 1..=num {
-                t = t.merge_sorted(vec![1.0]);
-            }
+            for _ in 1..=num { t = t.merge_sorted(vec![-1.0]); }
+            for _ in 1..=num { t = t.merge_sorted(vec![ 1.0]); }
 
             if t.estimate_quantile(0.5).abs() > 0.1 {
                 quantile_didnt_work = true;
             }
-
-            assert!(t.estimate_median().abs() < 0.01);
+            assert_abs_close("median()", 0.0, t.estimate_median(), 0.01);
         }
-        assert!(quantile_didnt_work);
+        assert!(
+            quantile_didnt_work,
+            "Sanity: expected at least one case where quantile(0.5) was off enough to trigger the special-case median."
+        );
     }
 
     #[test]
-    fn test_cdf() {
-        let t = TDigest::new_with_size(100);
-        let values: Vec<f64> = vec![1.0, 2.0, 3.0, 4.0, 5.0];
-        let t = t.merge_sorted(values);
+    fn cdf_basic() {
+        let t = TDigest::new_with_size(100).merge_sorted(vec![1.0, 2.0, 3.0, 4.0, 5.0]);
+        let v = t.estimate_cdf(&[3.0, 1.0, 5.0, 0.0, 6.0]);
+        assert_abs_close("CDF(3.0)", 0.5, v[0], 1e-4);
+        assert_abs_close("CDF(1.0)", 0.1, v[1], 1e-4);
+        assert_abs_close("CDF(5.0)", 0.9, v[2], 1e-4);
+        assert_abs_close("CDF(0.0)", 0.0, v[3], 0.0);
+        assert_abs_close("CDF(6.0)", 1.0, v[4], 0.0);
+    }
 
-        let cdf_vals = t.estimate_cdf(&[3.0, 1.0, 5.0, 0.0, 6.0]);
-        assert!(
-            (cdf_vals[0] - 0.5).abs() < 0.0001,
-            "CDF(3.0) deviates from 0.5"
-        );
-        assert!(
-            (cdf_vals[1] - 0.1).abs() < 0.0001,
-            "CDF(1.0) deviates from 0.1"
-        );
-        assert!(
-            (cdf_vals[2] - 0.9).abs() < 0.0001,
-            "CDF(5.0) deviates from 0.9"
-        );
-        assert_eq!(cdf_vals[3], 0.0, "CDF(0.0) should be 0.0");
-        assert_eq!(cdf_vals[4], 1.0, "CDF(6.0) should be 1.0");
+
+    #[test]
+    fn cdf_out_of_bounds() {
+        let t = TDigest::new_with_size(100).merge_sorted(vec![1.0, 2.0, 3.0, 4.0, 5.0]);
+        let v = t.estimate_cdf(&[0.0, 6.0]);
+        assert_abs_close("CDF(0.0)", 0.0, v[0], 0.0);
+        assert_abs_close("CDF(6.0)", 1.0, v[1], 0.0);
     }
 
     #[test]
-    fn test_cdf_out_of_bounds() {
-        let t = TDigest::new_with_size(100);
-        let values: Vec<f64> = vec![1.0, 2.0, 3.0, 4.0, 5.0];
-        let t = t.merge_sorted(values);
-
-        let cdf_vals = t.estimate_cdf(&[0.0, 6.0]);
-        // Test when the value is less than the minimum element
-        assert_eq!(cdf_vals[0], 0.0, "CDF(0.0) should be 0.0");
-        // Test when the value is greater than the maximum element
-        assert_eq!(cdf_vals[1], 1.0, "CDF(6.0) should be 1.0");
+    fn cdf_all_same_value_steps() {
+        let t = TDigest::new_with_size(10).merge_sorted(vec![2.0, 2.0, 2.0, 2.0, 2.0]);
+        let v = t.estimate_cdf(&[1.0, 2.0, 3.0]);
+        assert_abs_close("CDF(<2)", 0.0, v[0], 0.0);
+        assert_abs_close("CDF(=2)", 0.5, v[1], 0.1);
+        assert_abs_close("CDF(>2)", 1.0, v[2], 0.0);
     }
 
     #[test]
-    fn test_cdf_all_same_value() {
-        // All values are the same, CDF should step from 0 to 1 at that value
-        let t = TDigest::new_with_size(10);
-        let t = t.merge_sorted(vec![2.0, 2.0, 2.0, 2.0, 2.0]);
-        let cdf_vals = t.estimate_cdf(&[1.0, 2.0, 3.0]);
-        println!("cdf_vals: {:?}", cdf_vals);
-        assert_eq!(cdf_vals[0], 0.0, "CDF below all values should be 0.0");
-        assert!(
-            (cdf_vals[1] - 0.5).abs() < 0.1,
-            "CDF at the value should be close to 0.5"
-        );
-        assert_eq!(cdf_vals[2], 1.0, "CDF above all values should be 1.0");
+    fn cdf_duplicate_centroids_monotonic() {
+        let t = TDigest::new_with_size(100)
+            .merge_sorted(vec![1.0, 1.0, 2.0, 2.0, 2.0, 3.0, 3.0]);
+        let v = t.estimate_cdf(&[2.0, 1.0, 3.0]);
+        assert!(v[0] > v[1] && v[2] > v[0], "CDF monotone with duplicates: {:?}", v);
+        assert!(v[0] > 0.0 && v[0] < 1.0, "CDF in (0,1): {:?}", v);
     }
 
     #[test]
-    fn test_cdf_duplicate_centroids() {
-        // Insert values to force duplicate centroids (same mean)
-        let t = TDigest::new_with_size(100);
-        let t = t.merge_sorted(vec![1.0, 1.0, 2.0, 2.0, 2.0, 3.0, 3.0]);
-        let cdf_vals = t.estimate_cdf(&[2.0, 1.0, 3.0]);
-        // The exact values may depend on compression, but should be monotonic and between 0 and 1
-        assert!(
-            cdf_vals[0] > cdf_vals[1] && cdf_vals[2] > cdf_vals[0],
-            "CDF monotonic with duplicates"
-        );
-        assert!(cdf_vals[0] > 0.0 && cdf_vals[0] < 1.0, "CDF in (0,1)");
-    }
-
-    #[test]
-    fn test_cdf_large_and_one_small() {
-        // Many large values, one very small value
+    fn cdf_many_large_one_small() {
         let mut values = vec![1e9; 100];
         values.push(-1e9);
-        let t = TDigest::new_with_size(100);
-        let t = t.merge_sorted(values);
-        let cdf_vals = t.estimate_cdf(&[-1e9, 0.0, 1e9, 2e9]);
-        assert!(cdf_vals[0] < 0.02, "CDF at smallest value");
-        assert!(cdf_vals[1] < 0.05, "CDF at 0.0 should be small");
-        assert_eq!(cdf_vals[3], 1.0, "CDF above all values");
+        let t = TDigest::new_with_size(100).merge_sorted(values);
+        let v = t.estimate_cdf(&[-1e9, 0.0, 1e9, 2e9]);
+        assert!(v[0] < 0.02, "CDF(-1e9) too large: {}", v[0]);
+        assert!(v[1] < 0.05, "CDF(0.0) too large: {}", v[1]);
+        assert_abs_close("CDF(2e9)", 1.0, v[3], 0.0);
     }
 
     #[test]
-    fn test_cdf_small_numbers() {
-        // Very small numbers, check for precision
-        let t = TDigest::new_with_size(10);
-        let t = t.merge_sorted(vec![1e-10, 2e-10, 3e-10, 4e-10, 5e-10]);
-        let cdf_vals = t.estimate_cdf(&[2e-10, 3e-10, 6e-10]);
-        assert!(cdf_vals[0] > 0.1 && cdf_vals[0] < 0.5, "CDF at 2e-10");
-        assert!(cdf_vals[1] > cdf_vals[0], "CDF at 3e-10 > CDF at 2e-10");
-        assert_eq!(cdf_vals[2], 1.0, "CDF above all values");
+    fn cdf_small_numbers_precision() {
+        let t = TDigest::new_with_size(10)
+            .merge_sorted(vec![1e-10, 2e-10, 3e-10, 4e-10, 5e-10]);
+        let v = t.estimate_cdf(&[2e-10, 3e-10, 6e-10]);
+        assert!(v[0] > 0.1 && v[0] < 0.5, "CDF(2e-10) out of band: {}", v[0]);
+        assert!(v[1] > v[0], "CDF(3e-10) <= CDF(2e-10): {} <= {}", v[1], v[0]);
+        assert_abs_close("CDF(6e-10)", 1.0, v[2], 0.0);
     }
 
     #[test]
-    fn test_cdf_negative_values() {
-        // Negative values and zero
-        let t = TDigest::new_with_size(10);
-        let t = t.merge_sorted(vec![-5.0, -2.0, 0.0, 2.0, 5.0]);
-        let cdf_vals = t.estimate_cdf(&[-10.0, -2.0, 0.0, 3.0, 10.0]);
-        assert_eq!(cdf_vals[0], 0.0, "CDF below all values");
-        assert!(cdf_vals[1] > 0.0 && cdf_vals[1] < 0.5, "CDF at -2.0");
-        assert!(cdf_vals[2] > cdf_vals[1] && cdf_vals[2] < 0.7, "CDF at 0.0");
-        assert!(cdf_vals[3] > cdf_vals[2] && cdf_vals[3] < 1.0, "CDF at 3.0");
-        assert_eq!(cdf_vals[4], 1.0, "CDF above all values");
+    fn cdf_negative_values() {
+        let t = TDigest::new_with_size(10)
+            .merge_sorted(vec![-5.0, -2.0, 0.0, 2.0, 5.0]);
+        let v = t.estimate_cdf(&[-10.0, -2.0, 0.0, 3.0, 10.0]);
+        assert_abs_close("CDF(-10)", 0.0, v[0], 0.0);
+        assert!(v[1] > 0.0 && v[1] < 0.5, "CDF(-2.0) out of band: {}", v[1]);
+        assert!(v[2] > v[1] && v[2] < 0.7, "CDF(0.0) out of band: {}", v[2]);
+        assert!(v[3] > v[2] && v[3] < 1.0, "CDF(3.0) out of band: {}", v[3]);
+        assert_abs_close("CDF(10)", 1.0, v[4], 0.0);
     }
 
     #[test]
-    fn test_cdf_empty_input() {
-        // Empty input vector for vals
-        let t = TDigest::new_with_size(10);
-        let t = t.merge_sorted(vec![1.0, 2.0, 3.0]);
-        let cdf_vals = t.estimate_cdf(&[]);
-        assert_eq!(cdf_vals.len(), 0, "CDF of empty input should be empty");
+    fn cdf_empty_input_is_empty() {
+        let t = TDigest::new_with_size(10).merge_sorted(vec![1.0, 2.0, 3.0]);
+        let v = t.estimate_cdf(&[]);
+        assert_eq!(v.len(), 0, "CDF of empty input should be empty, got {:?}", v);
     }
-}
-
-// ==== Quality harness: KS + MAE, single score + no-regression guard =========
-
-#[derive(Debug, Clone)]
-pub struct Quality {
-    pub n: usize,
-    pub max_size: usize,
-    pub seed: u64,
-}
-
-#[derive(Debug, Clone)]
-pub struct QualityReport {
-    pub n: usize,
-    pub max_abs_err: f64, // KS
-    pub mean_abs_err: f64, // MAE
-}
-
-impl QualityReport {
-    /// Half-lives chosen so base lands around ~0.7
-    pub fn quality_score(&self) -> f64 {
-        self.quality_score_with_halves(0.028, 0.0008)
-    }
-
-    /// Customizable half-lives: score hits 0.5 when KS==half_ks and MAE==half_mae.
-    pub fn quality_score_with_halves(&self, half_ks: f64, half_mae: f64) -> f64 {
-        fn sub(x: f64, half: f64) -> f64 {
-            if half <= 0.0 || !x.is_finite() { return 0.0; }
-            (2.0f64).powf(-x / half).clamp(0.0, 1.0)
-        }
-        let s_ks  = sub(self.max_abs_err, half_ks);
-        let s_mae = sub(self.mean_abs_err, half_mae);
-        (s_ks * s_mae).sqrt()
-    }
-
-    pub fn strictly_better_than(&self, other: &QualityReport) -> bool {
-        let eps = 1e-12;
-        (self.max_abs_err <= other.max_abs_err + eps) &&
-        (self.mean_abs_err <= other.mean_abs_err + eps)
-    }
-
-    pub fn to_line(&self) -> String {
-        format!(
-            "QualityReport(n={}, KS={:.6e}, MAE={:.6e}, score={:.3})",
-            self.n, self.max_abs_err, self.mean_abs_err, self.quality_score()
-        )
-    }
-    pub fn log(&self) { eprintln!("{}", self.to_line()); }
-}
-
-impl Quality {
-    pub fn new(n: usize, max_size: usize, seed: u64) -> Self {
-        Self { n, max_size, seed }
-    }
-
-    pub fn run(&self) -> QualityReport {
-        use rand::{rngs::StdRng, Rng, SeedableRng};
-
-        let mut rng = StdRng::seed_from_u64(self.seed);
-        let mut values: Vec<f64> = Vec::with_capacity(self.n);
-        if self.n == 0 {
-            return QualityReport { n: 0, max_abs_err: f64::NAN, mean_abs_err: f64::NAN };
-        }
-        values.push(0.0); // guarantee a 0
-        while values.len() < self.n {
-            let bucket: u32 = rng.gen_range(0..100);
-            let x = if bucket < 70 {
-                // 70% uniform in [-1, 1]
-                rng.gen_range(-1.0..1.0)
-            } else if bucket < 90 {
-                // 20% normal(0, 1000) via Box–Muller
-                let u1: f64 = rng.gen::<f64>().clamp(1e-12, 1.0);
-                let u2: f64 = rng.gen::<f64>();
-                let z = (-2.0 * u1.ln()).sqrt() * (2.0 * std::f64::consts::PI * u2).cos();
-                z * 1000.0
-            } else {
-                // 10% very large magnitudes: 10^U(3,9) with random sign
-                let exp = rng.gen_range(3.0..9.0);
-                let mag = 10f64.powf(exp);
-                if rng.gen_bool(0.5) { mag } else { -mag }
-            };
-            values.push(x);
-        }
-
-        // 2) Exact ECDF at each sorted sample (midpoint convention on ties)
-        values.sort_by(|a, b| a.partial_cmp(b).unwrap());
-        let exact_cdf = Self::exact_ecdf_for_sorted(&values);
-
-        let t0 = TDigest::new_with_size(self.max_size);
-        let digest = t0.merge_sorted(values.clone()); // taking-ownership API => clone
-        let td_cdf = digest.estimate_cdf(&values);
-
-        let mut ks = 0.0;
-        let mut sum_abs = 0.0;
-        for (a, b) in exact_cdf.iter().zip(td_cdf.iter()) {
-            let d = (a - b).abs();
-            if d > ks { ks = d; }
-            sum_abs += d;
-        }
-        let mae = sum_abs / (self.n as f64);
-
-        QualityReport { n: self.n, max_abs_err: ks, mean_abs_err: mae }
-    }
-
-    fn exact_ecdf_for_sorted(sorted: &Vec<f64>) -> Vec<f64> {
-        let n = sorted.len();
-        let nf = n as f64;
-        let mut out = vec![0.0; n];
-        let mut i = 0usize;
-        while i < n {
-            let mut j = i + 1;
-            while j < n && sorted[j] == sorted[i] { j += 1; }
-            let mid = (i + j) as f64 / 2.0;
-            let val = mid / nf;
-            for k in i..j { out[k] = val; }
-            i = j;
-        }
-        out
-    }
-}
-
-
-#[test]
-fn quality_smoke_test_ks_mae_score() {
-    let rep = Quality::new(100_000, 100, 42).run();
-    rep.log();
-
-    let s = rep.quality_score();
-    eprintln!("quality_score = {:.3}", s);
-
-    assert!(s > 0.70 && s < 0.71); // expect ~0.7 with given halves
-}
-
-#[test]
-fn quality_improves_with_larger_digest() {
-    let base   = Quality::new(100_000, 100, 42).run();
-    let better = Quality::new(100_000, 1000, 42).run();
-
-    let s_base   = base.quality_score();
-    let s_better = better.quality_score();
-
-    eprintln!("BASE   -> {}", base.to_line());
-    eprintln!("BETTER -> {}", better.to_line());
-
-    assert!(better.strictly_better_than(&base));
-
-    assert!(s_better >= s_base);
 }
