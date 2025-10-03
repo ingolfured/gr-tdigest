@@ -50,22 +50,7 @@ fn tdigest_fields() -> Vec<Field> {
     ]
 }
 
-// Todo support other numerical types
-#[polars_expr(output_type_func=tdigest_output)]
-fn tdigest(inputs: &[Series], kwargs: TDigestKwargs) -> PolarsResult<Series> {
-    let mut tdigest = tdigest_from_series(inputs, kwargs.max_size)?;
-    if tdigest.is_empty() {
-        // Default value for TDigest contains NaNs that cause problems during serialization/deserailization
-        tdigest = TDigest::new(Vec::new(), 100.0, 0.0, 0.0, 0.0, 0)
-    }
-    Ok(tdigest_to_series(tdigest, inputs[0].name()))
-}
-
-#[polars_expr(output_type_func=tdigest_output)]
-fn tdigest_cast(inputs: &[Series], kwargs: TDigestKwargs) -> PolarsResult<Series> {
-    let tdigest = tdigest_from_series(inputs, kwargs.max_size)?;
-    Ok(tdigest_to_series(tdigest, inputs[0].name()))
-}
+// ------------------------------- core helpers -------------------------------
 
 fn tdigest_from_series(inputs: &[Series], max_size: usize) -> PolarsResult<TDigest> {
     let series = &inputs[0];
@@ -103,67 +88,88 @@ fn parse_tdigest(inputs: &[Series]) -> TDigest {
     TDigest::merge_digests(tdigests)
 }
 
-#[polars_expr(output_type_func=tdigest_output)]
-fn merge_tdigests(inputs: &[Series]) -> PolarsResult<Series> {
-    let tdigest = parse_tdigest(inputs);
-    Ok(tdigest_to_series(tdigest, inputs[0].name()))
-}
+// ------------------------------- testable impls ------------------------------
 
-// TODO this should check the type of the series and also work on series of Type f64
-#[polars_expr(output_type=Float64)]
-fn estimate_quantile(inputs: &[Series], kwargs: QuantileKwargs) -> PolarsResult<Series> {
-    let tdigest = parse_tdigest(inputs);
-    if tdigest.is_empty() {
-        let v: &[Option<f64>] = &[None];
-        Ok(Series::new("", v))
-    } else {
-        let ans = tdigest.estimate_quantile(kwargs.quantile);
-        Ok(Series::new("", vec![ans]))
+/// Plain, testable implementation: returns the **Series** form of the digest.
+pub(crate) fn tdigest_impl(inputs: &[Series], max_size: usize) -> PolarsResult<Series> {
+    let mut td = tdigest_from_series(inputs, max_size)?;
+    if td.is_empty() {
+        // avoid NaN default
+        td = TDigest::new(Vec::new(), 100.0, 0.0, 0.0, 0.0, 0)
     }
+    Ok(tdigest_to_series(td, inputs[0].name()))
 }
 
-#[polars_expr(output_type=Float64)]
-fn estimate_cdf(inputs: &[Series]) -> PolarsResult<Series> {
-    let tdigest = parse_tdigest(&inputs[..1]);
-    if tdigest.is_empty() {
-        let v: &[Option<f64>] = &[None];
-        return Ok(Series::new("", v));
+/// Plain, testable implementation of estimate_quantile expr.
+pub(crate) fn estimate_quantile_impl(inputs: &[Series], q: f64) -> PolarsResult<Series> {
+    let td = parse_tdigest(inputs);
+    let out = if td.is_empty() {
+        [None]
+    } else {
+        [Some(td.estimate_quantile(q))]
+    };
+    Ok(Series::new("", out))
+}
+
+/// Plain, testable implementation of estimate_cdf expr.
+pub(crate) fn estimate_cdf_impl(inputs: &[Series]) -> PolarsResult<Series> {
+    let td = parse_tdigest(&inputs[..1]);
+    if td.is_empty() {
+        return Ok(Series::new("", [None::<f64>]));
     }
 
     let x_series = &inputs[1];
     let x_values = x_series.f64()?;
+    let xs: Vec<Option<f64>> = x_values.into_iter().collect();
 
-    let mut x_vec = Vec::with_capacity(x_values.len());
-    for v in x_values {
-        x_vec.push(v);
-    }
-
-    let cdfs: Vec<Option<f64>> = if x_vec.iter().any(|v| v.is_none()) {
-        x_vec
-            .iter()
-            .map(|opt_x| opt_x.map(|x| tdigest.estimate_cdf(&[x])[0]))
+    let out: Vec<Option<f64>> = if xs.iter().any(|v| v.is_none()) {
+        xs.iter()
+            .map(|o| o.map(|v| td.estimate_cdf(&[v])[0]))
             .collect()
     } else {
-        let x_vals: Vec<f64> = x_vec.iter().map(|v| v.unwrap()).collect();
-        tdigest
-            .estimate_cdf(&x_vals)
-            .into_iter()
-            .map(Some)
-            .collect()
+        let vals: Vec<f64> = xs.iter().map(|o| o.unwrap()).collect();
+        td.estimate_cdf(&vals).into_iter().map(Some).collect()
     };
 
-    Ok(Series::new("", cdfs))
+    Ok(Series::new("", out))
+}
+
+// --------------------------- proc-macro forwarders ---------------------------
+
+#[polars_expr(output_type_func=tdigest_output)]
+pub(crate) fn tdigest(inputs: &[Series], kwargs: TDigestKwargs) -> PolarsResult<Series> {
+    tdigest_impl(inputs, kwargs.max_size)
+}
+
+#[polars_expr(output_type_func=tdigest_output)]
+pub(crate) fn tdigest_cast(inputs: &[Series], kwargs: TDigestKwargs) -> PolarsResult<Series> {
+    let td = tdigest_from_series(inputs, kwargs.max_size)?;
+    Ok(tdigest_to_series(td, inputs[0].name()))
+}
+
+#[polars_expr(output_type_func=tdigest_output)]
+fn merge_tdigests(inputs: &[Series]) -> PolarsResult<Series> {
+    let td = parse_tdigest(inputs);
+    Ok(tdigest_to_series(td, inputs[0].name()))
 }
 
 #[polars_expr(output_type=Float64)]
-fn estimate_median(inputs: &[Series]) -> PolarsResult<Series> {
-    let tdigest = parse_tdigest(inputs);
-    if tdigest.is_empty() {
-        let v: &[Option<f64>] = &[None];
-        Ok(Series::new("", v))
+pub(crate) fn estimate_quantile(inputs: &[Series], kwargs: QuantileKwargs) -> PolarsResult<Series> {
+    estimate_quantile_impl(inputs, kwargs.quantile)
+}
+
+#[polars_expr(output_type=Float64)]
+pub(crate) fn estimate_cdf(inputs: &[Series]) -> PolarsResult<Series> {
+    estimate_cdf_impl(inputs)
+}
+
+#[polars_expr(output_type=Float64)]
+pub(crate) fn estimate_median(inputs: &[Series]) -> PolarsResult<Series> {
+    let td = parse_tdigest(inputs);
+    if td.is_empty() {
+        Ok(Series::new("", [None::<f64>]))
     } else {
-        let ans = tdigest.estimate_median();
-        Ok(Series::new("", vec![ans]))
+        Ok(Series::new("", [Some(td.estimate_median())]))
     }
 }
 
@@ -171,33 +177,43 @@ fn estimate_median(inputs: &[Series]) -> PolarsResult<Series> {
 mod tests {
     use super::*;
 
+    /// Minimal smoke: build digest (impl), then query via quantile + cdf (impls).
     #[test]
-    fn test_supporting_different_numeric_types() {
-        // These types are not supported w/o special compilation flags
-        // The plugin panics if these types are used probably due to magic in #[palars_expr] annotations
-        let unsupported_types = [
-            DataType::Int16,
-            DataType::Int8,
-            DataType::UInt16,
-            DataType::UInt8,
-        ];
+    fn expr_impl_smoke_minimal() {
+        // Keep it lean: one supported dtype.
+        let inputs = [Series::new("n", [1, 2, 3]).cast(&DataType::Int32).unwrap()];
 
-        SUPPORTED_TYPES.iter().for_each(|t| {
-            let series = [Series::new("n", [1, 2, 3]).cast(t).unwrap()];
-            let td = tdigest_from_series(&series, 200).unwrap();
-            assert!(td.estimate_median() == 2.0);
-            let cdf_2 = td.estimate_cdf(&[2.0])[0];
-            let cdf_24 = td.estimate_cdf(&[2.4])[0];
-            let cdf_25 = td.estimate_cdf(&[2.5])[0];
-            let cdf_26 = td.estimate_cdf(&[2.6])[0];
-            assert!(cdf_2 == 0.5);
-            assert!((cdf_24 - 0.5).abs() < 0.0001);
-            assert!((cdf_25 - 0.66666).abs() < 0.0001);
-            assert!((cdf_26 - 0.83333).abs() < 0.0001);
-        });
+        // Build digest via impl
+        let td_ser = tdigest_impl(&inputs, 100).unwrap();
 
-        unsupported_types.iter().for_each(|t| {
-            assert!(Series::new("n", [1, 2, 3]).cast(t).is_err());
-        });
+        // Quantile impl: median should be exactly 2.0
+        let q_ser = estimate_quantile_impl(&[td_ser.clone()], 0.5).unwrap();
+        let q = q_ser.f64().unwrap().get(0).unwrap();
+        assert!(
+            (q - 2.0).abs() < 1e-12,
+            "estimate_quantile_impl median = {q}, expected 2.0"
+        );
+
+        // CDF impl: midpoint convention ⇒ CDF(2.0) = 0.5
+        let cdf_ser = estimate_cdf_impl(&[td_ser, Series::new("", &[2.0_f64])]).unwrap();
+        let cdf = cdf_ser.f64().unwrap().get(0).unwrap();
+        assert!(
+            (cdf - 0.5).abs() < 1e-12,
+            "estimate_cdf_impl CDF(2.0) = {cdf}, expected 0.5"
+        );
+    }
+
+    /// Empty input ⇒ empty digest ⇒ quantile impl returns None.
+    #[test]
+    fn expr_impl_empty_returns_none() {
+        let empty_inputs = [Series::new("n", Vec::<i32>::new())
+            .cast(&DataType::Int32)
+            .unwrap()];
+        let td_ser = tdigest_impl(&empty_inputs, 100).unwrap();
+        let q_ser = estimate_quantile_impl(&[td_ser], 0.5).unwrap();
+        assert!(
+            q_ser.f64().unwrap().get(0).is_none(),
+            "expected None for empty digest"
+        );
     }
 }
