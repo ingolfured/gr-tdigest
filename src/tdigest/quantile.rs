@@ -123,18 +123,8 @@ mod tests {
         values.sort_by(|a, b| a.partial_cmp(b).unwrap());
         let t = TDigest::new_with_size(10).merge_sorted(values.clone());
 
-        assert_abs_close(
-            "Q(0)",
-            *values.first().unwrap(),
-            t.estimate_quantile(0.0),
-            0.0,
-        );
-        assert_abs_close(
-            "Q(1)",
-            *values.last().unwrap(),
-            t.estimate_quantile(1.0),
-            0.0,
-        );
+        assert_exact("Q(0)", *values.first().unwrap(), t.estimate_quantile(0.0));
+        assert_exact("Q(1)", *values.last().unwrap(), t.estimate_quantile(1.0));
 
         let (lo_m, hi_m, _, _) = bracket(&values, 0.5);
         let med = t.estimate_quantile(0.5);

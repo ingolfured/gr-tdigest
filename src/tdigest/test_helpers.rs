@@ -1,7 +1,17 @@
 // src/tdigest/test_helpers.rs
 // Common test helper functions for tdigest tests
 
-#[allow(dead_code)]
+/// Assert that two f64 values are exactly equal (no tolerance).
+pub fn assert_exact(label: &str, expected: f64, got: f64) {
+    assert!(
+        expected == got,
+        "{}: expected exactly {:.9}, got {:.9}",
+        label,
+        expected,
+        got
+    );
+}
+
 pub fn assert_rel_close(label: &str, expected: f64, got: f64, rtol: f64) {
     let denom = expected.abs().max(1e-300);
     let rel = ((expected - got).abs()) / denom;
@@ -16,7 +26,6 @@ pub fn assert_rel_close(label: &str, expected: f64, got: f64, rtol: f64) {
     );
 }
 
-#[allow(dead_code)]
 pub fn assert_abs_close(label: &str, expected: f64, got: f64, atol: f64) {
     let abs = (expected - got).abs();
     assert!(
@@ -30,7 +39,6 @@ pub fn assert_abs_close(label: &str, expected: f64, got: f64, atol: f64) {
     );
 }
 
-#[allow(dead_code)]
 pub fn assert_monotone_chain(label: &str, xs: &[f64]) {
     for i in 1..xs.len() {
         assert!(
@@ -44,7 +52,6 @@ pub fn assert_monotone_chain(label: &str, xs: &[f64]) {
     }
 }
 
-#[allow(dead_code)]
 pub fn assert_strict_increasing(label: &str, xs: &[f64]) {
     for i in 1..xs.len() {
         assert!(
@@ -58,7 +65,6 @@ pub fn assert_strict_increasing(label: &str, xs: &[f64]) {
     }
 }
 
-#[allow(dead_code)]
 pub fn assert_all_in_unit_interval(label: &str, xs: &[f64]) {
     for (i, &x) in xs.iter().enumerate() {
         assert!(
@@ -71,7 +77,6 @@ pub fn assert_all_in_unit_interval(label: &str, xs: &[f64]) {
     }
 }
 
-#[allow(dead_code)]
 pub fn ks_mae(exact: &[f64], approx: &[f64]) -> (f64, f64) {
     assert_eq!(exact.len(), approx.len(), "KS/MAE length mismatch");
     let mut ks = 0.0;
@@ -86,7 +91,6 @@ pub fn ks_mae(exact: &[f64], approx: &[f64]) -> (f64, f64) {
     (ks, sum / exact.len() as f64)
 }
 
-#[allow(dead_code)]
 pub fn assert_in_bracket(label: &str, x: f64, lo: f64, hi: f64, i_lo: usize, i_hi: usize) {
     assert!(
         x >= lo && x <= hi,
@@ -100,7 +104,6 @@ pub fn assert_in_bracket(label: &str, x: f64, lo: f64, hi: f64, i_lo: usize, i_h
     );
 }
 
-#[allow(dead_code)]
 pub fn bracket(values: &[f64], q: f64) -> (f64, f64, usize, usize) {
     assert!(!values.is_empty(), "bracket() requires non-empty values");
     let n = values.len();
