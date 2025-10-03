@@ -62,8 +62,8 @@ impl Quality {
     }
 
     pub fn run(&self) -> QualityReport {
-        use rand::{rngs::StdRng, Rng, SeedableRng};
-        use crate::tdigest::cdf::exact_ecdf_for_sorted; // <-- moved here
+        use crate::tdigest::cdf::exact_ecdf_for_sorted;
+        use rand::{rngs::StdRng, Rng, SeedableRng}; // <-- moved here
 
         let mut rng = StdRng::seed_from_u64(self.seed);
         let mut values: Vec<f64> = Vec::with_capacity(self.n);
@@ -90,7 +90,11 @@ impl Quality {
                 // 10% very large magnitudes: 10^U(3,9) with random sign
                 let exp = rng.gen_range(3.0..9.0);
                 let mag = 10f64.powf(exp);
-                if rng.gen_bool(0.5) { mag } else { -mag }
+                if rng.gen_bool(0.5) {
+                    mag
+                } else {
+                    -mag
+                }
             };
             values.push(x);
         }
@@ -107,12 +111,18 @@ impl Quality {
         let mut sum_abs = 0.0;
         for (a, b) in exact_cdf.iter().zip(td_cdf.iter()) {
             let d = (a - b).abs();
-            if d > ks { ks = d; }
+            if d > ks {
+                ks = d;
+            }
             sum_abs += d;
         }
         let mae = sum_abs / (self.n as f64);
 
-        QualityReport { n: self.n, max_abs_err: ks, mean_abs_err: mae }
+        QualityReport {
+            n: self.n,
+            max_abs_err: ks,
+            mean_abs_err: mae,
+        }
     }
 }
 
