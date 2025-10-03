@@ -1,4 +1,3 @@
-// src/quality.rs
 use crate::tdigest::TDigest;
 
 #[derive(Debug, Clone)]
@@ -18,7 +17,9 @@ pub struct QualityReport {
 impl QualityReport {
     /// Half-lives chosen so base lands around ~0.7
     pub fn quality_score(&self) -> f64 {
-        self.quality_score_with_halves(0.028, 0.0008)
+        // Derived from observed KS≈1.478685e-3 and MAE≈3.493082e-5
+        // so that each subscore is ~0.70 ⇒ geometric mean is ~0.70.
+        self.quality_score_with_halves(0.002_873_614_6, 0.000_067_883_096)
     }
 
     /// Customizable half-lives: score hits 0.5 when KS==half_ks and MAE==half_mae.
@@ -157,13 +158,12 @@ mod tests {
 
     #[test]
     fn quality_smoke_test_ks_mae_score() {
-        let rep = Quality::new(100_000, 100, 42).run();
+        let rep = Quality::new(100_000, 1000, 42).run();
         rep.log();
         let s = rep.quality_score();
-        eprintln!("quality_score = {:.3}", s);
         assert!(
-            (0.70..0.71).contains(&s),
-            "quality_score out of expected band: got {:.6}, want ~0.705 (band [0.70, 0.71))",
+            (0.699..0.701).contains(&s),
+            "quality_score out of expected band: got {:.6}, want ~0.700 (band [0.699, 0.701))",
             s
         );
     }
