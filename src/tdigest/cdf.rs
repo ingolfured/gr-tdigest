@@ -121,60 +121,12 @@ mod tests {
     use crate::tdigest::TDigest;
 
     // Minimal helpers for CDF tests
-    mod helpers {
-        pub fn assert_all_in_unit_interval(label: &str, xs: &[f64]) {
-            for (i, &x) in xs.iter().enumerate() {
-                assert!(
-                    (0.0..=1.0).contains(&x),
-                    "{label}: value out of [0,1] at i={i}: {x}"
-                );
-            }
-        }
-        pub fn assert_monotone_chain(label: &str, xs: &[f64]) {
-            for i in 1..xs.len() {
-                assert!(
-                    xs[i] >= xs[i - 1],
-                    "{label}: non-monotone at i={i}: {} < {}",
-                    xs[i],
-                    xs[i - 1]
-                );
-            }
-        }
-        pub fn assert_strict_increasing(label: &str, xs: &[f64]) {
-            for i in 1..xs.len() {
-                assert!(
-                    xs[i] > xs[i - 1],
-                    "{label}: not strictly increasing at i={i}: {} !> {}",
-                    xs[i],
-                    xs[i - 1]
-                );
-            }
-        }
-        pub fn ks_mae(exact: &[f64], approx: &[f64]) -> (f64, f64) {
-            assert_eq!(exact.len(), approx.len(), "KS/MAE length mismatch");
-            let mut ks = 0.0;
-            let mut sum = 0.0;
-            for i in 0..exact.len() {
-                let d = (exact[i] - approx[i]).abs();
-                if d > ks {
-                    ks = d;
-                }
-                sum += d;
-            }
-            (ks, sum / exact.len() as f64)
-        }
-        pub fn assert_cdf_oob_clamps(
-            label: &str,
-            td: &crate::tdigest::TDigest,
-            below: f64,
-            above: f64,
-        ) {
-            let v = td.estimate_cdf(&[below, above]);
-            assert!((v[0] - 0.0).abs() == 0.0, "{label}/min-ε: {}", v[0]);
-            assert!((v[1] - 1.0).abs() == 0.0, "{label}/max+ε: {}", v[1]);
-        }
+    use crate::tdigest::test_helpers::*;
+    fn assert_cdf_oob_clamps(label: &str, td: &crate::tdigest::TDigest, below: f64, above: f64) {
+        let v = td.estimate_cdf(&[below, above]);
+        assert!((v[0] - 0.0).abs() == 0.0, "{label}/min-ε: {}", v[0]);
+        assert!((v[1] - 1.0).abs() == 0.0, "{label}/max+ε: {}", v[1]);
     }
-    use helpers::*;
 
     /// n=10, max_size=10 — negatives/zero/tiny/huge/duplicate + OOB clamps.
     /// No exact-ECDF dependency; just direct, simple checks.

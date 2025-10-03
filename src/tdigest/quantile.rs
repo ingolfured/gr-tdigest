@@ -101,69 +101,8 @@ impl TDigest {
 
 #[cfg(test)]
 mod tests {
-    use super::*;
+    use crate::tdigest::test_helpers::*;
     use crate::tdigest::TDigest;
-
-    // =============================== Helpers (for quantile tests) ===============================
-    mod helpers {
-        pub fn assert_rel_close(label: &str, expected: f64, got: f64, rtol: f64) {
-            let denom = expected.abs().max(1e-300);
-            let rel = ((expected - got).abs()) / denom;
-            assert!(
-                rel < rtol,
-                "{}: expected ~= {:.9}, got {:.9}, rel_err={:.6e}, rtol={:.6e}",
-                label,
-                expected,
-                got,
-                rel,
-                rtol
-            );
-        }
-        pub fn assert_abs_close(label: &str, expected: f64, got: f64, atol: f64) {
-            let abs = (expected - got).abs();
-            assert!(
-                abs <= atol,
-                "{}: expected ~= {:.9}, got {:.9}, abs_err={:.6e}, atol={:.6e}",
-                label,
-                expected,
-                got,
-                abs,
-                atol
-            );
-        }
-
-        // Type-7 (NumPy/R default): interpolate between order stats at r = q*(n-1)
-        pub fn bracket(values: &[f64], q: f64) -> (f64, f64, usize, usize) {
-            assert!(!values.is_empty(), "bracket() requires non-empty values");
-            let n = values.len();
-            let q = q.clamp(0.0, 1.0);
-            let r = q * (n.saturating_sub(1) as f64);
-
-            let i_lo = r.floor() as usize;
-            let i_hi = r.ceil() as usize;
-
-            (values[i_lo], values[i_hi], i_lo, i_hi)
-        }
-
-        pub fn assert_in_bracket(label: &str, x: f64, lo: f64, hi: f64, i_lo: usize, i_hi: usize) {
-            assert!(
-                x >= lo && x <= hi,
-                "{label}: {x} not in bracket [{lo}, {hi}] (i_lo={i_lo}, i_hi={i_hi})"
-            );
-        }
-
-        pub fn assert_monotone_chain(label: &str, xs: &[f64]) {
-            for i in 1..xs.len() {
-                assert!(
-                    xs[i] >= xs[i - 1],
-                    "{label}: non-monotone at i={i}: {} < {}",
-                    xs[i],
-                    xs[i - 1]
-                );
-            }
-        }
-    }
-    use helpers::*;
 
     // =============================== Quantiles ===============================
     #[test]

@@ -1,3 +1,5 @@
+#[cfg(test)]
+pub mod test_helpers;
 /*
  * Original version created by by Paul Meng and distributed under Apache-2.0 license.
  *
@@ -7,9 +9,9 @@
  *
  */
 
+pub mod cdf; // CDF-specific impls & tests live here
 pub mod codecs;
-pub mod cdf;       // CDF-specific impls & tests live here
-pub mod quantile;  // Quantile & median impls & tests live here
+pub mod quantile; // Quantile & median impls & tests live here
 
 use ordered_float::OrderedFloat;
 use std::cmp::Ordering;
@@ -448,22 +450,7 @@ mod tests {
     use super::*;
 
     // =============================== Helpers (only what this file needs) ===============================
-    mod helpers {
-        pub fn assert_rel_close(label: &str, expected: f64, got: f64, rtol: f64) {
-            let denom = expected.abs().max(1e-300);
-            let rel = ((expected - got).abs()) / denom;
-            assert!(
-                rel < rtol,
-                "{}: expected ~= {:.9}, got {:.9}, rel_err={:.6e}, rtol={:.6e}",
-                label,
-                expected,
-                got,
-                rel,
-                rtol
-            );
-        }
-    }
-    use helpers::*;
+    use crate::tdigest::test_helpers::*;
 
     // =============================== Merge-digest (exercises external_merge) ===============================
     #[test]
