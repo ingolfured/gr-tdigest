@@ -621,8 +621,10 @@ impl TDigest {
 
 #[cfg(test)]
 mod tests {
-
     use super::*;
+    use crate::quality::Quality; // only used in the n=100 CDF accuracy test
+
+    // =============================== Helpers ===============================
     mod helpers {
         pub fn assert_rel_close(label: &str, expected: f64, got: f64, rtol: f64) {
             let denom = expected.abs().max(1e-300);
@@ -630,192 +632,267 @@ mod tests {
             assert!(
                 rel < rtol,
                 "{}: expected ~= {:.9}, got {:.9}, rel_err={:.6e}, rtol={:.6e}",
-                label, expected, got, rel, rtol
+                label,
+                expected,
+                got,
+                rel,
+                rtol
             );
         }
-        // in your test helpers (tdigest/mod.rs test module or shared utils)
         pub fn assert_abs_close(label: &str, expected: f64, got: f64, atol: f64) {
             let abs = (expected - got).abs();
             assert!(
-                abs <= atol, // <-- non-strict
+                abs <= atol,
                 "{}: expected ~= {:.9}, got {:.9}, abs_err={:.6e}, atol={:.6e}",
-                label, expected, got, abs, atol
+                label,
+                expected,
+                got,
+                abs,
+                atol
             );
         }
 
-    }
+        pub fn ks_mae(exact: &[f64], approx: &[f64]) -> (f64, f64) {
+            assert_eq!(exact.len(), approx.len(), "KS/MAE length mismatch");
+            let mut ks = 0.0;
+            let mut sum = 0.0;
+            for i in 0..exact.len() {
+                let d = (exact[i] - approx[i]).abs();
+                if d > ks {
+                    ks = d;
+                }
+                sum += d;
+            }
+            (ks, sum / exact.len() as f64)
+        }
 
+        pub fn assert_monotone_chain(label: &str, xs: &[f64]) {
+            for i in 1..xs.len() {
+                assert!(
+                    xs[i] >= xs[i - 1],
+                    "{label}: non-monotone at i={i}: {} < {}",
+                    xs[i],
+                    xs[i - 1]
+                );
+            }
+        }
+
+        pub fn assert_strict_increasing(label: &str, xs: &[f64]) {
+            for i in 1..xs.len() {
+                assert!(
+                    xs[i] > xs[i - 1],
+                    "{label}: not strictly increasing at i={i}: {} !> {}",
+                    xs[i],
+                    xs[i - 1]
+                );
+            }
+        }
+
+        pub fn assert_all_in_unit_interval(label: &str, xs: &[f64]) {
+            for (i, &x) in xs.iter().enumerate() {
+                assert!(
+                    (0.0..=1.0).contains(&x),
+                    "{label}: value out of [0,1] at i={i}: {x}"
+                );
+            }
+        }
+
+        pub fn bracket(values: &[f64], q: f64) -> (f64, f64, usize, usize) {
+            assert!(!values.is_empty(), "bracket() requires non-empty values");
+            let n = values.len();
+            // Type-7 (NumPy/R default): interpolate between order stats at r = q*(n-1)
+            let q = q.clamp(0.0, 1.0);
+            let r = q * (n.saturating_sub(1) as f64);
+
+            let i_lo = r.floor() as usize;
+            let i_hi = r.ceil() as usize;
+
+            (values[i_lo], values[i_hi], i_lo, i_hi)
+        }
+
+        pub fn assert_in_bracket(label: &str, x: f64, lo: f64, hi: f64, i_lo: usize, i_hi: usize) {
+            assert!(
+                x >= lo && x <= hi,
+                "{label}: {x} not in bracket [{lo}, {hi}] (i_lo={i_lo}, i_hi={i_hi})"
+            );
+        }
+
+        pub fn assert_cdf_oob_clamps(
+            label: &str,
+            td: &crate::tdigest::TDigest,
+            below: f64,
+            above: f64,
+        ) {
+            let v = td.estimate_cdf(&[below, above]);
+            super::helpers::assert_abs_close(&format!("{label}/min-ε"), 0.0, v[0], 0.0);
+            super::helpers::assert_abs_close(&format!("{label}/max+ε"), 1.0, v[1], 0.0);
+        }
+    }
     use helpers::*;
 
-    #[test]
-    fn centroid_addition_regression_pr_1() {
-        // https://github.com/MnO2/t-digest/pull/1
-        let vals = vec![1.0, 1.0, 1.0, 2.0, 1.0, 1.0];
-        let mut t = TDigest::new_with_size(10);
-        for v in vals { t = t.merge_unsorted(vec![v]); }
-
-        assert_rel_close("median", 1.0, t.estimate_quantile(0.5), 0.01);
-        assert_rel_close("q=0.95", 2.0, t.estimate_quantile(0.95), 0.01);
-    }
-
-    #[test]
-    fn quantiles_uniform_sorted() {
-        let t = TDigest::new_with_size(100)
-            .merge_sorted((1..=1_000_000).map(f64::from).collect());
-
-        assert_rel_close("Q(1.00)", 1_000_000.0, t.estimate_quantile(1.0), 0.01);
-        assert_rel_close("Q(0.99)",   990_000.0, t.estimate_quantile(0.99), 0.01);
-        assert_rel_close("Q(0.01)",    10_000.0, t.estimate_quantile(0.01), 0.01);
-        assert_rel_close("Q(0.00)",         1.0, t.estimate_quantile(0.0), 0.01);
-        assert_rel_close("Q(0.50)",    500_000.0, t.estimate_quantile(0.5), 0.01);
-    }
-
-
-    #[test]
-    fn quantiles_uniform_unsorted() {
-        let t = TDigest::new_with_size(100)
-            .merge_unsorted((1..=1_000_000).map(f64::from).collect());
-
-        assert_rel_close("Q(1.00)", 1_000_000.0, t.estimate_quantile(1.0), 0.01);
-        assert_rel_close("Q(0.99)",   990_000.0, t.estimate_quantile(0.99), 0.01);
-        assert_rel_close("Q(0.01)",    10_000.0, t.estimate_quantile(0.01), 0.01);
-        assert_rel_close("Q(0.00)",         1.0, t.estimate_quantile(0.0), 0.01);
-        assert_rel_close("Q(0.50)",    500_000.0, t.estimate_quantile(0.5), 0.01);
-    }
-
-    #[test]
-    fn quantiles_skewed_sorted() {
-        let mut values: Vec<f64> = (1..=600_000).map(f64::from).collect();
-        for _ in 0..400_000 { values.push(1_000_000.0); }
-        let t = TDigest::new_with_size(100).merge_sorted(values);
-
-        assert_rel_close("Q(0.99)", 1_000_000.0, t.estimate_quantile(0.99), 0.01);
-        assert_rel_close("Q(0.01)",    10_000.0, t.estimate_quantile(0.01), 0.01);
-        assert_rel_close("Q(0.50)",   500_000.0, t.estimate_quantile(0.5),  0.01);
-    }
-
+    // =============================== Merge-digest ===============================
     #[test]
     fn merge_digests_uniform_100x1000() {
         let mut digests: Vec<TDigest> = Vec::new();
         for _ in 1..=100 {
-            let t = TDigest::new_with_size(100)
-                .merge_sorted((1..=1_000).map(f64::from).collect());
+            let t = TDigest::new_with_size(100).merge_sorted((1..=1_000).map(f64::from).collect());
             digests.push(t)
         }
         let t = TDigest::merge_digests(digests);
 
         assert_rel_close("Q(1.00)", 1000.0, t.estimate_quantile(1.0), 0.01);
-        assert_rel_close("Q(0.99)",  990.0, t.estimate_quantile(0.99), 0.01);
+        assert_rel_close("Q(0.99)", 990.0, t.estimate_quantile(0.99), 0.01);
 
-        // original had 0.2 here; keep same tolerance but with message
         let got = t.estimate_quantile(0.01);
         let expected = 10.0;
         let rel = ((expected - got).abs()) / expected;
         assert!(
             rel < 0.2,
             "Q(0.01): expected ~= {:.9}, got {:.9}, rel_err={:.6e}, rtol=2.0e-1",
-            expected, got, rel
+            expected,
+            got,
+            rel
         );
 
-        assert_rel_close("Q(0.00)",   1.0, t.estimate_quantile(0.0), 0.01);
+        assert_rel_close("Q(0.00)", 1.0, t.estimate_quantile(0.0), 0.01);
         assert_rel_close("Q(0.50)", 500.0, t.estimate_quantile(0.5), 0.01);
     }
 
+    // =============================== Quantiles ===============================
+    #[test]
+    fn centroid_addition_regression_pr_1() {
+        // https://github.com/MnO2/t-digest/pull/1
+        let vals = vec![1.0, 1.0, 1.0, 2.0, 1.0, 1.0];
+        let mut t = TDigest::new_with_size(10);
+        for v in vals {
+            t = t.merge_unsorted(vec![v]);
+        }
+        assert_rel_close("median", 1.0, t.estimate_quantile(0.5), 0.01);
+        assert_rel_close("q=0.95", 2.0, t.estimate_quantile(0.95), 0.01);
+    }
+
+    /// n=10, max_size=10 — edge clamps, median bracket, monotone grid.
+    #[test]
+    fn quantiles_small_max10_smalln() {
+        let mut values = vec![-10.0, -1.0, 0.0, 0.0, 2e-10, 1.0, 2.0, 10.0, 1e9, -1e9];
+        values.sort_by(|a, b| a.partial_cmp(b).unwrap());
+        let t = TDigest::new_with_size(10).merge_sorted(values.clone());
+
+        assert_abs_close(
+            "Q(0)",
+            *values.first().unwrap(),
+            t.estimate_quantile(0.0),
+            0.0,
+        );
+        assert_abs_close(
+            "Q(1)",
+            *values.last().unwrap(),
+            t.estimate_quantile(1.0),
+            0.0,
+        );
+
+        let (lo_m, hi_m, _, _) = bracket(&values, 0.5);
+        let med = t.estimate_quantile(0.5);
+        assert_in_bracket("median", med, lo_m, hi_m, 4, 5);
+
+        let grid = [
+            t.estimate_quantile(0.01),
+            t.estimate_quantile(0.10),
+            t.estimate_quantile(0.25),
+            med,
+            t.estimate_quantile(0.75),
+            t.estimate_quantile(0.90),
+            t.estimate_quantile(0.99),
+        ];
+        assert_monotone_chain("quantiles grid", &grid);
+    }
+
+    /// n=100, max_size=10 — quantile lies between bracketing order stats.
+    #[test]
+    fn quantiles_small_max10_medn_100() {
+        let mut values: Vec<f64> = (-30..=69).map(|x| x as f64).collect(); // 100 values
+        values.sort_by(|a, b| a.partial_cmp(b).unwrap());
+        let t = TDigest::new_with_size(10).merge_sorted(values.clone());
+
+        for &(q, label) in &[
+            (0.01, "Q(0.01)"),
+            (0.10, "Q(0.10)"),
+            (0.25, "Q(0.25)"),
+            (0.50, "Q(0.50)"),
+            (0.75, "Q(0.75)"),
+            (0.90, "Q(0.90)"),
+            (0.99, "Q(0.99)"),
+        ] {
+            let (lo, hi, i_lo, i_hi) = bracket(&values, q);
+            let x = t.estimate_quantile(q);
+            assert_in_bracket(label, x, lo, hi, i_lo, i_hi);
+        }
+    }
+
+    /// Even-count median special-case (kept from original).
     #[test]
     fn median_between_centroids_even_count() {
         // median of [-1, -1, ..., 1, 1] should be ~0
         let mut quantile_didnt_work: bool = false;
         for num in [1, 2, 3, 10, 20] {
             let mut t = TDigest::new_with_size(100);
-            for _ in 1..=num { t = t.merge_sorted(vec![-1.0]); }
-            for _ in 1..=num { t = t.merge_sorted(vec![ 1.0]); }
+            for _ in 1..=num {
+                t = t.merge_sorted(vec![-1.0]);
+            }
+            for _ in 1..=num {
+                t = t.merge_sorted(vec![1.0]);
+            }
 
             if t.estimate_quantile(0.5).abs() > 0.1 {
                 quantile_didnt_work = true;
             }
             assert_abs_close("median()", 0.0, t.estimate_median(), 0.01);
         }
-        assert!(
-            quantile_didnt_work,
-            "Sanity: expected at least one case where quantile(0.5) was off enough to trigger the special-case median."
+        assert!(quantile_didnt_work);
+    }
+
+    // =============================== CDF ===============================
+    /// n=10, max_size=10 — negatives/zero/tiny/huge/duplicate + OOB clamps.
+    /// No exact-ECDF dependency; just direct, simple checks.
+    #[test]
+    fn cdf_small_max10_smalln() {
+        let mut values = vec![-1e9, -5.0, -2.0, 0.0, 2.0, 5.0, 1e-10, 2e-10, 2e-10, 1e9];
+        values.sort_by(|a, b| a.partial_cmp(b).unwrap());
+        let td = TDigest::new_with_size(10).merge_sorted(values.clone());
+
+        assert_cdf_oob_clamps(
+            "cdf_small_max10_smalln",
+            &td,
+            values[0] - 1.0,
+            values[values.len() - 1] + 1.0,
         );
+
+        // Local order around dupes/tiny vs larger
+        let trio = td.estimate_cdf(&[1e-10, 2e-10, 5.0]);
+        assert_strict_increasing("cdf trio", &trio);
+        assert_all_in_unit_interval("cdf trio bounds", &trio);
     }
 
+    /// n=100, max_size=10 — accuracy vs exact ECDF (KS/MAE).
     #[test]
-    fn cdf_basic() {
-        let t = TDigest::new_with_size(100).merge_sorted(vec![1.0, 2.0, 3.0, 4.0, 5.0]);
-        let v = t.estimate_cdf(&[3.0, 1.0, 5.0, 0.0, 6.0]);
-        assert_abs_close("CDF(3.0)", 0.5, v[0], 1e-4);
-        assert_abs_close("CDF(1.0)", 0.1, v[1], 1e-4);
-        assert_abs_close("CDF(5.0)", 0.9, v[2], 1e-4);
-        assert_abs_close("CDF(0.0)", 0.0, v[3], 0.0);
-        assert_abs_close("CDF(6.0)", 1.0, v[4], 0.0);
-    }
+    fn cdf_small_max10_medn_100() {
+        // 100-point set with duplicates and extremes
+        let mut values: Vec<f64> = (-30..=69).map(|x| x as f64).collect();
+        values[0] = -1e9;
+        values[1] = -30.0; // duplicate
+        values[98] = 1e-10;
+        values[99] = 1e9;
+        values.sort_by(|a, b| a.partial_cmp(b).unwrap());
 
+        let exact = Quality::exact_ecdf_for_sorted(&values);
+        let td = TDigest::new_with_size(10).merge_sorted(values.clone());
+        let approx = td.estimate_cdf(&values);
 
-    #[test]
-    fn cdf_out_of_bounds() {
-        let t = TDigest::new_with_size(100).merge_sorted(vec![1.0, 2.0, 3.0, 4.0, 5.0]);
-        let v = t.estimate_cdf(&[0.0, 6.0]);
-        assert_abs_close("CDF(0.0)", 0.0, v[0], 0.0);
-        assert_abs_close("CDF(6.0)", 1.0, v[1], 0.0);
-    }
+        let (ks, mae) = ks_mae(&exact, &approx);
+        assert!(ks < 0.035, "CDF KS too large: {:.6e}", ks);
+        assert!(mae < 0.003, "CDF MAE too large: {:.6e}", mae);
 
-    #[test]
-    fn cdf_all_same_value_steps() {
-        let t = TDigest::new_with_size(10).merge_sorted(vec![2.0, 2.0, 2.0, 2.0, 2.0]);
-        let v = t.estimate_cdf(&[1.0, 2.0, 3.0]);
-        assert_abs_close("CDF(<2)", 0.0, v[0], 0.0);
-        assert_abs_close("CDF(=2)", 0.5, v[1], 0.1);
-        assert_abs_close("CDF(>2)", 1.0, v[2], 0.0);
-    }
-
-    #[test]
-    fn cdf_duplicate_centroids_monotonic() {
-        let t = TDigest::new_with_size(100)
-            .merge_sorted(vec![1.0, 1.0, 2.0, 2.0, 2.0, 3.0, 3.0]);
-        let v = t.estimate_cdf(&[2.0, 1.0, 3.0]);
-        assert!(v[0] > v[1] && v[2] > v[0], "CDF monotone with duplicates: {:?}", v);
-        assert!(v[0] > 0.0 && v[0] < 1.0, "CDF in (0,1): {:?}", v);
-    }
-
-    #[test]
-    fn cdf_many_large_one_small() {
-        let mut values = vec![1e9; 100];
-        values.push(-1e9);
-        let t = TDigest::new_with_size(100).merge_sorted(values);
-        let v = t.estimate_cdf(&[-1e9, 0.0, 1e9, 2e9]);
-        assert!(v[0] < 0.02, "CDF(-1e9) too large: {}", v[0]);
-        assert!(v[1] < 0.05, "CDF(0.0) too large: {}", v[1]);
-        assert_abs_close("CDF(2e9)", 1.0, v[3], 0.0);
-    }
-
-    #[test]
-    fn cdf_small_numbers_precision() {
-        let t = TDigest::new_with_size(10)
-            .merge_sorted(vec![1e-10, 2e-10, 3e-10, 4e-10, 5e-10]);
-        let v = t.estimate_cdf(&[2e-10, 3e-10, 6e-10]);
-        assert!(v[0] > 0.1 && v[0] < 0.5, "CDF(2e-10) out of band: {}", v[0]);
-        assert!(v[1] > v[0], "CDF(3e-10) <= CDF(2e-10): {} <= {}", v[1], v[0]);
-        assert_abs_close("CDF(6e-10)", 1.0, v[2], 0.0);
-    }
-
-    #[test]
-    fn cdf_negative_values() {
-        let t = TDigest::new_with_size(10)
-            .merge_sorted(vec![-5.0, -2.0, 0.0, 2.0, 5.0]);
-        let v = t.estimate_cdf(&[-10.0, -2.0, 0.0, 3.0, 10.0]);
-        assert_abs_close("CDF(-10)", 0.0, v[0], 0.0);
-        assert!(v[1] > 0.0 && v[1] < 0.5, "CDF(-2.0) out of band: {}", v[1]);
-        assert!(v[2] > v[1] && v[2] < 0.7, "CDF(0.0) out of band: {}", v[2]);
-        assert!(v[3] > v[2] && v[3] < 1.0, "CDF(3.0) out of band: {}", v[3]);
-        assert_abs_close("CDF(10)", 1.0, v[4], 0.0);
-    }
-
-    #[test]
-    fn cdf_empty_input_is_empty() {
-        let t = TDigest::new_with_size(10).merge_sorted(vec![1.0, 2.0, 3.0]);
-        let v = t.estimate_cdf(&[]);
-        assert_eq!(v.len(), 0, "CDF of empty input should be empty, got {:?}", v);
+        assert_all_in_unit_interval("cdf(100) bounds", &approx);
+        assert_monotone_chain("cdf(100) monotone", &approx);
     }
 }

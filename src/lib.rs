@@ -1,7 +1,7 @@
 mod expressions;
+pub mod quality;
 pub mod tdigest;
 mod utils;
-pub mod quality;
 pub use quality::{Quality, QualityReport};
 
 #[cfg(target_os = "linux")]
