@@ -1,25 +1,16 @@
-#[cfg(test)]
-pub mod test_helpers;
-/*
- * Original version created by by Paul Meng and distributed under Apache-2.0 license.
- *
- * http://www.apache.org/licenses/LICENSE-2.0
- *
- * https://github.com/MnO2/t-digest
- *
- */
-
-pub mod cdf; // CDF-specific impls & tests live here
+pub mod cdf;
 pub mod codecs;
-pub mod quantile; // Quantile & median impls & tests live here
+pub mod quantile;
+pub mod test_helpers;
 
 use ordered_float::OrderedFloat;
-use std::cmp::Ordering;
-
 use serde::{Deserialize, Serialize};
+use std::cmp::Ordering;
+use std::cmp::Reverse;
+use std::collections::BinaryHeap;
+use std::iter::Peekable;
 
-/// Centroid implementation to the cluster mentioned in the paper.
-#[derive(Debug, PartialEq, Eq, Clone, Serialize, Deserialize)]
+#[derive(Debug, Copy, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct Centroid {
     mean: OrderedFloat<f64>,
     weight: OrderedFloat<f64>,
@@ -30,13 +21,11 @@ impl PartialOrd for Centroid {
         Some(self.cmp(other))
     }
 }
-
 impl Ord for Centroid {
     fn cmp(&self, other: &Centroid) -> Ordering {
         self.mean.cmp(&other.mean)
     }
 }
-
 impl Centroid {
     pub fn new(mean: f64, weight: f64) -> Self {
         Centroid {
@@ -44,29 +33,26 @@ impl Centroid {
             weight: OrderedFloat::from(weight),
         }
     }
-
     #[inline]
     pub fn mean(&self) -> f64 {
         self.mean.into_inner()
     }
-
     #[inline]
     pub fn weight(&self) -> f64 {
         self.weight.into_inner()
     }
 
+    /// Fold a batch (sum, weight) into this centroid and return the contributed sum.
     pub fn add(&mut self, sum: f64, weight: f64) -> f64 {
-        let weight_: f64 = self.weight.into_inner();
-        let mean_: f64 = self.mean.into_inner();
-
-        let new_sum: f64 = sum + weight_ * mean_;
-        let new_weight: f64 = weight_ + weight;
-        self.weight = OrderedFloat::from(new_weight);
-        self.mean = OrderedFloat::from(new_sum / new_weight);
+        let w0 = self.weight.into_inner();
+        let m0 = self.mean.into_inner();
+        let new_sum = sum + w0 * m0;
+        let new_w = w0 + weight;
+        self.weight = OrderedFloat::from(new_w);
+        self.mean = OrderedFloat::from(new_sum / new_w);
         new_sum
     }
 }
-
 impl Default for Centroid {
     fn default() -> Self {
         Centroid {
@@ -76,7 +62,6 @@ impl Default for Centroid {
     }
 }
 
-/// T-Digest to be operated on.
 #[derive(Debug, PartialEq, Eq, Clone, Serialize, Deserialize)]
 pub struct TDigest {
     centroids: Vec<Centroid>,
@@ -88,6 +73,68 @@ pub struct TDigest {
 }
 
 impl TDigest {
+    /* ===========================
+     * Public API — up front
+     * =========================== */
+
+    pub fn merge_unsorted(&self, unsorted_values: Vec<f64>) -> TDigest {
+        let mut v: Vec<OrderedFloat<f64>> = unsorted_values
+            .into_iter()
+            .map(OrderedFloat::from)
+            .collect();
+        v.sort();
+        let v = v.into_iter().map(|f| f.into_inner()).collect();
+        self.merge_sorted(v)
+    }
+
+    pub fn merge_sorted(&self, sorted_values: Vec<f64>) -> TDigest {
+        if sorted_values.is_empty() {
+            return self.clone();
+        }
+        let mut result = self.new_result_for_values(&sorted_values);
+        let stream = MergeByMean::from_centroids_and_values(&self.centroids, &sorted_values);
+        let compressed = Self::compress_into(&mut result, self.max_size, stream);
+        result.centroids = compressed;
+        result
+    }
+
+    pub fn merge_digests(digests: Vec<TDigest>) -> TDigest {
+        let max_size = digests.first().map(|d| d.max_size).unwrap_or(100);
+
+        // Pre-reserved runs; no realloc-churn while pushing.
+        let mut runs: Vec<&[Centroid]> = Vec::with_capacity(digests.len());
+        let mut total_count = 0.0;
+        let mut min = OrderedFloat::from(f64::INFINITY);
+        let mut max = OrderedFloat::from(f64::NEG_INFINITY);
+
+        for d in &digests {
+            let n = d.count();
+            if n > 0.0 && !d.centroids.is_empty() {
+                total_count += n;
+                min = std::cmp::min(min, d.min);
+                max = std::cmp::max(max, d.max);
+                runs.push(&d.centroids);
+            }
+        }
+        if total_count == 0.0 {
+            return TDigest::default();
+        }
+
+        let mut result = TDigest::new_with_size(max_size);
+        result.count = OrderedFloat::from(total_count);
+        result.min = min;
+        result.max = max;
+
+        let merged_stream = KWayCentroidMerge::new(runs);
+        let compressed = Self::compress_into(&mut result, max_size, merged_stream);
+        result.centroids = compressed;
+        result
+    }
+
+    /* ===========================
+     * Small utilities
+     * =========================== */
+
     pub fn new_with_size(max_size: usize) -> Self {
         TDigest {
             centroids: Vec::new(),
@@ -98,7 +145,6 @@ impl TDigest {
             min: OrderedFloat::from(f64::NAN),
         }
     }
-
     pub fn new(
         centroids: Vec<Centroid>,
         sum: f64,
@@ -118,60 +164,103 @@ impl TDigest {
             }
         } else {
             let sz = centroids.len();
-            let digests: Vec<TDigest> = vec![
+            let digests = vec![
                 TDigest::new_with_size(100),
                 TDigest::new(centroids, sum, count, max, min, sz),
             ];
-
             Self::merge_digests(digests)
         }
     }
-
     #[inline]
     pub fn mean(&self) -> f64 {
-        let count_: f64 = self.count.into_inner();
-        let sum_: f64 = self.sum.into_inner();
-
-        if count_ > 0.0 {
-            sum_ / count_
+        let n = self.count.into_inner();
+        if n > 0.0 {
+            self.sum.into_inner() / n
         } else {
             0.0
         }
     }
-
     #[inline]
     pub fn sum(&self) -> f64 {
         self.sum.into_inner()
     }
-
     #[inline]
     pub fn count(&self) -> f64 {
         self.count.into_inner()
     }
-
     #[inline]
     pub fn max(&self) -> f64 {
         self.max.into_inner()
     }
-
     #[inline]
     pub fn min(&self) -> f64 {
         self.min.into_inner()
     }
-
     #[inline]
     pub fn is_empty(&self) -> bool {
         self.centroids.is_empty()
     }
-
     #[inline]
     pub fn max_size(&self) -> usize {
         self.max_size
     }
-
     #[inline]
-    pub fn centroids(&self) -> &Vec<Centroid> {
+    pub fn centroids(&self) -> &[Centroid] {
         &self.centroids
+    }
+
+    fn new_result_for_values(&self, values: &[f64]) -> TDigest {
+        let mut r = TDigest::new_with_size(self.max_size());
+        r.count = OrderedFloat::from(self.count() + values.len() as f64);
+        let vmin = OrderedFloat::from(values[0]);
+        let vmax = OrderedFloat::from(values[values.len() - 1]);
+        if self.count() > 0.0 {
+            r.min = std::cmp::min(self.min, vmin);
+            r.max = std::cmp::max(self.max, vmax);
+        } else {
+            r.min = vmin;
+            r.max = vmax;
+        }
+        r
+    }
+
+    /// Piecewise-quadratic tail-friendly scale: r=k/d; q=2r² for r<0.5; q=1−2(1−r)² otherwise.
+    fn k_to_q(k: f64, d: f64) -> f64 {
+        let r = k / d;
+        if r >= 0.5 {
+            let b = 1.0 - r;
+            1.0 - 2.0 * b * b
+        } else {
+            2.0 * r * r
+        }
+    }
+    #[inline]
+    fn clamp(v: f64, lo: f64, hi: f64) -> f64 {
+        v.max(lo).min(hi)
+    }
+
+    /* ===========================
+     * Core compressor (shared)
+     * =========================== */
+
+    fn compress_into<I>(result: &mut TDigest, max_size: usize, items: I) -> Vec<Centroid>
+    where
+        I: IntoIterator<Item = Centroid>,
+    {
+        let mut it = items.into_iter();
+        let first = match it.next() {
+            Some(c) => c,
+            None => return Vec::with_capacity(0),
+        };
+
+        // Read before we borrow `result` mutably into the compressor.
+        let total_count = result.count();
+
+        let mut comp = Compressor::new(result, max_size, first, total_count);
+        for next in it {
+            comp.take(next);
+        }
+        comp.finish()
     }
 }
 
@@ -188,260 +277,160 @@ impl Default for TDigest {
     }
 }
 
-impl TDigest {
-    fn k_to_q(k: f64, d: f64) -> f64 {
-        let k_div_d = k / d;
-        if k_div_d >= 0.5 {
-            let base = 1.0 - k_div_d;
-            1.0 - 2.0 * base * base
-        } else {
-            2.0 * k_div_d * k_div_d
+/* ===========================
+ * Compressor
+ * =========================== */
+
+struct Compressor<'a> {
+    result: &'a mut TDigest,
+    out: Vec<Centroid>,
+    scale: ScaleCursor,
+    curr: Centroid,
+    processed: f64,
+    batch_sum: f64,
+    batch_weight: f64,
+}
+
+impl<'a> Compressor<'a> {
+    fn new(result: &'a mut TDigest, max_size: usize, first: Centroid, total_count: f64) -> Self {
+        Self {
+            result,
+            out: Vec::with_capacity(max_size),
+            scale: ScaleCursor::new(max_size, total_count),
+            curr: first,
+            processed: first.weight(),
+            batch_sum: 0.0,
+            batch_weight: 0.0,
         }
     }
 
     #[inline]
-    fn clamp(v: f64, lo: f64, hi: f64) -> f64 {
-        if v > hi {
-            hi
-        } else if v < lo {
-            lo
+    fn take(&mut self, next: Centroid) {
+        self.processed += next.weight();
+        if self.processed <= self.scale.limit() {
+            self.batch_sum += next.mean() * next.weight();
+            self.batch_weight += next.weight();
         } else {
-            lo.max(v).min(hi)
+            self.flush_curr();
+            self.scale.advance();
+            self.curr = next;
         }
     }
 
-    pub fn merge_unsorted(&self, unsorted_values: Vec<f64>) -> TDigest {
-        let mut sorted_values: Vec<OrderedFloat<f64>> = unsorted_values
-            .into_iter()
-            .map(OrderedFloat::from)
-            .collect();
-        sorted_values.sort();
-        let sorted_values = sorted_values.into_iter().map(|f| f.into_inner()).collect();
-
-        self.merge_sorted(sorted_values)
+    #[inline]
+    fn flush_curr(&mut self) {
+        let contributed = self.curr.add(self.batch_sum, self.batch_weight);
+        self.result.sum = OrderedFloat::from(self.result.sum.into_inner() + contributed);
+        self.batch_sum = 0.0;
+        self.batch_weight = 0.0;
+        self.out.push(self.curr);
     }
 
-    pub fn merge_sorted(&self, sorted_values: Vec<f64>) -> TDigest {
-        if sorted_values.is_empty() {
-            return self.clone();
-        }
+    fn finish(mut self) -> Vec<Centroid> {
+        self.flush_curr();
+        debug_assert!(is_sorted_by_mean(&self.out));
+        self.out.shrink_to_fit();
+        self.out
+    }
+}
 
-        let mut result = TDigest::new_with_size(self.max_size());
-        result.count = OrderedFloat::from(self.count() + (sorted_values.len() as f64));
+/* ===========================
+ * Scale + merge streams
+ * =========================== */
 
-        let maybe_min = OrderedFloat::from(*sorted_values.first().unwrap());
-        let maybe_max = OrderedFloat::from(*sorted_values.last().unwrap());
-
-        if self.count() > 0.0 {
-            result.min = std::cmp::min(self.min, maybe_min);
-            result.max = std::cmp::max(self.max, maybe_max);
-        } else {
-            result.min = maybe_min;
-            result.max = maybe_max;
-        }
-
-        let mut compressed: Vec<Centroid> = Vec::with_capacity(self.max_size);
-
-        let mut k_limit: f64 = 1.0;
-        let mut q_limit_times_count: f64 =
-            Self::k_to_q(k_limit, self.max_size as f64) * result.count.into_inner();
-        k_limit += 1.0;
-
-        let mut iter_centroids = self.centroids.iter().peekable();
-        let mut iter_sorted_values = sorted_values.iter().peekable();
-
-        let mut curr: Centroid = if let Some(c) = iter_centroids.peek() {
-            let curr = **iter_sorted_values.peek().unwrap();
-            if c.mean() < curr {
-                iter_centroids.next().unwrap().clone()
-            } else {
-                Centroid::new(*iter_sorted_values.next().unwrap(), 1.0)
-            }
-        } else {
-            Centroid::new(*iter_sorted_values.next().unwrap(), 1.0)
+struct ScaleCursor {
+    k: f64,
+    d: f64,
+    n: f64,
+    current_limit: f64,
+}
+impl ScaleCursor {
+    fn new(max_size: usize, total_count: f64) -> Self {
+        let mut s = Self {
+            k: 1.0,
+            d: max_size as f64,
+            n: total_count,
+            current_limit: 0.0,
         };
+        s.current_limit = TDigest::k_to_q(s.k, s.d) * s.n;
+        s.k += 1.0;
+        s
+    }
+    #[inline]
+    fn limit(&self) -> f64 {
+        self.current_limit
+    }
+    #[inline]
+    fn advance(&mut self) {
+        self.current_limit = TDigest::k_to_q(self.k, self.d) * self.n;
+        self.k += 1.0;
+    }
+}
 
-        let mut weight_so_far: f64 = curr.weight();
+fn is_sorted_by_mean(cs: &[Centroid]) -> bool {
+    cs.windows(2).all(|w| w[0] <= w[1])
+}
 
-        let mut sums_to_merge: f64 = 0.0;
-        let mut weights_to_merge: f64 = 0.0;
-
-        while iter_centroids.peek().is_some() || iter_sorted_values.peek().is_some() {
-            let next: Centroid = if let Some(c) = iter_centroids.peek() {
-                if iter_sorted_values.peek().is_none()
-                    || c.mean() < **iter_sorted_values.peek().unwrap()
-                {
-                    iter_centroids.next().unwrap().clone()
+struct MergeByMean<'a> {
+    centroids: Peekable<std::slice::Iter<'a, Centroid>>,
+    values: Peekable<std::slice::Iter<'a, f64>>,
+}
+impl<'a> MergeByMean<'a> {
+    fn from_centroids_and_values(centroids: &'a [Centroid], values: &'a [f64]) -> Self {
+        Self {
+            centroids: centroids.iter().peekable(),
+            values: values.iter().peekable(),
+        }
+    }
+}
+impl Iterator for MergeByMean<'_> {
+    type Item = Centroid;
+    fn next(&mut self) -> Option<Self::Item> {
+        match (self.centroids.peek(), self.values.peek()) {
+            (Some(c), Some(v)) => {
+                if c.mean() < **v {
+                    Some(*self.centroids.next().unwrap())
                 } else {
-                    Centroid::new(*iter_sorted_values.next().unwrap(), 1.0)
-                }
-            } else {
-                Centroid::new(*iter_sorted_values.next().unwrap(), 1.0)
-            };
-
-            let next_sum: f64 = next.mean() * next.weight();
-            weight_so_far += next.weight();
-
-            if weight_so_far <= q_limit_times_count {
-                sums_to_merge += next_sum;
-                weights_to_merge += next.weight();
-            } else {
-                result.sum = OrderedFloat::from(
-                    result.sum.into_inner() + curr.add(sums_to_merge, weights_to_merge),
-                );
-                sums_to_merge = 0.0;
-                weights_to_merge = 0.0;
-
-                compressed.push(curr.clone());
-                q_limit_times_count = Self::k_to_q(k_limit, self.max_size as f64) * result.count();
-                k_limit += 1.0;
-                curr = next;
-            }
-        }
-
-        result.sum =
-            OrderedFloat::from(result.sum.into_inner() + curr.add(sums_to_merge, weights_to_merge));
-        compressed.push(curr);
-        compressed.shrink_to_fit();
-        compressed.sort();
-
-        result.centroids = compressed;
-        result
-    }
-
-    fn external_merge(centroids: &mut [Centroid], first: usize, middle: usize, last: usize) {
-        let mut result: Vec<Centroid> = Vec::with_capacity(centroids.len());
-
-        let mut i = first;
-        let mut j = middle;
-
-        while i < middle && j < last {
-            match centroids[i].cmp(&centroids[j]) {
-                Ordering::Less => {
-                    result.push(centroids[i].clone());
-                    i += 1;
-                }
-                Ordering::Greater => {
-                    result.push(centroids[j].clone());
-                    j += 1;
-                }
-                Ordering::Equal => {
-                    result.push(centroids[i].clone());
-                    i += 1;
+                    Some(Centroid::new(*self.values.next().unwrap(), 1.0))
                 }
             }
-        }
-
-        while i < middle {
-            result.push(centroids[i].clone());
-            i += 1;
-        }
-
-        while j < last {
-            result.push(centroids[j].clone());
-            j += 1;
-        }
-
-        i = first;
-        for centroid in result.into_iter() {
-            centroids[i] = centroid;
-            i += 1;
+            (Some(_), None) => Some(*self.centroids.next().unwrap()),
+            (None, Some(_)) => Some(Centroid::new(*self.values.next().unwrap(), 1.0)),
+            (None, None) => None,
         }
     }
+}
 
-    // Merge multiple T-Digests
-    pub fn merge_digests(digests: Vec<TDigest>) -> TDigest {
-        let n_centroids: usize = digests.iter().map(|d| d.centroids.len()).sum();
-        if n_centroids == 0 {
-            return TDigest::default();
-        }
-
-        let max_size = digests.first().unwrap().max_size;
-        let mut centroids: Vec<Centroid> = Vec::with_capacity(n_centroids);
-        let mut starts: Vec<usize> = Vec::with_capacity(digests.len());
-
-        let mut count: f64 = 0.0;
-        let mut min = OrderedFloat::from(f64::INFINITY);
-        let mut max = OrderedFloat::from(f64::NEG_INFINITY);
-
-        let mut start: usize = 0;
-        for digest in digests.into_iter() {
-            starts.push(start);
-
-            let curr_count: f64 = digest.count();
-            if curr_count > 0.0 {
-                min = std::cmp::min(min, digest.min);
-                max = std::cmp::max(max, digest.max);
-                count += curr_count;
-                for centroid in digest.centroids {
-                    centroids.push(centroid);
-                    start += 1;
-                }
+struct KWayCentroidMerge<'a> {
+    runs: Vec<&'a [Centroid]>,
+    pos: Vec<usize>,
+    heap: BinaryHeap<(Reverse<OrderedFloat<f64>>, usize)>,
+}
+impl<'a> KWayCentroidMerge<'a> {
+    fn new(runs: Vec<&'a [Centroid]>) -> Self {
+        let mut heap = BinaryHeap::with_capacity(runs.len());
+        let pos = vec![0; runs.len()];
+        for (i, r) in runs.iter().enumerate() {
+            if let Some(c) = r.first() {
+                heap.push((Reverse(c.mean), i));
             }
         }
-
-        let mut digests_per_block: usize = 1;
-        while digests_per_block < starts.len() {
-            for i in (0..starts.len()).step_by(digests_per_block * 2) {
-                if i + digests_per_block < starts.len() {
-                    let first = starts[i];
-                    let middle = starts[i + digests_per_block];
-                    let last = if i + 2 * digests_per_block < starts.len() {
-                        starts[i + 2 * digests_per_block]
-                    } else {
-                        centroids.len()
-                    };
-
-                    debug_assert!(first <= middle && middle <= last);
-                    Self::external_merge(&mut centroids, first, middle, last);
-                }
-            }
-
-            digests_per_block *= 2;
+        Self { runs, pos, heap }
+    }
+}
+impl Iterator for KWayCentroidMerge<'_> {
+    type Item = Centroid;
+    fn next(&mut self) -> Option<Self::Item> {
+        let (Reverse(_m), run) = self.heap.pop()?;
+        let i = self.pos[run];
+        let slice = self.runs[run];
+        let c = slice[i];
+        self.pos[run] += 1;
+        if self.pos[run] < slice.len() {
+            let n = slice[self.pos[run]];
+            self.heap.push((Reverse(n.mean), run));
         }
-
-        let mut result = TDigest::new_with_size(max_size);
-        let mut compressed: Vec<Centroid> = Vec::with_capacity(max_size);
-
-        let mut k_limit: f64 = 1.0;
-        let mut q_limit_times_count: f64 = Self::k_to_q(k_limit, max_size as f64) * count;
-
-        let mut iter_centroids = centroids.iter_mut();
-        let mut curr = iter_centroids.next().unwrap();
-        let mut weight_so_far: f64 = curr.weight();
-        let mut sums_to_merge: f64 = 0.0;
-        let mut weights_to_merge: f64 = 0.0;
-
-        for centroid in iter_centroids {
-            weight_so_far += centroid.weight();
-
-            if weight_so_far <= q_limit_times_count {
-                sums_to_merge += centroid.mean() * centroid.weight();
-                weights_to_merge += centroid.weight();
-            } else {
-                result.sum = OrderedFloat::from(
-                    result.sum.into_inner() + curr.add(sums_to_merge, weights_to_merge),
-                );
-                sums_to_merge = 0.0;
-                weights_to_merge = 0.0;
-                compressed.push(curr.clone());
-                q_limit_times_count = Self::k_to_q(k_limit, max_size as f64) * count;
-                k_limit += 1.0;
-                curr = centroid;
-            }
-        }
-
-        result.sum =
-            OrderedFloat::from(result.sum.into_inner() + curr.add(sums_to_merge, weights_to_merge));
-        compressed.push(curr.clone());
-        compressed.shrink_to_fit();
-        compressed.sort();
-
-        result.count = OrderedFloat::from(count);
-        result.min = min;
-        result.max = max;
-        result.centroids = compressed;
-        result
+        Some(c)
     }
 }
 
@@ -450,10 +439,8 @@ mod tests {
     use super::*;
     use crate::tdigest::test_helpers::{assert_exact, assert_rel_close};
 
-    // =============================== Merge-digest (exercises external_merge) ===============================
     #[test]
     fn merge_digests_uniform_100x1000() {
-        // Build 100 digests over 1..=1000 and merge them
         let mut digests: Vec<TDigest> = Vec::with_capacity(100);
         for _ in 1..=100 {
             let t = TDigest::new_with_size(100).merge_sorted((1..=1_000).map(f64::from).collect());
@@ -461,21 +448,50 @@ mod tests {
         }
         let t = TDigest::merge_digests(digests);
 
-        // Endpoints: these should be exact for this construction
         assert_exact("Q(1.00)", 1000.0, t.estimate_quantile(1.0));
         assert_exact("Q(0.00)", 1.0, t.estimate_quantile(0.0));
 
-        // High quantile: tight tolerance
         let q99 = t.estimate_quantile(0.99);
         assert_rel_close("Q(0.99)", 990.0, q99, 7e-4);
 
-        // Low quantile: looser tolerance (tails are harder)
         let q01 = t.estimate_quantile(0.01);
-        // relative tolerance 0.2 matches prior intent (<= 20% rel error)
         assert_rel_close("Q(0.01)", 10.0, q01, 2e-1);
 
-        // Median: modest tolerance
         let q50 = t.estimate_quantile(0.5);
         assert_rel_close("Q(0.50)", 500.0, q50, 2e-3);
+    }
+
+    #[test]
+    fn merge_unsorted_smoke_small() {
+        let vals = vec![5.0, 1.0, 3.0, 4.0, 2.0, 2.0, 9.0, 7.0];
+        let t = TDigest::new_with_size(64).merge_unsorted(vals.clone());
+
+        assert_exact("count", vals.len() as f64, t.count());
+        assert_exact("min", 1.0, t.min());
+        assert_exact("max", 9.0, t.max());
+
+        assert_exact("Q(0.00)", 1.0, t.estimate_quantile(0.0));
+        assert_exact("Q(1.00)", 9.0, t.estimate_quantile(1.0));
+
+        let expected_mean = vals.iter().sum::<f64>() / (vals.len() as f64);
+        assert_rel_close("mean", expected_mean, t.mean(), 1e-9);
+    }
+
+    #[test]
+    fn merge_digests_two_blocks_smoke() {
+        let d1 =
+            TDigest::new_with_size(128).merge_sorted((1..=5).map(f64::from).collect::<Vec<_>>());
+        let d2 =
+            TDigest::new_with_size(128).merge_sorted((6..=10).map(f64::from).collect::<Vec<_>>());
+
+        let t = TDigest::merge_digests(vec![d1, d2]);
+
+        assert_exact("count", 10.0, t.count());
+        assert_exact("min", 1.0, t.min());
+        assert_exact("max", 10.0, t.max());
+
+        assert_exact("Q(0.00)", 1.0, t.estimate_quantile(0.0));
+        assert_exact("Q(1.00)", 10.0, t.estimate_quantile(1.0));
+        assert_rel_close("Q(0.50)", 5.5, t.estimate_quantile(0.5), 1e-9);
     }
 }
