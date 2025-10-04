@@ -47,11 +47,11 @@ fn create_tdigest(size: usize, nonce: f64) -> TDigest {
 
 fn create_series() -> Series {
     let mut series = tdigest_to_series(create_tdigest(100, 0.0), "name");
-    (1..9).for_each(|i| {
+    for _ in 1..9 {
         series
             .append(&tdigest_to_series(create_tdigest(100, 0.0), "name"))
             .unwrap();
-    });
+    }
     series
 }
 
