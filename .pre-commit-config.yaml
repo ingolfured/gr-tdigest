@@ -23,6 +23,7 @@ repos:
         language: system
         pass_filenames: false
       - id: cargo-test
-        name: cargo test (src only)
-        entry: cargo test -- src/
+        name: cargo test (all)
+        entry: cargo test
         language: system
+        pass_filenames: false
