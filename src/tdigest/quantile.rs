@@ -152,6 +152,18 @@ mod tests {
         }
         assert_rel_close("median", 1.0, t.estimate_quantile(0.5), 0.01);
         assert_rel_close("q=0.95", 2.0, t.estimate_quantile(0.95), 0.01);
+        let means: Vec<f64> = t.centroids.iter().map(|c| c.mean.into_inner()).collect();
+        assert_eq!(
+            means.len(),
+            2,
+            "expected exactly two centroids, got {:?}",
+            means
+        );
+        assert!(
+            means.contains(&1.0) && means.contains(&2.0),
+            "expected centroid means [1.0, 2.0], got {:?}",
+            means
+        );
     }
 
     /// n=10, max_size=10 — edge clamps, median bracket, monotone grid.

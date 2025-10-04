@@ -558,6 +558,11 @@ mod tests {
         let t = TDigest::new_with_size(64).merge_sorted(vals);
 
         let cs = t.centroids();
+        assert!(
+            cs.windows(2).all(|w| w[0].mean() != w[1].mean()),
+            "duplicate centroid means found"
+        );
+
         assert_eq!(cs.len(), 3);
 
         assert_eq!(cs[0].mean(), 1.0);
