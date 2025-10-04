@@ -10,10 +10,17 @@ use std::cmp::Reverse;
 use std::collections::BinaryHeap;
 use std::iter::Peekable;
 
+/// A centroid summarizes a cluster in the digest.
+///
+/// `singleton` is a *data* flag:
+/// - `true` for an atomic ECDF jump (a raw singleton with `weight==1`, or a pile of
+///   identical values with `weight>=2`),
+/// - `false` for a mixed cluster.
 #[derive(Debug, Copy, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct Centroid {
     mean: OrderedFloat<f64>,
     weight: OrderedFloat<f64>,
+    singleton: bool,
 }
 
 impl PartialOrd for Centroid {
@@ -23,16 +30,32 @@ impl PartialOrd for Centroid {
 }
 impl Ord for Centroid {
     fn cmp(&self, other: &Centroid) -> Ordering {
+        // We never output duplicate means; ordering by mean alone is fine.
         self.mean.cmp(&other.mean)
     }
 }
+
 impl Centroid {
     pub fn new(mean: f64, weight: f64) -> Self {
+        // Default heuristic: weight==1 => singleton; weight>1 is not, unless explicitly marked.
         Centroid {
             mean: OrderedFloat::from(mean),
             weight: OrderedFloat::from(weight),
+            singleton: weight == 1.0,
         }
     }
+
+    /// Construct a centroid known to be a pile of identical values.
+    /// This sets `singleton = true` even if `weight > 1`.
+    pub fn new_singleton_pile(mean: f64, weight: f64) -> Self {
+        debug_assert!(weight >= 1.0);
+        Centroid {
+            mean: OrderedFloat::from(mean),
+            weight: OrderedFloat::from(weight),
+            singleton: true,
+        }
+    }
+
     #[inline]
     pub fn mean(&self) -> f64 {
         self.mean.into_inner()
@@ -41,8 +64,14 @@ impl Centroid {
     pub fn weight(&self) -> f64 {
         self.weight.into_inner()
     }
+    #[inline]
+    pub fn is_singleton(&self) -> bool {
+        self.singleton
+    }
 
-    /// Fold a batch (sum, weight) into this centroid and return the contributed sum.
+    /// Fold a batch `(sum, weight)` into this centroid and return the contributed sum.
+    /// Note: This does *not* mutate `singleton`; the compressor decides whether we remained
+    /// a same-mean pile or got mixed with other means.
     pub fn add(&mut self, sum: f64, weight: f64) -> f64 {
         let w0 = self.weight.into_inner();
         let m0 = self.mean.into_inner();
@@ -53,11 +82,13 @@ impl Centroid {
         new_sum
     }
 }
+
 impl Default for Centroid {
     fn default() -> Self {
         Centroid {
             mean: OrderedFloat::from(0.0),
             weight: OrderedFloat::from(1.0),
+            singleton: true,
         }
     }
 }
@@ -74,7 +105,7 @@ pub struct TDigest {
 
 impl TDigest {
     /* ===========================
-     * Public API — up front
+     * Public API
      * =========================== */
 
     pub fn merge_unsorted(&self, unsorted_values: Vec<f64>) -> TDigest {
@@ -101,7 +132,7 @@ impl TDigest {
     pub fn merge_digests(digests: Vec<TDigest>) -> TDigest {
         let max_size = digests.first().map(|d| d.max_size).unwrap_or(100);
 
-        // Pre-reserved runs; no realloc-churn while pushing.
+        // Pre-reserve runs to avoid churn.
         let mut runs: Vec<&[Centroid]> = Vec::with_capacity(digests.len());
         let mut total_count = 0.0;
         let mut min = OrderedFloat::from(f64::INFINITY);
@@ -145,6 +176,7 @@ impl TDigest {
             min: OrderedFloat::from(f64::NAN),
         }
     }
+
     pub fn new(
         centroids: Vec<Centroid>,
         sum: f64,
@@ -171,6 +203,7 @@ impl TDigest {
             Self::merge_digests(digests)
         }
     }
+
     #[inline]
     pub fn mean(&self) -> f64 {
         let n = self.count.into_inner();
@@ -224,7 +257,8 @@ impl TDigest {
         r
     }
 
-    /// Piecewise-quadratic tail-friendly scale: r=k/d; q=2r² for r<0.5; q=1−2(1−r)² otherwise.
+    /// Piecewise-quadratic tail-friendly scale:
+    /// r = k/d; q = 2r² for r<0.5; q = 1 − 2(1 − r)² otherwise.
     fn k_to_q(k: f64, d: f64) -> f64 {
         let r = k / d;
         if r >= 0.5 {
@@ -253,7 +287,7 @@ impl TDigest {
             None => return Vec::with_capacity(0),
         };
 
-        // Read before we borrow `result` mutably into the compressor.
+        // Read before borrowing `result` mutably.
         let total_count = result.count();
 
         let mut comp = Compressor::new(result, max_size, first, total_count);
@@ -289,6 +323,8 @@ struct Compressor<'a> {
     processed: f64,
     batch_sum: f64,
     batch_weight: f64,
+    /// True if everything batched into `curr` had the same mean as `curr`.
+    curr_same_mean_only: bool,
 }
 
 impl<'a> Compressor<'a> {
@@ -301,6 +337,7 @@ impl<'a> Compressor<'a> {
             processed: first.weight(),
             batch_sum: 0.0,
             batch_weight: 0.0,
+            curr_same_mean_only: true, // so far just `first`
         }
     }
 
@@ -308,19 +345,26 @@ impl<'a> Compressor<'a> {
     fn take(&mut self, next: Centroid) {
         self.processed += next.weight();
         if self.processed <= self.scale.limit() {
+            // Merge `next` into `curr` via batch buffers.
+            self.curr_same_mean_only &= next.mean() == self.curr.mean();
             self.batch_sum += next.mean() * next.weight();
             self.batch_weight += next.weight();
         } else {
+            // Finalize `curr` with whatever we batched.
             self.flush_curr();
             self.scale.advance();
+            // Start a new current centroid.
             self.curr = next;
+            self.curr_same_mean_only = true;
         }
     }
 
     #[inline]
     fn flush_curr(&mut self) {
         let contributed = self.curr.add(self.batch_sum, self.batch_weight);
-        self.result.sum = OrderedFloat::from(self.result.sum.into_inner() + contributed);
+        self.curr.singleton = self.curr.weight() == 1.0 || self.curr_same_mean_only;
+
+        self.result.sum = (self.result.sum.into_inner() + contributed).into();
         self.batch_sum = 0.0;
         self.batch_weight = 0.0;
         self.out.push(self.curr);
@@ -329,8 +373,11 @@ impl<'a> Compressor<'a> {
     fn finish(mut self) -> Vec<Centroid> {
         self.flush_curr();
         debug_assert!(is_sorted_by_mean(&self.out));
-        self.out.shrink_to_fit();
-        self.out
+
+        // Fuse adjacent equal-mean neighbors into piles so weights aren't fragmented.
+        let mut fused = coalesce_adjacent_equal_means(std::mem::take(&mut self.out));
+        fused.shrink_to_fit();
+        fused
     }
 }
 
@@ -371,31 +418,94 @@ fn is_sorted_by_mean(cs: &[Centroid]) -> bool {
     cs.windows(2).all(|w| w[0] <= w[1])
 }
 
+/// Merge adjacent centroids that have the exact same mean into a single centroid.
+/// Keeps `singleton=true` and sums weights.
+fn coalesce_adjacent_equal_means(xs: Vec<Centroid>) -> Vec<Centroid> {
+    if xs.len() <= 1 {
+        return xs;
+    }
+    let mut out: Vec<Centroid> = Vec::with_capacity(xs.len());
+    let mut acc = xs[0];
+    for c in xs.into_iter().skip(1) {
+        if c.mean() == acc.mean() {
+            let w = acc.weight() + c.weight();
+            acc = Centroid::new_singleton_pile(acc.mean(), w);
+        } else {
+            out.push(acc);
+            acc = c;
+        }
+    }
+    out.push(acc);
+    out
+}
+
 struct MergeByMean<'a> {
     centroids: Peekable<std::slice::Iter<'a, Centroid>>,
     values: Peekable<std::slice::Iter<'a, f64>>,
+    /// When pulling from values, group consecutive identical values into a single centroid
+    /// so those piles become `singleton=true` even with weight>1.
+    pending_value_run: Option<(f64, usize)>,
 }
 impl<'a> MergeByMean<'a> {
     fn from_centroids_and_values(centroids: &'a [Centroid], values: &'a [f64]) -> Self {
         Self {
             centroids: centroids.iter().peekable(),
             values: values.iter().peekable(),
+            pending_value_run: None,
         }
     }
+
+    /// Drain a run of identical raw values into one centroid.
+    fn next_values_run(&mut self) -> Option<Centroid> {
+        if let Some((val, len)) = self.pending_value_run.take() {
+            return Some(Centroid::new_singleton_pile(val, len as f64));
+        }
+        let first = *self.values.next()?; // at least one value exists
+        let mut len = 1usize;
+        while let Some(&&v) = self.values.peek() {
+            if v == first {
+                self.values.next();
+                len += 1;
+            } else {
+                break;
+            }
+        }
+        Some(Centroid::new_singleton_pile(first, len as f64))
+    }
 }
+
 impl Iterator for MergeByMean<'_> {
     type Item = Centroid;
     fn next(&mut self) -> Option<Self::Item> {
+        // Always flush any stashed equal-mean value run before peeking again.
+        if self.pending_value_run.is_some() {
+            return self.next_values_run();
+        }
+
         match (self.centroids.peek(), self.values.peek()) {
             (Some(c), Some(v)) => {
                 if c.mean() < **v {
                     Some(*self.centroids.next().unwrap())
+                } else if c.mean() > **v {
+                    self.next_values_run()
                 } else {
-                    Some(Centroid::new(*self.values.next().unwrap(), 1.0))
+                    // Equal means: emit the existing centroid now, stash the *whole* values run.
+                    let target = **v;
+                    let mut len = 0usize;
+                    while let Some(&&vv) = self.values.peek() {
+                        if vv == target {
+                            self.values.next();
+                            len += 1;
+                        } else {
+                            break;
+                        }
+                    }
+                    self.pending_value_run = Some((target, len));
+                    Some(*self.centroids.next().unwrap())
                 }
             }
             (Some(_), None) => Some(*self.centroids.next().unwrap()),
-            (None, Some(_)) => Some(Centroid::new(*self.values.next().unwrap(), 1.0)),
+            (None, Some(_)) => self.next_values_run(),
             (None, None) => None,
         }
     }
@@ -438,6 +548,30 @@ impl Iterator for KWayCentroidMerge<'_> {
 mod tests {
     use super::*;
     use crate::tdigest::test_helpers::{assert_exact, assert_rel_close};
+
+    /// Identical values become singleton piles (weight>1 with `singleton=true`);
+    /// distinct values are weight==1 singletons.
+    #[test]
+    fn singletons_grouped_runs() {
+        // Values: three 1s, one 2, two 3s
+        let vals = vec![1.0, 1.0, 1.0, 2.0, 3.0, 3.0];
+        let t = TDigest::new_with_size(64).merge_sorted(vals);
+
+        let cs = t.centroids();
+        assert_eq!(cs.len(), 3);
+
+        assert_eq!(cs[0].mean(), 1.0);
+        assert_eq!(cs[0].weight(), 3.0);
+        assert!(cs[0].is_singleton());
+
+        assert_eq!(cs[1].mean(), 2.0);
+        assert_eq!(cs[1].weight(), 1.0);
+        assert!(cs[1].is_singleton());
+
+        assert_eq!(cs[2].mean(), 3.0);
+        assert_eq!(cs[2].weight(), 2.0);
+        assert!(cs[2].is_singleton());
+    }
 
     #[test]
     fn merge_digests_uniform_100x1000() {

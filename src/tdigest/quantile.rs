@@ -1,4 +1,3 @@
-// src/tdigest/quantile.rs
 use super::TDigest;
 
 impl TDigest {
@@ -11,19 +10,35 @@ impl TDigest {
         let count_: f64 = self.count.into_inner();
         let rank: f64 = q * count_;
 
+        // Early path for exact median on identical-value piles (even total only):
+        // If both middle order-stat ranks fall strictly inside a *single* centroid
+        // that is a same-mean pile (`singleton=true`), return its mean.
+        if q == 0.5 && (count_ as i64) % 2 == 0 {
+            let r_lo = (count_ as i64) / 2; // lower middle (1-based)
+            let r_hi = r_lo + 1; // upper middle (1-based)
+
+            let mut prev = 0.0;
+            for c in self.centroids.iter() {
+                let next = prev + c.weight();
+                let inside = (prev < r_lo as f64) && ((r_hi as f64) <= next);
+                if inside && c.is_singleton() {
+                    return c.mean();
+                }
+                prev = next;
+            }
+        }
+
+        // Locate the containing centroid using the rank walk.
         let mut pos: usize;
         let mut t: f64;
         if q > 0.5 {
             if q >= 1.0 {
                 return self.max();
             }
-
             pos = 0;
             t = count_;
-
             for (k, centroid) in self.centroids.iter().enumerate().rev() {
                 t -= centroid.weight();
-
                 if rank >= t {
                     pos = k;
                     break;
@@ -33,20 +48,24 @@ impl TDigest {
             if q <= 0.0 {
                 return self.min();
             }
-
             pos = self.centroids.len() - 1;
             t = 0.0;
-
             for (k, centroid) in self.centroids.iter().enumerate() {
                 if rank < t + centroid.weight() {
                     pos = k;
                     break;
                 }
-
                 t += centroid.weight();
             }
         }
 
+        // If we landed inside a pile of identical values, don't interpolate inside it.
+        if self.centroids[pos].is_singleton() && self.centroids[pos].weight() > 1.0 {
+            return self.centroids[pos].mean();
+        }
+
+        // Otherwise, compute a local slope `delta` from neighbors and interpolate,
+        // clamping to adjacent means to keep monotonicity and avoid overshoot.
         let mut delta = 0.0;
         let mut min: f64 = self.min.into_inner();
         let mut max: f64 = self.max.into_inner();
@@ -70,40 +89,59 @@ impl TDigest {
         super::TDigest::clamp(value, min, max)
     }
 
-    fn find_median_between_centroids(&self) -> Option<f64> {
-        if (self.count.into_inner() as i64) % 2 != 0 {
-            return None;
+    /// Find the pair of centroid indices that bracket q=0.5 using the same rank logic
+    /// as `estimate_quantile`, but returning neighbors so we can average their means
+    /// for even totals.
+    fn bracket_centroids_for_median(&self) -> (usize, usize) {
+        debug_assert!(!self.centroids.is_empty());
+        if self.centroids.len() == 1 {
+            return (0, 0);
         }
-        let mut target = (self.count.into_inner() as i64) / 2;
-        for (idx, c) in self.centroids.iter().enumerate() {
-            target -= c.weight() as i64;
-            if target == 0 {
-                let m1 = c.mean();
-                let m2 = self.centroids[idx + 1].mean();
-                return Option::Some((m1 + m2) / 2.0);
+
+        let count_ = self.count();
+        let rank = 0.5 * count_;
+
+        // Walk from the left (q <= 0.5 branch) to locate the containing cell.
+        let mut t = 0.0;
+        for (k, c) in self.centroids.iter().enumerate() {
+            if rank < t + c.weight() {
+                // Inside centroid k → bracket is (k-1, k) if k>0, else (0,1).
+                if k == 0 {
+                    return (0, 1);
+                } else {
+                    return (k - 1, k);
+                }
             }
-            if target < 0 {
-                return Option::None;
-            }
+            t += c.weight();
         }
-        Option::None
+
+        // If we fall off the end due to numeric wiggle, use the last two.
+        let m = self.centroids.len();
+        (m - 2, m - 1)
     }
 
     /// Median with an even-count special case to avoid over-interpolation.
+    /// - If total count is even: return the average of the two *neighboring centroid means*
+    ///   around q=0.5 (independent of centroid weights).
+    /// - If odd: fall back to `estimate_quantile(0.5)`.
     pub fn estimate_median(&self) -> f64 {
-        self.find_median_between_centroids()
-            .unwrap_or(self.estimate_quantile(0.5))
+        let total = self.count().round() as i64;
+        if total <= 0 {
+            return 0.0;
+        }
+        if total % 2 != 0 {
+            return self.estimate_quantile(0.5);
+        }
+        let (il, ir) = self.bracket_centroids_for_median();
+        (self.centroids[il].mean() + self.centroids[ir].mean()) * 0.5
     }
 }
 
 #[cfg(test)]
 mod tests {
+    use crate::tdigest::test_helpers::*;
     use crate::tdigest::TDigest;
 
-    // =============================== Helpers (for quantile tests) ===============================
-    use crate::tdigest::test_helpers::*;
-
-    // =============================== Quantiles ===============================
     #[test]
     fn centroid_addition_regression_pr_1() {
         // https://github.com/MnO2/t-digest/pull/1
@@ -164,7 +202,7 @@ mod tests {
         }
     }
 
-    /// Even-count median special-case (kept from original).
+    /// Even-count median special-case (independent of centroid weights).
     #[test]
     fn median_between_centroids_even_count() {
         // median of [-1, -1, ..., 1, 1] should be ~0
