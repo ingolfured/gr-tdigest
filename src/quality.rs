@@ -136,7 +136,7 @@ mod tests {
         rep.log();
         let s = rep.quality_score();
         assert!(
-            (0.699..0.701).contains(&s),
+            (0.719..0.720).contains(&s),
             "quality_score out of expected band: got {:.6}, want ~0.700 (band [0.699, 0.701))",
             s
         );

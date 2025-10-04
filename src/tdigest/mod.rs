@@ -103,6 +103,19 @@ pub struct TDigest {
     min: OrderedFloat<f64>,
 }
 
+impl Default for TDigest {
+    fn default() -> Self {
+        TDigest {
+            centroids: Vec::new(),
+            max_size: 100,
+            sum: OrderedFloat::from(0.0),
+            count: OrderedFloat::from(0.0),
+            max: OrderedFloat::from(f64::NAN),
+            min: OrderedFloat::from(f64::NAN),
+        }
+    }
+}
+
 impl TDigest {
     /* ===========================
      * Public API
@@ -257,17 +270,16 @@ impl TDigest {
         r
     }
 
-    /// Piecewise-quadratic tail-friendly scale:
-    /// r = k/d; q = 2r² for r<0.5; q = 1 − 2(1 − r)² otherwise.
-    fn k_to_q(k: f64, d: f64) -> f64 {
-        let r = k / d;
-        if r >= 0.5 {
-            let b = 1.0 - r;
-            1.0 - 2.0 * b * b
+    fn q_to_k(q: f64, d: f64) -> f64 {
+        let qq = TDigest::clamp(q, 0.0, 1.0);
+        let r = if qq < 0.5 {
+            (qq * 0.5).sqrt()
         } else {
-            2.0 * r * r
-        }
+            1.0 - ((1.0 - qq) * 0.5).sqrt()
+        };
+        d * r
     }
+
     #[inline]
     fn clamp(v: f64, lo: f64, hi: f64) -> f64 {
         v.max(lo).min(hi)
@@ -276,7 +288,6 @@ impl TDigest {
     /* ===========================
      * Core compressor (shared)
      * =========================== */
-
     fn compress_into<I>(result: &mut TDigest, max_size: usize, items: I) -> Vec<Centroid>
     where
         I: IntoIterator<Item = Centroid>,
@@ -287,10 +298,8 @@ impl TDigest {
             None => return Vec::with_capacity(0),
         };
 
-        // Read before borrowing `result` mutably.
-        let total_count = result.count();
-
-        let mut comp = Compressor::new(result, max_size, first, total_count);
+        let total_n = result.count();
+        let mut comp = Compressor::new(result, max_size, total_n, first);
         for next in it {
             comp.take(next);
         }
@@ -298,73 +307,93 @@ impl TDigest {
     }
 }
 
-impl Default for TDigest {
-    fn default() -> Self {
-        TDigest {
-            centroids: Vec::new(),
-            max_size: 100,
-            sum: OrderedFloat::from(0.0),
-            count: OrderedFloat::from(0.0),
-            max: OrderedFloat::from(f64::NAN),
-            min: OrderedFloat::from(f64::NAN),
-        }
-    }
-}
-
-/* ===========================
- * Compressor
- * =========================== */
-
 struct Compressor<'a> {
+    // output & accounting
     result: &'a mut TDigest,
     out: Vec<Centroid>,
-    scale: ScaleCursor,
+
+    // scale parameters
+    d: f64, // denominator for k (≈ max_size as used in your code)
+    n: f64, // total sample count
+
+    // current centroid under construction
     curr: Centroid,
-    processed: f64,
-    batch_sum: f64,
-    batch_weight: f64,
-    /// True if everything batched into `curr` had the same mean as `curr`.
     curr_same_mean_only: bool,
+    batch_sum: f64,    // pending (mean*weight) to fold into curr
+    batch_weight: f64, // pending weight to fold into curr
+    curr_w: f64,       // curr.weight() + batch_weight (cached)
+
+    // cumulative mass strictly to the LEFT of the current centroid
+    processed_left: f64,
 }
 
 impl<'a> Compressor<'a> {
-    fn new(result: &'a mut TDigest, max_size: usize, first: Centroid, total_count: f64) -> Self {
+    fn new(result: &'a mut TDigest, max_size: usize, total_n: f64, first: Centroid) -> Self {
+        let d = max_size as f64;
+        let curr_w = first.weight();
         Self {
             result,
             out: Vec::with_capacity(max_size),
-            scale: ScaleCursor::new(max_size, total_count),
+            d,
+            n: total_n.max(1.0), // guard against divide-by-zero on degenerate inputs
             curr: first,
-            processed: first.weight(),
+            curr_same_mean_only: true,
             batch_sum: 0.0,
             batch_weight: 0.0,
-            curr_same_mean_only: true, // so far just `first`
+            curr_w,
+            processed_left: 0.0, // nothing to the left at the very first centroid
         }
+    }
+
+    /// Decide whether the current centroid can absorb `next` without violating
+    /// the invariant k(q_R) - k(q_L) ≤ 1, where:
+    ///   q_L = processed_left / n
+    ///   q_R = (processed_left + curr_w + next.weight()) / n
+    #[inline]
+    fn can_absorb(&self, next_w: f64) -> bool {
+        let q_l = self.processed_left / self.n;
+        let q_r = (self.processed_left + self.curr_w + next_w) / self.n;
+
+        // Local k-size:
+        let k_l = TDigest::q_to_k(q_l, self.d);
+        let k_r = TDigest::q_to_k(q_r, self.d);
+        (k_r - k_l) <= 1.0 + 1e-12 // tiny epsilon for fp slop
     }
 
     #[inline]
     fn take(&mut self, next: Centroid) {
-        self.processed += next.weight();
-        if self.processed <= self.scale.limit() {
-            // Merge `next` into `curr` via batch buffers.
+        if self.can_absorb(next.weight()) {
+            // Absorb into the current centroid (defer arithmetic via batch buffers).
             self.curr_same_mean_only &= next.mean() == self.curr.mean();
             self.batch_sum += next.mean() * next.weight();
             self.batch_weight += next.weight();
+            self.curr_w += next.weight();
         } else {
-            // Finalize `curr` with whatever we batched.
+            // Finalize current centroid and move the "left" boundary forward.
             self.flush_curr();
-            self.scale.advance();
-            // Start a new current centroid.
+            self.processed_left += self.curr_w;
+
+            // Start a new centroid with `next`.
             self.curr = next;
             self.curr_same_mean_only = true;
+            self.batch_sum = 0.0;
+            self.batch_weight = 0.0;
+            self.curr_w = self.curr.weight();
         }
     }
 
     #[inline]
     fn flush_curr(&mut self) {
+        // Fold the batch into `curr`.
         let contributed = self.curr.add(self.batch_sum, self.batch_weight);
+
+        // If everything that merged shared the same mean, keep it an atomic jump.
         self.curr.singleton = self.curr.weight() == 1.0 || self.curr_same_mean_only;
 
+        // Account into the result sum.
         self.result.sum = (self.result.sum.into_inner() + contributed).into();
+
+        // Clear batch and emit.
         self.batch_sum = 0.0;
         self.batch_weight = 0.0;
         self.out.push(self.curr);
@@ -372,45 +401,12 @@ impl<'a> Compressor<'a> {
 
     fn finish(mut self) -> Vec<Centroid> {
         self.flush_curr();
-        debug_assert!(is_sorted_by_mean(&self.out));
 
-        // Fuse adjacent equal-mean neighbors into piles so weights aren't fragmented.
+        // After building, fuse adjacent equal means so weights aren't fragmented.
         let mut fused = coalesce_adjacent_equal_means(std::mem::take(&mut self.out));
+        debug_assert!(is_sorted_by_mean(&fused));
         fused.shrink_to_fit();
         fused
-    }
-}
-
-/* ===========================
- * Scale + merge streams
- * =========================== */
-
-struct ScaleCursor {
-    k: f64,
-    d: f64,
-    n: f64,
-    current_limit: f64,
-}
-impl ScaleCursor {
-    fn new(max_size: usize, total_count: f64) -> Self {
-        let mut s = Self {
-            k: 1.0,
-            d: max_size as f64,
-            n: total_count,
-            current_limit: 0.0,
-        };
-        s.current_limit = TDigest::k_to_q(s.k, s.d) * s.n;
-        s.k += 1.0;
-        s
-    }
-    #[inline]
-    fn limit(&self) -> f64 {
-        self.current_limit
-    }
-    #[inline]
-    fn advance(&mut self) {
-        self.current_limit = TDigest::k_to_q(self.k, self.d) * self.n;
-        self.k += 1.0;
     }
 }
 
