@@ -23,6 +23,18 @@ pub struct Centroid {
     singleton: bool,
 }
 
+#[derive(Debug, Copy, Clone, PartialEq, Eq, Serialize, Deserialize)]
+pub enum ScaleFamily {
+    /// Your current piecewise-quadratic tail-friendly scale (default to preserve behavior).
+    Quad,
+    /// k1: arcsine scale; stricter tails than linear.
+    K1,
+    /// k2: logistic scale; forces unit centroids at extremes.
+    K2,
+    /// k3: double-log scale; ultra-strict tails.
+    K3,
+}
+
 impl PartialOrd for Centroid {
     fn partial_cmp(&self, other: &Centroid) -> Option<Ordering> {
         Some(self.cmp(other))
@@ -101,8 +113,8 @@ pub struct TDigest {
     count: OrderedFloat<f64>,
     max: OrderedFloat<f64>,
     min: OrderedFloat<f64>,
+    scale: ScaleFamily, // <— NEW
 }
-
 impl Default for TDigest {
     fn default() -> Self {
         TDigest {
@@ -112,14 +124,41 @@ impl Default for TDigest {
             count: OrderedFloat::from(0.0),
             max: OrderedFloat::from(f64::NAN),
             min: OrderedFloat::from(f64::NAN),
+            scale: ScaleFamily::Quad, // preserve old behavior
         }
     }
 }
 
 impl TDigest {
-    /* ===========================
-     * Public API
-     * =========================== */
+    pub fn new_with_size(max_size: usize) -> Self {
+        TDigest {
+            centroids: Vec::new(),
+            max_size,
+            sum: OrderedFloat::from(0.0),
+            count: OrderedFloat::from(0.0),
+            max: OrderedFloat::from(f64::NAN),
+            min: OrderedFloat::from(f64::NAN),
+            scale: ScaleFamily::Quad, // default
+        }
+    }
+
+    /// New: pick the scale family explicitly.
+    pub fn new_with_size_and_scale(max_size: usize, scale: ScaleFamily) -> Self {
+        TDigest {
+            centroids: Vec::new(),
+            max_size,
+            sum: OrderedFloat::from(0.0),
+            count: OrderedFloat::from(0.0),
+            max: OrderedFloat::from(f64::NAN),
+            min: OrderedFloat::from(f64::NAN),
+            scale,
+        }
+    }
+
+    #[inline]
+    pub fn scale(&self) -> ScaleFamily {
+        self.scale
+    }
 
     pub fn merge_unsorted(&self, unsorted_values: Vec<f64>) -> TDigest {
         let mut v: Vec<OrderedFloat<f64>> = unsorted_values
@@ -144,6 +183,7 @@ impl TDigest {
 
     pub fn merge_digests(digests: Vec<TDigest>) -> TDigest {
         let max_size = digests.first().map(|d| d.max_size).unwrap_or(100);
+        let mut chosen_scale = ScaleFamily::Quad;
 
         // Pre-reserve runs to avoid churn.
         let mut runs: Vec<&[Centroid]> = Vec::with_capacity(digests.len());
@@ -154,6 +194,9 @@ impl TDigest {
         for d in &digests {
             let n = d.count();
             if n > 0.0 && !d.centroids.is_empty() {
+                if runs.is_empty() {
+                    chosen_scale = d.scale; // <— adopt first non-empty's scale
+                }
                 total_count += n;
                 min = std::cmp::min(min, d.min);
                 max = std::cmp::max(max, d.max);
@@ -163,8 +206,8 @@ impl TDigest {
         if total_count == 0.0 {
             return TDigest::default();
         }
+        let mut result = TDigest::new_with_size_and_scale(max_size, chosen_scale);
 
-        let mut result = TDigest::new_with_size(max_size);
         result.count = OrderedFloat::from(total_count);
         result.min = min;
         result.max = max;
@@ -178,17 +221,6 @@ impl TDigest {
     /* ===========================
      * Small utilities
      * =========================== */
-
-    pub fn new_with_size(max_size: usize) -> Self {
-        TDigest {
-            centroids: Vec::new(),
-            max_size,
-            sum: OrderedFloat::from(0.0),
-            count: OrderedFloat::from(0.0),
-            max: OrderedFloat::from(f64::NAN),
-            min: OrderedFloat::from(f64::NAN),
-        }
-    }
 
     pub fn new(
         centroids: Vec<Centroid>,
@@ -206,6 +238,7 @@ impl TDigest {
                 count: OrderedFloat::from(count),
                 max: OrderedFloat::from(max),
                 min: OrderedFloat::from(min),
+                scale: ScaleFamily::Quad,
             }
         } else {
             let sz = centroids.len();
@@ -256,7 +289,7 @@ impl TDigest {
     }
 
     fn new_result_for_values(&self, values: &[f64]) -> TDigest {
-        let mut r = TDigest::new_with_size(self.max_size());
+        let mut r = TDigest::new_with_size_and_scale(self.max_size(), self.scale);
         r.count = OrderedFloat::from(self.count() + values.len() as f64);
         let vmin = OrderedFloat::from(values[0]);
         let vmax = OrderedFloat::from(values[values.len() - 1]);
@@ -270,14 +303,44 @@ impl TDigest {
         r
     }
 
-    fn q_to_k(q: f64, d: f64) -> f64 {
-        let qq = TDigest::clamp(q, 0.0, 1.0);
-        let r = if qq < 0.5 {
-            (qq * 0.5).sqrt()
-        } else {
-            1.0 - ((1.0 - qq) * 0.5).sqrt()
-        };
-        d * r
+    /// Family-aware q -> k mapping. `d` is the scale denominator (≈ max_size).
+    fn q_to_k(q: f64, d: f64, family: ScaleFamily) -> f64 {
+        use std::f64::consts::{LN_2, PI};
+        let eps = 1e-15;
+        let qq = TDigest::clamp(q, eps, 1.0 - eps);
+        match family {
+            // Your existing piecewise-quadratic (kept as-is)
+            ScaleFamily::Quad => {
+                // Inverse of: r=k/d; q = 2r^2 (r<0.5), else 1-2(1-r)^2
+                // Solve for r: r = sqrt(q/2) for q<0.5; r = 1 - sqrt((1-q)/2) otherwise.
+                let r = if qq < 0.5 {
+                    (qq * 0.5).sqrt()
+                } else {
+                    1.0 - ((1.0 - qq) * 0.5).sqrt()
+                };
+                d * r
+            }
+            // k1: arcsine scale
+            ScaleFamily::K1 => {
+                // k = δ/(2π) * asin(2q-1); here d plays the role of δ.
+                let s = (2.0 * qq - 1.0).clamp(-1.0, 1.0).asin();
+                (d / (2.0 * PI)) * s
+            }
+            // k2: logistic scale
+            ScaleFamily::K2 => {
+                // k = δ/(4 ln 2) * ln(q/(1-q))
+                let s = (qq / (1.0 - qq)).ln();
+                (d / (4.0 * LN_2)) * s
+            }
+            // k3: double-log (ultra-strict tails)
+            ScaleFamily::K3 => {
+                // k = δ/4 * ln( ln(1/(1-q)) / ln(1/q) )
+                let a = (1.0 / (1.0 - qq)).ln(); // ln(1/(1-q))
+                let b = (1.0 / qq).ln(); // ln(1/q)
+                let ratio = (a / b).max(eps);
+                (d / 4.0) * ratio.ln()
+            }
+        }
     }
 
     #[inline]
@@ -313,17 +376,17 @@ struct Compressor<'a> {
     out: Vec<Centroid>,
 
     // scale parameters
-    d: f64, // denominator for k (≈ max_size as used in your code)
-    n: f64, // total sample count
+    d: f64,
+    n: f64,
+    family: ScaleFamily,
 
     // current centroid under construction
     curr: Centroid,
     curr_same_mean_only: bool,
-    batch_sum: f64,    // pending (mean*weight) to fold into curr
-    batch_weight: f64, // pending weight to fold into curr
-    curr_w: f64,       // curr.weight() + batch_weight (cached)
+    batch_sum: f64,
+    batch_weight: f64,
+    curr_w: f64,
 
-    // cumulative mass strictly to the LEFT of the current centroid
     processed_left: f64,
 }
 
@@ -331,33 +394,31 @@ impl<'a> Compressor<'a> {
     fn new(result: &'a mut TDigest, max_size: usize, total_n: f64, first: Centroid) -> Self {
         let d = max_size as f64;
         let curr_w = first.weight();
+        let family = result.scale; // <-- read before taking &mut in the struct
+
         Self {
             result,
             out: Vec::with_capacity(max_size),
             d,
-            n: total_n.max(1.0), // guard against divide-by-zero on degenerate inputs
+            n: total_n.max(1.0),
+            family, // <-- use the local copy
             curr: first,
             curr_same_mean_only: true,
             batch_sum: 0.0,
             batch_weight: 0.0,
             curr_w,
-            processed_left: 0.0, // nothing to the left at the very first centroid
+            processed_left: 0.0,
         }
     }
 
-    /// Decide whether the current centroid can absorb `next` without violating
-    /// the invariant k(q_R) - k(q_L) ≤ 1, where:
-    ///   q_L = processed_left / n
-    ///   q_R = (processed_left + curr_w + next.weight()) / n
     #[inline]
     fn can_absorb(&self, next_w: f64) -> bool {
         let q_l = self.processed_left / self.n;
         let q_r = (self.processed_left + self.curr_w + next_w) / self.n;
 
-        // Local k-size:
-        let k_l = TDigest::q_to_k(q_l, self.d);
-        let k_r = TDigest::q_to_k(q_r, self.d);
-        (k_r - k_l) <= 1.0 + 1e-12 // tiny epsilon for fp slop
+        let k_l = TDigest::q_to_k(q_l, self.d, self.family);
+        let k_r = TDigest::q_to_k(q_r, self.d, self.family);
+        (k_r - k_l) <= 1.0 + 1e-12
     }
 
     #[inline]
@@ -403,10 +464,17 @@ impl<'a> Compressor<'a> {
         self.flush_curr();
 
         // After building, fuse adjacent equal means so weights aren't fragmented.
-        let mut fused = coalesce_adjacent_equal_means(std::mem::take(&mut self.out));
+        let fused = coalesce_adjacent_equal_means(std::mem::take(&mut self.out));
         debug_assert!(is_sorted_by_mean(&fused));
-        fused.shrink_to_fit();
-        fused
+
+        // This is safe and sum-preserving, and it won't introduce duplicate means.
+        let min = self.result.min();
+        let max = self.result.max();
+        let enforced = enforce_edge_unit_singletons(fused, min, max);
+
+        let mut out = enforced;
+        out.shrink_to_fit();
+        out
     }
 }
 
@@ -433,6 +501,55 @@ fn coalesce_adjacent_equal_means(xs: Vec<Centroid>) -> Vec<Centroid> {
     }
     out.push(acc);
     out
+}
+
+fn enforce_edge_unit_singletons(mut xs: Vec<Centroid>, min: f64, max: f64) -> Vec<Centroid> {
+    if xs.is_empty() {
+        return xs;
+    }
+
+    // Left edge
+    {
+        let first_mean = xs[0].mean();
+        let first_w = xs[0].weight();
+        if first_w > 1.0 && first_mean > min {
+            let w_rem = first_w - 1.0;
+            // New remainder mean that preserves total sum on the left centroid
+            let m_rem = (first_w * first_mean - min) / w_rem;
+
+            // Replace the original first centroid with the remainder (not a singleton by default)
+            xs[0] = Centroid {
+                mean: OrderedFloat::from(m_rem),
+                weight: OrderedFloat::from(w_rem),
+                singleton: false,
+            };
+            // Insert a 1-weight singleton at the global min in front
+            xs.insert(0, Centroid::new_singleton_pile(min, 1.0));
+        }
+    }
+
+    // Right edge
+    {
+        let last_idx = xs.len() - 1;
+        let last_mean = xs[last_idx].mean();
+        let last_w = xs[last_idx].weight();
+        if last_w > 1.0 && last_mean < max {
+            let w_rem = last_w - 1.0;
+            let m_rem = (last_w * last_mean - max) / w_rem;
+
+            // Replace the original last centroid with the remainder
+            xs[last_idx] = Centroid {
+                mean: OrderedFloat::from(m_rem),
+                weight: OrderedFloat::from(w_rem),
+                singleton: false,
+            };
+            // Append a 1-weight singleton at the global max
+            xs.push(Centroid::new_singleton_pile(max, 1.0));
+        }
+    }
+
+    debug_assert!(is_sorted_by_mean(&xs), "edge enforcement broke sort order");
+    xs
 }
 
 struct MergeByMean<'a> {

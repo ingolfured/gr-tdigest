@@ -1,5 +1,4 @@
-// src/quality.rs
-use crate::tdigest::TDigest;
+use crate::tdigest::{ScaleFamily, TDigest};
 
 #[derive(Debug, Clone)]
 pub struct Quality {
@@ -51,6 +50,7 @@ impl QualityReport {
             self.quality_score()
         )
     }
+
     pub fn log(&self) {
         eprintln!("{}", self.to_line());
     }
@@ -63,7 +63,7 @@ impl Quality {
 
     pub fn run(&self) -> QualityReport {
         use crate::tdigest::cdf::exact_ecdf_for_sorted;
-        use rand::{rngs::StdRng, Rng, SeedableRng}; // <-- moved here
+        use rand::{rngs::StdRng, Rng, SeedableRng};
 
         let mut rng = StdRng::seed_from_u64(self.seed);
         let mut values: Vec<f64> = Vec::with_capacity(self.n);
@@ -78,16 +78,13 @@ impl Quality {
         while values.len() < self.n {
             let bucket: u32 = rng.gen_range(0..100);
             let x = if bucket < 70 {
-                // 70% uniform in [-1, 1]
                 rng.gen_range(-1.0..1.0)
             } else if bucket < 90 {
-                // 20% normal(0, 1000) via Box–Muller
                 let u1: f64 = rng.gen::<f64>().clamp(1e-12, 1.0);
                 let u2: f64 = rng.gen::<f64>();
                 let z = (-2.0 * u1.ln()).sqrt() * (2.0 * std::f64::consts::PI * u2).cos();
                 z * 1000.0
             } else {
-                // 10% very large magnitudes: 10^U(3,9) with random sign
                 let exp = rng.gen_range(3.0..9.0);
                 let mag = 10f64.powf(exp);
                 if rng.gen_bool(0.5) {
@@ -105,6 +102,67 @@ impl Quality {
 
         let t0 = TDigest::new_with_size(self.max_size);
         let digest = t0.merge_sorted(values.clone()); // taking-ownership API => clone
+        let td_cdf = digest.estimate_cdf(&values);
+
+        let mut ks = 0.0;
+        let mut sum_abs = 0.0;
+        for (a, b) in exact_cdf.iter().zip(td_cdf.iter()) {
+            let d = (a - b).abs();
+            if d > ks {
+                ks = d;
+            }
+            sum_abs += d;
+        }
+        let mae = sum_abs / (self.n as f64);
+
+        QualityReport {
+            n: self.n,
+            max_abs_err: ks,
+            mean_abs_err: mae,
+        }
+    }
+
+    /// Run the quality harness using a specific scale family.
+    pub fn run_with_scale(&self, family: ScaleFamily) -> QualityReport {
+        use crate::tdigest::cdf::exact_ecdf_for_sorted;
+        use rand::{rngs::StdRng, Rng, SeedableRng};
+
+        let mut rng = StdRng::seed_from_u64(self.seed);
+        let mut values: Vec<f64> = Vec::with_capacity(self.n);
+        if self.n == 0 {
+            return QualityReport {
+                n: 0,
+                max_abs_err: f64::NAN,
+                mean_abs_err: f64::NAN,
+            };
+        }
+        values.push(0.0);
+        while values.len() < self.n {
+            let bucket: u32 = rng.gen_range(0..100);
+            let x = if bucket < 70 {
+                rng.gen_range(-1.0..1.0)
+            } else if bucket < 90 {
+                let u1: f64 = rng.gen::<f64>().clamp(1e-12, 1.0);
+                let u2: f64 = rng.gen::<f64>();
+                let z = (-2.0 * u1.ln()).sqrt() * (2.0 * std::f64::consts::PI * u2).cos();
+                z * 1000.0
+            } else {
+                let exp = rng.gen_range(3.0..9.0);
+                let mag = 10f64.powf(exp);
+                if rng.gen_bool(0.5) {
+                    mag
+                } else {
+                    -mag
+                }
+            };
+            values.push(x);
+        }
+
+        values.sort_by(|a, b| a.partial_cmp(b).unwrap());
+        let exact_cdf = exact_ecdf_for_sorted(&values);
+
+        let t0 = TDigest::new_with_size_and_scale(self.max_size, family);
+        let digest = t0.merge_sorted(values.clone());
         let td_cdf = digest.estimate_cdf(&values);
 
         let mut ks = 0.0;
@@ -165,5 +223,36 @@ mod tests {
             s_base,
             s_better
         );
+    }
+
+    #[test]
+    fn quality_regression_scales_fixed_seed() {
+        let q = Quality::new(100_000, 1000, 42);
+
+        let mut results = Vec::new();
+        let expected = [
+            (ScaleFamily::Quad, 0.720_f64),
+            (ScaleFamily::K1, 0.533_f64),
+            (ScaleFamily::K2, 0.862_f64),
+            (ScaleFamily::K3, 0.867_f64),
+        ];
+        for (fam, _) in expected {
+            let rep = q.run_with_scale(fam);
+            eprintln!("{:?} -> {}", fam, rep.to_line());
+            results.push((fam, rep));
+        }
+
+        let score_tol = 5e-3;
+        for ((fam, exp_score), (_, rep)) in expected.iter().zip(results.iter()) {
+            let got = rep.quality_score();
+            assert!(
+                (got - exp_score).abs() <= score_tol,
+                "Score regression for {:?}: got {:.3}, expected {:.3} ± {:.3}",
+                fam,
+                got,
+                exp_score,
+                score_tol
+            );
+        }
     }
 }
