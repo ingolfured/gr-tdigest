@@ -60,7 +60,7 @@ def test_estimate_quantile_f64():
     assert df_merged_median.item() == 3.0
 
 
-def test_estimate_quantile_f32():
+def test_estimate_quantile_32():
 
     df_median = (
         df_float.with_columns(col("values").cast(Float32))

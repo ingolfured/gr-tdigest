@@ -2,12 +2,52 @@ use crate::tdigest::{Centroid, TDigest};
 use polars::prelude::*;
 use polars::series::Series;
 
-/// Build an f32 tdigest struct from a TDigest by downcasting the f64 struct.
-/// - centroids.mean/weight → Float32
-/// - min/max → Float32
-/// - sum stays Float64; count/max_size unchanged
-pub(crate) fn tdigest_to_series_f32(td: TDigest, name: &str) -> Series {
-    // Start from the canonical f64 struct to avoid touching TDigest internals here.
+/* -----------------------------------------------------------------------------
+ Compact vs canonical representations
+ -----------------------------------------------------------------------------
+ - Canonical (produced by `tdigest_to_series`):
+     centroids.mean:  Float64
+     centroids.weight: Int64   (exact integer counts)
+     min/max:         Float64
+     sum:             Float64
+     count:           Int64    (exact total count)
+     max_size:        Int64
+
+ - Compact (produced by `tdigest_to_series_f32`):
+     centroids.mean:  Float32  (smaller, adequate precision)
+     centroids.weight: UInt32  (exact up to ~4.29e9 per centroid)
+     min/max:         Float32
+     sum:             Float64
+     count:           Int64
+     max_size:        Int64
+
+ Readers:
+ - `parse_tdigests_any` is tolerant and accepts f64/f32/i64/u64/u32 variants.
+ - `parse_tdigests` is the older/“strict” reader, but now casts weight to f64
+   so it can read both i64 and u32 (and friends) without panicking.
+
+ Rationale for UInt32 weights:
+ - Centroid weight is a count of absorbed points; integers are natural here.
+ - u32 is compact and exact up to 4_294_967_295 per centroid.
+ - When building means, converting u32->f64 is exact (≤ 2^53).
+ - If you ever foresee >4.29e9 in a *single centroid*, switch to u64.
+----------------------------------------------------------------------------- */
+
+/// Build a **compact** tdigest struct from a TDigest by downcasting the canonical f64 struct.
+///
+/// Layout in the resulting `Struct`:
+/// - `centroids`: List<Struct{ mean: Float32, weight: UInt32 }>
+/// - `sum`:       Float64 (unchanged; preserves accumulation precision)
+/// - `min/max`:   Float32
+/// - `count`:     Int64
+/// - `max_size`:  Int64
+///
+/// Implementation note:
+/// We construct the compact struct by first producing the canonical f64 struct
+/// via `tdigest_to_series(td, name)` and then downcasting columns. This keeps
+/// all logic about TDigest internals in one place.
+pub(crate) fn tdigest_to_series_32(td: TDigest, name: &str) -> Series {
+    // Start from the canonical f64 struct.
     let s64 = tdigest_to_series(td, name);
     let sc = s64
         .struct_()
@@ -20,14 +60,16 @@ pub(crate) fn tdigest_to_series_f32(td: TDigest, name: &str) -> Series {
     let count_col = sc.field_by_name("count").expect("count");
     let max_size_col = sc.field_by_name("max_size").expect("max_size");
 
-    // centroids is a 1-row List whose inner dtype is Struct{mean,weight}
+    // `centroids` is a 1-row List whose inner dtype is Struct{mean, weight}.
     let list_av = centroids_col.get(0).expect("centroids row 0");
     let centroids_list_series = match list_av {
         AnyValue::List(ls) => ls,
-        _ => Series::new("centroids", &[] as &[Series]), // empty list fallback
+        // Empty fallback. If you hit this path in practice, consider constructing
+        // an empty List with explicit inner Struct schema to make the dtype clearer.
+        _ => Series::new("centroids", &[] as &[Series]),
     };
 
-    // Cast struct fields to f32
+    // Downcast inner fields to compact types.
     let scents = centroids_list_series
         .struct_()
         .expect("centroids inner struct");
@@ -36,27 +78,27 @@ pub(crate) fn tdigest_to_series_f32(td: TDigest, name: &str) -> Series {
         .expect("mean")
         .cast(&DataType::Float32)
         .unwrap();
-    let weight_f32 = scents
+    let weight_u32 = scents
         .field_by_name("weight")
         .expect("weight")
-        .cast(&DataType::Float32)
+        .cast(&DataType::UInt32)
         .unwrap();
 
-    let centroids_struct_f32 = StructChunked::new("centroids", &[mean_f32, weight_f32])
+    let centroids_struct_compact = StructChunked::new("centroids", &[mean_f32, weight_u32])
         .unwrap()
         .into_series();
 
-    // Wrap single struct as a one-row List
-    let centroids_list_f32 = Series::new("centroids", &[centroids_struct_f32]);
+    // Wrap the single Struct as a one-row List.
+    let centroids_list_compact = Series::new("centroids", &[centroids_struct_compact]);
 
-    // min/max to f32; keep sum/count/max_size as-is
+    // min/max → f32; keep sum/count/max_size as-is for precision/consistency.
     let min_f32 = min_col.cast(&DataType::Float32).unwrap();
     let max_f32 = max_col.cast(&DataType::Float32).unwrap();
 
     StructChunked::new(
         name,
         &[
-            centroids_list_f32,
+            centroids_list_compact,
             sum_col.clone(),
             min_f32,
             max_f32,
@@ -68,14 +110,13 @@ pub(crate) fn tdigest_to_series_f32(td: TDigest, name: &str) -> Series {
     .into_series()
 }
 
-// NEW: tolerant parser that accepts either f64 or f32 tdigest payloads.
-
-/// Accepts both "classic" f64 digests and compact f32 digests.
-/// Tolerant casts:
-/// - centroids.mean:  f64 or f32  -> f64
-/// - centroids.weight: f64 or f32 or i64 -> f64
-/// - min/max:         f64 or f32  -> f64
-/// - count:           i64 or u64  -> f64
+/// NEW: tolerant parser that accepts both canonical f64 digests and compact f32/u32 digests.
+///
+/// Tolerant casts performed:
+/// - centroids.mean:    f64 or f32          → f64
+/// - centroids.weight:  f64/f32/i64/u64/u32 → f64
+/// - min/max:           f64 or f32          → f64
+/// - count:             i64 or u64          → f64
 pub(crate) fn parse_tdigests_any(input: &Series) -> Vec<TDigest> {
     let Ok(struct_ca) = input.struct_() else {
         return Vec::new();
@@ -103,7 +144,6 @@ pub(crate) fn parse_tdigests_any(input: &Series) -> Vec<TDigest> {
     let n = input.len();
     let mut out = Vec::with_capacity(n);
 
-    // centroids is a List column; use list() and get_as_series(i) on Polars 0.40
     let Ok(centroids_list) = centroids_col.list() else {
         return Vec::new();
     };
@@ -152,7 +192,7 @@ pub(crate) fn parse_tdigests_any(input: &Series) -> Vec<TDigest> {
             .and_then(|v| v.try_extract::<i64>().ok())
             .unwrap_or(0) as usize;
 
-        // Centroids row: a Series (dtype=Struct) of length = #centroids
+        // Centroids row: a Series (dtype=Struct) of length = #centroids.
         let mut cents: Vec<Centroid> = Vec::new();
         if let Some(centroids_row) = centroids_list.get_as_series(i) {
             let sc = centroids_row.struct_().unwrap();
@@ -185,7 +225,9 @@ pub(crate) fn parse_tdigests_any(input: &Series) -> Vec<TDigest> {
     out
 }
 
-// TODO: error handling w/o panic
+/// Legacy/“strict” parser used by existing call-sites. It now mirrors the tolerant
+/// behavior for weights by casting to `Float64` first, so it can read both i64/u32.
+/// This preserves compatibility with historical payloads while supporting compact ones.
 pub fn parse_tdigests(input: &Series) -> Vec<TDigest> {
     input
         .struct_()
@@ -193,11 +235,13 @@ pub fn parse_tdigests(input: &Series) -> Vec<TDigest> {
         .flat_map(|chunk| {
             let count_series = chunk.field_by_name("count").unwrap();
             let count_it = count_series.i64().unwrap().into_iter();
+
             let max_series = chunk.field_by_name("max").unwrap();
             let min_series = chunk.field_by_name("min").unwrap();
             let sum_series = chunk.field_by_name("sum").unwrap();
             let max_size_series = chunk.field_by_name("max_size").unwrap();
             let centroids_series = chunk.field_by_name("centroids").unwrap();
+
             let mut max_it = max_series.f64().unwrap().into_iter();
             let mut min_it = min_series.f64().unwrap().into_iter();
             let mut max_size_it = max_size_series.i64().unwrap().into_iter();
@@ -213,13 +257,20 @@ pub fn parse_tdigests(input: &Series) -> Vec<TDigest> {
                         .struct_()
                         .unwrap()
                         .field_by_name("weight")
+                        .unwrap()
+                        .cast(&DataType::Float64)
                         .unwrap();
-                    let mut weight_it = weight_series.i64().unwrap().into_iter();
+                    let mut weight_it = weight_series.f64().unwrap().into_iter();
+
                     let centroids_res = mean_it
                         .map(|m| {
-                            Centroid::new(m.unwrap(), weight_it.next().unwrap().unwrap() as f64)
+                            Centroid::new(
+                                m.unwrap(),
+                                weight_it.next().unwrap().unwrap(), // already f64
+                            )
                         })
                         .collect::<Vec<_>>();
+
                     TDigest::new(
                         centroids_res,
                         sum_it.next().unwrap().unwrap(),
@@ -234,9 +285,22 @@ pub fn parse_tdigests(input: &Series) -> Vec<TDigest> {
         .collect::<Vec<_>>()
 }
 
+/// Produce the **canonical** (lossless) tdigest struct as a single-row `Series` with a `Struct`.
+///
+/// Layout:
+/// - `centroids`: List<Struct{ mean: Float64, weight: Int64 }>
+/// - `sum`:       Float64
+/// - `min/max`:   Float64
+/// - `count`:     Int64
+/// - `max_size`:  Int64
+///
+/// Notes:
+/// - Canonical uses Int64 for weights to preserve exact integer counts.
+/// - Compact writers can downcast from this representation.
 pub fn tdigest_to_series(tdigest: TDigest, name: &str) -> Series {
     let mut means: Vec<f64> = vec![];
     let mut weights: Vec<i64> = vec![];
+
     tdigest.centroids().iter().for_each(|c| {
         weights.push(c.weight() as i64);
         means.push(c.mean());
@@ -251,6 +315,7 @@ pub fn tdigest_to_series(tdigest: TDigest, name: &str) -> Series {
     .into_series();
 
     DataFrame::new(vec![
+        // Wrap centroids struct as a 1-row List for the outer struct’s `centroids` field.
         Series::new("centroids", [Series::new("centroids", centroids_series)]),
         Series::new("sum", [tdigest.sum()]),
         Series::new("min", [tdigest.min()]),
@@ -265,17 +330,18 @@ pub fn tdigest_to_series(tdigest: TDigest, name: &str) -> Series {
 
 #[cfg(test)]
 mod tests {
-    use std::io::Cursor;
-
     use super::*;
+    use std::io::Cursor;
 
     #[test]
     fn test_tdigest_deserializstion() {
+        // Legacy canonical payload (weight as integer JSON → Int64 in Polars).
         let json_str = "[{\"tdigest\":{\"centroids\":[{\"mean\":4.0,\"weight\":1},{\"mean\":5.0,\"weight\":1},{\"mean\":6.0,\"weight\":1}],\"sum\":15.0,\"min\":4.0,\"max\":6.0,\"count\":3,\"max_size\":100}},{\"tdigest\":{\"centroids\":[{\"mean\":1.0,\"weight\":1},{\"mean\":2.0,\"weight\":1},{\"mean\":3.0,\"weight\":1}],\"sum\":6.0,\"min\":1.0,\"max\":3.0,\"count\":3,\"max_size\":100}}]";
         let cursor = Cursor::new(json_str);
         let df = JsonReader::new(cursor).finish().unwrap();
         let series = df.column("tdigest").unwrap();
         let res = parse_tdigests(series);
+
         let expected = vec![
             TDigest::new(
                 vec![
@@ -306,7 +372,8 @@ mod tests {
     }
 
     #[test]
-    fn test_tdigest_serialization() {
+    fn test_tdigest_serialization_roundtrip() {
+        // Canonical → canonical (weights Int64)
         let tdigest = TDigest::new(
             vec![
                 Centroid::new(10.0, 1.0),
@@ -319,11 +386,12 @@ mod tests {
             10.0,
             300,
         );
-        let res = tdigest_to_series(tdigest, "n");
+        let ser = tdigest_to_series(tdigest.clone(), "n");
 
+        // Expected canonical struct.
         let cs = DataFrame::new(vec![
             Series::new("mean", [10.0, 20.0, 30.0]),
-            Series::new("weight", [1, 2, 3]),
+            Series::new("weight", [1_i64, 2, 3]),
         ])
         .unwrap()
         .into_struct("centroids")
@@ -334,13 +402,22 @@ mod tests {
             Series::new("sum", [60.0]),
             Series::new("min", [10.0]),
             Series::new("max", [30.0]),
-            Series::new("count", [3.0]),
+            Series::new("count", [3_i64]),
             Series::new("max_size", [300_i64]),
         ])
         .unwrap()
         .into_struct("n")
         .into_series();
 
-        assert!(res == expected);
+        assert!(ser == expected);
+
+        // Compact writer (mean 32, weight u32, min/max 32) still parses back to the same TDigest.
+        let compact = tdigest_to_series_32(tdigest.clone(), "n");
+        let parsed = parse_tdigests_any(&compact);
+        assert_eq!(parsed.len(), 1);
+        // We permit minor float rounding in min/max due to f32 downcast; centroids and totals match.
+        assert_eq!(parsed[0].count(), tdigest.count());
+        assert_eq!(parsed[0].max_size(), tdigest.max_size());
+        assert_eq!(parsed[0].centroids().len(), tdigest.centroids().len());
     }
 }

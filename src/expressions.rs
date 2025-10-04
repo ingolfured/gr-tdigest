@@ -1,5 +1,5 @@
 #![allow(clippy::unused_unit)]
-use crate::tdigest::codecs::tdigest_to_series_f32;
+use crate::tdigest::codecs::tdigest_to_series_32;
 use polars::prelude::*;
 
 use crate::tdigest::codecs::parse_tdigests_any;
@@ -63,7 +63,7 @@ fn tdigest_fields() -> Vec<Field> {
     )
 }
 
-fn tdigest_fields_f32() -> Vec<Field> {
+fn tdigest_fields_32() -> Vec<Field> {
     // compact payload: f32 centroids + min/max, keep sum f64
     tdigest_fields_cfg(
         DataType::Float32, // mean
@@ -77,11 +77,8 @@ fn tdigest_output(_: &[Field]) -> PolarsResult<Field> {
     Ok(Field::new("tdigest", DataType::Struct(tdigest_fields())))
 }
 
-fn tdigest_output_f32(_: &[Field]) -> PolarsResult<Field> {
-    Ok(Field::new(
-        "tdigest",
-        DataType::Struct(tdigest_fields_f32()),
-    ))
+fn tdigest_output_32(_: &[Field]) -> PolarsResult<Field> {
+    Ok(Field::new("tdigest", DataType::Struct(tdigest_fields_32())))
 }
 
 // fn tdigest_fields() -> Vec<Field> {
@@ -198,24 +195,24 @@ pub(crate) fn tdigest(inputs: &[Series], kwargs: TDigestKwargs) -> PolarsResult<
 }
 
 // testable impl
-pub(crate) fn tdigest_f32_impl(inputs: &[Series], max_size: usize) -> PolarsResult<Series> {
+pub(crate) fn tdigest_32_impl(inputs: &[Series], max_size: usize) -> PolarsResult<Series> {
     let mut td = tdigest_from_series(inputs, max_size)?;
     if td.is_empty() {
         td = TDigest::new(Vec::new(), 100.0, 0.0, 0.0, 0.0, 0);
     }
-    Ok(tdigest_to_series_f32(td, inputs[0].name()))
+    Ok(tdigest_to_series_32(td, inputs[0].name()))
 }
 
 // expr forwarder
-#[polars_expr(output_type_func=tdigest_output_f32)]
-pub(crate) fn tdigest_f32(inputs: &[Series], kwargs: TDigestKwargs) -> PolarsResult<Series> {
-    tdigest_f32_impl(inputs, kwargs.max_size)
+#[polars_expr(output_type_func=tdigest_output_32)]
+pub(crate) fn tdigest_32(inputs: &[Series], kwargs: TDigestKwargs) -> PolarsResult<Series> {
+    tdigest_32_impl(inputs, kwargs.max_size)
 }
 
 // #[polars_expr(output_type_func=tdigest_output)]
-// pub(crate) fn tdigest_f32(inputs: &[Series], kwargs: TDigestKwargs) -> PolarsResult<Series> {
+// pub(crate) fn tdigest_32(inputs: &[Series], kwargs: TDigestKwargs) -> PolarsResult<Series> {
 //     // Phase 1: behavior-identical to `tdigest` so this compiles and ships safely.
-//     // Next phase will switch this to an f32 payload (new schema + serializer).
+//     // Next phase will switch this to a 32 payload (new schema + serializer).
 //     let td = tdigest_from_series(inputs, kwargs.max_size)?;
 //     Ok(tdigest_to_series(td, inputs[0].name()))
 // }
@@ -295,7 +292,7 @@ mod tests {
             .unwrap()];
 
         let s64 = super::tdigest_impl(&inputs, 100).unwrap(); // f64 schema Series
-        let s32 = super::tdigest_f32_impl(&inputs, 100).unwrap(); // f32 schema Series
+        let s32 = super::tdigest_32_impl(&inputs, 100).unwrap(); // 32 schema Series
 
         let td64 = parse_tdigests_any(&s64).into_iter().next().unwrap();
         let td32 = parse_tdigests_any(&s32).into_iter().next().unwrap();
@@ -326,7 +323,7 @@ mod tests {
             .into_iter()
             .next()
             .unwrap();
-        let td32 = parse_tdigests_any(&super::tdigest_f32_impl(&inputs, 100).unwrap())
+        let td32 = parse_tdigests_any(&super::tdigest_32_impl(&inputs, 100).unwrap())
             .into_iter()
             .next()
             .unwrap();

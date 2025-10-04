@@ -15,12 +15,12 @@ lib = Path(__file__).parent
 
 
 
-def tdigest(expr: 'IntoExpr', max_size: int = 100, f32: bool = False) -> pl.Expr:
+def tdigest(expr: 'IntoExpr', max_size: int = 100, use_32: bool = False) -> pl.Expr:
     """
-    Compute a TDigest or TDigest (f32) depending on the f32 flag.
-    If f32 is True, use the f32-optimized implementation.
+    Compute a TDigest or TDigest (32) depending on the use_32 flag.
+    If use_32 is True, use the 32-bit optimized implementation.
     """
-    function_name = "tdigest_f32" if f32 else "tdigest"
+    function_name = "tdigest_32" if use_32 else "tdigest"
     return register_plugin_function(
         plugin_path=Path(__file__).parent,
         function_name=function_name,
