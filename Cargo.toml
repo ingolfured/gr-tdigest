@@ -5,7 +5,7 @@ edition = "2021"
 
 [lib]
 name = "polars_tdigest"
-crate-type = ["rlib"]
+crate-type = ["rlib", "cdylib"]
 
 [dependencies]
 rayon = "1.11"
@@ -22,10 +22,10 @@ ordered-float = { version = "5.1.0", features = ["serde"] }
 serde_json = "1.0.145"
 rand = "0.9.2"
 
-# Python glue (optional)
-pyo3 = { version = "0.25", optional = true }
-# Need the `derive` feature for `pyo3_polars::derive::polars_expr`
-pyo3-polars = { version = "0.24", optional = true, features = ["derive"] }
+pyo3 = { version = "0.25", features = ["extension-module", "abi3-py312"], optional = true }
+pyo3-polars = { version = "0.24", optional = true }
+numpy = { version = "0.25.0", optional = true }
+bincode = "2.0.1"
 
 [dev-dependencies]
 criterion = "0.7.0"

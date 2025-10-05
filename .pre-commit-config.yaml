@@ -7,23 +7,35 @@ repos:
         entry: python -m ruff check . --fix --exit-non-zero-on-fix
         language: system
         pass_filenames: false
+
       - id: cargo-build
         name: cargo build
         entry: cargo build
         language: system
         pass_filenames: false
+
       - id: cargo-fmt
         name: cargo fmt --all (auto-fix)
         entry: cargo fmt --all
         language: system
         pass_filenames: false
+
       - id: cargo-clippy
         name: cargo clippy --all-features --fix
         entry: cargo clippy --all-features --fix --allow-dirty --allow-staged
         language: system
         pass_filenames: false
+
       - id: cargo-test
         name: cargo test (all)
         entry: cargo test
         language: system
         pass_filenames: false
+
+      - id: python-smoke
+        name: build & import smoke (.env)
+        language: system
+        pass_filenames: false
+        files: ^(pyproject\.toml|Cargo\.toml|Cargo\.lock|src/|polars_tdigest/|tests/)
+        entry: >
+          bash -lc 'set -e; if [[ ! -x .env/bin/python || ! -x .env/bin/maturin ]]; then echo "[smoke] .env not ready; run: python3.12 -m venv .env && ./.env/bin/pip install -e .[dev]" >&2; exit 1; fi; ./.env/bin/maturin develop; ./.env/bin/python -c "import sys, polars as pl; import polars_tdigest as pt; print(\"python:\", sys.version.split()[0]); print(\"polars:\", pl.__version__); print(\"polars_tdigest:\", getattr(pt, \"__version__\", \"ok\"))"'
