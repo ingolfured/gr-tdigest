@@ -498,53 +498,114 @@ fn coalesce_adjacent_equal_means(xs: Vec<Centroid>) -> Vec<Centroid> {
     out
 }
 
-fn enforce_edge_unit_singletons(mut xs: Vec<Centroid>, min: f64, max: f64) -> Vec<Centroid> {
-    if xs.is_empty() {
+fn enforce_edge_unit_singletons(xs: Vec<Centroid>, min: f64, max: f64) -> Vec<Centroid> {
+    let n = xs.len();
+    if n == 0 {
         return xs;
     }
 
-    // Left edge
-    {
-        let first_mean = xs[0].mean();
-        let first_w = xs[0].weight();
-        if first_w > 1.0 && first_mean > min {
-            let w_rem = first_w - 1.0;
-            // New remainder mean that preserves total sum on the left centroid
-            let m_rem = (first_w * first_mean - min) / w_rem;
+    if n == 1 {
+        let c = xs[0];
+        let left_split = c.weight() > 1.0 && c.mean() > min;
+        let right_split = c.weight() > 1.0 && c.mean() < max;
 
-            // Replace the original first centroid with the remainder (not a singleton by default)
-            xs[0] = Centroid {
+        if !left_split && !right_split {
+            return xs; // fast path: nothing to do
+        }
+
+        let mut out = Vec::with_capacity(3);
+
+        // Left split if needed
+        let mut core = c;
+        if left_split {
+            out.push(Centroid::new_singleton_pile(min, 1.0));
+            let w_rem = c.weight() - 1.0;
+            let m_rem = (c.weight() * c.mean() - min) / w_rem;
+            core = Centroid {
                 mean: OrderedFloat::from(m_rem),
                 weight: OrderedFloat::from(w_rem),
                 singleton: false,
             };
-            // Insert a 1-weight singleton at the global min in front
-            xs.insert(0, Centroid::new_singleton_pile(min, 1.0));
         }
-    }
 
-    // Right edge
-    {
-        let last_idx = xs.len() - 1;
-        let last_mean = xs[last_idx].mean();
-        let last_w = xs[last_idx].weight();
-        if last_w > 1.0 && last_mean < max {
-            let w_rem = last_w - 1.0;
-            let m_rem = (last_w * last_mean - max) / w_rem;
-
-            // Replace the original last centroid with the remainder
-            xs[last_idx] = Centroid {
+        // Right split if needed
+        if right_split {
+            let w_rem = core.weight() - 1.0;
+            let m_rem = (core.weight() * core.mean() - max) / w_rem;
+            out.push(Centroid {
                 mean: OrderedFloat::from(m_rem),
                 weight: OrderedFloat::from(w_rem),
                 singleton: false,
-            };
-            // Append a 1-weight singleton at the global max
-            xs.push(Centroid::new_singleton_pile(max, 1.0));
+            });
+            out.push(Centroid::new_singleton_pile(max, 1.0));
+        } else {
+            out.push(core);
         }
+
+        debug_assert!(is_sorted_by_mean(&out));
+        return out;
     }
 
-    debug_assert!(is_sorted_by_mean(&xs), "edge enforcement broke sort order");
-    xs
+    // n >= 2
+    let left_split = xs[0].weight() > 1.0 && xs[0].mean() > min;
+    let right_split = xs[n - 1].weight() > 1.0 && xs[n - 1].mean() < max;
+
+    if !left_split && !right_split {
+        return xs; // fast path: nothing to do
+    }
+
+    // Allocate exactly what we need: original n plus up to 2 singletons.
+    let mut out = Vec::with_capacity(n + (left_split as usize) + (right_split as usize));
+
+    // ---- Left edge
+    let mut first = xs[0];
+    if left_split {
+        out.push(Centroid::new_singleton_pile(min, 1.0));
+        let w_rem = first.weight() - 1.0;
+        let m_rem = (first.weight() * first.mean() - min) / w_rem;
+        first = Centroid {
+            mean: OrderedFloat::from(m_rem),
+            weight: OrderedFloat::from(w_rem),
+            singleton: false,
+        };
+    }
+    out.push(first);
+
+    // ---- Middle slice (Centroid is Copy → memcpy)
+    if n > 2 {
+        out.extend_from_slice(&xs[1..n - 1]);
+    }
+
+    // ---- Right edge
+    let prev_mean = out.last().map(|c| c.mean()).unwrap_or(xs[n - 1].mean());
+    if right_split {
+        let w_rem = xs[n - 1].weight() - 1.0;
+        let m_rem = (xs[n - 1].weight() * xs[n - 1].mean() - max) / w_rem;
+        let remainder = Centroid {
+            mean: OrderedFloat::from(m_rem),
+            weight: OrderedFloat::from(w_rem),
+            singleton: false,
+        };
+
+        if remainder.mean() < prev_mean {
+            // Extremely rare numeric wobble: keep order by swapping with the last
+            let last_idx = out.len() - 1;
+            let prev = out[last_idx];
+            out[last_idx] = remainder;
+            out.push(prev);
+        } else {
+            out.push(remainder);
+        }
+        out.push(Centroid::new_singleton_pile(max, 1.0));
+    } else {
+        // No right split → append original last
+        if xs[n - 1].mean() >= prev_mean {
+            out.push(xs[n - 1]);
+        } // else: order would break; inputs should be sorted already
+    }
+
+    debug_assert!(is_sorted_by_mean(&out), "edge enforcement broke sort order");
+    out
 }
 
 struct MergeByMean<'a> {
