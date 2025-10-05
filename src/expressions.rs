@@ -24,8 +24,8 @@ const SUPPORTED_TYPES: &[DataType] = &[
 ];
 
 #[cfg_attr(feature = "python", polars_expr(output_type = Float64))]
-fn estimate_cdf(inputs: &[Series]) -> PolarsResult<Series> {
-    estimate_cdf_impl(inputs)
+fn estimate_cdf(inputs: &[Series], kwargs: CDFKwargs) -> PolarsResult<Series> {
+    estimate_cdf_impl(inputs, kwargs.xs)
 }
 
 #[cfg_attr(feature = "python", polars_expr(output_type = Float64))]
@@ -61,6 +61,11 @@ fn tdigest_32(inputs: &[Series], kwargs: TDigestKwargs) -> PolarsResult<Series> 
 #[derive(Debug, Deserialize)]
 struct QuantileKwargs {
     quantile: f64,
+}
+
+#[derive(Debug, Deserialize)]
+struct CDFKwargs {
+    xs: Vec<f64>,
 }
 
 #[derive(Debug, Deserialize)]
@@ -174,22 +179,12 @@ fn estimate_quantile_impl(inputs: &[Series], q: f64) -> PolarsResult<Series> {
     Ok(Series::new("".into(), out))
 }
 
-fn estimate_cdf_impl(inputs: &[Series]) -> PolarsResult<Series> {
+fn estimate_cdf_impl(inputs: &[Series], xs: Vec<f64>) -> PolarsResult<Series> {
     let td = parse_tdigest(&inputs[..1]);
     if td.is_empty() {
         return Ok(Series::new("".into(), [None::<f64>]));
     }
-    let x_series = &inputs[1];
-    let x_values = x_series.f64()?;
-    let xs: Vec<Option<f64>> = x_values.into_iter().collect();
-    let out: Vec<Option<f64>> = if xs.iter().any(|v| v.is_none()) {
-        xs.iter()
-            .map(|o| o.map(|v| td.estimate_cdf(&[v])[0]))
-            .collect()
-    } else {
-        let vals: Vec<f64> = xs.iter().map(|o| o.unwrap()).collect();
-        td.estimate_cdf(&vals).into_iter().map(Some).collect()
-    };
+    let out = td.estimate_cdf(&xs);
     Ok(Series::new("".into(), out))
 }
 
@@ -220,8 +215,7 @@ mod tests {
         let q_ser = super::estimate_quantile_impl(&[td_ser.clone()], 0.5).unwrap();
         let q = q_ser.f64().unwrap().get(0).unwrap();
         assert_exact("estimate_quantile_impl median = {q}, expected 2.0", 2.0, q);
-        let cdf_ser =
-            super::estimate_cdf_impl(&[td_ser, Series::new("".into(), &[2.0_f64])]).unwrap();
+        let cdf_ser = super::estimate_cdf_impl(&[td_ser], vec![2.0_f64]).unwrap();
         let cdf = cdf_ser.f64().unwrap().get(0).unwrap();
         assert_exact("estimate_cdf_impl CDF(2.0) = {cdf}, expected 0.5", 0.5, cdf);
     }

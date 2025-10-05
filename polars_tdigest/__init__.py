@@ -13,6 +13,23 @@ if TYPE_CHECKING:
 
 lib = Path(__file__).parent
 
+try:
+    from .polars_tdigest import TDigest, __version__  # compiled extension
+except Exception:
+    TDigest = None
+    __version__ = "0.0.0-dev"
+
+__all__ = [
+    "TDigest",
+    "__version__",
+    "tdigest",
+    "estimate_quantile",
+    "estimate_cdf",
+    "estimate_median",
+    "merge_tdigests",
+]
+
+
 
 
 def tdigest(expr: 'IntoExpr', max_size: int = 100, use_32: bool = False) -> pl.Expr:
@@ -42,18 +59,14 @@ def estimate_quantile(expr: IntoExpr, quantile: float) -> pl.Expr:
     )
 
 
-def estimate_cdf(expr: IntoExpr, x: Union[float, int, Sequence[float], pl.Series, pl.Expr]) -> pl.Expr:
-    if isinstance(x, (float, int, pl.Expr, pl.Series)):
-        x_arg = x
-    else:
-        x_arg = pl.Series("x", x)
+def estimate_cdf(expr: IntoExpr, xs: Union[float, int, Sequence[float], pl.Series, pl.Expr]) -> pl.Expr:
     return register_plugin_function(
         plugin_path=Path(__file__).parent,
         function_name="estimate_cdf",
         args=expr,
         is_elementwise=False,
         returns_scalar=False,
-        kwargs={"x": x_arg},
+        kwargs={"xs": xs},
     )
 
 def estimate_median(expr: IntoExpr) -> pl.Expr:

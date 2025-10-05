@@ -1,3 +1,6 @@
+#![cfg(any(test, feature = "python"))]
+mod expressions;
+
 pub mod quality;
 pub mod tdigest;
 mod utils;
@@ -10,23 +13,18 @@ use jemallocator::Jemalloc;
 #[cfg(target_os = "linux")]
 static ALLOC: Jemalloc = Jemalloc;
 
-// ---------------------- Python glue (feature-gated) ----------------------
-// Everything PyO3-related is compiled ONLY when the `python` feature is enabled.
-
-#[cfg(any(test, feature = "python"))]
-mod expressions;
+#[cfg(feature = "python")]
+mod py;
 
 #[cfg(feature = "python")]
 use pyo3::prelude::*;
 #[cfg(feature = "python")]
-use pyo3::types::PyModule;
-
-#[cfg(feature = "python")]
-mod py;
+use pyo3::types::PyModuleMethods;
 
 #[cfg(feature = "python")]
 #[pymodule]
 fn polars_tdigest(m: &Bound<'_, PyModule>) -> PyResult<()> {
     m.add("__version__", env!("CARGO_PKG_VERSION"))?;
+    py::register(m)?;
     Ok(())
 }

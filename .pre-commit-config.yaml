@@ -32,6 +32,12 @@ repos:
         language: system
         pass_filenames: false
 
+      - id: pytest
+        name: pytest (python)
+        entry: bash -lc 'pytest -q'
+        language: system
+        pass_filenames: false
+
       - id: python-smoke
         name: build & import smoke (.env)
         language: system

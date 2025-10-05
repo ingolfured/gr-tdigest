@@ -53,7 +53,7 @@ impl Centroid {
         Centroid {
             mean: OrderedFloat::from(mean),
             weight: OrderedFloat::from(weight),
-            singleton: weight == 1.0,
+            singleton: (weight == 1.0),
         }
     }
 
@@ -113,8 +113,9 @@ pub struct TDigest {
     count: OrderedFloat<f64>,
     max: OrderedFloat<f64>,
     min: OrderedFloat<f64>,
-    scale: ScaleFamily, // <— NEW
+    scale: ScaleFamily,
 }
+
 impl Default for TDigest {
     fn default() -> Self {
         TDigest {
@@ -130,16 +131,30 @@ impl Default for TDigest {
 }
 
 impl TDigest {
+    /// Keep Quad to preserve your crate’s default behavior.
     pub fn new_with_size(max_size: usize) -> Self {
-        TDigest {
-            centroids: Vec::new(),
-            max_size,
-            sum: OrderedFloat::from(0.0),
-            count: OrderedFloat::from(0.0),
-            max: OrderedFloat::from(f64::NAN),
-            min: OrderedFloat::from(f64::NAN),
-            scale: ScaleFamily::Quad, // default
-        }
+        Self::new_with_size_and_scale(max_size, ScaleFamily::Quad)
+    }
+
+    /// Build from unsorted values (convenience over `merge_unsorted`).
+    pub fn from_unsorted(values: &[f64], max_size: usize) -> TDigest {
+        let base = TDigest::new_with_size(max_size);
+        base.merge_unsorted(values.to_vec())
+    }
+
+    /// Convenience: estimate the q-quantile via your existing method (defined in `quantile.rs`).
+    pub fn quantile(&self, q: f64) -> f64 {
+        self.estimate_quantile(q)
+    }
+
+    /// Convenience: estimate CDF(x) via your existing method (defined in `cdf.rs`).
+    pub fn cdf(&self, x: &[f64]) -> Vec<f64> {
+        self.estimate_cdf(x)
+    }
+
+    /// Convenience: median == quantile(0.5).
+    pub fn median(&self) -> f64 {
+        self.estimate_quantile(0.5)
     }
 
     /// New: pick the scale family explicitly.
@@ -190,7 +205,7 @@ impl TDigest {
             let n = d.count();
             if n > 0.0 && !d.centroids.is_empty() {
                 if runs.is_empty() {
-                    chosen_scale = d.scale; // <— adopt first non-empty's scale
+                    chosen_scale = d.scale; // adopt first non-empty's scale
                 }
                 total_count += n;
                 min = std::cmp::min(min, d.min);
@@ -304,10 +319,9 @@ impl TDigest {
         let eps = 1e-15;
         let qq = TDigest::clamp(q, eps, 1.0 - eps);
         match family {
-            // Your existing piecewise-quadratic (kept as-is)
+            // Piecewise-quadratic
             ScaleFamily::Quad => {
                 // Inverse of: r=k/d; q = 2r^2 (r<0.5), else 1-2(1-r)^2
-                // Solve for r: r = sqrt(q/2) for q<0.5; r = 1 - sqrt((1-q)/2) otherwise.
                 let r = if qq < 0.5 {
                     (qq * 0.5).sqrt()
                 } else {
@@ -317,19 +331,16 @@ impl TDigest {
             }
             // k1: arcsine scale
             ScaleFamily::K1 => {
-                // k = δ/(2π) * asin(2q-1); here d plays the role of δ.
                 let s = (2.0 * qq - 1.0).clamp(-1.0, 1.0).asin();
                 (d / (2.0 * PI)) * s
             }
             // k2: logistic scale
             ScaleFamily::K2 => {
-                // k = δ/(4 ln 2) * ln(q/(1-q))
                 let s = (qq / (1.0 - qq)).ln();
                 (d / (4.0 * LN_2)) * s
             }
-            // k3: double-log (ultra-strict tails)
+            // k3: double-log
             ScaleFamily::K3 => {
-                // k = δ/4 * ln( ln(1/(1-q)) / ln(1/q) )
                 let a = (1.0 / (1.0 - qq)).ln(); // ln(1/(1-q))
                 let b = (1.0 / qq).ln(); // ln(1/q)
                 let ratio = (a / b).max(eps);
@@ -395,8 +406,6 @@ impl<'a> Compressor<'a> {
         let n_inv = 1.0 / n;
         let family = result.scale;
         let curr_w = first.weight();
-
-        // At the start: processed_left = 0 ⇒ q_l = 0
         let k_left = TDigest::q_to_k(0.0, d, family);
 
         Self {
@@ -417,7 +426,6 @@ impl<'a> Compressor<'a> {
 
     #[inline]
     fn can_absorb(&self, next_w: f64) -> bool {
-        // Right boundary includes current run (curr_w) plus the next item.
         let q_r = (self.processed_left + self.curr_w + next_w) * self.n_inv;
         let k_r = TDigest::q_to_k(q_r, self.d, self.family);
         (k_r - self.k_left) <= 1.0 - 1e-12
@@ -469,12 +477,10 @@ impl<'a> Compressor<'a> {
         let fused = coalesce_adjacent_equal_means(std::mem::take(&mut self.out));
         debug_assert!(is_sorted_by_mean(&fused));
 
-        // This is safe and sum-preserving, and it won't introduce duplicate means.
+        // Enforce unit singletons at edges if necessary (safe, preserves sum).
         let min = self.result.min();
         let max = self.result.max();
-        let enforced = enforce_edge_unit_singletons(fused, min, max);
-
-        let mut out = enforced;
+        let mut out = enforce_edge_unit_singletons(fused, min, max);
         out.shrink_to_fit();
         out
     }
@@ -517,7 +523,7 @@ fn enforce_edge_unit_singletons(xs: Vec<Centroid>, min: f64, max: f64) -> Vec<Ce
         let right_split = c.weight() > 1.0 && c.mean() < max;
 
         if !left_split && !right_split {
-            return xs; // fast path: nothing to do
+            return xs; // fast path
         }
 
         let mut out = Vec::with_capacity(3);
@@ -558,7 +564,7 @@ fn enforce_edge_unit_singletons(xs: Vec<Centroid>, min: f64, max: f64) -> Vec<Ce
     let right_split = xs[n - 1].weight() > 1.0 && xs[n - 1].mean() < max;
 
     if !left_split && !right_split {
-        return xs; // fast path: nothing to do
+        return xs; // fast path
     }
 
     // Allocate exactly what we need: original n plus up to 2 singletons.
@@ -608,7 +614,7 @@ fn enforce_edge_unit_singletons(xs: Vec<Centroid>, min: f64, max: f64) -> Vec<Ce
         // No right split → append original last
         if xs[n - 1].mean() >= prev_mean {
             out.push(xs[n - 1]);
-        } // else: order would break; inputs should be sorted already
+        }
     }
 
     debug_assert!(is_sorted_by_mean(&out), "edge enforcement broke sort order");
@@ -622,6 +628,7 @@ struct MergeByMean<'a> {
     /// so those piles become `singleton=true` even with weight>1.
     pending_value_run: Option<(f64, usize)>,
 }
+
 impl<'a> MergeByMean<'a> {
     fn from_centroids_and_values(centroids: &'a [Centroid], values: &'a [f64]) -> Self {
         Self {
@@ -692,6 +699,7 @@ struct KWayCentroidMerge<'a> {
     pos: Vec<usize>,
     heap: BinaryHeap<(Reverse<OrderedFloat<f64>>, usize)>,
 }
+
 impl<'a> KWayCentroidMerge<'a> {
     fn new(runs: Vec<&'a [Centroid]>) -> Self {
         let mut heap = BinaryHeap::with_capacity(runs.len());
@@ -704,6 +712,7 @@ impl<'a> KWayCentroidMerge<'a> {
         Self { runs, pos, heap }
     }
 }
+
 impl Iterator for KWayCentroidMerge<'_> {
     type Item = Centroid;
     fn next(&mut self) -> Option<Self::Item> {
