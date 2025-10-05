@@ -1,50 +1,98 @@
-# T-Digest Polars Plugin
+# polars-tdigest
 
-This Polars plugin is a wrapper around the [T-Digest Rust implementation](https://docs.rs/tdigest/latest/tdigest/). It not only provides means to compute an estimated qunatile, but exposes the tdigest creation and merging functionality so it can be used to estimate quantiles in a distributed environment.
+A Polars plugin and Rust library for distributed quantile estimation using [T-Digest](https://docs.rs/tdigest/latest/tdigest/).
 
-For an example see the [Yellow Taxi Notebook](./tdigest_yellow_taxi.ipynb). Note that this example is a bit artifical as it doesn't distribute the computation. It is mainly meant to show how to use the plugin with multiple partitions of a dataset. It does not make sense to use this plugin for computations on a single machine as the tdigest computation essentially adds overhead to the percentile computation and is therefore slower than computing the actual percentile.
+- Fast, mergeable quantile estimation for large/distributed datasets
+- Native Rust implementation, with Python bindings for Polars
+- Supports both canonical (f64) and compact (32-bit) payloads
+- Easily integrates with Polars DataFrames and expressions
 
-# How to contribute
+## Example
 
-## Dev setup
+See the [Yellow Taxi Notebook](./tdigest_yellow_taxi.ipynb) for a usage example.
 
-Setup your virtual environment with a python version `>=3.8`, e.g. use 
-```bash
-python -m venv .env
-source .env/bin/activate
-``` .
-Install the python dependencies used for development:
-```bash
-python -m pip install -r requirements.txt
+Minimal Python usage:
+```python
+from polars_tdigest import tdigest
+import polars as pl
+
+df = pl.DataFrame({"values": [1, 2, 3, 4, 5]})
+df = df.with_columns(
+    tdigest("values", max_size=100, use_32=True)
+)
 ```
 
-Install [Rust](https://rustup.rs/).
+## Requirements
 
-## Build
+- **Python:** 3.12+ recommended (works with 3.8+)
+- **Rust:** 1.70+ (2021 edition)
+- **Polars:** 0.51.x (Rust and Python)
+- **Maturin:** for building Python extensions
 
-In order to build the package, please run `maturin develop`. If you want to test performance, run `maturin develop --release`. 
+## Development Setup
 
-## Developing using cargo
+1. **Python environment:**
+   ```bash
+   python3.12 -m venv .env
+   source .env/bin/activate
+   python -m pip install -r requirements.txt
+   ```
 
-Cargo commands (e.g. `cargo build`, `cargo test`) don't work out of the box. 
-In order to use cargo instead of maturin for local development, remove `extension-module` from `cargo.toml`: 
-replace 
-```
-pyo3 = { version = "0.21.2", features = ["extension-module", "abi3-py38"] }
-```
-with 
+2. **Rust toolchain:**
+   - Install from [rustup.rs](https://rustup.rs/)
+   - Recommended: `rustup update stable`
 
-```
-pyo3 = { version = "0.21.2", features = ["abi3-py38"] }
-```
+3. **Build the Python extension:**
+   ```bash
+   maturin develop
+   # or for optimized builds:
+   maturin develop --release
+   ```
 
-## Commit / Release
+4. **Pre-commit hooks:**
+   - This repo uses [pre-commit](https://pre-commit.com/) to enforce formatting, linting, and test hygiene.
+   - Install pre-commit and set up hooks:
+     ```bash
+     pip install pre-commit
+     pre-commit install
+     ```
+   - To run all checks manually:
+     ```bash
+     pre-commit run --all-files -v
+     ```
+   - The hooks will:
+     - Auto-fix Python with Ruff
+     - Run `cargo build`, `cargo fmt`, `cargo clippy --fix`, and `cargo test` (all)
+     - Fail fast on the first error
 
-Before committing and pushing your work, make sure to run
+## Rust Development
 
-```
-cargo fmt --all && cargo clippy --all-features
-python -m ruff check . --fix --exit-non-zero-on-fix
-```
+- To build and test with Cargo:
+  ```bash
+  cargo build
+  cargo test
+  ```
 
-and resolve any errors.
+## Python API
+
+- The plugin exposes a `tdigest` function for Polars expressions:
+  ```python
+  from polars_tdigest import tdigest
+
+  # Use use_32=True for compact 32-bit payloads
+  df.with_columns(
+      tdigest("col", max_size=100, use_32=True)
+  )
+  ```
+
+## Versioning
+
+- All Polars crates are pinned to the same version (`0.51.x`) for compatibility.
+- Python requirements are in `requirements.txt` and support Python 3.12+.
+- See `Cargo.toml` and `pyproject.toml` for details.
+
+## Contributing
+
+- Please run all pre-commit hooks and ensure all tests pass before submitting a PR.
+- For Rust code, follow `cargo fmt` and `cargo clippy` suggestions.
+- For Python code, follow Ruff and type-check with `mypy`.
