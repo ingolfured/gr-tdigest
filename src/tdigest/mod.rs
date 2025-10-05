@@ -160,14 +160,9 @@ impl TDigest {
         self.scale
     }
 
-    pub fn merge_unsorted(&self, unsorted_values: Vec<f64>) -> TDigest {
-        let mut v: Vec<OrderedFloat<f64>> = unsorted_values
-            .into_iter()
-            .map(OrderedFloat::from)
-            .collect();
-        v.sort();
-        let v = v.into_iter().map(|f| f.into_inner()).collect();
-        self.merge_sorted(v)
+    pub fn merge_unsorted(&self, mut unsorted_values: Vec<f64>) -> TDigest {
+        unsorted_values.sort_by(|a, b| a.total_cmp(b));
+        self.merge_sorted(unsorted_values)
     }
 
     pub fn merge_sorted(&self, sorted_values: Vec<f64>) -> TDigest {
