@@ -11,7 +11,6 @@ crate-type = ["rlib", "cdylib"]
 rayon = "1.11"
 serde = { version = "1.0.228", features = ["derive"] }
 
-# Polars 0.51 stack
 polars = { version = "0.51.0", default-features = false, features = ["dtype-struct", "dtype-array", "fmt"] }
 polars-core = "0.51.0"
 polars-arrow = "0.51.0"
@@ -25,17 +24,19 @@ rand = "0.9.2"
 pyo3 = { version = "0.25", features = ["extension-module", "abi3-py312"], optional = true }
 pyo3-polars = { version = "0.24", optional = true }
 numpy = { version = "0.25.0", optional = true }
-bincode = "2.0.1"
+
+bincode = { version = "2.0.1", features = ["serde"] }
+
 
 [dev-dependencies]
 criterion = "0.7.0"
 
 [features]
 default = []
-# Enabling `python` pulls in pyo3 + pyo3-polars with derive, and enables extension-module.
 python = [
   "dep:pyo3",
   "dep:pyo3-polars",
+  "dep:numpy",
   "pyo3/extension-module",
   "pyo3-polars/derive"
 ]
