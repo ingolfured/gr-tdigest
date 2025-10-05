@@ -418,7 +418,7 @@ impl<'a> Compressor<'a> {
 
         let k_l = TDigest::q_to_k(q_l, self.d, self.family);
         let k_r = TDigest::q_to_k(q_r, self.d, self.family);
-        (k_r - k_l) <= 1.0 + 1e-12
+        (k_r - k_l) <= 1.0 - 1e-12
     }
 
     #[inline]
