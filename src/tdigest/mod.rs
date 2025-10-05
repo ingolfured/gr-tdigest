@@ -372,7 +372,7 @@ struct Compressor<'a> {
 
     // scale parameters
     d: f64,
-    n: f64,
+    n_inv: f64, // 1.0 / n cached
     family: ScaleFamily,
 
     // current centroid under construction
@@ -383,53 +383,61 @@ struct Compressor<'a> {
     curr_w: f64,
 
     processed_left: f64,
+
+    // cached left boundary in k-space: k(q_l) where q_l = processed_left * n_inv
+    k_left: f64,
 }
 
 impl<'a> Compressor<'a> {
     fn new(result: &'a mut TDigest, max_size: usize, total_n: f64, first: Centroid) -> Self {
         let d = max_size as f64;
+        let n = total_n.max(1.0);
+        let n_inv = 1.0 / n;
+        let family = result.scale;
         let curr_w = first.weight();
-        let family = result.scale; // <-- read before taking &mut in the struct
+
+        // At the start: processed_left = 0 ⇒ q_l = 0
+        let k_left = TDigest::q_to_k(0.0, d, family);
 
         Self {
             result,
-            out: Vec::with_capacity(max_size),
+            out: Vec::with_capacity(max_size.saturating_mul(2)),
             d,
-            n: total_n.max(1.0),
-            family, // <-- use the local copy
+            n_inv,
+            family,
             curr: first,
             curr_same_mean_only: true,
             batch_sum: 0.0,
             batch_weight: 0.0,
             curr_w,
             processed_left: 0.0,
+            k_left,
         }
     }
 
     #[inline]
     fn can_absorb(&self, next_w: f64) -> bool {
-        let q_l = self.processed_left / self.n;
-        let q_r = (self.processed_left + self.curr_w + next_w) / self.n;
-
-        let k_l = TDigest::q_to_k(q_l, self.d, self.family);
+        // Right boundary includes current run (curr_w) plus the next item.
+        let q_r = (self.processed_left + self.curr_w + next_w) * self.n_inv;
         let k_r = TDigest::q_to_k(q_r, self.d, self.family);
-        (k_r - k_l) <= 1.0 - 1e-12
+        (k_r - self.k_left) <= 1.0 - 1e-12
     }
 
     #[inline]
     fn take(&mut self, next: Centroid) {
         if self.can_absorb(next.weight()) {
-            // Absorb into the current centroid (defer arithmetic via batch buffers).
+            // extend current run
             self.curr_same_mean_only &= next.mean() == self.curr.mean();
             self.batch_sum += next.mean() * next.weight();
             self.batch_weight += next.weight();
             self.curr_w += next.weight();
         } else {
-            // Finalize current centroid and move the "left" boundary forward.
+            // finalize current, then advance left and refresh k_left
             self.flush_curr();
             self.processed_left += self.curr_w;
+            self.k_left = TDigest::q_to_k(self.processed_left * self.n_inv, self.d, self.family);
 
-            // Start a new centroid with `next`.
+            // start new run
             self.curr = next;
             self.curr_same_mean_only = true;
             self.batch_sum = 0.0;
@@ -440,16 +448,15 @@ impl<'a> Compressor<'a> {
 
     #[inline]
     fn flush_curr(&mut self) {
-        // Fold the batch into `curr`.
         let contributed = self.curr.add(self.batch_sum, self.batch_weight);
 
-        // If everything that merged shared the same mean, keep it an atomic jump.
+        // keep atomic jump if run was same-mean only
         self.curr.singleton = self.curr.weight() == 1.0 || self.curr_same_mean_only;
 
-        // Account into the result sum.
+        // account into result sum
         self.result.sum = (self.result.sum.into_inner() + contributed).into();
 
-        // Clear batch and emit.
+        // clear batch and emit
         self.batch_sum = 0.0;
         self.batch_weight = 0.0;
         self.out.push(self.curr);
