@@ -6,134 +6,166 @@ impl TDigest {
         if self.centroids.is_empty() {
             return 0.0;
         }
-
-        let count_: f64 = self.count.into_inner();
-        let rank: f64 = q * count_;
-
-        // Early path for exact median on identical-value piles (even total only):
-        // If both middle order-stat ranks fall strictly inside a *single* centroid
-        // that is a same-mean pile (`singleton=true`), return its mean.
-        if q == 0.5 && (count_ as i64) % 2 == 0 {
-            let r_lo = (count_ as i64) / 2; // lower middle (1-based)
-            let r_hi = r_lo + 1; // upper middle (1-based)
-
-            let mut prev = 0.0;
-            for c in self.centroids.iter() {
-                let next = prev + c.weight();
-                let inside = (prev < r_lo as f64) && ((r_hi as f64) <= next);
-                if inside && c.is_singleton() {
-                    return c.mean();
-                }
-                prev = next;
-            }
+        if self.centroids.len() == 1 {
+            return self.centroids[0].mean();
         }
 
-        // Locate the containing centroid using the rank walk.
-        let mut pos: usize;
-        let mut t: f64;
-        if q > 0.5 {
-            if q >= 1.0 {
-                return self.max();
-            }
-            pos = 0;
-            t = count_;
-            for (k, centroid) in self.centroids.iter().enumerate().rev() {
-                t -= centroid.weight();
-                if rank >= t {
-                    pos = k;
-                    break;
-                }
-            }
-        } else {
-            if q <= 0.0 {
-                return self.min();
-            }
-            pos = self.centroids.len() - 1;
-            t = 0.0;
-            for (k, centroid) in self.centroids.iter().enumerate() {
-                if rank < t + centroid.weight() {
-                    pos = k;
-                    break;
-                }
-                t += centroid.weight();
-            }
+        let q = q.clamp(0.0, 1.0);
+        let (target_index, total_weight) = self.quantile_to_weight_index(q);
+
+        // Strict edge clamps: keep boundary cases (index==1 or index==N-1) in the interior logic.
+        if target_index < 1.0 {
+            return self.min();
+        }
+        if target_index > total_weight - 1.0 {
+            return self.max();
         }
 
-        // If we landed inside a pile of identical values, don't interpolate inside it.
-        if self.centroids[pos].is_singleton() && self.centroids[pos].weight() > 1.0 {
-            return self.centroids[pos].mean();
-        }
+        let (left_idx, right_idx, left_center_cum_w, center_span_w) =
+            self.find_bracketing_centroids(target_index);
 
-        // Otherwise, compute a local slope `delta` from neighbors and interpolate,
-        // clamping to adjacent means to keep monotonicity and avoid overshoot.
-        let mut delta = 0.0;
-        let mut min: f64 = self.min.into_inner();
-        let mut max: f64 = self.max.into_inner();
-
-        if self.centroids.len() > 1 {
-            if pos == 0 {
-                delta = self.centroids[pos + 1].mean() - self.centroids[pos].mean();
-                max = self.centroids[pos + 1].mean();
-            } else if pos == (self.centroids.len() - 1) {
-                delta = self.centroids[pos].mean() - self.centroids[pos - 1].mean();
-                min = self.centroids[pos - 1].mean();
-            } else {
-                delta = (self.centroids[pos + 1].mean() - self.centroids[pos - 1].mean()) / 2.0;
-                min = self.centroids[pos - 1].mean();
-                max = self.centroids[pos + 1].mean();
-            }
-        }
-
-        let value =
-            self.centroids[pos].mean() + ((rank - t) / self.centroids[pos].weight() - 0.5) * delta;
-        super::TDigest::clamp(value, min, max)
+        self.interpolate_between_centroids(
+            left_idx,
+            right_idx,
+            left_center_cum_w,
+            center_span_w,
+            target_index,
+        )
     }
 
-    /// Find the pair of centroid indices that bracket q=0.5 using the same rank logic
-    /// as `estimate_quantile`, but returning neighbors so we can average their means
-    /// for even totals.
+    /// Map q∈[0,1] to a cumulative weight index in [0, total_weight].
+    #[inline]
+    fn quantile_to_weight_index(&self, q: f64) -> (f64, f64) {
+        let total_weight = self.count();
+        (q * total_weight, total_weight)
+    }
+
+    /// Half-weight bracketing: find adjacent centroids whose center-to-center span contains `index`.
+    /// Returns (left_idx, right_idx, cumulative_weight_at_left_center, center_span_weight).
+    fn find_bracketing_centroids(&self, index: f64) -> (usize, usize, f64, f64) {
+        let first_w = self.centroids[0].weight();
+        let mut cum_w_at_left_center = first_w / 2.0;
+
+        for left_idx in 0..(self.centroids.len() - 1) {
+            let w_left = self.centroids[left_idx].weight();
+            let w_right = self.centroids[left_idx + 1].weight();
+            let center_span_weight = (w_left + w_right) / 2.0;
+
+            if cum_w_at_left_center + center_span_weight > index {
+                return (
+                    left_idx,
+                    left_idx + 1,
+                    cum_w_at_left_center,
+                    center_span_weight,
+                );
+            }
+            cum_w_at_left_center += center_span_weight;
+        }
+
+        // Fallback: last pair (shouldn't happen in normal flow).
+        let m = self.centroids.len();
+        let w_last = self.centroids[m - 1].weight();
+        let span_w = (self.centroids[m - 2].weight() + w_last) / 2.0;
+        (m - 2, m - 1, self.count() - w_last / 2.0, span_w)
+    }
+
+    /// Interpolate between bracketing centroids with symmetric singleton/pile logic.
+    fn interpolate_between_centroids(
+        &self,
+        left_idx: usize,
+        right_idx: usize,
+        cum_w_at_left_center: f64,
+        center_span_weight: f64,
+        target_index: f64,
+    ) -> f64 {
+        let left = &self.centroids[left_idx];
+        let right = &self.centroids[right_idx];
+
+        let (w_left, w_right) = (left.weight(), right.weight());
+        let (m_left, m_right) = (left.mean(), right.mean());
+        let right_center_cum_w = cum_w_at_left_center + center_span_weight;
+
+        if left.is_singleton()
+            && w_left > 1.0
+            && Self::inside_pile_strict(target_index, cum_w_at_left_center, w_left)
+        {
+            return m_left;
+        }
+        if right.is_singleton()
+            && w_right > 1.0
+            && Self::inside_pile_strict(target_index, right_center_cum_w, w_right)
+        {
+            return m_right;
+        }
+
+        if w_left == 1.0 && (target_index - cum_w_at_left_center) < 0.5 {
+            return m_left;
+        }
+        if w_right == 1.0 && (right_center_cum_w - target_index) < 0.5 {
+            return m_right;
+        }
+
+        let dead_left = if w_left == 1.0 { 0.5 } else { 0.0 };
+        let dead_right = if w_right == 1.0 { 0.5 } else { 0.0 };
+        let weight_toward_right = target_index - cum_w_at_left_center - dead_left;
+        let weight_toward_left = right_center_cum_w - target_index - dead_right;
+        let denom = weight_toward_right + weight_toward_left;
+
+        if denom <= 0.0 {
+            0.5 * (m_left + m_right)
+        } else {
+            (m_left * weight_toward_left + m_right * weight_toward_right) / denom
+        }
+    }
+
+    #[inline]
+    fn inside_pile_strict(target_index: f64, center_cum_w: f64, pile_weight: f64) -> bool {
+        // A “pile” is a centroid representing multiple identical values (singleton && weight>1).
+        if pile_weight <= 1.0 {
+            return false;
+        }
+        let half = pile_weight / 2.0;
+        (center_cum_w - half) < target_index && target_index < (center_cum_w + half)
+    }
+
+    /// Return the indices of the two centroids that bracket the median (q = 0.5)
+    /// using the same half-weight bracketing as estimate_quantile.
     fn bracket_centroids_for_median(&self) -> (usize, usize) {
         debug_assert!(!self.centroids.is_empty());
         if self.centroids.len() == 1 {
             return (0, 0);
         }
-
-        let count_ = self.count();
-        let rank = 0.5 * count_;
-
-        // Walk from the left (q <= 0.5 branch) to locate the containing cell.
-        let mut t = 0.0;
-        for (k, c) in self.centroids.iter().enumerate() {
-            if rank < t + c.weight() {
-                // Inside centroid k → bracket is (k-1, k) if k>0, else (0,1).
-                if k == 0 {
-                    return (0, 1);
-                } else {
-                    return (k - 1, k);
-                }
-            }
-            t += c.weight();
+        let total_w = self.count();
+        if self.centroids.len() == 2 || total_w <= 2.0 {
+            return (0, 1);
         }
+        let index = 0.5 * total_w;
 
-        // If we fall off the end due to numeric wiggle, use the last two.
-        let m = self.centroids.len();
-        (m - 2, m - 1)
+        if index < 1.0 {
+            return (0, 1);
+        }
+        if index > total_w - 1.0 {
+            let m = self.centroids.len();
+            return (m - 2, m - 1);
+        }
+        let (li, ri, _cw, _span) = self.find_bracketing_centroids(index);
+        (li, ri)
     }
 
     /// Median with an even-count special case to avoid over-interpolation.
-    /// - If total count is even: return the average of the two *neighboring centroid means*
-    ///   around q=0.5 (independent of centroid weights).
+    /// - If total count is even: average the two neighboring centroid means around q=0.5.
     /// - If odd: fall back to `estimate_quantile(0.5)`.
     pub fn estimate_median(&self) -> f64 {
-        let total = self.count().round() as i64;
-        if total <= 0 {
+        let total = self.count();
+        if total <= 0.0 {
             return 0.0;
         }
-        if total % 2 != 0 {
+        if (total as i64) % 2 != 0 {
             return self.estimate_quantile(0.5);
         }
-        let (il, ir) = self.bracket_centroids_for_median();
-        (self.centroids[il].mean() + self.centroids[ir].mean()) * 0.5
+        let (li, ri) = self.bracket_centroids_for_median();
+        let (ml, mr) = (self.centroids[li].mean(), self.centroids[ri].mean());
+        (ml + mr) * 0.5
     }
 }
 
@@ -214,25 +246,41 @@ mod tests {
         }
     }
 
-    /// Even-count median special-case (independent of centroid weights).
     #[test]
     fn median_between_centroids_even_count() {
-        // median of [-1, -1, ..., 1, 1] should be ~0
-        let mut quantile_didnt_work: bool = false;
+        // With symmetric bracketing, Q(0.5) equals the average of the two middle piles (→ 0.0).
         for num in [1, 2, 3, 10, 20] {
             let mut t = TDigest::new_with_size(100);
-            for _ in 1..=num {
+            for _ in 0..num {
                 t = t.merge_sorted(vec![-1.0]);
             }
-            for _ in 1..=num {
+            for _ in 0..num {
                 t = t.merge_sorted(vec![1.0]);
             }
 
-            if t.estimate_quantile(0.5).abs() > 0.1 {
-                quantile_didnt_work = true;
-            }
+            assert_exact("Q(0.5)", 0.0, t.estimate_quantile(0.5));
             assert_exact("median()", 0.0, t.estimate_median());
         }
-        assert!(quantile_didnt_work);
+    }
+
+    #[test]
+    fn quantile_exact_with_enough_capacity() {
+        use crate::tdigest::test_helpers::assert_exact;
+        use rand::{rngs::StdRng, Rng, SeedableRng};
+
+        const N: usize = 9_999;
+        let mut v: Vec<f64> = {
+            let mut r = StdRng::seed_from_u64(42);
+            (0..N).map(|_| r.random_range(0..N as u64) as f64).collect()
+        };
+        v.sort_by(|a, b| a.partial_cmp(b).unwrap());
+        let td = super::TDigest::new_with_size(N + 1).merge_sorted(v.clone());
+
+        assert_exact("Q(0)", v[0], td.estimate_quantile(0.0));
+        assert_exact("Q(1)", v[N - 1], td.estimate_quantile(1.0));
+        for (i, &x) in v.iter().enumerate() {
+            let q = (i as f64 + 0.5) / N as f64; // mid-rank → exact order stat
+            assert_exact("Q(mid)", x, td.estimate_quantile(q));
+        }
     }
 }

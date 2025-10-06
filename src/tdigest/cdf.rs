@@ -171,4 +171,25 @@ mod tests {
         assert_all_in_unit_interval("cdf(100) bounds", &approx);
         assert_monotone_chain("cdf(100) monotone", &approx);
     }
+    #[test]
+    fn cdf_exact_with_enough_capacity() {
+        use crate::tdigest::test_helpers::assert_exact;
+        use rand::{rngs::StdRng, Rng, SeedableRng};
+
+        const N: usize = 9_999;
+        let mut rng = StdRng::seed_from_u64(42);
+        let mut vals: Vec<f64> = (0..N)
+            .map(|_| rng.random_range(0..N as u64) as f64)
+            .collect();
+        vals.sort_by(|a, b| a.partial_cmp(b).unwrap());
+
+        let exact = super::exact_ecdf_for_sorted(&vals);
+        let approx = super::TDigest::new_with_size(N + 1)
+            .merge_sorted(vals.clone())
+            .estimate_cdf(&vals);
+
+        for (i, (&e, &a)) in exact.iter().zip(&approx).enumerate() {
+            assert_exact(&format!("CDF[{i}]",), e, a);
+        }
+    }
 }
