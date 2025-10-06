@@ -131,7 +131,6 @@ impl Default for TDigest {
 }
 
 impl TDigest {
-    /// Keep Quad to preserve your crate’s default behavior.
     pub fn new_with_size(max_size: usize) -> Self {
         Self::new_with_size_and_scale(max_size, ScaleFamily::Quad)
     }
@@ -817,5 +816,80 @@ mod tests {
         assert_exact("Q(0.00)", 1.0, t.estimate_quantile(0.0));
         assert_exact("Q(1.00)", 10.0, t.estimate_quantile(1.0));
         assert_rel_close("Q(0.50)", 5.5, t.estimate_quantile(0.5), 1e-9);
+    }
+
+    #[test]
+    fn compact_scaling_prevents_overflow_and_preserves_shape() {
+        use crate::tdigest::codecs::{parse_tdigests_any, tdigest_to_series_32};
+        use crate::tdigest::test_helpers::assert_rel_close;
+
+        // Three centroids with astronomical weights to force scaling for f32.
+        let c0 = Centroid::new(0.0, 1.0e36);
+        let c1 = Centroid::new(1.0, 2.0e36);
+        let c2 = Centroid::new(2.0, 3.0e36);
+        let cents = vec![c0, c1, c2];
+
+        // Keep TDigest "as-is" (no compression): set max_size comfortably above len.
+        let sum = c0.mean() * c0.weight() + c1.mean() * c1.weight() + c2.mean() * c2.weight(); // 8e36
+        let count = c0.weight() + c1.weight() + c2.weight(); // 6e36
+        let td = TDigest::new(cents, sum, count, 2.0, 0.0, 512);
+
+        // Baseline quantile
+        let p50_before = td.estimate_quantile(0.5);
+
+        // Write compact (f32/f32) — this will auto-scale internally.
+        let ser = tdigest_to_series_32(td.clone(), "n");
+
+        // Sanity: compact centroids' weights must be finite f32 and well within range.
+        {
+            let sc = ser.struct_().expect("struct");
+            let centroids_col = sc.field_by_name("centroids").expect("centroids");
+            let list = centroids_col.list().expect("list");
+            let row0 = list.get_as_series(0).expect("row0");
+            let inner = row0.struct_().expect("inner");
+            let w_series = inner.field_by_name("weight").expect("weight");
+            let w_f32 = w_series.f32().expect("f32 weights");
+
+            for i in 0..w_f32.len() {
+                if let Some(w) = w_f32.get(i) {
+                    assert!(w.is_finite(), "compact weight must be finite");
+                    assert!(w.abs() < f32::MAX / 4.0, "compact weight too large: {w}");
+                }
+            }
+        }
+
+        // Parse back and verify shape invariants.
+        let parsed = parse_tdigests_any(&ser);
+        assert_eq!(parsed.len(), 1, "one digest expected");
+        let td2 = parsed.into_iter().next().unwrap();
+
+        // 1) Quantiles should be preserved under uniform re-scaling of weights.
+        let p50_after = td2.estimate_quantile(0.5);
+        assert_rel_close("p50 preserved after scaling", p50_before, p50_after, 1e-6);
+
+        // 2) Relative weights should match (only a global factor differs).
+        let w1: Vec<f64> = td.centroids().iter().map(|c| c.weight()).collect();
+        let w2: Vec<f64> = td2
+            .centroids()
+            .iter()
+            .map(|c: &crate::tdigest::Centroid| c.weight())
+            .collect();
+        assert_eq!(w1.len(), w2.len(), "centroid count must match");
+
+        let s1: f64 = w1.iter().sum();
+        let s2: f64 = w2.iter().sum();
+        for (i, (a, b)) in w1.iter().zip(w2.iter()).enumerate() {
+            let ra = *a / s1;
+            let rb = *b / s2;
+            assert_rel_close(&format!("weight ratio[{i}]"), ra, rb, 1e-7);
+        }
+
+        // 3) Optional: CDF invariants at a few points.
+        let xs = [0.5, 1.0, 1.5];
+        let cdf1 = td.estimate_cdf(&xs);
+        let cdf2 = td2.estimate_cdf(&xs);
+        for i in 0..xs.len() {
+            assert_rel_close(&format!("CDF({}) preserved", xs[i]), cdf1[i], cdf2[i], 1e-6);
+        }
     }
 }

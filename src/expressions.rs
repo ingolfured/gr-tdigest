@@ -1,19 +1,15 @@
 #![allow(clippy::unused_unit)]
-#![cfg_attr(all(test, not(feature = "python")), allow(dead_code))]
-#![cfg(any(test, feature = "python"))]
 
-#[cfg(feature = "python")]
-use pyo3_polars::derive::polars_expr;
-
-use crate::tdigest::codecs::parse_tdigests_any;
-use crate::tdigest::codecs::tdigest_to_series_32;
-use crate::tdigest::{codecs::tdigest_to_series, TDigest};
 use polars::prelude::*;
 use polars_core::utils::arrow::array::Float64Array;
 use polars_core::POOL;
+use pyo3_polars::derive::polars_expr;
 use rayon::iter::ParallelBridge;
 use rayon::prelude::*;
 use serde::Deserialize;
+
+use crate::tdigest::codecs::{parse_tdigests_any, tdigest_to_series, tdigest_to_series_32};
+use crate::tdigest::TDigest;
 
 const SUPPORTED_TYPES: &[DataType] = &[
     DataType::Float32,
@@ -23,12 +19,12 @@ const SUPPORTED_TYPES: &[DataType] = &[
     DataType::UInt32,
 ];
 
-#[cfg_attr(feature = "python", polars_expr(output_type = Float64))]
+#[polars_expr(output_type = Float64)]
 fn estimate_cdf(inputs: &[Series], kwargs: CDFKwargs) -> PolarsResult<Series> {
     estimate_cdf_impl(inputs, kwargs.xs)
 }
 
-#[cfg_attr(feature = "python", polars_expr(output_type = Float64))]
+#[polars_expr(output_type = Float64)]
 fn estimate_median(inputs: &[Series]) -> PolarsResult<Series> {
     let td = parse_tdigest(inputs);
     if td.is_empty() {
@@ -38,24 +34,48 @@ fn estimate_median(inputs: &[Series]) -> PolarsResult<Series> {
     }
 }
 
-#[cfg_attr(feature = "python", polars_expr(output_type = Float64))]
+#[polars_expr(output_type = Float64)]
 fn estimate_quantile(inputs: &[Series], kwargs: QuantileKwargs) -> PolarsResult<Series> {
     estimate_quantile_impl(inputs, kwargs.quantile)
 }
 
-#[cfg_attr(feature = "python", polars_expr(output_type_func = tdigest_output))]
+#[polars_expr(output_type_func = tdigest_output)]
 fn merge_tdigests(inputs: &[Series]) -> PolarsResult<Series> {
     merge_tdigests_impl(inputs)
 }
 
-#[cfg_attr(feature = "python", polars_expr(output_type_func = tdigest_output))]
+#[polars_expr(output_type_func = tdigest_output)]
 fn tdigest(inputs: &[Series], kwargs: TDigestKwargs) -> PolarsResult<Series> {
     tdigest_impl(inputs, kwargs.max_size)
 }
 
-#[cfg_attr(feature = "python", polars_expr(output_type_func = tdigest_output_32))]
+#[polars_expr(output_type_func = tdigest_output_32)]
 fn tdigest_32(inputs: &[Series], kwargs: TDigestKwargs) -> PolarsResult<Series> {
     tdigest_32_impl(inputs, kwargs.max_size)
+}
+
+// df.lazy().group_by("g").agg([
+//     tdigest(pl.col("x")).alias("td"),
+//     tdigest_summary("td").alias("td_summary"),  # pretty, one-line
+// ]).collect()
+
+#[polars_expr(output_type = String)]
+fn tdigest_summary(inputs: &[Series]) -> PolarsResult<Series> {
+    let td = parse_tdigest(inputs);
+    let s = if td.is_empty() {
+        None
+    } else {
+        Some(format!(
+            "TDigest(n={:.0}, k={}, min={:.6}, p50={:.6}, max={:.6}, centroids={})",
+            td.count(),
+            td.max_size(),
+            td.min(),
+            td.estimate_quantile(0.5),
+            td.max(),
+            td.centroids().len(),
+        ))
+    };
+    Ok(Series::new("".into(), [s]))
 }
 
 #[derive(Debug, Deserialize)]
@@ -90,7 +110,7 @@ fn tdigest_fields_cfg(
         Field::new("sum".into(), sum_dt),
         Field::new("min".into(), minmax_dt.clone()),
         Field::new("max".into(), minmax_dt),
-        Field::new("count".into(), DataType::Int64),
+        Field::new("count".into(), DataType::Float64),
         Field::new("max_size".into(), DataType::Int64),
     ]
 }
@@ -98,7 +118,7 @@ fn tdigest_fields_cfg(
 fn tdigest_fields() -> Vec<Field> {
     tdigest_fields_cfg(
         DataType::Float64,
-        DataType::Int64,
+        DataType::Float64,
         DataType::Float64,
         DataType::Float64,
     )
@@ -107,7 +127,7 @@ fn tdigest_fields() -> Vec<Field> {
 fn tdigest_fields_32() -> Vec<Field> {
     tdigest_fields_cfg(
         DataType::Float32,
-        DataType::UInt32,
+        DataType::Float32,
         DataType::Float32,
         DataType::Float64,
     )
@@ -137,6 +157,7 @@ fn tdigest_from_series(inputs: &[Series], max_size: usize) -> PolarsResult<TDige
         }
         series.cast(&DataType::Float64)?
     };
+
     let values = series_casted.f64()?;
     let chunks: Vec<TDigest> = POOL.install(|| {
         values
@@ -148,6 +169,7 @@ fn tdigest_from_series(inputs: &[Series], max_size: usize) -> PolarsResult<TDige
             })
             .collect()
     });
+
     Ok(TDigest::merge_digests(chunks))
 }
 
@@ -156,12 +178,23 @@ fn parse_tdigest(inputs: &[Series]) -> TDigest {
     TDigest::merge_digests(tdigests)
 }
 
-fn tdigest_impl(inputs: &[Series], max_size: usize) -> PolarsResult<Series> {
+fn tdigest_impl_generic<F>(inputs: &[Series], max_size: usize, to_series: F) -> PolarsResult<Series>
+where
+    F: FnOnce(TDigest, &str) -> Series,
+{
     let mut td = tdigest_from_series(inputs, max_size)?;
     if td.is_empty() {
-        td = TDigest::new(Vec::new(), 100.0, 0.0, 0.0, 0.0, 0)
+        td = TDigest::new(Vec::new(), 100.0, 0.0, 0.0, 0.0, 0);
     }
-    Ok(tdigest_to_series(td, inputs[0].name()))
+    Ok(to_series(td, inputs[0].name()))
+}
+
+fn tdigest_impl(inputs: &[Series], max_size: usize) -> PolarsResult<Series> {
+    tdigest_impl_generic(inputs, max_size, tdigest_to_series)
+}
+
+fn tdigest_32_impl(inputs: &[Series], max_size: usize) -> PolarsResult<Series> {
+    tdigest_impl_generic(inputs, max_size, tdigest_to_series_32)
 }
 
 fn estimate_quantile_impl(inputs: &[Series], q: f64) -> PolarsResult<Series> {
@@ -186,14 +219,6 @@ fn estimate_cdf_impl(inputs: &[Series], xs: Vec<f64>) -> PolarsResult<Series> {
     }
     let out = td.estimate_cdf(&xs);
     Ok(Series::new("".into(), out))
-}
-
-fn tdigest_32_impl(inputs: &[Series], max_size: usize) -> PolarsResult<Series> {
-    let mut td = tdigest_from_series(inputs, max_size)?;
-    if td.is_empty() {
-        td = TDigest::new(Vec::new(), 100.0, 0.0, 0.0, 0.0, 0);
-    }
-    Ok(tdigest_to_series_32(td, inputs[0].name()))
 }
 
 fn merge_tdigests_impl(inputs: &[Series]) -> PolarsResult<Series> {

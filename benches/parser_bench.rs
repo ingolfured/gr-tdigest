@@ -1,8 +1,6 @@
 use criterion::{black_box, criterion_group, criterion_main, Criterion};
 use polars::series::Series;
-use polars_tdigest::tdigest::{
-    codecs::parse_tdigests, codecs::tdigest_to_series, Centroid, TDigest,
-};
+use polars_tdigest::tdigest::{codecs::tdigest_to_series, Centroid, TDigest};
 
 mod legacy_json_parser {
     use std::io::BufWriter;
