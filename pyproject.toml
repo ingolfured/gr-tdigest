@@ -1,35 +1,81 @@
 [build-system]
-requires = ["maturin>=1.0,<2.0"]
+requires = ["maturin>=1.9.5,<2.0"]
 build-backend = "maturin"
 
-[project]
+# ------------------------------------------------------------
+# Poetry metadata (authoritative for env/dev/publish commands)
+# ------------------------------------------------------------
+[tool.poetry]
 name = "polars-tdigest"
-requires-python = ">=3.12"
-dynamic = ["version"]
-dependencies = [
-  "polars>=1.34.0",
+version = "0.0.0"  # kept in lockstep with Cargo.toml via `make version_set`
+description = "T-digest algorithms and Polars integration (Rust + PyO3) for Python"
+license = "Apache-2.0"
+readme = "README.md"
+authors = [
+  "Thomas Lutterbeck <thomas.lutterbeck@appian.com>",
+  "Ingolfur Edvardsson <ingo.edvardsson@gresearch.co.uk>",
 ]
 classifiers = [
-  "Programming Language :: Rust",
+  "Programming Language :: Python :: 3",
   "Programming Language :: Python :: Implementation :: CPython",
   "Programming Language :: Python :: Implementation :: PyPy",
-]
-authors = [
-  {name = "Thomas Lutterbeck", email = "thomas.lutterbeck@appian.com"},
-  {name = "Ingolfur Edvardsson", email = "ingo.edvardsson@gresearch.co.uk"},
-]
-
-[project.optional-dependencies]
-# Developer environment (used with: `pip install -e ".[dev]"`)
-dev = [
-  "maturin>=1.0,<2.0",
-  "pre-commit>=4.3.0",
-  "ruff>=0.5.0",
-  "pytest>=8.0.0",
-  "numpy>=2.3.3"
+  "Programming Language :: Rust",
+  "License :: OSI Approved :: Apache Software License",
+  "Operating System :: OS Independent",
 ]
 
+# ------------------------------------------------------------
+# Runtime dependencies (minimal)
+# ------------------------------------------------------------
+[tool.poetry.dependencies]
+python = ">=3.12,<3.13"
+polars = ">=1.34.0"
+
+# ------------------------------------------------------------
+# Dev-only dependencies (installed by `poetry install --with dev`)
+# ------------------------------------------------------------
+[tool.poetry.group.dev.dependencies]
+pytest = ">=8.4.2"
+ruff = ">=0.13.3"
+pre-commit = ">=4.3.0"
+maturin = ">=1.9.5"
+numpy = ">=2.3.3"
+
+# ------------------------------------------------------------
+# Maturin build settings
+# ------------------------------------------------------------
 [tool.maturin]
 bindings = "pyo3"
 features = ["python"]
+# Let maturin derive the wheel version from Cargo.toml
 version = "from-cargo-toml"
+# If the Python module/package name differs from the Cargo crate:
+# module-name = "polars_tdigest"
+
+# ------------------------------------------------------------
+# Ruff (lint / format)
+# ------------------------------------------------------------
+[tool.ruff]
+line-length = 120
+target-version = "py312"
+extend-exclude = [
+  "target",
+  "dist",
+  "build",
+  ".venv",
+  ".maturin",
+  ".pytest_cache",
+  ".ruff_cache"
+]
+
+# Optional per-file ignores example (uncomment if useful)
+# [tool.ruff.lint.per-file-ignores]
+# "polars_tdigest/__init__.py" = ["F401"]
+
+# ------------------------------------------------------------
+# Pytest defaults
+# ------------------------------------------------------------
+[tool.pytest.ini_options]
+addopts = "-q"
+testpaths = ["tests"]
+pythonpath = ["."]

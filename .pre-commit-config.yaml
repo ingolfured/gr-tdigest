@@ -1,47 +1,27 @@
+default_language_version:
+  python: python3.12
 fail_fast: true
+minimum_pre_commit_version: "4.3.0"
 repos:
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v5.0.0
+    hooks:
+      - id: trailing-whitespace
+      - id: end-of-file-fixer
+      - id: check-yaml
+      - id: check-toml
+      - id: check-merge-conflict
   - repo: local
     hooks:
-      - id: ruff-fix
-        name: ruff check (auto-fix Python)
-        entry: python -m ruff check . --fix --exit-non-zero-on-fix
+      - id: precommit-fast
+        name: make precommit_fast (fmt+lint+check+test)
         language: system
+        entry: bash -lc 'poetry run make precommit_fast'
         pass_filenames: false
-
-      - id: cargo-build
-        name: cargo build
-        entry: cargo build
+        stages: [commit]
+      - id: prepush-full
+        name: make prepush_full (maturin smoke + quick benches)
         language: system
+        entry: bash -lc 'poetry run make prepush_full'
         pass_filenames: false
-
-      - id: cargo-fmt
-        name: cargo fmt --all (auto-fix)
-        entry: cargo fmt --all
-        language: system
-        pass_filenames: false
-
-      - id: cargo-clippy
-        name: cargo clippy --all-features --fix
-        entry: cargo clippy --all-features --fix --allow-dirty --allow-staged
-        language: system
-        pass_filenames: false
-
-      - id: cargo-test
-        name: cargo test (all)
-        entry: cargo test
-        language: system
-        pass_filenames: false
-
-      - id: pytest
-        name: pytest (python)
-        entry: bash -lc 'pytest -q'
-        language: system
-        pass_filenames: false
-
-      - id: python-smoke
-        name: build & import smoke (.env)
-        language: system
-        pass_filenames: false
-        files: ^(pyproject\.toml|Cargo\.toml|Cargo\.lock|src/|polars_tdigest/|tests/)
-        entry: >
-          bash -lc 'set -e; if [[ ! -x .env/bin/python || ! -x .env/bin/maturin ]]; then echo "[smoke] .env not ready; run: python3.12 -m venv .env && ./.env/bin/pip install -e .[dev]" >&2; exit 1; fi; ./.env/bin/maturin develop; ./.env/bin/python -c "import sys, polars as pl; import polars_tdigest as pt; print(\"python:\", sys.version.split()[0]); print(\"polars:\", pl.__version__); print(\"polars_tdigest:\", getattr(pt, \"__version__\", \"ok\"))"'
+        stages: [push]
