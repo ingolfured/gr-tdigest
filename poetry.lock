@@ -102,6 +102,7 @@ files = [
 
 [package.dependencies]
 patchelf = {version = "*", optional = true, markers = "extra == \"patchelf\""}
+ziglang = {version = ">=0.10.0,<0.13.0", optional = true, markers = "extra == \"zig\""}
 
 [package.extras]
 patchelf = ["patchelf"]
@@ -520,7 +521,25 @@ platformdirs = ">=3.9.1,<5"
 docs = ["furo (>=2023.7.26)", "proselint (>=0.13)", "sphinx (>=7.1.2,!=7.3)", "sphinx-argparse (>=0.4)", "sphinxcontrib-towncrier (>=0.2.1a0)", "towncrier (>=23.6)"]
 test = ["covdefaults (>=2.3)", "coverage (>=7.2.7)", "coverage-enable-subprocess (>=1)", "flaky (>=3.7)", "packaging (>=23.1)", "pytest (>=7.4)", "pytest-env (>=0.8.2)", "pytest-freezer (>=0.4.8) ; platform_python_implementation == \"PyPy\" or platform_python_implementation == \"GraalVM\" or platform_python_implementation == \"CPython\" and sys_platform == \"win32\" and python_version >= \"3.13\"", "pytest-mock (>=3.11.1)", "pytest-randomly (>=3.12)", "pytest-timeout (>=2.1)", "setuptools (>=68)", "time-machine (>=2.10) ; platform_python_implementation == \"CPython\""]
 
+[[package]]
+name = "ziglang"
+version = "0.12.1"
+description = "Zig is a general-purpose programming language and toolchain for maintaining robust, optimal, and reusable software."
+optional = false
+python-versions = "~=3.5"
+groups = ["dev"]
+files = [
+    {file = "ziglang-0.12.1-py3-none-macosx_12_0_arm64.whl", hash = "sha256:e166297bc3fa4e8f7e4f8ca4fdd3e20fc6821a27fd3b6ca04268654a5003a8ba"},
+    {file = "ziglang-0.12.1-py3-none-macosx_12_0_x86_64.whl", hash = "sha256:5164d25349441c890b8cf928317a533e3338e3603285c394001ea12ba6af7687"},
+    {file = "ziglang-0.12.1-py3-none-manylinux_2_12_i686.manylinux2010_i686.musllinux_1_1_i686.whl", hash = "sha256:66fbb91889d7cfca5a9e3820e07cbbaa6ffbeadb1402b2db3cd7702b5fe43372"},
+    {file = "ziglang-0.12.1-py3-none-manylinux_2_12_x86_64.manylinux2010_x86_64.musllinux_1_1_x86_64.whl", hash = "sha256:dcde948140b9e5776c2295b9b808fb4950df7ecadaecb54623dd701502be2017"},
+    {file = "ziglang-0.12.1-py3-none-manylinux_2_17_aarch64.manylinux2014_aarch64.musllinux_1_1_aarch64.whl", hash = "sha256:945ea8ac157373e8437b377f7eac39f16fe63cd21b2b27fb4e518466e1cd561d"},
+    {file = "ziglang-0.12.1-py3-none-manylinux_2_17_armv7l.manylinux2014_armv7l.musllinux_1_1_armv7l.whl", hash = "sha256:011717479951d820e9a0fe0b61b9132560f4094861fca54d66595b66f8aee23a"},
+    {file = "ziglang-0.12.1-py3-none-win32.whl", hash = "sha256:0489dfbc6186f528fd7a18c713d13303bcc62f0a281e469599ba5645ecbf4ac0"},
+    {file = "ziglang-0.12.1-py3-none-win_amd64.whl", hash = "sha256:c5344e28e9ce4a48949f140c2bb6457e10107dfed27da8af7611f7640bc50177"},
+]
+
 [metadata]
 lock-version = "2.1"
 python-versions = ">=3.12,<3.13"
-content-hash = "85b0742e414c22dcd68a454149a882817fcb8d4dac7f1ea65e3f7431e3437307"
+content-hash = "f703e8844da93b462ebed67584be324c009d47e78e5d2f07284033bf56059590"

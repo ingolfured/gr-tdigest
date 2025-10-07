@@ -178,9 +178,11 @@ check:
 
 test:
 	cargo test -- --quiet
+	pytest
 
 fulltest: ## Full test suite
 	cargo test -- --quiet --include-ignored
+	pytest
 
 bench_quick: ## Quick criterion benches
 	for b in $(BENCH_BINS); do
