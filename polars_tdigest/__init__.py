@@ -49,9 +49,7 @@ def _coerce_scale(scale: ScaleFamily | str) -> str:
         s = scale.strip().lower()
         if s in {e.value for e in ScaleFamily}:
             return s
-    raise ValueError(
-        f"Invalid `scale`={scale!r}. Allowed: {[e.value for e in ScaleFamily]}"
-    )
+    raise ValueError(f"Invalid `scale`={scale!r}. Allowed: {[e.value for e in ScaleFamily]}")
 
 
 def _coerce_storage(storage: StorageSchema | str) -> str:

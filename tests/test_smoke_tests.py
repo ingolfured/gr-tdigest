@@ -7,6 +7,7 @@ from polars_tdigest import (
     StorageSchema,
 )
 
+
 def _centroid_means_dtype(df: pl.DataFrame, storage) -> pl.DataType:
     out = (
         df.lazy()
@@ -39,19 +40,14 @@ def test_tdigest_storage_f64_inner_means_are_float64():
 
 def test_tdigest_f32_has_lower_precision_than_f64():
     df = pl.DataFrame({"g": ["a"] * 2000, "x": list(range(1, 2001))})
-    max_size = 512      # larger k → tighter median with QUAD
+    max_size = 512  # larger k → tighter median with QUAD
     q_target = 0.5
     true_median = 1000.5
 
     q64 = (
         df.lazy()
         .group_by("g")
-        .agg(
-            tdigest(pl.col("x"),
-                    storage=StorageSchema.F64,
-                    scale=ScaleFamily.QUAD,
-                    max_size=max_size).alias("td")
-        )
+        .agg(tdigest(pl.col("x"), storage=StorageSchema.F64, scale=ScaleFamily.QUAD, max_size=max_size).alias("td"))
         .select(estimate_quantile("td", q_target))
         .collect()
         .item()
@@ -60,12 +56,7 @@ def test_tdigest_f32_has_lower_precision_than_f64():
     q32 = (
         df.lazy()
         .group_by("g")
-        .agg(
-            tdigest(pl.col("x"),
-                    storage=StorageSchema.F32,
-                    scale=ScaleFamily.QUAD,
-                    max_size=max_size).alias("td")
-        )
+        .agg(tdigest(pl.col("x"), storage=StorageSchema.F32, scale=ScaleFamily.QUAD, max_size=max_size).alias("td"))
         .select(estimate_quantile("td", q_target))
         .collect()
         .item()

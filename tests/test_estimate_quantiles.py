@@ -61,7 +61,6 @@ def test_estimate_quantile_f64():
 
 
 def test_estimate_quantile_32():
-
     df_median = (
         df_float.with_columns(col("values").cast(Float32))
         .group_by("group")
@@ -77,7 +76,6 @@ def test_estimate_quantile_32():
 
 
 def test_estimate_quantile_utf8():
-
     with pytest.raises(pl.exceptions.ComputeError):
         (
             df_float.with_columns(col("values").cast(Utf8))

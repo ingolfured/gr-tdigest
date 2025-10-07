@@ -1,3 +1,4 @@
+#![cfg(feature = "python")]
 #![allow(clippy::unused_unit)]
 
 use polars::prelude::*;

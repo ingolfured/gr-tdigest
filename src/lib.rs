@@ -12,6 +12,13 @@ pub mod quality {
 pub use crate::quality::quality_base::{print_banner, print_report, print_section};
 // use pyo3_polars::export::export_polars_plugin;
 
+#[cfg(target_os = "linux")]
+use jemallocator::Jemalloc;
+
+#[cfg(target_os = "linux")]
+#[global_allocator]
+static ALLOC: Jemalloc = Jemalloc;
+
 #[cfg(feature = "python")]
 mod py;
 

@@ -120,6 +120,7 @@ mod tests {
 
     /// ========= 2) STORY: readable full matrix =========
     #[test]
+    #[ignore = "slow"]
     fn cdf_story_matrix() {
         use DistKind::*;
         const SEED: u64 = 4242;

@@ -103,6 +103,7 @@ mod tests {
     /// Prints clear separators so you can scroll the output easily.
     /// No assertions — this is diagnostic and narrative only.
     #[test]
+    #[ignore = "slow"]
     fn quantile_story_matrix() {
         use DistKind::*;
 
