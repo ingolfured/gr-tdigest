@@ -41,7 +41,9 @@ pre-commit = ">=4.3.0"
 maturin = { version = ">=1.9.5", extras = ["patchelf", "zig"] }
 numpy = ">=2.3.3"
 
-
+# ------------------------------------------------------------
+# Maturin build settings
+# ------------------------------------------------------------
 [tool.maturin]
 profile = "release"                     # docs: config 'profile' key
 features = ["python"]                   # flips on your PyO3 bindings
