@@ -1,149 +1,233 @@
-use crate::tdigest::{Centroid, TDigest};
+//! Polars ↔ TDigest codecs (strict).
+//!
+//! Two precision modes:
+//! - **Canonical** – full precision (f64 centroids; f64 min/max/sum/count)
+//! - **Compact**   – reduced precision (f32 centroids; f32 min/max; f64 sum/count)
+//!
+//! Instance API (strict):
+//!   td.try_to_series("td")                 -> PolarsResult<Series>
+//!   td.try_to_series_compact("td")         -> PolarsResult<Series>
+//!   TDigest::try_from_series(&series)      -> Result<Vec<TDigest>, CodecError>
+//!   TDigest::try_from_series_compact(&s)   -> Result<Vec<TDigest>, CodecError>
+
+use std::fmt;
+
 use polars::prelude::*;
 
+use crate::tdigest::{Centroid, TDigest};
+
 // --------------------- field name constants ----------------------------------
-const F_CENTROIDS: &str = "centroids";
-const F_MEAN: &str = "mean";
-const F_WEIGHT: &str = "weight";
-const F_SUM: &str = "sum";
-const F_MIN: &str = "min";
-const F_MAX: &str = "max";
-const F_COUNT: &str = "count";
-const F_MAX_SIZE: &str = "max_size";
 
-// --------------------- shared helpers: centroid pack/unpack ------------------
+pub const F_CENTROIDS: &str = "centroids";
+pub const F_MEAN: &str = "mean";
+pub const F_WEIGHT: &str = "weight";
+pub const F_SUM: &str = "sum";
+pub const F_MIN: &str = "min";
+pub const F_MAX: &str = "max";
+pub const F_COUNT: &str = "count";
+pub const F_MAX_SIZE: &str = "max_size";
 
-#[inline]
-fn centroid_struct(mean_s: &Series, weight_s: &Series) -> PolarsResult<Series> {
-    StructChunked::from_series(
-        "centroid".into(),
-        mean_s.len(),
-        [mean_s, weight_s].into_iter(), // yields &Series (not &&Series)
-    )
-    .map(|sc| sc.into_series())
+// --------------------- precision mode ----------------------------------------
+
+#[derive(Clone, Copy, Debug)]
+pub enum PrecisionMode {
+    Canonical, // f64 centroids, f64 min/max
+    Compact,   // f32 centroids, f32 min/max
 }
 
-/// Build `List<Struct{mean, weight}>` with f64 inner fields
-fn pack_centroids_f64(cents: &[Centroid]) -> Series {
-    let mut means: Vec<f64> = Vec::with_capacity(cents.len());
-    let mut wgts: Vec<f64> = Vec::with_capacity(cents.len());
-    for c in cents {
-        means.push(c.mean());
-        wgts.push(c.weight());
+// --------------------- public API on TDigest ---------------------------------
+
+impl TDigest {
+    /// Canonical encoding: f64 centroids and f64 min/max/sum/count.
+    pub fn try_to_series(&self, name: &str) -> PolarsResult<Series> {
+        tdigest_to_series_with(self, name, PrecisionMode::Canonical)
     }
-    let mean_s = Series::new(F_MEAN.into(), means);
-    let weight_s = Series::new(F_WEIGHT.into(), wgts);
-    let inner = centroid_struct(&mean_s, &weight_s).expect("centroid struct (f64)");
-    Series::new(F_CENTROIDS.into(), &[inner])
-}
 
-/// Build `List<Struct{mean, weight}>` with f32 inner fields (compact)
-fn pack_centroids_f32(cents: &[Centroid]) -> Series {
-    let mut means: Vec<f32> = Vec::with_capacity(cents.len());
-    let mut wgts: Vec<f32> = Vec::with_capacity(cents.len());
-    for c in cents {
-        means.push(c.mean() as f32);
-        wgts.push(c.weight() as f32);
+    /// Compact encoding: f32 centroids and f32 min/max (sum/count stay f64).
+    pub fn try_to_series_compact(&self, name: &str) -> PolarsResult<Series> {
+        tdigest_to_series_with(self, name, PrecisionMode::Compact)
     }
-    let mean_s = Series::new(F_MEAN.into(), means);
-    let weight_s = Series::new(F_WEIGHT.into(), wgts);
-    let inner = centroid_struct(&mean_s, &weight_s).expect("centroid struct (f32)");
-    Series::new(F_CENTROIDS.into(), &[inner])
+
+    /// Strict parse of canonical schema.
+    pub fn try_from_series(input: &Series) -> Result<Vec<TDigest>, CodecError> {
+        parse_tdigests_strict(input, PrecisionMode::Canonical)
+    }
+
+    /// Strict parse of compact schema.
+    pub fn try_from_series_compact(input: &Series) -> Result<Vec<TDigest>, CodecError> {
+        parse_tdigests_strict(input, PrecisionMode::Compact)
+    }
+
+    /// Canonical Polars dtype for a TDigest row (struct of 6 fields).
+    pub fn polars_dtype() -> DataType {
+        canonical_dtype()
+    }
+
+    /// Compact Polars dtype for a TDigest row (struct of 6 fields).
+    pub fn polars_dtype_compact() -> DataType {
+        compact_dtype()
+    }
 }
 
-/// Parse one row’s `List<Struct{mean, weight}>` into `Vec<Centroid>` (as f64)
-fn unpack_centroids_to_f64(centroids_list: &ListChunked, row: usize) -> Vec<Centroid> {
-    let mut out = Vec::new();
-    let Some(row_ser) = centroids_list.get_as_series(row) else {
-        return out;
-    };
-    let Ok(sc) = row_ser.struct_() else {
-        return out;
-    };
+// --------------------- error type (strict) -----------------------------------
 
-    let m_ser = match sc
-        .field_by_name(F_MEAN)
-        .ok()
-        .and_then(|s| s.cast(&DataType::Float64).ok())
-    {
-        Some(s) => s,
-        None => return out,
-    };
-    let w_ser = match sc
-        .field_by_name(F_WEIGHT)
-        .ok()
-        .and_then(|s| s.cast(&DataType::Float64).ok())
-    {
-        Some(s) => s,
-        None => return out,
-    };
+#[non_exhaustive]
+#[derive(Debug)]
+pub enum CodecError {
+    NotAStruct {
+        series_name: String,
+    },
+    MissingField(&'static str),
+    WrongDtype {
+        field: &'static str,
+        found: Box<DataType>,
+        expected: Box<DataType>,
+    },
+    BadCentroidLayout {
+        expected_mean: Box<DataType>,
+        expected_weight: Box<DataType>,
+        found: Box<DataType>,
+    },
+    NullField {
+        field: &'static str,
+        row: usize,
+    },
+    NullCentroid {
+        row: usize,
+        index: usize,
+    },
+    Polars(PolarsError),
+}
 
-    let m = m_ser.f64().unwrap();
-    let w = w_ser.f64().unwrap();
+impl From<PolarsError> for CodecError {
+    fn from(e: PolarsError) -> Self {
+        CodecError::Polars(e)
+    }
+}
 
-    // zip() keeps the shorter; filter out Nones cleanly
-    for (mm, ww) in m.into_iter().zip(w.into_iter()) {
-        if let (Some(mv), Some(wv)) = (mm, ww) {
-            out.push(Centroid::new(mv, wv));
+impl fmt::Display for CodecError {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        use CodecError::*;
+        match self {
+            NotAStruct { series_name } =>
+                write!(f, "series '{series_name}' is not a struct column"),
+            MissingField(field) =>
+                write!(f, "missing field '{field}'"),
+            WrongDtype { field, found, expected } =>
+                write!(f, "field '{field}' has dtype {found:?}, expected {expected:?}"),
+            BadCentroidLayout { expected_mean, expected_weight, found } =>
+                write!(f, "centroids must be List<Struct{{mean: {expected_mean:?}, weight: {expected_weight:?}}}>, found {found:?}"),
+            NullField { field, row } =>
+                write!(f, "null in scalar field '{field}' at row {row}"),
+            NullCentroid { row, index } =>
+                write!(f, "null in centroids at row {row}, index {index}"),
+            Polars(e) => write!(f, "polars error: {e}"),
         }
     }
-    out
 }
 
-// --------------------- shared helpers: scalars & outer struct ----------------
+// --------------------- schema builders & validators --------------------------
 
-#[inline]
-fn any_to_f64(v: AnyValue<'_>) -> Option<f64> {
-    v.try_extract::<f64>()
-        .ok()
-        .or_else(|| v.try_extract::<f32>().ok().map(|x| x as f64))
+fn canonical_dtype() -> DataType {
+    DataType::Struct(vec![
+        Field::new(
+            F_CENTROIDS.into(),
+            DataType::List(Box::new(DataType::Struct(vec![
+                Field::new(F_MEAN.into(), DataType::Float64),
+                Field::new(F_WEIGHT.into(), DataType::Float64),
+            ]))),
+        ),
+        Field::new(F_SUM.into(), DataType::Float64),
+        Field::new(F_MIN.into(), DataType::Float64),
+        Field::new(F_MAX.into(), DataType::Float64),
+        Field::new(F_COUNT.into(), DataType::Float64),
+        Field::new(F_MAX_SIZE.into(), DataType::Int64),
+    ])
 }
 
-#[inline]
-fn any_to_count(v: AnyValue<'_>) -> Option<f64> {
-    v.try_extract::<f64>()
-        .ok()
-        .or_else(|| v.try_extract::<i64>().ok().map(|x| x as f64))
-        .or_else(|| v.try_extract::<u64>().ok().map(|x| x as f64))
+fn compact_dtype() -> DataType {
+    DataType::Struct(vec![
+        Field::new(
+            F_CENTROIDS.into(),
+            DataType::List(Box::new(DataType::Struct(vec![
+                Field::new(F_MEAN.into(), DataType::Float32),
+                Field::new(F_WEIGHT.into(), DataType::Float32),
+            ]))),
+        ),
+        Field::new(F_SUM.into(), DataType::Float64),
+        Field::new(F_MIN.into(), DataType::Float32),
+        Field::new(F_MAX.into(), DataType::Float32),
+        Field::new(F_COUNT.into(), DataType::Float64),
+        Field::new(F_MAX_SIZE.into(), DataType::Int64),
+    ])
 }
 
-/// Build the single-row outer struct from pre-built centroids + scalar fields.
-/// `min`/`max` are passed as Series to preserve exact dtype (f64 for canonical, f32 for compact).
-fn build_outer_struct(
-    name: &str,
-    centroids_list: &Series,
-    sum: f64,
-    min: Series,
-    max: Series,
-    count: f64,
-    max_size: i64,
-) -> Series {
-    let sum_s = Series::new(F_SUM.into(), [sum]);
-    let count_s = Series::new(F_COUNT.into(), [count]);
-    let max_size_s = Series::new(F_MAX_SIZE.into(), [max_size]);
+fn validate_schema_strict(s: &StructChunked, mode: PrecisionMode) -> Result<(), CodecError> {
+    let expected = match mode {
+        PrecisionMode::Canonical => canonical_dtype(),
+        PrecisionMode::Compact => compact_dtype(),
+    };
 
-    StructChunked::from_series(
-        name.into(),
-        1,
-        [centroids_list, &sum_s, &min, &max, &count_s, &max_size_s].into_iter(),
-    )
-    .expect("tdigest outer struct")
-    .into_series()
+    let expected_fields = match &expected {
+        DataType::Struct(v) => v,
+        _ => unreachable!(),
+    };
+
+    for field in expected_fields {
+        let name = field.name();
+        let expected_dt = field.dtype();
+        let ser = s.field_by_name(name).map_err(|_| {
+            CodecError::MissingField(match name.as_str() {
+                F_CENTROIDS => F_CENTROIDS,
+                F_SUM => F_SUM,
+                F_MIN => F_MIN,
+                F_MAX => F_MAX,
+                F_COUNT => F_COUNT,
+                F_MAX_SIZE => F_MAX_SIZE,
+                _ => "unknown",
+            })
+        })?;
+
+        let found_dt = ser.dtype();
+        if found_dt != expected_dt {
+            if name.as_str() == F_CENTROIDS {
+                return Err(CodecError::BadCentroidLayout {
+                    expected_mean: Box::new(match mode {
+                        PrecisionMode::Canonical => DataType::Float64,
+                        PrecisionMode::Compact => DataType::Float32,
+                    }),
+                    expected_weight: Box::new(match mode {
+                        PrecisionMode::Canonical => DataType::Float64,
+                        PrecisionMode::Compact => DataType::Float32,
+                    }),
+                    found: Box::new(found_dt.clone()),
+                });
+            } else {
+                return Err(CodecError::WrongDtype {
+                    field: match name.as_str() {
+                        F_SUM => F_SUM,
+                        F_MIN => F_MIN,
+                        F_MAX => F_MAX,
+                        F_COUNT => F_COUNT,
+                        F_MAX_SIZE => F_MAX_SIZE,
+                        _ => "unknown",
+                    },
+                    found: Box::new(found_dt.clone()),
+                    expected: Box::new(expected_dt.clone()),
+                });
+            }
+        }
+    }
+    Ok(())
 }
 
-// --------------------- writers (single dispatcher) ---------------------------
+// --------------------- private writer core -----------------------------------
 
-enum Precision {
-    F32,
-    F64,
-}
-
-fn tdigest_to_series_with(td: TDigest, name: &str, p: Precision) -> Series {
+fn tdigest_to_series_with(td: &TDigest, name: &str, mode: PrecisionMode) -> PolarsResult<Series> {
     let cents = td.centroids();
-
-    match p {
-        Precision::F64 => {
-            let centroids_list = pack_centroids_f64(cents);
+    match mode {
+        PrecisionMode::Canonical => {
+            let centroids_list = pack_centroids_f64(cents)?;
             build_outer_struct(
                 name,
                 &centroids_list,
@@ -154,8 +238,8 @@ fn tdigest_to_series_with(td: TDigest, name: &str, p: Precision) -> Series {
                 td.max_size() as i64,
             )
         }
-        Precision::F32 => {
-            let centroids_list = pack_centroids_f32(cents);
+        PrecisionMode::Compact => {
+            let centroids_list = pack_centroids_f32(cents)?;
             build_outer_struct(
                 name,
                 &centroids_list,
@@ -169,55 +253,265 @@ fn tdigest_to_series_with(td: TDigest, name: &str, p: Precision) -> Series {
     }
 }
 
-/// Canonical: f64 means/weights, f64 min/max/sum/count, i64 max_size
-pub fn tdigest_to_series(td: TDigest, name: &str) -> Series {
-    tdigest_to_series_with(td, name, Precision::F64)
+// --------------------- pack/unpack helpers -----------------------------------
+
+#[inline]
+fn centroid_struct(mean_s: &Series, weight_s: &Series) -> PolarsResult<Series> {
+    StructChunked::from_series(
+        "centroid".into(),
+        mean_s.len(),
+        [mean_s, weight_s].into_iter(),
+    )
+    .map(|sc| sc.into_series())
 }
 
-/// Compact: f32 means/weights, f32 min/max, f64 sum/count, i64 max_size
-pub(crate) fn tdigest_to_series_32(td: TDigest, name: &str) -> Series {
-    tdigest_to_series_with(td, name, Precision::F32)
+/// Build `List<Struct{mean, weight}>` with f64 inner fields
+fn pack_centroids_f64(cents: &[Centroid]) -> PolarsResult<Series> {
+    let means: Vec<f64> = cents.iter().map(|c| c.mean()).collect();
+    let wgts: Vec<f64> = cents.iter().map(|c| c.weight()).collect();
+    let mean_s = Series::new(F_MEAN.into(), means);
+    let weight_s = Series::new(F_WEIGHT.into(), wgts);
+    let inner = centroid_struct(&mean_s, &weight_s)?;
+    Ok(Series::new(F_CENTROIDS.into(), &[inner]))
 }
 
-// --------------------- parser (re-uses the same helpers) ---------------------
+/// Build `List<Struct{mean, weight}>` with f32 inner fields (compact)
+fn pack_centroids_f32(cents: &[Centroid]) -> PolarsResult<Series> {
+    let means: Vec<f32> = cents.iter().map(|c| c.mean() as f32).collect();
+    let wgts: Vec<f32> = cents.iter().map(|c| c.weight() as f32).collect();
+    let mean_s = Series::new(F_MEAN.into(), means);
+    let weight_s = Series::new(F_WEIGHT.into(), wgts);
+    let inner = centroid_struct(&mean_s, &weight_s)?;
+    Ok(Series::new(F_CENTROIDS.into(), &[inner]))
+}
 
-pub(crate) fn parse_tdigests_any(input: &Series) -> Vec<TDigest> {
-    let Ok(s) = input.struct_() else {
-        return Vec::new();
-    };
+/// Build the single-row outer struct from pre-built centroids + scalar fields.
+fn build_outer_struct(
+    name: &str,
+    centroids_list: &Series,
+    sum: f64,
+    min: Series,
+    max: Series,
+    count: f64,
+    max_size: i64,
+) -> PolarsResult<Series> {
+    let sum_s = Series::new(F_SUM.into(), [sum]);
+    let count_s = Series::new(F_COUNT.into(), [count]);
+    let max_size_s = Series::new(F_MAX_SIZE.into(), [max_size]);
 
-    let (Ok(centroids_col), Ok(sum_col), Ok(min_col), Ok(max_col), Ok(count_col), Ok(max_size_col)) = (
-        s.field_by_name(F_CENTROIDS),
-        s.field_by_name(F_SUM),
-        s.field_by_name(F_MIN),
-        s.field_by_name(F_MAX),
-        s.field_by_name(F_COUNT),
-        s.field_by_name(F_MAX_SIZE),
-    ) else {
-        return Vec::new();
-    };
+    StructChunked::from_series(
+        name.into(),
+        1,
+        [centroids_list, &sum_s, &min, &max, &count_s, &max_size_s].into_iter(),
+    )
+    .map(|sc| sc.into_series())
+}
 
-    let Ok(centroids_list) = centroids_col.list() else {
-        return Vec::new();
+/// Parse one row’s centroids into `Vec<Centroid>` with strict null/shape checks.
+fn unpack_centroids_strict(
+    centroids_list: &ListChunked,
+    row: usize,
+    mode: PrecisionMode,
+) -> Result<Vec<Centroid>, CodecError> {
+    let Some(row_ser) = centroids_list.get_as_series(row) else {
+        return Ok(Vec::new());
     };
+    let sc = row_ser
+        .struct_()
+        .map_err(|_| CodecError::BadCentroidLayout {
+            expected_mean: Box::new(match mode {
+                PrecisionMode::Canonical => DataType::Float64,
+                PrecisionMode::Compact => DataType::Float32,
+            }),
+            expected_weight: Box::new(match mode {
+                PrecisionMode::Canonical => DataType::Float64,
+                PrecisionMode::Compact => DataType::Float32,
+            }),
+            found: Box::new(row_ser.dtype().clone()),
+        })?;
+
+    match mode {
+        PrecisionMode::Canonical => {
+            let m_ser = sc
+                .field_by_name(F_MEAN)
+                .map_err(|_| CodecError::MissingField(F_MEAN))?;
+            let w_ser = sc
+                .field_by_name(F_WEIGHT)
+                .map_err(|_| CodecError::MissingField(F_WEIGHT))?;
+            let m = m_ser.f64().map_err(|_| CodecError::WrongDtype {
+                field: F_MEAN,
+                found: Box::new(m_ser.dtype().clone()),
+                expected: Box::new(DataType::Float64),
+            })?;
+            let w = w_ser.f64().map_err(|_| CodecError::WrongDtype {
+                field: F_WEIGHT,
+                found: Box::new(w_ser.dtype().clone()),
+                expected: Box::new(DataType::Float64),
+            })?;
+
+            let len = m.len().min(w.len());
+            let mut out = Vec::with_capacity(len);
+            for (idx, (mm, ww)) in m.into_iter().zip(w.into_iter()).enumerate() {
+                let (Some(mv), Some(wv)) = (mm, ww) else {
+                    return Err(CodecError::NullCentroid { row, index: idx });
+                };
+                out.push(Centroid::new(mv, wv));
+            }
+            Ok(out)
+        }
+        PrecisionMode::Compact => {
+            let m_ser = sc
+                .field_by_name(F_MEAN)
+                .map_err(|_| CodecError::MissingField(F_MEAN))?;
+            let w_ser = sc
+                .field_by_name(F_WEIGHT)
+                .map_err(|_| CodecError::MissingField(F_WEIGHT))?;
+            let m = m_ser.f32().map_err(|_| CodecError::WrongDtype {
+                field: F_MEAN,
+                found: Box::new(m_ser.dtype().clone()),
+                expected: Box::new(DataType::Float32),
+            })?;
+            let w = w_ser.f32().map_err(|_| CodecError::WrongDtype {
+                field: F_WEIGHT,
+                found: Box::new(w_ser.dtype().clone()),
+                expected: Box::new(DataType::Float32),
+            })?;
+
+            let len = m.len().min(w.len());
+            let mut out = Vec::with_capacity(len);
+            for (idx, (mm, ww)) in m.into_iter().zip(w.into_iter()).enumerate() {
+                let (Some(mv), Some(wv)) = (mm, ww) else {
+                    return Err(CodecError::NullCentroid { row, index: idx });
+                };
+                out.push(Centroid::new(mv as f64, wv as f64));
+            }
+            Ok(out)
+        }
+    }
+}
+
+// --------------------- strict parser entry -----------------------------------
+
+fn parse_tdigests_strict(input: &Series, mode: PrecisionMode) -> Result<Vec<TDigest>, CodecError> {
+    let s = input.struct_().map_err(|_| CodecError::NotAStruct {
+        series_name: input.name().to_string(),
+    })?;
+
+    validate_schema_strict(s, mode)?;
+
+    // Bind each field to avoid temporary-drop borrow issues.
+    let c_field = s
+        .field_by_name(F_CENTROIDS)
+        .map_err(|_| CodecError::MissingField(F_CENTROIDS))?;
+    let centroids_list = c_field.list().map_err(|_| CodecError::WrongDtype {
+        field: F_CENTROIDS,
+        found: Box::new(c_field.dtype().clone()),
+        expected: Box::new(DataType::List(Box::new(DataType::Struct(vec![])))), // message only
+    })?;
+
+    let sum_field = s
+        .field_by_name(F_SUM)
+        .map_err(|_| CodecError::MissingField(F_SUM))?;
+    let count_field = s
+        .field_by_name(F_COUNT)
+        .map_err(|_| CodecError::MissingField(F_COUNT))?;
+    let maxsz_field = s
+        .field_by_name(F_MAX_SIZE)
+        .map_err(|_| CodecError::MissingField(F_MAX_SIZE))?;
+    let min_field = s
+        .field_by_name(F_MIN)
+        .map_err(|_| CodecError::MissingField(F_MIN))?;
+    let max_field = s
+        .field_by_name(F_MAX)
+        .map_err(|_| CodecError::MissingField(F_MAX))?;
+
+    let sum_col = sum_field.f64().map_err(|_| CodecError::WrongDtype {
+        field: F_SUM,
+        found: Box::new(sum_field.dtype().clone()),
+        expected: Box::new(DataType::Float64),
+    })?;
+    let count_col = count_field.f64().map_err(|_| CodecError::WrongDtype {
+        field: F_COUNT,
+        found: Box::new(count_field.dtype().clone()),
+        expected: Box::new(DataType::Float64),
+    })?;
+    let maxsz_col = maxsz_field.i64().map_err(|_| CodecError::WrongDtype {
+        field: F_MAX_SIZE,
+        found: Box::new(maxsz_field.dtype().clone()),
+        expected: Box::new(DataType::Int64),
+    })?;
 
     let n = input.len();
     let mut out = Vec::with_capacity(n);
 
     for i in 0..n {
-        let sum = sum_col.get(i).ok().and_then(any_to_f64).unwrap_or(0.0);
-        let min = min_col.get(i).ok().and_then(any_to_f64).unwrap_or(0.0);
-        let max = max_col.get(i).ok().and_then(any_to_f64).unwrap_or(0.0);
-        let count = count_col.get(i).ok().and_then(any_to_count).unwrap_or(0.0);
-        let max_sz = max_size_col
-            .get(i)
-            .ok()
-            .and_then(|v| v.try_extract::<i64>().ok())
-            .unwrap_or(0) as usize;
+        let sum = sum_col.get(i).ok_or(CodecError::NullField {
+            field: F_SUM,
+            row: i,
+        })?;
+        let count = count_col.get(i).ok_or(CodecError::NullField {
+            field: F_COUNT,
+            row: i,
+        })?;
+        let max_size_i64 = maxsz_col.get(i).ok_or(CodecError::NullField {
+            field: F_MAX_SIZE,
+            row: i,
+        })?;
+        let max_size = max_size_i64 as usize;
 
-        let cents = unpack_centroids_to_f64(centroids_list, i);
-        out.push(TDigest::new(cents, sum, count, min, max, max_sz));
+        let min = match mode {
+            PrecisionMode::Canonical => {
+                let col = min_field.f64().map_err(|_| CodecError::WrongDtype {
+                    field: F_MIN,
+                    found: Box::new(min_field.dtype().clone()),
+                    expected: Box::new(DataType::Float64),
+                })?;
+                col.get(i).ok_or(CodecError::NullField {
+                    field: F_MIN,
+                    row: i,
+                })?
+            }
+            PrecisionMode::Compact => {
+                let col = min_field.f32().map_err(|_| CodecError::WrongDtype {
+                    field: F_MIN,
+                    found: Box::new(min_field.dtype().clone()),
+                    expected: Box::new(DataType::Float32),
+                })?;
+                col.get(i).ok_or(CodecError::NullField {
+                    field: F_MIN,
+                    row: i,
+                })? as f64
+            }
+        };
+
+        let max = match mode {
+            PrecisionMode::Canonical => {
+                let col = max_field.f64().map_err(|_| CodecError::WrongDtype {
+                    field: F_MAX,
+                    found: Box::new(max_field.dtype().clone()),
+                    expected: Box::new(DataType::Float64),
+                })?;
+                col.get(i).ok_or(CodecError::NullField {
+                    field: F_MAX,
+                    row: i,
+                })?
+            }
+            PrecisionMode::Compact => {
+                let col = max_field.f32().map_err(|_| CodecError::WrongDtype {
+                    field: F_MAX,
+                    found: Box::new(max_field.dtype().clone()),
+                    expected: Box::new(DataType::Float32),
+                })?;
+                col.get(i).ok_or(CodecError::NullField {
+                    field: F_MAX,
+                    row: i,
+                })? as f64
+            }
+        };
+
+        let cents = unpack_centroids_strict(centroids_list, i, mode)?;
+        out.push(TDigest::new(cents, sum, count, min, max, max_size));
     }
 
-    out
+    Ok(out)
 }

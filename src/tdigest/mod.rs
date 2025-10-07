@@ -192,6 +192,7 @@ impl TDigest {
     }
 
     pub fn merge_digests(digests: Vec<TDigest>) -> TDigest {
+        // TODO: scale different down and have one max_size
         let max_size = digests.first().map(|d| d.max_size).unwrap_or(100);
         let mut chosen_scale = ScaleFamily::Quad;
 
@@ -820,7 +821,6 @@ mod tests {
 
     #[test]
     fn compact_scaling_prevents_overflow_and_preserves_shape() {
-        use crate::tdigest::codecs::{parse_tdigests_any, tdigest_to_series_32};
         use crate::tdigest::test_helpers::assert_rel_close;
 
         // Three centroids with astronomical weights to force scaling for f32.
@@ -838,7 +838,7 @@ mod tests {
         let p50_before = td.estimate_quantile(0.5);
 
         // Write compact (f32/f32) — this will auto-scale internally.
-        let ser = tdigest_to_series_32(td.clone(), "n");
+        let ser = td.clone().try_to_series_compact("n").unwrap();
 
         // Sanity: compact centroids' weights must be finite f32 and well within range.
         {
@@ -851,15 +851,17 @@ mod tests {
             let w_f32 = w_series.f32().expect("f32 weights");
 
             for i in 0..w_f32.len() {
-                if let Some(w) = w_f32.get(i) {
-                    assert!(w.is_finite(), "compact weight must be finite");
-                    assert!(w.abs() < f32::MAX / 4.0, "compact weight too large: {w}");
+                if let Some(wf) = w_f32.get(i) {
+                    // make the type explicit for the compiler
+                    let wf: f32 = wf;
+                    assert!(wf.is_finite(), "compact weight must be finite");
+                    assert!(wf.abs() < f32::MAX / 4.0, "compact weight too large: {wf}");
                 }
             }
         }
 
         // Parse back and verify shape invariants.
-        let parsed = parse_tdigests_any(&ser);
+        let parsed = TDigest::try_from_series_compact(&ser).unwrap();
         assert_eq!(parsed.len(), 1, "one digest expected");
         let td2 = parsed.into_iter().next().unwrap();
 

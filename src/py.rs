@@ -6,13 +6,16 @@ use crate::tdigest::{ScaleFamily, TDigest as CoreTDigest};
 use bincode::config;
 use bincode::serde::{decode_from_slice, encode_to_vec};
 
-fn parse_scale(s: Option<&str>) -> ScaleFamily {
-    match s.unwrap_or("quad").to_ascii_lowercase().as_str() {
-        "quad" => ScaleFamily::Quad,
-        "k1" => ScaleFamily::K1,
-        "k2" => ScaleFamily::K2,
-        "k3" => ScaleFamily::K3,
-        _ => ScaleFamily::Quad,
+fn parse_scale(s: Option<&str>) -> Result<ScaleFamily, PyErr> {
+    match s.map(|t| t.to_ascii_lowercase()) {
+        None => Ok(ScaleFamily::K2), // default: K2 to match library-wide default
+        Some(ref v) if v == "quad" => Ok(ScaleFamily::Quad),
+        Some(ref v) if v == "k1" => Ok(ScaleFamily::K1),
+        Some(ref v) if v == "k2" => Ok(ScaleFamily::K2),
+        Some(ref v) if v == "k3" => Ok(ScaleFamily::K3),
+        Some(v) => Err(pyo3::exceptions::PyValueError::new_err(format!(
+            "invalid scale: {v} (expected 'quad', 'k1', 'k2', or 'k3')"
+        ))),
     }
 }
 
@@ -26,9 +29,14 @@ impl PyTDigest {
     /// Build from a Python array-like of floats.
     /// Example: TDigest.from_array(xs, max_size=200, scale="k2")
     #[staticmethod]
-    #[pyo3(signature = (xs, max_size, scale=None))]
+    #[pyo3(signature = (xs, max_size=1000, scale=None))]
     pub fn from_array(xs: Vec<f64>, max_size: usize, scale: Option<&str>) -> PyResult<Self> {
-        let sc = parse_scale(scale);
+        if max_size == 0 {
+            return Err(pyo3::exceptions::PyValueError::new_err(
+                "max_size must be > 0",
+            ));
+        }
+        let sc = parse_scale(scale)?;
         let base = CoreTDigest::new_with_size_and_scale(max_size, sc);
         Ok(Self {
             inner: base.merge_unsorted(xs),

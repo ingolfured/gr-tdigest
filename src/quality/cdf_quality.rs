@@ -1,5 +1,3 @@
-//! Quality checks for `TDigest::estimate_cdf(&[x])`.
-
 use super::quality_base::{
     build_digest_sorted, exact_ecdf_for_sorted, gen_dataset, DistKind, Precision, QualityReport,
 };
@@ -59,8 +57,8 @@ pub fn assess_cdf_with(
     precision: Precision,
     seed: u64,
 ) -> QualityReport {
-    let mut data = gen_dataset(kind, n, seed);
-    data.sort_by(|a, b| a.partial_cmp(b).unwrap());
+    let mut data: Vec<f64> = gen_dataset(kind, n, seed);
+    data.sort_by(|a: &f64, b: &f64| a.total_cmp(b));
 
     let td = build_digest_sorted(data.clone(), max_size, scale, precision);
     let (ks, mae) = cdf_grid_errors(&td, &data);
@@ -75,7 +73,6 @@ pub fn assess_cdf(kind: DistKind, n: usize, max_size: usize, seed: u64) -> Quali
 #[cfg(test)]
 mod tests {
     use super::*;
-    // Bring the printers into *this* submodule explicitly.
     use crate::print_report; // re-exported in lib.rs
     use crate::quality::quality_base::{print_banner, print_section};
 
@@ -135,7 +132,7 @@ mod tests {
             ScaleFamily::K2,
             ScaleFamily::K3,
         ];
-        let precs = [Precision::F64, Precision::F32Inputs];
+        let precs = [Precision::F64, Precision::F32];
         let dists = [Uniform, Normal, LogNormal { sigma: 1.0 }, Mixture];
 
         print_banner(&format!(

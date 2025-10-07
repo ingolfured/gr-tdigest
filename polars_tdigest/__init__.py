@@ -64,31 +64,17 @@ def _coerce_storage(storage: StorageSchema | str) -> str:
     raise ValueError("`storage` must be one of 'f64', 'f32', or StorageSchema.F64/F32")
 
 
-def tdigest(
-    expr: IntoExpr,
-    max_size: int = 100,
-    scale: ScaleFamily | str = ScaleFamily.K2,
-    storage: StorageSchema | str = StorageSchema.F64,
-) -> pl.Expr:
-    """
-    Build a TDigest over `expr`.
-
-    Parameters
-    ----------
-    max_size : int, default 100
-        Target maximum number of centroids.
-    scale : ScaleFamily | str, default ScaleFamily.QUAD
-        Tail allocation family ("quad", "k1", "k2", "k3").
-    storage : StorageSchema | str, default StorageSchema.F64
-        Output struct schema. "f64" stores centroids as f64/f64.
-        "f32" stores a compact f32/f32 schema.
-    """
+def tdigest(expr, max_size=100, scale=ScaleFamily.K2, storage=StorageSchema.F64) -> pl.Expr:
+    _STORAGE_FN = {
+        "f64": "tdigest",
+        "f32": "_tdigest_f32",
+    }
     scale_s = _coerce_scale(scale)
     storage_s = _coerce_storage(storage)
-    function_name = "tdigest_32" if storage_s == "f32" else "tdigest"
+    fn = _STORAGE_FN[storage_s]
     return register_plugin_function(
         plugin_path=lib,
-        function_name=function_name,
+        function_name=fn,
         args=expr,
         is_elementwise=False,
         returns_scalar=True,

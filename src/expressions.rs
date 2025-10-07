@@ -8,7 +8,6 @@ use rayon::iter::ParallelBridge;
 use rayon::prelude::*;
 use serde::Deserialize;
 
-use crate::tdigest::codecs::{parse_tdigests_any, tdigest_to_series, tdigest_to_series_32};
 use crate::tdigest::{ScaleFamily, TDigest};
 
 const SUPPORTED_TYPES: &[DataType] = &[
@@ -18,6 +17,8 @@ const SUPPORTED_TYPES: &[DataType] = &[
     DataType::UInt64,
     DataType::UInt32,
 ];
+
+/* ==================== user-facing exprs ==================== */
 
 #[polars_expr(output_type = Float64)]
 fn estimate_cdf(inputs: &[Series], kwargs: CDFKwargs) -> PolarsResult<Series> {
@@ -39,19 +40,23 @@ fn estimate_quantile(inputs: &[Series], kwargs: QuantileKwargs) -> PolarsResult<
     estimate_quantile_impl(inputs, kwargs.quantile)
 }
 
-#[polars_expr(output_type_func = tdigest_output)]
+// merge → canonical (f64) schema for stability
+#[polars_expr(output_type_func = tdigest_output_f64)]
 fn merge_tdigests(inputs: &[Series]) -> PolarsResult<Series> {
-    merge_tdigests_impl(inputs)
+    let td = parse_tdigest(inputs);
+    td.try_to_series(inputs[0].name())
 }
 
-#[polars_expr(output_type_func = tdigest_output)]
+// canonical f64 storage
+#[polars_expr(output_type_func = tdigest_output_f64)]
 fn tdigest(inputs: &[Series], kwargs: TDigestKwargs) -> PolarsResult<Series> {
-    tdigest_impl(inputs, kwargs.max_size, kwargs.scale)
+    tdigest_impl(inputs, kwargs.max_size, kwargs.scale, Storage::F64)
 }
 
-#[polars_expr(output_type_func = tdigest_output_32)]
-fn tdigest_32(inputs: &[Series], kwargs: TDigestKwargs) -> PolarsResult<Series> {
-    tdigest_32_impl(inputs, kwargs.max_size, kwargs.scale)
+// compact f32 storage (internal; called from Python by name)
+#[polars_expr(output_type_func = tdigest_output_f32)]
+fn _tdigest_f32(inputs: &[Series], kwargs: TDigestKwargs) -> PolarsResult<Series> {
+    tdigest_impl(inputs, kwargs.max_size, kwargs.scale, Storage::F32)
 }
 
 #[polars_expr(output_type = String)]
@@ -73,6 +78,8 @@ fn tdigest_summary(inputs: &[Series]) -> PolarsResult<Series> {
     Ok(Series::new("".into(), [s]))
 }
 
+/* ==================== kwargs & output types ==================== */
+
 #[derive(Debug, Deserialize)]
 struct QuantileKwargs {
     quantile: f64,
@@ -83,7 +90,7 @@ struct CDFKwargs {
     xs: Vec<f64>,
 }
 
-// Defaults: max_size=1000, scale=K2 (serde accepts "quad","k1","k2","k3" thanks to #[serde(rename_all="lowercase")] on ScaleFamily)
+// Defaults: max_size=1000, scale=K2
 #[inline]
 fn default_max_size() -> usize {
     1000
@@ -100,6 +107,22 @@ struct TDigestKwargs {
     #[serde(default = "default_scale")]
     scale: ScaleFamily,
 }
+
+fn tdigest_output_f64(_input_fields: &[Field]) -> PolarsResult<Field> {
+    Ok(Field::new(
+        "tdigest".into(),
+        DataType::Struct(tdigest_fields_f64()),
+    ))
+}
+
+fn tdigest_output_f32(_input_fields: &[Field]) -> PolarsResult<Field> {
+    Ok(Field::new(
+        "tdigest".into(),
+        DataType::Struct(tdigest_fields_f32()),
+    ))
+}
+
+/* ==================== schema builders ==================== */
 
 fn tdigest_fields_cfg(
     mean_dt: DataType,
@@ -123,7 +146,7 @@ fn tdigest_fields_cfg(
     ]
 }
 
-fn tdigest_fields() -> Vec<Field> {
+fn tdigest_fields_f64() -> Vec<Field> {
     tdigest_fields_cfg(
         DataType::Float64,
         DataType::Float64,
@@ -131,8 +154,7 @@ fn tdigest_fields() -> Vec<Field> {
         DataType::Float64,
     )
 }
-
-fn tdigest_fields_32() -> Vec<Field> {
+fn tdigest_fields_f32() -> Vec<Field> {
     tdigest_fields_cfg(
         DataType::Float32,
         DataType::Float32,
@@ -141,18 +163,28 @@ fn tdigest_fields_32() -> Vec<Field> {
     )
 }
 
-fn tdigest_output(_: &[Field]) -> PolarsResult<Field> {
-    Ok(Field::new(
-        "tdigest".into(),
-        DataType::Struct(tdigest_fields()),
-    ))
+/* ==================== core helpers ==================== */
+
+#[derive(Copy, Clone)]
+enum Storage {
+    F64,
+    F32,
 }
 
-fn tdigest_output_32(_: &[Field]) -> PolarsResult<Field> {
-    Ok(Field::new(
-        "tdigest".into(),
-        DataType::Struct(tdigest_fields_32()),
-    ))
+fn tdigest_impl(
+    inputs: &[Series],
+    max_size: usize,
+    scale: ScaleFamily,
+    storage: Storage,
+) -> PolarsResult<Series> {
+    let mut td = tdigest_from_series(inputs, max_size, scale)?;
+    if td.is_empty() {
+        td = TDigest::new(Vec::new(), 0.0, 0.0, 0.0, 0.0, 0);
+    }
+    match storage {
+        Storage::F64 => td.try_to_series(inputs[0].name()),
+        Storage::F32 => td.try_to_series_compact(inputs[0].name()),
+    }
 }
 
 fn tdigest_from_series(
@@ -185,33 +217,14 @@ fn tdigest_from_series(
     Ok(TDigest::merge_digests(chunks))
 }
 
+/// Parse a TDigest struct column via public strict APIs:
+///   try canonical first, then compact.
 fn parse_tdigest(inputs: &[Series]) -> TDigest {
-    let tdigests: Vec<TDigest> = parse_tdigests_any(&inputs[0]);
-    TDigest::merge_digests(tdigests)
-}
-
-fn tdigest_impl_generic<F>(
-    inputs: &[Series],
-    max_size: usize,
-    scale: ScaleFamily,
-    to_series: F,
-) -> PolarsResult<Series>
-where
-    F: FnOnce(TDigest, &str) -> Series,
-{
-    let mut td = tdigest_from_series(inputs, max_size, scale)?;
-    if td.is_empty() {
-        td = TDigest::new(Vec::new(), 100.0, 0.0, 0.0, 0.0, 0);
-    }
-    Ok(to_series(td, inputs[0].name()))
-}
-
-fn tdigest_impl(inputs: &[Series], max_size: usize, scale: ScaleFamily) -> PolarsResult<Series> {
-    tdigest_impl_generic(inputs, max_size, scale, tdigest_to_series)
-}
-
-fn tdigest_32_impl(inputs: &[Series], max_size: usize, scale: ScaleFamily) -> PolarsResult<Series> {
-    tdigest_impl_generic(inputs, max_size, scale, tdigest_to_series_32)
+    let s = &inputs[0];
+    let parsed = TDigest::try_from_series(s)
+        .or_else(|_| TDigest::try_from_series_compact(s))
+        .unwrap_or_default();
+    TDigest::merge_digests(parsed)
 }
 
 fn estimate_quantile_impl(inputs: &[Series], q: f64) -> PolarsResult<Series> {
@@ -236,9 +249,4 @@ fn estimate_cdf_impl(inputs: &[Series], xs: Vec<f64>) -> PolarsResult<Series> {
     }
     let out = td.estimate_cdf(&xs);
     Ok(Series::new("".into(), out))
-}
-
-fn merge_tdigests_impl(inputs: &[Series]) -> PolarsResult<Series> {
-    let td = parse_tdigest(inputs);
-    Ok(tdigest_to_series(td, inputs[0].name()))
 }

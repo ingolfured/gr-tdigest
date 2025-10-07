@@ -10,8 +10,10 @@ crate-type = ["rlib", "cdylib"]
 [features]
 default = []
 python  = ["dep:pyo3", "dep:numpy"]
+bench_codecs = []
 
 [dependencies]
+tdigest-testdata = { path = "tdigest-testdata" }
 polars       = { version = "0.51.0", default-features = false, features = ["dtype-struct", "dtype-array", "fmt"] }
 polars-core  = "0.51.0"
 polars-arrow = "0.51.0"
@@ -38,9 +40,19 @@ serde_json     = "1.0.145"
 jemallocator = { version = "0.5", features = ["disable_initial_exec_tls"] }
 
 [dev-dependencies]
-criterion = "0.7"
+tdigest-testdata = { path = "tdigest-testdata" }
+criterion = { version = "0.7", features = ["html_reports"] }
+rand_distr  = "0.5"
 
 [[bench]]
-name    = "tdigest_bench"
+name = "tdigest_core"
 harness = false
-path    = "benches/parser_bench.rs"
+
+[[bench]]
+name = "codecs"
+harness = false
+required-features = ["bench_codecs"]
+
+[workspace]
+members = ["tdigest-testdata"]
+resolver = "2"

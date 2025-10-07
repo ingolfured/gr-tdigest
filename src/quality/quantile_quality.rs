@@ -115,7 +115,7 @@ mod tests {
             ScaleFamily::K2,
             ScaleFamily::K3,
         ];
-        let precs = [Precision::F64, Precision::F32Inputs];
+        let precs = [Precision::F64, Precision::F32];
         let dists = [Uniform, Normal, LogNormal { sigma: 1.0 }, Mixture];
 
         println!();

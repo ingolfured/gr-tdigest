@@ -1,18 +1,7 @@
-//! Shared quality/diagnostics helpers for the t-digest implementation.
-//!
-//! - Synthetic dataset generators (Uniform, Normal, LogNormal, Mixture)
-//! - QualityReport + scoring heuristic
-//! - Helpers: expected_quantile (order-stat interpolation), exact_ecdf_for_sorted
-//! - Precision + build helpers to standardize digest construction for tests.
-//!
-//! Engineering diagnostics, not publication-grade stats.
-
-use rand::rngs::StdRng;
-use rand::{Rng, SeedableRng};
-
 use crate::tdigest::{ScaleFamily, TDigest};
 
-/// Compact report printed in tests/benches.
+pub use tdigest_testdata::{gen_dataset, DistKind};
+
 #[derive(Debug, Clone, Copy)]
 pub struct QualityReport {
     pub n: usize,
@@ -33,22 +22,13 @@ impl QualityReport {
     }
 }
 
-/// Which synthetic distribution to generate.
-#[derive(Debug, Clone, Copy)]
-pub enum DistKind {
-    Uniform,
-    Normal,
-    LogNormal { sigma: f64 },
-    Mixture,
-}
-
 /// Simulate building digests with different numeric precision.
 #[derive(Debug, Clone, Copy)]
 pub enum Precision {
     F64,
     /// “F32 mode”: round inputs to f32 first, then back to f64 before building the digest.
     /// This isolates input precision from internal math, giving a realistic lower-precision signal.
-    F32Inputs,
+    F32,
 }
 
 /// Pretty banner for section headings in story-style tests.
@@ -71,72 +51,6 @@ pub fn print_report(tag: &str, r: QualityReport) {
         "{} -> QualityReport(n={}, KS={:.6e}, MAE={:.6e}, score={:.3})",
         tag, r.n, r.ks, r.mae, r.score
     );
-}
-
-#[inline]
-fn box_muller_normal<R: Rng>(rng: &mut R) -> f64 {
-    // Clamp u1 to avoid ln(0).
-    let u1: f64 = rng.random::<f64>().clamp(1e-12, 1.0);
-    let u2: f64 = rng.random::<f64>();
-    let r = (-2.0 * u1.ln()).sqrt();
-    let theta = 2.0 * std::f64::consts::PI * u2;
-    r * theta.cos()
-}
-
-/// Generate `n` samples for the chosen distribution, clamped/squashed into [0,1].
-pub fn gen_dataset(kind: DistKind, n: usize, seed: u64) -> Vec<f64> {
-    let mut rng = StdRng::seed_from_u64(seed);
-    let mut out = Vec::with_capacity(n);
-
-    match kind {
-        DistKind::Uniform => {
-            for _ in 0..n {
-                out.push(rng.random::<f64>());
-            }
-        }
-        DistKind::Normal => {
-            for _ in 0..n {
-                let x = 0.5 + 0.2 * box_muller_normal(&mut rng);
-                out.push(x.clamp(0.0, 1.0));
-            }
-        }
-        DistKind::LogNormal { sigma } => {
-            for _ in 0..n {
-                let z = box_muller_normal(&mut rng);
-                let x = (sigma * z).exp();
-                let y = x / (1.0 + x);
-                out.push(y.clamp(0.0, 1.0));
-            }
-        }
-        DistKind::Mixture => {
-            for _ in 0..n {
-                let bucket: u32 = rng.random_range(0..100);
-                let v = match bucket {
-                    0..=29 => {
-                        let center = match rng.random_range(0..3) {
-                            0 => 0.10,
-                            1 => 0.50,
-                            _ => 0.90,
-                        };
-                        center + 1e-3 * rng.random_range(-1.0..1.0)
-                    }
-                    30..=69 => rng.random::<f64>(),
-                    _ => {
-                        let exp = rng.random_range(3.0..9.0);
-                        if rng.random_bool(0.5) {
-                            let u = rng.random::<f64>().clamp(1e-12, 1.0);
-                            u.powf(exp)
-                        } else {
-                            let u = rng.random::<f64>().clamp(1e-12, 1.0);
-                            1.0 - u.powf(exp)
-                        }
-                    }
-                };
-                out.push(v.clamp(0.0, 1.0));
-            }
-        }
-    }
-    out
 }
 
 /// Interpolate between order statistics to get an expected value at quantile `q`.
@@ -196,7 +110,7 @@ pub fn build_digest_sorted(
     data.sort_by(|a, b| a.partial_cmp(b).unwrap());
     let data = match precision {
         Precision::F64 => data,
-        Precision::F32Inputs => data.into_iter().map(|x| (x as f32) as f64).collect(),
+        Precision::F32 => data.into_iter().map(|x| (x as f32) as f64).collect(),
     };
     let base = TDigest::new_with_size_and_scale(max_size, scale);
     base.merge_sorted(data)
