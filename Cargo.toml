@@ -51,7 +51,6 @@ harness = false
 [[bench]]
 name = "codecs"
 harness = false
-required-features = ["bench_codecs"]
 
 [workspace]
 members = ["tdigest-testdata"]
