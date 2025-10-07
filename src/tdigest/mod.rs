@@ -24,6 +24,7 @@ pub struct Centroid {
 }
 
 #[derive(Debug, Copy, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "lowercase")] // accept "quad","k1","k2","k3" from Python kwargs / serde
 pub enum ScaleFamily {
     /// Your current piecewise-quadratic tail-friendly scale (default to preserve behavior).
     Quad,
@@ -311,7 +312,6 @@ impl TDigest {
         }
         r
     }
-
     /// Family-aware q -> k mapping. `d` is the scale denominator (≈ max_size).
     fn q_to_k(q: f64, d: f64, family: ScaleFamily) -> f64 {
         use std::f64::consts::{LN_2, PI};

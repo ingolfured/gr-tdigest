@@ -1,10 +1,20 @@
 use pyo3::prelude::*;
 use pyo3::types::PyBytes;
 
-use crate::tdigest::TDigest as CoreTDigest;
+use crate::tdigest::{ScaleFamily, TDigest as CoreTDigest};
 
 use bincode::config;
 use bincode::serde::{decode_from_slice, encode_to_vec};
+
+fn parse_scale(s: Option<&str>) -> ScaleFamily {
+    match s.unwrap_or("quad").to_ascii_lowercase().as_str() {
+        "quad" => ScaleFamily::Quad,
+        "k1" => ScaleFamily::K1,
+        "k2" => ScaleFamily::K2,
+        "k3" => ScaleFamily::K3,
+        _ => ScaleFamily::Quad,
+    }
+}
 
 #[pyclass(name = "TDigest")]
 pub struct PyTDigest {
@@ -13,10 +23,15 @@ pub struct PyTDigest {
 
 #[pymethods]
 impl PyTDigest {
+    /// Build from a Python array-like of floats.
+    /// Example: TDigest.from_array(xs, max_size=200, scale="k2")
     #[staticmethod]
-    pub fn from_array(xs: Vec<f64>, max_size: usize) -> PyResult<Self> {
+    #[pyo3(signature = (xs, max_size, scale=None))]
+    pub fn from_array(xs: Vec<f64>, max_size: usize, scale: Option<&str>) -> PyResult<Self> {
+        let sc = parse_scale(scale);
+        let base = CoreTDigest::new_with_size_and_scale(max_size, sc);
         Ok(Self {
-            inner: CoreTDigest::from_unsorted(&xs, max_size),
+            inner: base.merge_unsorted(xs),
         })
     }
 
