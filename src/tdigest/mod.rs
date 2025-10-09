@@ -1,3 +1,4 @@
+// src/tdigest/mod.rs
 pub mod cdf;
 pub mod codecs;
 pub mod quantile;
@@ -9,6 +10,19 @@ use std::cmp::Ordering;
 use std::cmp::Reverse;
 use std::collections::BinaryHeap;
 use std::iter::Peekable;
+
+#[allow(unused_macros)]
+macro_rules! ttrace {
+    ($($arg:tt)*) => {
+        if std::env::var("TDIGEST_TRACE").is_ok() {
+            eprintln!($($arg)*);
+        }
+    }
+}
+
+/* ===========================
+ * Core types
+ * =========================== */
 
 /// A centroid summarizes a cluster in the digest.
 ///
@@ -26,7 +40,7 @@ pub struct Centroid {
 #[derive(Debug, Copy, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "lowercase")] // accept "quad","k1","k2","k3" from Python kwargs / serde
 pub enum ScaleFamily {
-    /// Your current piecewise-quadratic tail-friendly scale (default to preserve behavior).
+    /// Piecewise-quadratic tail-friendly scale (legacy default).
     Quad,
     /// k1: arcsine scale; stricter tails than linear.
     K1,
@@ -106,10 +120,13 @@ impl Default for Centroid {
     }
 }
 
-#[derive(Debug, PartialEq, Eq, Clone, Serialize, Deserialize)]
+#[derive(Debug, PartialEq, Clone, Serialize, Deserialize)]
 pub struct TDigest {
     centroids: Vec<Centroid>,
     max_size: usize,
+    /// Protect this many *raw items* on each tail during compression.
+    /// First/last `extra_tail_keep` items are never merged by the compressor.
+    extra_tail_keep: usize,
     sum: OrderedFloat<f64>,
     count: OrderedFloat<f64>,
     max: OrderedFloat<f64>,
@@ -122,6 +139,7 @@ impl Default for TDigest {
         TDigest {
             centroids: Vec::new(),
             max_size: 100,
+            extra_tail_keep: 0,
             sum: OrderedFloat::from(0.0),
             count: OrderedFloat::from(0.0),
             max: OrderedFloat::from(f64::NAN),
@@ -134,6 +152,27 @@ impl Default for TDigest {
 impl TDigest {
     pub fn new_with_size(max_size: usize) -> Self {
         Self::new_with_size_and_scale(max_size, ScaleFamily::Quad)
+    }
+
+    /// Pick the scale family explicitly.
+    pub fn new_with_size_and_scale(max_size: usize, scale: ScaleFamily) -> Self {
+        TDigest {
+            centroids: Vec::new(),
+            max_size,
+            extra_tail_keep: 0,
+            sum: OrderedFloat::from(0.0),
+            count: OrderedFloat::from(0.0),
+            max: OrderedFloat::from(f64::NAN),
+            min: OrderedFloat::from(f64::NAN),
+            scale,
+        }
+    }
+
+    /// Minimal-API way to enable/adjust tail protection without touching existing call sites.
+    #[inline]
+    pub fn with_protected_tails(mut self, n: usize) -> Self {
+        self.extra_tail_keep = n;
+        self
     }
 
     /// Build from unsorted values (convenience over `merge_unsorted`).
@@ -157,19 +196,6 @@ impl TDigest {
         self.estimate_quantile(0.5)
     }
 
-    /// New: pick the scale family explicitly.
-    pub fn new_with_size_and_scale(max_size: usize, scale: ScaleFamily) -> Self {
-        TDigest {
-            centroids: Vec::new(),
-            max_size,
-            sum: OrderedFloat::from(0.0),
-            count: OrderedFloat::from(0.0),
-            max: OrderedFloat::from(f64::NAN),
-            min: OrderedFloat::from(f64::NAN),
-            scale,
-        }
-    }
-
     #[inline]
     pub fn scale(&self) -> ScaleFamily {
         self.scale
@@ -185,6 +211,7 @@ impl TDigest {
             return self.clone();
         }
         let mut result = self.new_result_for_values(&sorted_values);
+
         let stream = MergeByMean::from_centroids_and_values(&self.centroids, &sorted_values);
         let compressed = Self::compress_into(&mut result, self.max_size, stream);
         result.centroids = compressed;
@@ -195,6 +222,7 @@ impl TDigest {
         // TODO: scale different down and have one max_size
         let max_size = digests.first().map(|d| d.max_size).unwrap_or(100);
         let mut chosen_scale = ScaleFamily::Quad;
+        let mut chosen_extra = 0usize;
 
         // Pre-reserve runs to avoid churn.
         let mut runs: Vec<&[Centroid]> = Vec::with_capacity(digests.len());
@@ -207,6 +235,7 @@ impl TDigest {
             if n > 0.0 && !d.centroids.is_empty() {
                 if runs.is_empty() {
                     chosen_scale = d.scale; // adopt first non-empty's scale
+                    chosen_extra = d.extra_tail_keep;
                 }
                 total_count += n;
                 min = std::cmp::min(min, d.min);
@@ -217,15 +246,22 @@ impl TDigest {
         if total_count == 0.0 {
             return TDigest::default();
         }
-        let mut result = TDigest::new_with_size_and_scale(max_size, chosen_scale);
 
-        result.count = OrderedFloat::from(total_count);
-        result.min = min;
-        result.max = max;
+        let mut result = TDigest {
+            centroids: Vec::new(),
+            max_size,
+            extra_tail_keep: chosen_extra,
+            sum: OrderedFloat::from(0.0),
+            count: OrderedFloat::from(total_count),
+            max,
+            min,
+            scale: chosen_scale,
+        };
 
         let merged_stream = KWayCentroidMerge::new(runs);
         let compressed = Self::compress_into(&mut result, max_size, merged_stream);
         result.centroids = compressed;
+
         result
     }
 
@@ -245,6 +281,7 @@ impl TDigest {
             TDigest {
                 centroids,
                 max_size,
+                extra_tail_keep: 0,
                 sum: OrderedFloat::from(sum),
                 count: OrderedFloat::from(count),
                 max: OrderedFloat::from(max),
@@ -300,7 +337,9 @@ impl TDigest {
     }
 
     fn new_result_for_values(&self, values: &[f64]) -> TDigest {
-        let mut r = TDigest::new_with_size_and_scale(self.max_size(), self.scale);
+        let mut r = TDigest::new_with_size_and_scale(self.max_size(), self.scale)
+            .with_protected_tails(self.extra_tail_keep);
+
         r.count = OrderedFloat::from(self.count() + values.len() as f64);
         let vmin = OrderedFloat::from(values[0]);
         let vmax = OrderedFloat::from(values[values.len() - 1]);
@@ -313,6 +352,7 @@ impl TDigest {
         }
         r
     }
+
     /// Family-aware q -> k mapping. `d` is the scale denominator (≈ max_size).
     fn q_to_k(q: f64, d: f64, family: ScaleFamily) -> f64 {
         use std::f64::consts::{LN_2, PI};
@@ -397,6 +437,10 @@ struct Compressor<'a> {
 
     // cached left boundary in k-space: k(q_l) where q_l = processed_left * n_inv
     k_left: f64,
+
+    // tail protection
+    protect: f64, // items per side (clamped)
+    n_total: f64,
 }
 
 impl<'a> Compressor<'a> {
@@ -407,6 +451,9 @@ impl<'a> Compressor<'a> {
         let family = result.scale;
         let curr_w = first.weight();
         let k_left = TDigest::q_to_k(0.0, d, family);
+
+        // Clamp protection to at most half the mass to avoid degenerate "all protected".
+        let protect = (result.extra_tail_keep as f64).min(n * 0.5);
 
         Self {
             result,
@@ -421,11 +468,52 @@ impl<'a> Compressor<'a> {
             curr_w,
             processed_left: 0.0,
             k_left,
+            protect,
+            n_total: n,
         }
     }
 
     #[inline]
     fn can_absorb(&self, next_w: f64) -> bool {
+        if self.protect > 0.0 {
+            let left = self.processed_left;
+            let curr_end = left + self.curr_w;
+            let next_end = curr_end + next_w;
+            let right_start = self.n_total - self.protect;
+
+            // Still within the left protected region → never absorb.
+            if curr_end < self.protect {
+                ttrace!(
+                    "LEFT-GUARD: block absorb  curr_end={:.0} < protect={:.0}",
+                    curr_end,
+                    self.protect
+                );
+                return false;
+            }
+
+            // Don't *cross* out of the left protected region in one step.
+            // If any part of the current run sits before `protect` and absorbing would jump past it,
+            // freeze here and start a fresh run.
+            if left < self.protect && next_end > self.protect {
+                ttrace!(
+                    "LEFT-GUARD: block crossing  left={:.0} .. next_end={:.0} crosses protect={:.0}",
+                    left, next_end, self.protect
+                );
+                return false;
+            }
+
+            // Adding `next` would land inside the right protected region → don't absorb.
+            if next_end > right_start {
+                ttrace!(
+                    "RIGHT-GUARD: block absorb  next_end={:.0} > right_start={:.0}",
+                    next_end,
+                    right_start
+                );
+                return false;
+            }
+        }
+
+        // Normal k-space width rule.
         let q_r = (self.processed_left + self.curr_w + next_w) * self.n_inv;
         let k_r = TDigest::q_to_k(q_r, self.d, self.family);
         (k_r - self.k_left) <= 1.0 - 1e-12
@@ -433,13 +521,24 @@ impl<'a> Compressor<'a> {
 
     #[inline]
     fn take(&mut self, next: Centroid) {
+        ttrace!(
+            "take: curr(m={:.6},w={:.0})  next(m={:.6},w={:.0})  processed_left={:.0}",
+            self.curr.mean(),
+            self.curr_w,
+            next.mean(),
+            next.weight(),
+            self.processed_left
+        );
+
         if self.can_absorb(next.weight()) {
+            ttrace!("  -> ABSORB");
             // extend current run
             self.curr_same_mean_only &= next.mean() == self.curr.mean();
             self.batch_sum += next.mean() * next.weight();
             self.batch_weight += next.weight();
             self.curr_w += next.weight();
         } else {
+            ttrace!("  -> FLUSH & NEW");
             // finalize current, then advance left and refresh k_left
             self.flush_curr();
             self.processed_left += self.curr_w;
@@ -729,6 +828,11 @@ impl Iterator for KWayCentroidMerge<'_> {
     }
 }
 
+/* ===========================
+ * Tests living here validate merge & structural invariants.
+ * (Quantile/CDF tests live in respective modules as well.)
+ * =========================== */
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -852,7 +956,6 @@ mod tests {
 
             for i in 0..w_f32.len() {
                 if let Some(wf) = w_f32.get(i) {
-                    // make the type explicit for the compiler
                     let wf: f32 = wf;
                     assert!(wf.is_finite(), "compact weight must be finite");
                     assert!(wf.abs() < f32::MAX / 4.0, "compact weight too large: {wf}");
@@ -884,14 +987,111 @@ mod tests {
             let ra = *a / s1;
             let rb = *b / s2;
             assert_rel_close(&format!("weight ratio[{i}]"), ra, rb, 1e-7);
+
+            // 3) Optional: CDF invariants at a few points.
+            let xs = [0.5, 1.0, 1.5];
+            let cdf1 = td.estimate_cdf(&xs);
+            let cdf2 = td2.estimate_cdf(&xs);
+            for i in 0..xs.len() {
+                assert_rel_close(&format!("CDF({}) preserved", xs[i]), cdf1[i], cdf2[i], 1e-6);
+            }
+        }
+    }
+
+    #[test]
+    fn edge_tail_protection_small_max() {
+        use crate::tdigest::test_helpers::assert_exact;
+
+        // Tiny core, protect 3 raw items per tail.
+        let base = TDigest::new_with_size(4).with_protected_tails(3);
+
+        // Merge three batches:
+        // - middle bulk: 1..=20
+        // - extend right tail: 21..=30
+        // - distinct left tail: -3, -2, -1  (ensures 3 separate edge centroids are protected)
+        let t1 = base.merge_sorted((1..=20).map(f64::from).collect());
+        let t2 = t1.merge_sorted((21..=30).map(f64::from).collect());
+        let t3 = t2.merge_sorted(vec![-3.0, -2.0, -1.0]);
+
+        // Global invariants
+        assert_exact("count", 33.0, t3.count());
+        assert_exact("min", -3.0, t3.min());
+        assert_exact("max", 30.0, t3.max());
+
+        let cs = t3.centroids();
+
+        // Sorted by mean (non-decreasing) and strictly increasing (no duplicate centroids).
+        assert!(
+            cs.windows(2).all(|w| w[0] <= w[1]),
+            "centroids not sorted by mean"
+        );
+        assert!(
+            cs.windows(2).all(|w| w[0].mean() < w[1].mean()),
+            "duplicate centroid means found"
+        );
+
+        // All centroids: weight must be finite and > 0.
+        for (i, c) in cs.iter().enumerate() {
+            assert!(
+                c.weight().is_finite() && c.weight() > 0.0,
+                "invalid weight at {i}"
+            );
+            assert!(c.mean().is_finite(), "invalid mean at {i}");
         }
 
-        // 3) Optional: CDF invariants at a few points.
-        let xs = [0.5, 1.0, 1.5];
-        let cdf1 = td.estimate_cdf(&xs);
-        let cdf2 = td2.estimate_cdf(&xs);
-        for i in 0..xs.len() {
-            assert_rel_close(&format!("CDF({}) preserved", xs[i]), cdf1[i], cdf2[i], 1e-6);
+        // Must have at least the 3+3 protected edge centroids plus some middle.
+        assert!(
+            cs.len() >= 6,
+            "need ≥6 centroids (3 per edge), got {}",
+            cs.len()
+        );
+
+        // ---- Left edge: first 3 must be protected (singleton or pile) at -3, -2, -1.
+        assert!(cs[0].is_singleton() && cs[1].is_singleton() && cs[2].is_singleton());
+        assert_exact("left[0] mean", -3.0, cs[0].mean());
+        assert_exact("left[1] mean", -2.0, cs[1].mean());
+        assert_exact("left[2] mean", -1.0, cs[2].mean());
+
+        // No cross-boundary absorption: next centroid (if any) strictly greater than -1.
+        if cs.len() > 3 {
+            assert!(
+                cs[3].mean() > -1.0,
+                "merged across left protected boundary (cs[3]={})",
+                cs[3].mean()
+            );
         }
+
+        // ---- Right edge: last 3 must be protected (singleton or pile) at 28, 29, 30.
+        let n = cs.len();
+        assert!(cs[n - 3].is_singleton() && cs[n - 2].is_singleton() && cs[n - 1].is_singleton());
+        assert_exact("right[-3] mean", 28.0, cs[n - 3].mean());
+        assert_exact("right[-2] mean", 29.0, cs[n - 2].mean());
+        assert_exact("right[-1] mean", 30.0, cs[n - 1].mean());
+
+        // ---- Extreme quantiles exact due to protected edges.
+        assert_exact("Q(0.00)", -3.0, t3.estimate_quantile(0.0));
+        assert_exact("Q(1.00)", 30.0, t3.estimate_quantile(1.0));
+
+        // ---- Quantiles near tails: inside reasonable bands with tiny core.
+        let q10 = t3.estimate_quantile(0.10);
+        assert!(
+            (-3.0..=1.0).contains(&q10),
+            "Q(0.10) expected in [-3,1], got {}",
+            q10
+        );
+
+        let q90 = t3.estimate_quantile(0.90);
+        assert!(
+            (25.0..=30.0).contains(&q90),
+            "Q(0.90) expected in [25,30], got {}",
+            q90
+        );
+
+        // Sanity: centroid count remains bounded with tiny core + protected tails.
+        assert!(
+            cs.len() <= 12,
+            "too many centroids for tiny capacity with protected tails; got {}",
+            cs.len()
+        );
     }
 }

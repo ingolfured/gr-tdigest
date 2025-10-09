@@ -38,15 +38,22 @@ jemallocator = { version = "0.5", features = ["disable_initial_exec_tls"] }
 
 [dev-dependencies]
 tdigest-testdata = { path = "tdigest-testdata" }
-criterion = { version = "0.7", features = ["html_reports"] }
-rand_distr  = "0.5"
-
-[[bench]]
-name = "tdigest_core"
-harness = false
+criterion = "0.5"
+bytesize = "1"
+libc = "0.2"
+ctor = "0.2"
+jemalloc-ctl = "0.5"
 
 [[bench]]
 name = "codecs"
+harness = false
+
+[[bench]]
+name = "cdf_quantile"
+harness = false
+
+[[bench]]
+name = "tdigest"
 harness = false
 
 [workspace]

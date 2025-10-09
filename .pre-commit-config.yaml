@@ -26,7 +26,7 @@ repos:
     rev: v1.18.2
     hooks:
       - id: mypy
-        additional_dependencies: [] 
+        additional_dependencies: []
 
   - repo: https://github.com/python-poetry/poetry
     rev: 2.2.1
