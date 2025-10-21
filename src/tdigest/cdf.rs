@@ -123,11 +123,11 @@ fn cdf_at_val_fast(
             let cl_w = weights[idx - 1];
             let cr_w = weights[idx];
 
-            // Snap to unit steps first — use division to match exact ECDF.
-            if cl_w == 1.0 && (val - cl_mean).abs() <= 0.5 {
+            // Snap to unit steps — STRICT '< 0.5' so midpoint doesn't snap.
+            if cl_w == 1.0 && (val - cl_mean).abs() < 0.5 {
                 return (prefix[idx - 1] + 0.5) / count_f64;
             }
-            if cr_w == 1.0 && (val - cr_mean).abs() <= 0.5 {
+            if cr_w == 1.0 && (val - cr_mean).abs() < 0.5 {
                 return (prefix[idx] + 0.5) / count_f64;
             }
 

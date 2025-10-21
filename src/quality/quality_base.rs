@@ -112,6 +112,6 @@ pub fn build_digest_sorted(
         Precision::F64 => data,
         Precision::F32 => data.into_iter().map(|x| (x as f32) as f64).collect(),
     };
-    let base = TDigest::new_with_size_and_scale(max_size, scale).with_protected_tails(200);
+    let base = TDigest::new_with_size_and_scale(max_size, scale); //.with_protected_tails(200);
     base.merge_sorted(data)
 }
