@@ -1,6 +1,9 @@
 mod expressions;
 pub mod tdigest;
 
+#[cfg(feature = "java")]
+pub mod jni;
+
 #[cfg(test)]
 pub mod quality {
     pub mod cdf_quality;

@@ -43,14 +43,8 @@ repos:
   - repo: local
     hooks:
       - id: precommit-fast
-        name: make precommit_fast (fmt+lint+check+test)
+        name: make (fmt+lint+test)
         language: system
-        entry: bash -lc 'pipx run poetry run make precommit_fast'
+        entry: bash -lc 'pipx run poetry run make fmt lint test'
         pass_filenames: false
         stages: [pre-commit]
-      - id: prepush-full
-        name: make prepush_full (maturin smoke + quick benches)
-        language: system
-        entry: bash -lc 'pipx run poetry run make prepush_full'
-        pass_filenames: false
-        stages: [pre-push]

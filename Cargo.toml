@@ -10,6 +10,7 @@ crate-type = ["rlib", "cdylib"]
 [features]
 default = []
 python  = ["dep:pyo3", "dep:numpy", "dep:pyo3-polars" ]
+java    = ["dep:jni"]
 bench_codecs = []
 
 [dependencies]
@@ -19,6 +20,8 @@ polars-core  = "0.51.0"
 polars-arrow = "0.51.0"
 polars-plan  = "0.51.0"
 polars-io    = { version = "0.51.0", features = ["json"] }
+jni          = { version = "0.21", optional = true }
+clap         = { version = "4.5", features = ["derive"] }
 
 pyo3-polars = { version = "0.24", features = ["derive"], optional = true }
 pyo3  = { version = "0.25", features = ["extension-module", "abi3-py312"], optional = true }
@@ -43,6 +46,10 @@ bytesize = "1"
 libc = "0.2"
 ctor = "0.2"
 jemalloc-ctl = "0.5"
+
+[[bin]]
+name = "tdigest_cli"
+path = "src/bin/tdigest_cli.rs"
 
 [[bench]]
 name = "codecs"
