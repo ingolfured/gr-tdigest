@@ -1,10 +1,74 @@
-*.so
+# =========================
+# Rust / Cargo
+# =========================
+/target/
+/Cargo.lock.old
+**/*.rlib
+**/*.dSYM
+**/*.dll
+**/*.dylib
+**/*.so
+**/*.exe
+**/*.pdb
+**/*.obj
+**/*.o
+
+# =========================
+# Python / Poetry / Maturin
+# =========================
+__pycache__/
+**/__pycache__/
 *.pyc
-target
+*.pyo
+*.pyd
+.pytest_cache/
+.mypy_cache/
+.dmypy.json
+.pyre/
+.pyright/
+.maturin/
+build/
+dist/
+*.egg-info/
+.eggs/
+poetry.lock.bak
 .env
 .venv
-.mypy_cache
-**/__pycache__
-.pytest_cache
-*.code-workspace
+venv/
+.envrc
+.python-version
 .python312_path
+
+# =========================
+# JNI / Java
+# =========================
+*.class
+*.jar
+*.war
+*.ear
+*.iml
+*.idea/
+.gradle/
+build/
+
+# =========================
+# IDE / Editor
+# =========================
+.vscode/
+*.code-workspace
+*.swp
+*.swo
+*~
+.DS_Store
+Thumbs.db
+
+# =========================
+# Benchmarks / Temp / Logs
+# =========================
+bench_results/
+criterion/
+tmp/
+*.log
+*.tmp
+*.bak
+*.old
