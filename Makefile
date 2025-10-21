@@ -15,7 +15,7 @@ POETRY := poetry
 VENV_DIR := .venv
 POETRY_MIN_VERSION := 2.2.0
 POETRY_BIN := $(HOME)/.local/bin/poetry
-BENCH_BINS ?= tdigest_core codecs
+BENCH_BINS ?= cdf_quantile codecs tdigest
 BENCH_ARGS ?= --warm-up-time 0.04 --sample-size 30 --measurement-time 1.5
 
 # Pretty output
