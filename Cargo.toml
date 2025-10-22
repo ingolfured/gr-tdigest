@@ -9,11 +9,8 @@ crate-type = ["rlib", "cdylib"]
 
 [features]
 default = []
-# Turn on Python extension bits (PyO3 + numpy + pyo3-polars)
 python = ["dep:pyo3", "dep:numpy", "dep:pyo3-polars"]
-# Turn on JNI bits
 java = ["dep:jni"]
-# Bench toggle stays here for clarity (no deps)
 bench_codecs = []
 
 [dependencies]

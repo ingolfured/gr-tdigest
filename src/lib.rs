@@ -1,9 +1,13 @@
+// src/lib.rs
+#![allow(non_snake_case)]
+
 mod expressions;
 pub mod tdigest;
 
 #[cfg(feature = "java")]
 pub mod jni;
 
+// ---- test-only quality modules ------------------------------------------------
 #[cfg(test)]
 pub mod quality {
     pub mod cdf_quality;
@@ -13,8 +17,8 @@ pub mod quality {
 
 #[cfg(test)]
 pub use crate::quality::quality_base::{print_banner, print_report, print_section};
-// use pyo3_polars::export::export_polars_plugin;
 
+// ---- jemalloc on linux (ok to keep) ------------------------------------------
 #[cfg(target_os = "linux")]
 use jemallocator::Jemalloc;
 
@@ -22,6 +26,7 @@ use jemallocator::Jemalloc;
 #[global_allocator]
 static ALLOC: Jemalloc = Jemalloc;
 
+// ---- Python extension (behind feature) ---------------------------------------
 #[cfg(feature = "python")]
 mod py;
 

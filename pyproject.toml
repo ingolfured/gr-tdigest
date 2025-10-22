@@ -39,6 +39,7 @@ ruff = ">=0.13.3"
 pre-commit = ">=4.3.0"
 maturin = { version = ">=1.9.5", extras = ["patchelf", "zig"] }
 numpy = ">=2.3.3"
+mypy = ">=1.18.2"
 
 # ------------------------------------------------------------
 # Maturin build settings
@@ -78,3 +79,11 @@ extend-exclude = [
 addopts = "-q"
 testpaths = ["tests"]
 pythonpath = ["."]
+
+[tool.mypy]
+python_version = "3.12"
+exclude = "(^target/|^build/|^dist/|^\\.venv/|^out/)"
+ignore_missing_imports = true
+warn_unused_ignores = true
+disallow_untyped_defs = true
+no_implicit_optional = true

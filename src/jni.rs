@@ -1,6 +1,3 @@
-// src/jni.rs
-#![allow(non_snake_case)]
-
 use std::ptr::NonNull;
 
 use jni::objects::{JClass, JDoubleArray, JString};
@@ -52,13 +49,6 @@ fn parse_scale(env: &mut JNIEnv, jscale: JString) -> Option<ScaleFamily> {
     };
     Some(scale)
 }
-
-/* ============================ JNI EXPORTS ============================ */
-/* Java package: gr.tdigest_rs
-Class:       TDigestNative
-JNI prefix:  Java_gr_tdigest_1rs_TDigestNative_*
-Note: underscore in package name is encoded as `_1` in JNI symbols.     */
-
 #[no_mangle]
 pub extern "system" fn Java_gr_tdigest_1rs_TDigestNative_create(
     mut env: JNIEnv,
@@ -110,7 +100,7 @@ pub extern "system" fn Java_gr_tdigest_1rs_TDigestNative_createFromValues(
         return 0;
     }
 
-    // If you have an unsorted merge, replace this pair with it.
+    // If you have an unsorted merge, replace sort+merge_sorted with that.
     buf.sort_by(|a, b| a.partial_cmp(b).unwrap());
     let digest = TDigest::new_with_size_and_scale(ms, scale).merge_sorted(buf);
     let boxed = Box::new(digest);
@@ -163,7 +153,7 @@ pub extern "system" fn Java_gr_tdigest_1rs_TDigestNative_estimateQuantile(
     let Some(d) = from_handle(&mut env, handle) else {
         return f64::NAN;
     };
-    if !(0.0..=1.0).contains(&{ q }) {
+    if !(0.0..=1.0).contains(&q) {
         throw_illegal_arg(&mut env, "q must be in [0, 1]");
         return f64::NAN;
     }

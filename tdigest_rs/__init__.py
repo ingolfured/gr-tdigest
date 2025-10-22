@@ -17,7 +17,7 @@ lib = Path(__file__).parent
 # --- native class import (fail loudly so tests don't silently pass with None) ---
 try:
     # Only import the class; keep Python wrappers below without name collisions
-    from .tdigest_rs import TDigest  # type: ignore[attr-defined]
+    from .tdigest_rs import TDigest, __version__
 except Exception as e:  # pragma: no cover
     raise ImportError(
         "Failed to import the native extension 'tdigest_rs'. "

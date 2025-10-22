@@ -14,19 +14,46 @@ repos:
       - id: check-merge-conflict
       - id: check-added-large-files
       - id: check-json
-
-  - repo: https://github.com/pre-commit/pre-commit-hooks
-    rev: v6.0.0
-    hooks:
       - id: pretty-format-json
         args: ["--autofix"]
 
-  # Type checking via mypy
-  - repo: https://github.com/pre-commit/mirrors-mypy
-    rev: v1.18.2
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.6.9
+    hooks:
+      - id: ruff
+        args: ["--fix"]
+      - id: ruff-format
+
+  # Run mypy inside your Poetry env so it sees project deps
+  - repo: local
     hooks:
       - id: mypy
-        additional_dependencies: []
+        name: mypy (poetry)
+        language: system
+        entry: poetry run python -m mypy
+        files: ^tdigest_rs/.*\.pyi?$   # only check your package
+        types_or: [python, pyi]
+        require_serial: true
+
+      - id: cargo-fmt-check
+        name: cargo fmt --check
+        language: system
+        entry: bash -lc 'cargo fmt --all -- --check'
+        pass_filenames: false
+
+      - id: cargo-clippy
+        name: cargo clippy (deny warnings)
+        language: system
+        entry: bash -lc 'cargo clippy --all-targets --all-features -- -D warnings'
+        pass_filenames: false
+
+      # Optional: quick project smoke (kept separate so you can skip with SKIP=fast-smoke)
+      - id: fast-smoke
+        name: make test (fast)
+        language: system
+        entry: bash -lc 'poetry run pytest -q'
+        pass_filenames: false
+        stages: [pre-commit]
 
   - repo: https://github.com/python-poetry/poetry
     rev: 2.2.1
@@ -34,17 +61,4 @@ repos:
       - id: poetry-check
       - id: poetry-lock
         files: ^(pyproject\.toml|poetry\.lock)$
-
-  - repo: https://github.com/pre-commit/sync-pre-commit-deps
-    rev: v0.0.3
-    hooks:
-      - id: sync-pre-commit-deps
-
-  - repo: local
-    hooks:
-      - id: precommit-fast
-        name: make (fmt+lint+test)
-        language: system
-        entry: bash -lc 'pipx run poetry run make fmt lint test'
-        pass_filenames: false
-        stages: [pre-commit]
+        stages: [manual]
