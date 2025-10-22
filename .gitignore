@@ -14,7 +14,7 @@
 **/*.o
 
 # =========================
-# Python / Poetry / Maturin
+# Python / Maturin
 # =========================
 __pycache__/
 **/__pycache__/
@@ -31,7 +31,6 @@ build/
 dist/
 *.egg-info/
 .eggs/
-poetry.lock.bak
 .env
 .venv
 venv/

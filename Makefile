@@ -30,11 +30,12 @@ endef
 # ----------------------------------------------------------------------
 PATH := $(HOME)/.local/bin:$(HOME)/.cargo/bin:$(PATH)
 
-CARGO   ?= cargo
-POETRY  ?= poetry
-JAVAC   ?= javac
-JAVA    ?= java
-PYTHON  ?= python3
+CARGO ?= cargo
+UV     ?= uv
+JAVAC  ?= javac
+JAVA   ?= java
+PYTHON ?= python3
+
 
 JAVA_SRC := src-java
 LIB_DIR  := target/release
@@ -132,15 +133,17 @@ setup:
 	$(call need,rustup)
 	$(call need,cargo)
 	$(call need,git)
-	$(call need,poetry)
-	$(POETRY) --version
-	$(call banner,Create Poetry venv + install deps)
-	$(POETRY) config virtualenvs.in-project true
-	$(POETRY) env use 3.12 || true
-	$(POETRY) install --with dev -q
-	$(POETRY) run pip -q install -U maturin
+	$(call need,uv)
+	$(UV) --version
+
+	$(call banner,Create .venv and install deps (all groups))
+	# ensure requested Python exists (optional; uv can fetch it if missing)
+	$(UV) python install 3.12 || true
+	$(UV) sync --all-groups
+
 	$(call banner,Quick Python import smoke)
-	$(POETRY) run python -c "import polars as pl, sys; print('python', sys.version.split()[0], '| polars', pl.__version__, '| env ok')"
+	$(UV) run python -c "import polars as pl, sys; print('python', sys.version.split()[0], '| polars', pl.__version__, '| env ok')"
+
 
 # ==============================================================================
 # Core dev loop
@@ -158,11 +161,11 @@ build:
 
 fmt:
 	$(CARGO) fmt --all
-	$(POETRY) run ruff format .
+	$(UV) run ruff format .
 
 lint:
 	$(CARGO) clippy --all-targets --all-features -- -D warnings
-	$(POETRY) run ruff check .
+	$(UV) run ruff check .
 
 clean:
 	$(call banner,Clean: Rust target/)
@@ -173,6 +176,7 @@ clean:
 	find . -type d -name "__pycache__" -prune -exec rm -rf {} + || true
 	rm -f tdigest_rs/*.so || true
 	@printf "$(STYLE_OK)✓ cleaned Rust, Python, and Java artifacts$(STYLE_RESET)\n"
+
 
 test: rust-test rust-cli-smoke py-test java-test
 	@echo "✅ all tests passed"
@@ -190,7 +194,7 @@ help-me-run:
 	@printf "  echo '0 1 2 3' | target/release/$(CLI_BIN) quantile -q 0.5   # -> 1.5\n"
 	@printf "  echo '0 1 2 3' | target/release/$(CLI_BIN) --probes '0,1.5,3' cdf\n"
 	@printf "\n$(STYLE_BOLD)Python — module$(STYLE_RESET)\n"
-	@printf "  poetry run python - <<'PY'\n"
+	@printf "  uv run python - <<'PY'\n"
 	@printf "import tdigest_rs as pt\n"
 	@printf "xs = [0.0, 1.0, 2.0, 3.0]\n"
 	@printf "# TDigest is factory-constructed:\n"
@@ -199,7 +203,7 @@ help-me-run:
 	@printf "print('cdf =', d.cdf([0.0, 1.5, 3.0]).tolist())\n"
 	@printf "PY\n"
 	@printf "\n$(STYLE_BOLD)Polars — plugin$(STYLE_RESET)\n"
-	@printf "  poetry run python - <<'PY'\n"
+	@printf "  uv run python - <<'PY'\n"
 	@printf "import polars as pl, tdigest_rs as ptd\n"
 	@printf "df = pl.DataFrame({'x':[0.0,1.0,2.0,3.0]})\n"
 	@printf "df = df.select(ptd.tdigest('x', 100))\n"
@@ -232,12 +236,11 @@ rust-cli-smoke: $(CLI_PATH)
 # ==============================================================================
 # Python
 # ==============================================================================
-.PHONY: py-build py-test
 py-build:
-	$(POETRY) run maturin develop -r -F python
+	$(UV) run maturin develop -r -F python
 
 py-test: py-build
-	$(POETRY) run pytest -q
+	$(UV) run pytest -q
 
 # ==============================================================================
 # Java / JNI (classes build + smoke)
@@ -270,7 +273,7 @@ java-test: java-build
         native-jar-linux-x86_64 native-jar-macos-aarch64 native-jar-windows-x86_64
 
 wheel:
-	$(POETRY) run maturin build --release --manylinux 2_28 --zig -F python
+	$(UV) run maturin build --release --manylinux 2_28 --zig -F python
 
 # Build API JAR + current platform native JAR
 jar: api-jar native-jar-current

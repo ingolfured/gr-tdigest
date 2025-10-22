@@ -21,7 +21,7 @@ try:
 except Exception as e:  # pragma: no cover
     raise ImportError(
         "Failed to import the native extension 'tdigest_rs'. "
-        "Build/install it with: `poetry run maturin develop -r -F python`."
+        "Build/install it with: `uv run maturin develop -r -F python`."
     ) from e
 
 # Version from package metadata (fallback for editable dev installs)

@@ -24,14 +24,13 @@ repos:
         args: ["--fix"]
       - id: ruff-format
 
-  # Run mypy inside your Poetry env so it sees project deps
   - repo: local
     hooks:
       - id: mypy
-        name: mypy (poetry)
+        name: mypy (uv)
         language: system
-        entry: poetry run python -m mypy
-        files: ^tdigest_rs/.*\.pyi?$   # only check your package
+        entry: uv run python -m mypy
+        files: ^tdigest_rs/.*\.pyi?$
         types_or: [python, pyi]
         require_serial: true
 
@@ -47,18 +46,9 @@ repos:
         entry: bash -lc 'cargo clippy --all-targets --all-features -- -D warnings'
         pass_filenames: false
 
-      # Optional: quick project smoke (kept separate so you can skip with SKIP=fast-smoke)
       - id: fast-smoke
-        name: make test (fast)
+        name: pytest quick
         language: system
-        entry: bash -lc 'poetry run pytest -q'
+        entry: uv run pytest -q
         pass_filenames: false
         stages: [pre-commit]
-
-  - repo: https://github.com/python-poetry/poetry
-    rev: 2.2.1
-    hooks:
-      - id: poetry-check
-      - id: poetry-lock
-        files: ^(pyproject\.toml|poetry\.lock)$
-        stages: [manual]
