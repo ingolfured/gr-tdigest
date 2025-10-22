@@ -1,5 +1,5 @@
 import polars as pl
-import polars_tdigest as ptd
+import tdigest_rs as ptd
 
 
 def test_plugin_estimate_quantile_small():

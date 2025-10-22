@@ -2,7 +2,7 @@ import polars as pl
 import pytest
 from polars import Float32, Int32, Utf8, col
 
-from polars_tdigest import estimate_quantile, tdigest
+from tdigest_rs import estimate_quantile, tdigest
 
 df_int = pl.DataFrame(
     {

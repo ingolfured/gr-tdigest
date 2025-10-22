@@ -8,7 +8,7 @@ use std::process::Command;
 use std::time::Duration;
 
 use criterion::{criterion_group, criterion_main, BatchSize, BenchmarkId, Criterion, Throughput};
-use polars_tdigest::tdigest::{ScaleFamily, TDigest};
+use tdigest_rs::tdigest::{ScaleFamily, TDigest};
 use tdigest_testdata::{gen_dataset, DistKind};
 
 fn bench_merge_unsorted(c: &mut Criterion) {

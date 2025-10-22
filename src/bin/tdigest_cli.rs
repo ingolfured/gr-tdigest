@@ -1,7 +1,7 @@
 use clap::{Parser, Subcommand, ValueEnum};
-use polars_tdigest::tdigest::{ScaleFamily, TDigest};
 use std::error::Error;
 use std::io::{self, Read};
+use tdigest_rs::tdigest::{ScaleFamily, TDigest};
 
 #[derive(Debug, Clone, ValueEnum)]
 enum Scale {

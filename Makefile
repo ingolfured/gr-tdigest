@@ -1,5 +1,5 @@
 # ==============================================================================
-# Makefile — polars-tdigest (Rust core + CLI, Python extension, Java/JNI)
+# Makefile — tdigest-rs (Rust core + CLI, Python extension, Java/JNI)
 # ==============================================================================
 
 SHELL := /bin/bash
@@ -50,7 +50,7 @@ BENCH_BINS ?= cdf_quantile codecs tdigest
 BENCH_ARGS ?= --warm-up-time 0.04 --sample-size 30 --measurement-time 1.5
 
 # CLI binary name (matches Cargo [[bin]] name)
-CLI_BIN ?= tdigest_cli
+CLI_BIN ?= tdigest-rs
 CLI_PATH := $(LIB_DIR)/$(CLI_BIN)
 CARGO_FEATURES ?=
 
@@ -86,9 +86,19 @@ help:
 # Setup
 # ==============================================================================
 .PHONY: setup
+
+define need
+	command -v $(1) >/dev/null 2>&1 || { printf "$(STYLE_ERR)✗ Missing dependency: $(1)$(STYLE_RESET)\n"; exit 1; }
+	printf "$(STYLE_OK)✓ $(1)$(STYLE_RESET)\n"
+endef
+
+
 setup:
 	$(call banner,Checking required host tools)
-	$(call need,rustup); $(call need,cargo); $(call need,git); $(call need,poetry)
+	$(call need,rustup)
+	$(call need,cargo)
+	$(call need,git)
+	$(call need,poetry)
 	$(POETRY) --version
 	$(call banner,Create Poetry venv + install deps)
 	$(POETRY) config virtualenvs.in-project true
@@ -96,7 +106,7 @@ setup:
 	$(POETRY) install --with dev -q
 	$(POETRY) run pip -q install -U maturin
 	$(call banner,Quick Python import smoke)
-	$(POETRY) run python -c 'import polars as pl, polars_tdigest as pt, sys; print("python", sys.version.split()[0], "| polars", pl.__version__, "| polars_tdigest ok")'
+	$(POETRY) run python -c 'import polars as pl, tdigest_rs as pt, sys; print("python", sys.version.split()[0], "| polars", pl.__version__, "| tdigest_rs ok")'
 
 # ==============================================================================
 # Core dev loop (everything)
@@ -126,7 +136,7 @@ clean:
 	$(call banner,Clean: Java .class files)
 	@find $(JAVA_SRC) -name "*.class" -delete
 	$(call banner,Clean: Python build artfacts)
-	@rm -f polars_tdigest/*.so
+	@rm -f tdigest_rs/*.so
 	@find . -type d -name "__pycache__" -prune -exec rm -rf {} +
 	@printf "$(STYLE_OK)✓ cleaned Rust, Python, and Java artifacts$(STYLE_RESET)\n"
 
@@ -140,18 +150,18 @@ help-me-run:
 	@printf "  echo '0 1 2 3' | target/release/$(CLI_BIN) quantile -q 0.5  # -> 1.5\n"
 	@printf "  echo '0 1 2 3' | target/release/$(CLI_BIN) --probes '0,1.5,3' cdf\n"
 	@printf "\n$(STYLE_BOLD)Rust — as a library$(STYLE_RESET)\n"
-	@printf "  // Create a small bin (src/bin/try.rs) using polars_tdigest::tdigest::TDigest\n"
+	@printf "  // Create a small bin (src/bin/try.rs) using tdigest_rs::tdigest::TDigest\n"
 	@printf "  // then: cargo run --release --bin try\n"
 	@printf "  // skeleton:\n"
-	@printf "  // use polars_tdigest::tdigest::{TDigest, ScaleFamily};\n"
+	@printf "  // use tdigest_rs::tdigest::{TDigest, ScaleFamily};\n"
 	@printf "  // fn main(){ let xs = vec![0.0,1.0,2.0,3.0];\n"
 	@printf "  //   let d = TDigest::new_with_size_and_scale(100, ScaleFamily::K2).merge_sorted(xs);\n"
 	@printf "  //   println!(\"p50={}\", d.estimate_quantile(0.5)); }\n"
 	@printf "\n$(STYLE_BOLD)Python — module$(STYLE_RESET)\n"
-	@printf "  poetry run python -c \"import polars_tdigest as pt; import numpy as np;\\n"
+	@printf "  poetry run python -c \"import tdigest_rs as pt; import numpy as np;\\n"
 	@printf "xs=[0,1,2,3]; d=pt.TDigest(xs, max_size=100); print(d.estimate_quantile(0.5))\"\n"
 	@printf "\n$(STYLE_BOLD)Polars — plugin$(STYLE_RESET)\n"
-	@printf "  poetry run python -c \"import polars as pl, polars_tdigest as ptd;\\n"
+	@printf "  poetry run python -c \"import polars as pl, tdigest_rs as ptd;\\n"
 	@printf "df=pl.DataFrame({'x':[0.0,1.0,2.0,3.0]});\\n"
 	@printf "df=df.select(ptd.tdigest('x',100));\\n"
 	@printf "print(df.select(ptd.estimate_cdf('x',[0.0,1.5,3.0])))\"\n"
@@ -187,9 +197,9 @@ rust-cli-smoke: $(CLI_PATH)
 # ==============================================================================
 .PHONY: py-build py-test
 py-build:
-	$(POETRY) run maturin develop -r
+	$(POETRY) run maturin develop -r -F python
 
-py-test:
+py-test: py-build
 	$(POETRY) run pytest -q
 
 # ==============================================================================
@@ -232,4 +242,4 @@ bench:
 	done
 
 wheel:
-	$(POETRY) run maturin build --release --manylinux 2_28 --zig
+	$(POETRY) run maturin build --release --manylinux 2_28 --zig -F python

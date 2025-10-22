@@ -8,7 +8,7 @@ use std::time::Duration;
 use bytesize::ByteSize;
 use criterion::{criterion_group, criterion_main, BenchmarkId, Criterion, Throughput};
 use jemalloc_ctl::{epoch, stats};
-use polars_tdigest::tdigest::{ScaleFamily, TDigest};
+use tdigest_rs::tdigest::{ScaleFamily, TDigest};
 use tdigest_testdata::{gen_dataset, DistKind};
 
 /* ------------------------ helpers ------------------------ */

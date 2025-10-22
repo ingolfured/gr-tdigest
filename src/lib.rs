@@ -32,7 +32,7 @@ use pyo3::types::PyModuleMethods;
 
 #[cfg(feature = "python")]
 #[pymodule]
-fn polars_tdigest(m: &Bound<'_, PyModule>) -> PyResult<()> {
+fn tdigest_rs(m: &Bound<'_, PyModule>) -> PyResult<()> {
     m.add("__version__", env!("CARGO_PKG_VERSION"))?;
     py::register(m)?;
     Ok(())

@@ -1,7 +1,7 @@
 package gr.tdigest_rs;
 
 public final class TDigestNative {
-  static { System.loadLibrary("polars_tdigest"); }
+  static { System.loadLibrary("tdigest_rs"); }
 
   public static native long create(int maxSize, String scale);
   public static native long createFromValues(double[] values, int maxSize, String scale);

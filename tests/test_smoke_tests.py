@@ -1,6 +1,6 @@
 import polars as pl
 
-from polars_tdigest import (
+from tdigest_rs import (
     tdigest,
     estimate_quantile,
     ScaleFamily,

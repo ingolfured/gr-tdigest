@@ -1,4 +1,4 @@
-# polars-tdigest
+# tdigest-rs
 
 A Polars plugin and Rust library for distributed quantile estimation using [T-Digest](https://docs.rs/tdigest/latest/tdigest/).
 
@@ -13,7 +13,7 @@ See the [Yellow Taxi Notebook](./tdigest_yellow_taxi.ipynb) for a usage example.
 
 Minimal Python usage:
 ```python
-from polars_tdigest import tdigest
+from tdigest_rs import tdigest
 import polars as pl
 
 df = pl.DataFrame({"values": [1, 2, 3, 4, 5]})
@@ -77,7 +77,7 @@ df = df.with_columns(
 
 - The plugin exposes a `tdigest` function for Polars expressions:
   ```python
-  from polars_tdigest import tdigest
+  from tdigest_rs import tdigest
 
   # Use use_32=True for compact 32-bit payloads
   df.with_columns(

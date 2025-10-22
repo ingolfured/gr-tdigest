@@ -6,13 +6,12 @@ build-backend = "maturin"
 # Poetry metadata (authoritative for env/dev/publish commands)
 # ------------------------------------------------------------
 [tool.poetry]
-name = "polars-tdigest"
-version = "0.0.0"  # kept in lockstep with Cargo.toml via `make version_set`
-description = "T-digest algorithms and Polars integration (Rust + PyO3) for Python"
-license = "Apache-2.0"
+name = "tdigest-rs"
+description = "Rust TDigest with Python, Polars and JNI"
 readme = "README.md"
+version = "0.0.0"  # kept in lockstep with Cargo.toml via `make version_set`
+license = "Apache-2.0"
 authors = [
-  "Thomas Lutterbeck <thomas.lutterbeck@appian.com>",
   "Ingolfur Edvardsson <ingo.edvardsson@gresearch.co.uk>",
 ]
 classifiers = [
@@ -45,14 +44,12 @@ numpy = ">=2.3.3"
 # Maturin build settings
 # ------------------------------------------------------------
 [tool.maturin]
-profile = "release"                     # docs: config 'profile' key
-features = ["python"]                   # flips on your PyO3 bindings
-no-default-features = true              # keep core lean in wheel builds
-bindings = "pyo3"                       # pyo3/rust-cpython/cffi/bin supported
+features = ["python"]  # if you’re gating Python features
+bindings = "pyo3"
+module-name = "tdigest_rs"                # must match [lib] name in Cargo
 strip = true
-manylinux = "manylinux_2_28"        # good modern baseline for glibc-based Linux
-auditwheel = "repair"
-zig = "always"                        # use zig for static linking
+manylinux = "2_28"                        # matches your Makefile wheel target
+zig = true
 
 # ------------------------------------------------------------
 # Ruff (lint / format)
@@ -72,7 +69,7 @@ extend-exclude = [
 
 # Optional per-file ignores example (uncomment if useful)
 # [tool.ruff.lint.per-file-ignores]
-# "polars_tdigest/__init__.py" = ["F401"]
+# "tdigest_rs/__init__.py" = ["F401"]
 
 # ------------------------------------------------------------
 # Pytest defaults

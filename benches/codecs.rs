@@ -3,7 +3,7 @@ use std::hint::black_box;
 use std::time::{Duration, Instant};
 
 use criterion::{criterion_group, criterion_main, Criterion, SamplingMode};
-use polars_tdigest::tdigest::{Centroid, TDigest};
+use tdigest_rs::tdigest::{Centroid, TDigest};
 
 const DIGESTS: usize = 100; // number of TDigest objects (rows)
 const CENTROIDS: usize = 1000; // centroids per digest

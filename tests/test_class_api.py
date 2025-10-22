@@ -1,6 +1,6 @@
 import math
 import numpy as np
-from polars_tdigest import TDigest
+from tdigest_rs import TDigest
 
 
 def test_class_basic_quantiles_and_median():
