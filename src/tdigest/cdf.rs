@@ -1,5 +1,5 @@
 // src/tdigest/cdf.rs
-use super::TDigest;
+use crate::tdigest::TDigest;
 use rayon::iter::IndexedParallelIterator;
 use rayon::prelude::*;
 
@@ -16,7 +16,7 @@ impl TDigest {
     /// - Parallelized for large `vals` via Rayon with a conservative crossover.
     pub fn estimate_cdf(&self, vals: &[f64]) -> Vec<f64> {
         // Degenerate cases
-        let n = self.centroids.len();
+        let n = self.centroids().len();
         if n == 0 {
             return vec![f64::NAN; vals.len()];
         }
@@ -68,11 +68,11 @@ struct CdfLight {
 
 #[inline]
 fn build_arrays_light(td: &TDigest) -> CdfLight {
-    let n = td.centroids.len();
+    let n = td.centroids().len();
 
     let mut means = Vec::with_capacity(n);
     let mut weights = Vec::with_capacity(n);
-    for c in &td.centroids {
+    for c in td.centroids() {
         means.push(c.mean());
         weights.push(c.weight());
     }
@@ -89,7 +89,7 @@ fn build_arrays_light(td: &TDigest) -> CdfLight {
         means,
         weights,
         prefix,
-        count_f64: run, // equals td.count()
+        count_f64: td.count(), // equals `run`, but use the accessor for clarity
     }
 }
 
@@ -181,7 +181,9 @@ fn exact_ecdf_for_sorted(sorted: &[f64]) -> Vec<f64> {
 
 #[cfg(test)]
 mod tests {
+    use crate::tdigest::scale::q_to_k;
     use crate::tdigest::test_helpers::*;
+    use crate::tdigest::SingletonPolicy;
     use crate::tdigest::TDigest;
 
     fn assert_cdf_oob_clamps(label: &str, td: &TDigest, below: f64, above: f64) {
@@ -211,23 +213,75 @@ mod tests {
     #[test]
     fn cdf_small_max10_medn_100() {
         let mut values: Vec<f64> = (-30..=69).map(|x| x as f64).collect();
-        values[0] = -1e9;
-        values[1] = -30.0;
-        values[98] = 1e-10;
-        values[99] = 1e9;
-        values.sort_by(|a, b| a.partial_cmp(b).unwrap());
+        values[0] = -1e9;      // Extreme low value
+        values[1] = -30.0;     // Boundary condition
+        values[98] = 1e-10;    // Very small value
+        values[99] = 1e9;      // Extreme high value
+        values.sort_by(|a, b| a.partial_cmp(b).unwrap()); // Sort values
 
         let exact = super::exact_ecdf_for_sorted(&values);
-        let td = TDigest::new_with_size(10).merge_sorted(values.clone());
+
+        // Compress the values into TDigest with max size 10
+        let td = TDigest::builder()
+            .max_size(10)
+            .singleton_policy(SingletonPolicy::Off)  // Force merging of all centroids
+            .build()
+            .merge_sorted(values.clone());
+
+        // Debugging: Print centroids after merging
+        eprintln!("Centroids after merging (max_size=10, SingletonPolicy::Off):");
+        for (i, centroid) in td.centroids().iter().enumerate() {
+            eprintln!("Centroid {}: mean = {:.6e}, weight = {:.6e}", i, centroid.mean(), centroid.weight());
+        }
+
+        // Estimate CDF using TDigest
         let approx = td.estimate_cdf(&values);
 
+        // Calculate KS and MAE
         let (ks, mae) = ks_mae(&exact, &approx);
+
+        // Debugging outputs to inspect the failure
+        eprintln!("Exact ECDF: {:?}", exact);
+        eprintln!("Approximate CDF: {:?}", approx);
+        eprintln!("KS statistic: {:.6e}", ks);
+        eprintln!("MAE: {:.6e}", mae);
+
+        // More debugging info
+        eprintln!("==================== Debugging Compression Process =====================");
+        let result = td.centroids();
+        for (i, centroid) in result.iter().enumerate() {
+            eprintln!("Centroid {}: mean = {:.6e}, weight = {:.6e}", i, centroid.mean(), centroid.weight());
+        }
+
+        // More debugging on the k-space and merging thresholds
+        eprintln!("==================== Inspecting k-space Logic =====================");
+        let total_weight: f64 = result.iter().map(|c| c.weight()).sum();
+        eprintln!("Total weight of all centroids: {:.6e}", total_weight);
+
+        // Print out the k-space parameters for the first few centroids
+        for i in 0..result.len().min(5) {
+            let centroid = &result[i];
+            let q_r = centroid.weight() * total_weight; // Simplified for demonstration
+            let k_r = q_to_k(q_r, 1.0, td.scale());  // Substitute actual scale factor
+            eprintln!("Centroid {}: k_r = {:.6e}, q_r = {:.6e}", i, k_r, q_r);
+        }
+
+        // Check how many centroids were generated and how they are distributed
+        eprintln!("Total number of centroids: {}", result.len());
+        
+        // Assert CDF KS and MAE are within expected bounds
         assert!(ks < 0.035, "CDF KS too large: {:.6e}", ks);
         assert!(mae < 0.003, "CDF MAE too large: {:.6e}", mae);
 
+        // Assert that the estimated CDF values are within the unit interval [0, 1]
         assert_all_in_unit_interval("cdf(100) bounds", &approx);
+
+        // Assert that the estimated CDF is monotonic
         assert_monotone_chain("cdf(100) monotone", &approx);
     }
+
+
+
 
     #[test]
     fn cdf_exact_with_enough_capacity() {

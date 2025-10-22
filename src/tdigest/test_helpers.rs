@@ -1,7 +1,3 @@
-// src/tdigest/test_helpers.rs
-// Common test helper functions for tdigest tests
-
-/// Assert that two f64 values are exactly equal (no tolerance).
 pub fn assert_exact(label: &str, expected: f64, got: f64) {
     assert!(
         expected == got,

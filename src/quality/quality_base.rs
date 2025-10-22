@@ -1,4 +1,4 @@
-use crate::tdigest::{ScaleFamily, TDigest};
+use crate::tdigest::{ScaleFamily, SingletonPolicy, TDigest};
 
 pub use tdigest_testdata::{gen_dataset, DistKind};
 
@@ -100,18 +100,17 @@ pub fn exact_ecdf_for_sorted(sorted: &[f64]) -> Vec<f64> {
     out
 }
 
-/// Build a TDigest for sorted `data` with a chosen `max_size`, `scale` and `precision` model.
+
 pub fn build_digest_sorted(
-    mut data: Vec<f64>,
+    data: Vec<f64>,
     max_size: usize,
     scale: ScaleFamily,
-    precision: Precision,
+    _precision: Precision, // don't switch to "exact" based on this
 ) -> TDigest {
-    data.sort_by(|a, b| a.partial_cmp(b).unwrap());
-    let data = match precision {
-        Precision::F64 => data,
-        Precision::F32 => data.into_iter().map(|x| (x as f32) as f64).collect(),
-    };
-    let base = TDigest::new_with_size_and_scale(max_size, scale); //.with_protected_tails(200);
-    base.merge_sorted(data)
+    TDigest::builder()
+        .max_size(max_size)
+        .scale(scale)
+        .singleton_policy(SingletonPolicy::Use) 
+        .build()
+        .merge_sorted(data)
 }

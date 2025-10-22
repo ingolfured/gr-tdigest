@@ -1,4 +1,5 @@
 // benches/codecs.rs
+use crate::tdigest::{TDigest, ScaleFamily, SingletonPolicy, Centroid};
 use std::hint::black_box;
 use std::time::{Duration, Instant};
 

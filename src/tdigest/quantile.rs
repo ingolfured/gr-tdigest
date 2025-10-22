@@ -1,13 +1,13 @@
-use super::TDigest;
+use crate::tdigest::TDigest;
 
 impl TDigest {
     /// Estimate the value located at quantile `q` (0..=1).
     pub fn estimate_quantile(&self, q: f64) -> f64 {
-        if self.centroids.is_empty() {
+        if self.centroids().is_empty() {
             return 0.0;
         }
-        if self.centroids.len() == 1 {
-            return self.centroids[0].mean();
+        if self.centroids().len() == 1 {
+            return self.centroids()[0].mean();
         }
 
         let q = q.clamp(0.0, 1.0);
@@ -43,12 +43,12 @@ impl TDigest {
     /// Half-weight bracketing: find adjacent centroids whose center-to-center span contains `index`.
     /// Returns (left_idx, right_idx, cumulative_weight_at_left_center, center_span_weight).
     fn find_bracketing_centroids(&self, index: f64) -> (usize, usize, f64, f64) {
-        let first_w = self.centroids[0].weight();
+        let first_w = self.centroids()[0].weight();
         let mut cum_w_at_left_center = first_w / 2.0;
 
-        for left_idx in 0..(self.centroids.len() - 1) {
-            let w_left = self.centroids[left_idx].weight();
-            let w_right = self.centroids[left_idx + 1].weight();
+        for left_idx in 0..(self.centroids().len() - 1) {
+            let w_left = self.centroids()[left_idx].weight();
+            let w_right = self.centroids()[left_idx + 1].weight();
             let center_span_weight = (w_left + w_right) / 2.0;
 
             if cum_w_at_left_center + center_span_weight > index {
@@ -63,9 +63,9 @@ impl TDigest {
         }
 
         // Fallback: last pair (shouldn't happen in normal flow).
-        let m = self.centroids.len();
-        let w_last = self.centroids[m - 1].weight();
-        let span_w = (self.centroids[m - 2].weight() + w_last) / 2.0;
+        let m = self.centroids().len();
+        let w_last = self.centroids()[m - 1].weight();
+        let span_w = (self.centroids()[m - 2].weight() + w_last) / 2.0;
         (m - 2, m - 1, self.count() - w_last / 2.0, span_w)
     }
 
@@ -78,8 +78,8 @@ impl TDigest {
         center_span_weight: f64,
         target_index: f64,
     ) -> f64 {
-        let left = &self.centroids[left_idx];
-        let right = &self.centroids[right_idx];
+        let left = &self.centroids()[left_idx];
+        let right = &self.centroids()[right_idx];
 
         let (w_left, w_right) = (left.weight(), right.weight());
         let (m_left, m_right) = (left.mean(), right.mean());
@@ -131,12 +131,12 @@ impl TDigest {
     /// Return the indices of the two centroids that bracket the median (q = 0.5)
     /// using the same half-weight bracketing as estimate_quantile.
     fn bracket_centroids_for_median(&self) -> (usize, usize) {
-        debug_assert!(!self.centroids.is_empty());
-        if self.centroids.len() == 1 {
+        debug_assert!(!self.centroids().is_empty());
+        if self.centroids().len() == 1 {
             return (0, 0);
         }
         let total_w = self.count();
-        if self.centroids.len() == 2 || total_w <= 2.0 {
+        if self.centroids().len() == 2 || total_w <= 2.0 {
             return (0, 1);
         }
         let index = 0.5 * total_w;
@@ -145,7 +145,7 @@ impl TDigest {
             return (0, 1);
         }
         if index > total_w - 1.0 {
-            let m = self.centroids.len();
+            let m = self.centroids().len();
             return (m - 2, m - 1);
         }
         let (li, ri, _cw, _span) = self.find_bracketing_centroids(index);
@@ -164,7 +164,7 @@ impl TDigest {
             return self.estimate_quantile(0.5);
         }
         let (li, ri) = self.bracket_centroids_for_median();
-        let (ml, mr) = (self.centroids[li].mean(), self.centroids[ri].mean());
+        let (ml, mr) = (self.centroids()[li].mean(), self.centroids()[ri].mean());
         (ml + mr) * 0.5
     }
 }
@@ -184,7 +184,8 @@ mod tests {
         }
         assert_rel_close("median", 1.0, t.estimate_quantile(0.5), 0.01);
         assert_rel_close("q=0.95", 2.0, t.estimate_quantile(0.95), 0.01);
-        let means: Vec<f64> = t.centroids.iter().map(|c| c.mean.into_inner()).collect();
+
+        let means: Vec<f64> = t.centroids().iter().map(|c| c.mean()).collect();
         assert_eq!(
             means.len(),
             2,
@@ -201,7 +202,9 @@ mod tests {
     /// n=10, max_size=10 — edge clamps, median bracket, monotone grid.
     #[test]
     fn quantiles_small_max10_smalln() {
-        let mut values = vec![-10.0, -1.0, 0.0, 0.0, 2e-10, 1.0, 2.0, 10.0, 1e9, -1e9];
+        let mut values = vec![
+            -10.0, -1.0, 0.0, 0.0, 2e-10, 1.0, 2.0, 10.0, 1e9, -1e9,
+        ];
         values.sort_by(|a, b| a.partial_cmp(b).unwrap());
         let t = TDigest::new_with_size(10).merge_sorted(values.clone());
 
@@ -274,7 +277,7 @@ mod tests {
             (0..N).map(|_| r.random_range(0..N as u64) as f64).collect()
         };
         v.sort_by(|a, b| a.partial_cmp(b).unwrap());
-        let td = super::TDigest::new_with_size(N + 1).merge_sorted(v.clone());
+        let td = TDigest::new_with_size(N + 1).merge_sorted(v.clone());
 
         assert_exact("Q(0)", v[0], td.estimate_quantile(0.0));
         assert_exact("Q(1)", v[N - 1], td.estimate_quantile(1.0));

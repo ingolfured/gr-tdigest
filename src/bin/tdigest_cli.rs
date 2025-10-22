@@ -1,7 +1,8 @@
+// src/bin/tdigest_cli.rs
 use clap::{Parser, Subcommand, ValueEnum};
 use std::error::Error;
 use std::io::{self, Read};
-use tdigest_rs::tdigest::{ScaleFamily, TDigest};
+use tdigest_rs::tdigest::{ScaleFamily, SingletonPolicy};
 
 #[derive(Debug, Clone, ValueEnum)]
 enum Scale {
@@ -10,7 +11,6 @@ enum Scale {
     K2,
     K3,
 }
-
 impl From<Scale> for ScaleFamily {
     fn from(s: Scale) -> Self {
         match s {
@@ -22,16 +22,43 @@ impl From<Scale> for ScaleFamily {
     }
 }
 
+#[derive(Debug, Clone, ValueEnum)]
+enum Policy {
+    Off,
+    Use,
+    UseProtectedEdges,
+}
+impl Policy {
+    fn into_singleton_policy(self, keep: Option<usize>) -> SingletonPolicy {
+        match self {
+            Policy::Off => SingletonPolicy::Off,
+            Policy::Use => SingletonPolicy::Use,
+            Policy::UseProtectedEdges => {
+                let k = keep.unwrap_or(3);
+                SingletonPolicy::UseWithProtectedEdges(k)
+            }
+        }
+    }
+}
+
 #[derive(Parser)]
 #[command(author, version, about)]
 struct Args {
     /// Max digest size (compression parameter)
-    #[arg(short = 'm', long, default_value_t = 100)]
+    #[arg(short = 'm', long, default_value_t = 1000)]
     max_size: usize,
 
     /// Scale family (quad|k1|k2|k3)
     #[arg(short = 's', long, value_enum, default_value_t = Scale::K2)]
     scale: Scale,
+
+    /// Singleton policy (off|use|use-protected-edges)
+    #[arg(short = 'p', long, value_enum, default_value_t = Policy::Use)]
+    policy: Policy,
+
+    /// When --policy=use-protected-edges, keep this many raw items per tail
+    #[arg(long, value_parser, requires = "policy")]
+    keep: Option<usize>,
 
     /// Optional: probe xs (space/comma/newline separated). If omitted, uses input xs.
     #[arg(long)]
@@ -64,20 +91,27 @@ fn parse_numbers(s: &str) -> Result<Vec<f64>, Box<dyn Error>> {
     Ok(out)
 }
 
-fn read_stdin_f64s() -> Result<Vec<f64>, Box<dyn Error>> {
+fn read_stdin_f64s_sorted() -> Result<Vec<f64>, Box<dyn Error>> {
     let mut s = String::new();
     io::stdin().read_to_string(&mut s)?;
     let mut xs = parse_numbers(&s)?;
-    xs.sort_by(|a, b| a.partial_cmp(b).unwrap());
+    xs.sort_by(|a, b| a.total_cmp(b));
     Ok(xs)
 }
 
 fn main() -> Result<(), Box<dyn Error>> {
     let args = Args::parse();
     let scale: ScaleFamily = args.scale.into();
+    let policy = args.policy.clone().into_singleton_policy(args.keep);
 
-    let xs = read_stdin_f64s()?;
-    let digest = TDigest::new_with_size_and_scale(args.max_size, scale).merge_sorted(xs.clone());
+    let xs = read_stdin_f64s_sorted()?;
+
+    let digest = tdigest_rs::tdigest::TDigest::builder()
+        .max_size(args.max_size)
+        .scale(scale)
+        .singleton_policy(policy)
+        .build()
+        .merge_sorted(xs.clone());
 
     match args.cmd {
         Cmd::Cdf => {
@@ -86,7 +120,7 @@ fn main() -> Result<(), Box<dyn Error>> {
             } else {
                 xs
             };
-            let cdf = digest.estimate_cdf(&probes);
+            let cdf = digest.cdf(&probes);
             for (x, p) in probes.iter().zip(cdf.iter()) {
                 println!("{x}\t{p}");
             }
@@ -96,7 +130,7 @@ fn main() -> Result<(), Box<dyn Error>> {
                 eprintln!("q must be in [0,1]");
                 std::process::exit(2);
             }
-            let v = digest.estimate_quantile(q);
+            let v = digest.quantile(q);
             println!("{v}");
         }
     }
