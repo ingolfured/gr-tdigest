@@ -151,7 +151,7 @@ impl Default for TDigest {
 
 impl TDigest {
     pub fn new_with_size(max_size: usize) -> Self {
-        Self::new_with_size_and_scale(max_size, ScaleFamily::Quad)
+        Self::new_with_size_and_scale(max_size, ScaleFamily::K2)
     }
 
     /// Pick the scale family explicitly.
@@ -1003,7 +1003,7 @@ mod tests {
         use crate::tdigest::test_helpers::assert_exact;
 
         // Tiny core, protect 3 raw items per tail.
-        let base = TDigest::new_with_size(4).with_protected_tails(3);
+        let base = TDigest::new_with_size_and_scale(4, ScaleFamily::Quad).with_protected_tails(3);
 
         // Merge three batches:
         // - middle bulk: 1..=20
