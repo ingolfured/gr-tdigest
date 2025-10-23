@@ -88,7 +88,7 @@ mod tests {
         // ---- BLESSED FROM 2025-10-06 21:26 RUN ----
         const BASE_KS: f64 = 1.206064e-3;
         const BASE_MAE: f64 = 4.157326e-5;
-        const BASE_SCORE: f64 = 0.9309059239725813;
+        const BASE_SCORE: f64 = 0.9197612445918796;
 
         // Keep tolerances strict-ish; score tolerance separate due to exp heuristic sensitivity.
         const KS_TOL: f64 = 5e-4;

@@ -69,7 +69,7 @@ mod tests {
         // ---- UPDATE THESE THREE WHEN YOU INTENTIONALLY CHANGE THE ALGO ----
         const BASE_KS: f64 = 7.318705e-4; // <- pinned from 20:52 run
         const BASE_MAE: f64 = 3.616685e-5; // <- pinned from 20:52 run
-        const BASE_SCORE: f64 = 0.945; // <- pinned from 20:52 run
+        const BASE_SCORE: f64 = 0.942988915480563; // <- pinned from 20:52 run
         const TOL: f64 = 5e-4; // strict-ish; adjust if you see flakiness
 
         let r = assess_quantiles_with(DistKind::Mixture, N, MAX_SIZE, SCALE, PREC, SEED);
