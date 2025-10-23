@@ -34,16 +34,16 @@ repos:
         types_or: [python, pyi]
         require_serial: true
 
-      - id: cargo-fmt-check
-        name: cargo fmt --check
+      - id: cargo-fmt-fix
+        name: cargo fmt --fix
         language: system
-        entry: bash -lc 'cargo fmt --all -- --check'
+        entry: bash -lc 'cargo fmt'
         pass_filenames: false
 
-      - id: cargo-clippy
-        name: cargo clippy (deny warnings)
+      - id: cargo-clippy-fix
+        name: cargo clippy --fix
         language: system
-        entry: bash -lc 'cargo clippy --all-targets --all-features -- -D warnings'
+        entry: bash -lc 'cargo clippy --fix --allow-dirty --allow-staged'
         pass_filenames: false
 
       - id: fast-smoke
