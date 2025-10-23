@@ -1,15 +1,16 @@
-pub mod centroids;
 pub mod cdf;
+pub mod centroids;
 pub mod codecs;
 pub mod quantile;
 pub mod test_helpers;
 
 // Internal building blocks
-mod tdigest;
-mod scale;
-mod singleton_policy;
 mod compressor;
 mod merges;
+mod scale;
+mod singleton_policy;
+#[allow(clippy::module_inception)]
+mod tdigest;
 
 // Public surface
 pub use centroids::Centroid;

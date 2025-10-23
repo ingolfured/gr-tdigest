@@ -3,21 +3,17 @@ use serde::{Deserialize, Serialize};
 /// Scale families define the q→k mapping that controls compression density.
 #[derive(Debug, Copy, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "lowercase")] // accept "quad","k1","k2","k3"
+#[derive(Default)]
 pub enum ScaleFamily {
     /// Piecewise-quadratic tail-friendly scale.
     Quad,
     /// k1: arcsine scale.
     K1,
     /// k2: logistic scale (DEFAULT).
+    #[default]
     K2,
     /// k3: double-log scale.
     K3,
-}
-
-impl Default for ScaleFamily {
-    fn default() -> Self {
-        ScaleFamily::K2
-    }
 }
 
 #[inline]
@@ -55,7 +51,7 @@ pub(crate) fn q_to_k(q: f64, d: f64, family: ScaleFamily) -> f64 {
         // k3: double-log
         ScaleFamily::K3 => {
             let a = (1.0 / (1.0 - qq)).ln(); // ln(1/(1-q))
-            let b = (1.0 / qq).ln();         // ln(1/q)
+            let b = (1.0 / qq).ln(); // ln(1/q)
             let ratio = (a / b).max(eps);
             (d / 4.0) * ratio.ln()
         }

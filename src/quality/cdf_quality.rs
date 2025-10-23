@@ -3,28 +3,50 @@ use super::quality_base::{
 };
 use crate::tdigest::{ScaleFamily, TDigest};
 
-/// Returns (KS, MAE) between digest-estimated CDF and empirical ECDF
-/// evaluated *at the data points themselves* (midpoint-ties ECDF).
-fn cdf_grid_errors(td: &TDigest, sorted: &[f64]) -> (f64, f64) {
+/// Compute empirical CDF at the grid `xs` using the midpoint-ties ECDF.
+fn empirical_cdf_at_grid(sorted: &[f64], ecdf_sorted: &[f64], xs: &[f64]) -> Vec<f64> {
     let n = sorted.len();
     if n == 0 {
-        return (f64::NAN, f64::NAN);
+        return vec![f64::NAN; xs.len()];
     }
-    let ecdf_sorted = exact_ecdf_for_sorted(sorted);          // length n
-    let est_on_data: Vec<f64> = td.estimate_cdf(sorted);      // evaluate at the jump locations
-
-    let mut ks: f64 = 0.0;
-    let mut mae: f64 = 0.0;
-    for (est, exp) in est_on_data.iter().zip(ecdf_sorted.iter()) {
-        let err = (est - exp).abs();
-        if err > ks { ks = err; }
-        mae += err;
+    let mut out = Vec::with_capacity(xs.len());
+    for &x in xs {
+        // count of values <= x
+        let idx = match sorted.binary_search_by(|v| v.partial_cmp(&x).unwrap()) {
+            Ok(mut j) => {
+                while j + 1 < n && sorted[j + 1] <= x {
+                    j += 1;
+                }
+                j + 1
+            }
+            Err(j) => j,
+        };
+        let f = if idx == 0 { 0.0 } else { ecdf_sorted[idx - 1] };
+        out.push(f);
     }
-    mae /= n as f64;
-    (ks, mae)
+    out
 }
 
+/// Returns (ks_like, mae) between digest-estimated CDF and empirical CDF on a dense grid.
+fn cdf_grid_errors(td: &TDigest, sorted: &[f64]) -> (f64, f64) {
+    let ecdf_sorted = exact_ecdf_for_sorted(sorted);
+    let steps = 1000usize;
+    let xs: Vec<f64> = (0..=steps).map(|i| (i as f64) / (steps as f64)).collect();
+    let est: Vec<f64> = td.estimate_cdf(&xs);
+    let exp: Vec<f64> = empirical_cdf_at_grid(sorted, &ecdf_sorted, &xs);
 
+    let mut ks_like: f64 = 0.0;
+    let mut mae: f64 = 0.0;
+    for (e, a) in est.iter().zip(exp.iter()) {
+        let err = (*e - *a).abs();
+        mae += err;
+        if err > ks_like {
+            ks_like = err;
+        }
+    }
+    mae /= (steps + 1) as f64;
+    (ks_like, mae)
+}
 
 /// Build, score, and wrap as `QualityReport` with configurable scale/precision.
 pub fn assess_cdf_with(
@@ -39,7 +61,6 @@ pub fn assess_cdf_with(
     data.sort_by(|a: &f64, b: &f64| a.total_cmp(b));
 
     let td = build_digest_sorted(data.clone(), max_size, scale, precision);
-    println!("hall {}", td.centroids().len());
     let (ks, mae) = cdf_grid_errors(&td, &data);
     QualityReport::from_metrics(n, ks, mae)
 }
@@ -77,41 +98,18 @@ mod tests {
         let r = assess_cdf_with(DistKind::Mixture, N, MAX_SIZE, SCALE, PREC, SEED);
         print_report("REG/F[Mixture, k=1000, Quad, F64]", r);
 
-        if r.ks < BASE_KS {
-            println!("KS improved: {} < {} (baseline)", r.ks, BASE_KS);
-        } else if r.ks > BASE_KS {
-            println!("KS worsened: {} > {} (baseline)", r.ks, BASE_KS);
-        } else {
-            println!("KS unchanged: {} == {} (baseline)", r.ks, BASE_KS);
-        }
         assert!(
             (r.ks - BASE_KS).abs() <= KS_TOL,
             "KS changed: {} vs {}",
             r.ks,
             BASE_KS
         );
-
-        if r.mae < BASE_MAE {
-            println!("MAE improved: {} < {} (baseline)", r.mae, BASE_MAE);
-        } else if r.mae > BASE_MAE {
-            println!("MAE worsened: {} > {} (baseline)", r.mae, BASE_MAE);
-        } else {
-            println!("MAE unchanged: {} == {} (baseline)", r.mae, BASE_MAE);
-        }
         assert!(
             (r.mae - BASE_MAE).abs() <= MAE_TOL,
             "MAE changed: {} vs {}",
             r.mae,
             BASE_MAE
         );
-
-        if r.score > BASE_SCORE {
-            println!("Score improved: {} > {} (baseline)", r.score, BASE_SCORE);
-        } else if r.score < BASE_SCORE {
-            println!("Score worsened: {} < {} (baseline)", r.score, BASE_SCORE);
-        } else {
-            println!("Score unchanged: {} == {} (baseline)", r.score, BASE_SCORE);
-        }
         assert!(
             (r.score - BASE_SCORE).abs() <= SCORE_TOL,
             "score changed: {} vs {}",

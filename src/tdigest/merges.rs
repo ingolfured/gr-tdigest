@@ -92,11 +92,15 @@ impl<'a> Iterator for MergeByMean<'a> {
     }
 }
 
-/// k-way merge of centroid runs (by increasing mean).
+/// k-way merge of centroid runs (by increasing mean), with COALESCING of equal means.
+/// If multiple runs have the same mean, they are merged into a single centroid whose:
+/// - mean == that value,
+/// - weight == sum of weights,
+/// - singleton == true iff ALL contributing centroids were marked singleton (pile semantics).
 pub(crate) struct KWayCentroidMerge<'a> {
     runs: Vec<&'a [Centroid]>,
     pos: Vec<usize>,
-    heap: BinaryHeap<(Reverse<OrderedFloat<f64>>, usize)>,
+    heap: BinaryHeap<(Reverse<OrderedFloat<f64>>, usize)>, // (mean, run_idx)
 }
 
 impl<'a> KWayCentroidMerge<'a> {
@@ -110,21 +114,69 @@ impl<'a> KWayCentroidMerge<'a> {
         }
         Self { runs, pos, heap }
     }
+
+    #[inline]
+    fn push_next(&mut self, run_idx: usize) {
+        let p = self.pos[run_idx];
+        let r = self.runs[run_idx];
+        if p < r.len() {
+            let c = &r[p];
+            self.heap
+                .push((Reverse(OrderedFloat::from(c.mean())), run_idx));
+        }
+    }
 }
 
 impl<'a> Iterator for KWayCentroidMerge<'a> {
     type Item = Centroid;
+
     fn next(&mut self) -> Option<Self::Item> {
-        let (Reverse(_m), run) = self.heap.pop()?;
-        let i = self.pos[run];
-        let slice = self.runs[run];
-        let c = slice[i];
-        self.pos[run] += 1;
-        if self.pos[run] < slice.len() {
-            let n = slice[self.pos[run]];
-            self.heap
-                .push((Reverse(OrderedFloat::from(n.mean())), run));
+        // Empty? Done.
+        let (Reverse(min_mean_ord), first_run) = self.heap.pop()?;
+        let min_mean = min_mean_ord.into_inner();
+
+        // Start a coalesced centroid at this mean.
+        // Accumulate weight from *all* runs whose current centroid has exactly this mean.
+        let mut sum_w = 0.0f64;
+        let mut all_singleton = true;
+
+        // Consume the head item we just popped.
+        {
+            let p = &mut self.pos[first_run];
+            let c = &self.runs[first_run][*p];
+            debug_assert!(c.mean() == min_mean);
+            sum_w += c.weight();
+            all_singleton &= c.is_singleton();
+            *p += 1;
+            // Push next from this run, if any.
+            self.push_next(first_run);
         }
-        Some(c)
+
+        // Now consume any other runs that also have this same mean at their head.
+        while let Some((Reverse(peek_mean_ord), run_idx)) = self.heap.peek().copied() {
+            if peek_mean_ord.into_inner() != min_mean {
+                break;
+            }
+            // Pop that matching-mean head and accumulate.
+            let _ = self.heap.pop();
+            let p = &mut self.pos[run_idx];
+            let c = &self.runs[run_idx][*p];
+            debug_assert!(c.mean() == min_mean);
+            sum_w += c.weight();
+            all_singleton &= c.is_singleton();
+            *p += 1;
+            self.push_next(run_idx);
+        }
+
+        // Build the coalesced centroid at exactly min_mean.
+        // Use your real constructor that sets `singleton` (pile) correctly.
+        // If you only have `Centroid::new(mean, weight)`, add a helper like:
+        //   Centroid::new_with_singleton(mean, weight, all_singleton)
+        // or `Centroid::pile(mean, weight)` when all_singleton is true.
+        let mut out = Centroid::new(min_mean, sum_w);
+        if all_singleton {
+            out.mark_singleton(true); // <- adjust to your actual API
+        }
+        Some(out)
     }
 }

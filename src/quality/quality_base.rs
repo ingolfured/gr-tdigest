@@ -100,7 +100,6 @@ pub fn exact_ecdf_for_sorted(sorted: &[f64]) -> Vec<f64> {
     out
 }
 
-
 pub fn build_digest_sorted(
     data: Vec<f64>,
     max_size: usize,
@@ -110,7 +109,7 @@ pub fn build_digest_sorted(
     TDigest::builder()
         .max_size(max_size)
         .scale(scale)
-        .singleton_policy(SingletonPolicy::Use) 
+        .singleton_policy(SingletonPolicy::Use)
         .build()
         .merge_sorted(data)
 }

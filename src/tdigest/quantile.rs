@@ -202,9 +202,7 @@ mod tests {
     /// n=10, max_size=10 — edge clamps, median bracket, monotone grid.
     #[test]
     fn quantiles_small_max10_smalln() {
-        let mut values = vec![
-            -10.0, -1.0, 0.0, 0.0, 2e-10, 1.0, 2.0, 10.0, 1e9, -1e9,
-        ];
+        let mut values = vec![-10.0, -1.0, 0.0, 0.0, 2e-10, 1.0, 2.0, 10.0, 1e9, -1e9];
         values.sort_by(|a, b| a.partial_cmp(b).unwrap());
         let t = TDigest::new_with_size(10).merge_sorted(values.clone());
 
