@@ -26,6 +26,7 @@ repos:
 
   - repo: local
     hooks:
+      # ---------- Python ----------
       - id: mypy
         name: mypy (uv)
         language: system
@@ -34,6 +35,7 @@ repos:
         types_or: [python, pyi]
         require_serial: true
 
+      # ---------- Rust formatting & lints ----------
       - id: cargo-fmt-fix
         name: cargo fmt --fix
         language: system
@@ -46,9 +48,23 @@ repos:
         entry: bash -lc 'cargo clippy --fix --allow-dirty --allow-staged'
         pass_filenames: false
 
+      # ---------- Tests (quick) ----------
       - id: fast-smoke
         name: pytest quick
         language: system
         entry: uv run pytest -q
         pass_filenames: false
         stages: [pre-commit]
+
+      - id: cargo-doc-strict
+        name: cargo doc (deny warnings)
+        language: system
+        entry: bash -lc
+        pass_filenames: false
+        require_serial: true
+        stages: [pre-commit]
+        args:
+          - |
+            set -euo pipefail
+            export RUSTDOCFLAGS="-D warnings -D rustdoc::private_intra_doc_links -D rustdoc::broken_intra_doc_links"
+            cargo doc --no-deps

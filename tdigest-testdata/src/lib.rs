@@ -1,6 +1,6 @@
 //! tdigest-testdata
 //! Synthetic data generators shared by benches and tests.
-//! Values are squashed into [0,1] so shapes are comparable.
+//! Values are squashed into \[0,1] so shapes are comparable.
 
 use rand::rngs::StdRng;
 use rand::{Rng, SeedableRng};
@@ -9,17 +9,17 @@ use rand_distr::{Distribution, Normal};
 /// Available synthetic distributions.
 #[derive(Clone, Copy, Debug)]
 pub enum DistKind {
-    /// Uniform in [0,1)
+    /// Uniform in \[0,1)
     Uniform,
-    /// Gaussian mapped to [0,1]
+    /// Gaussian mapped to \[0,1]
     Normal,
-    /// Log-normal-ish: exp(N(0, σ²)) squashed to [0,1]
+    /// Log-normal-ish: exp(N(0, σ²)) squashed to \[0,1]
     LogNormal { sigma: f64 },
     /// Mixed: clumps, broad region, and heavy tails
     Mixture,
 }
 
-/// Generate `n` samples for the chosen distribution, squashed into [0,1].
+/// Generate `n` samples for the chosen distribution, squashed into \[0,1].
 pub fn gen_dataset(kind: DistKind, n: usize, seed: u64) -> Vec<f64> {
     let mut rng = StdRng::seed_from_u64(seed);
     let mut out = Vec::with_capacity(n);

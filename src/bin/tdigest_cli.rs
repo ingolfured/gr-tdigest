@@ -2,7 +2,8 @@
 use clap::{Parser, Subcommand, ValueEnum};
 use std::error::Error;
 use std::io::{self, Read};
-use tdigest_rs::tdigest::{ScaleFamily, SingletonPolicy};
+use tdigest_rs::tdigest::singleton_policy::SingletonPolicy;
+use tdigest_rs::tdigest::ScaleFamily;
 
 #[derive(Debug, Clone, ValueEnum)]
 enum Scale {

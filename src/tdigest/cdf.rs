@@ -1,22 +1,104 @@
-// src/tdigest/cdf.rs
+//! CDF (cumulative distribution function) evaluation for `TDigest`.
+//!
+//! This module provides a fast, allocation-lean evaluator for
+//! `TDigest::estimate_cdf`, including an optimized scalar kernel and an
+//! auto-switch to Rayon for large query batches.
+//!
+//! # Semantics
+//! This implementation aims for robust, predictable CDF behavior under streaming and compressed data:
+//! - **Outside support**: clamp to `{0, 1}` (strictly below `min` → `0`, strictly
+//!   above `max` → `1`).
+//! - **Left/right tails**: guarded linear ramps between `min↔mean[0]` and
+//!   `mean[last]↔max`, where the edge centroid contributes **half weight**.
+//! - **Exact centroid hit**: return midpoint mass, i.e. `(prefix + 0.5·w) / N`.
+//! - **Between centroids**: center-to-center interpolation that **excludes
+//!   singleton half-mass** from the interpolation span. Two adjacent singletons
+//!   form a discrete step.
+//!
+//! # Guarantees
+//! - Output is in **[0, 1]**.
+//! - Output is **non-decreasing** in the query value.
+//! - With sufficient capacity (no compression), the result matches the
+//!   **midpoint ECDF** over ties.
+//!
+//! # Performance
+//! - Per query is **O(log n)** due to a binary search on centroid means.
+//! - A single temporary “light” view (`means`, `weights`, `prefix`, `count`) is
+//!   built **once per call** (O(n)) and reused for every query value.
+//! - For large batches the evaluation switches to **Rayon** parallelism
+//!   (see [`PAR_MIN`]) to amortize setup costs across threads.
+//!
+//! # Numerical notes
+//! - Tail ramps use explicit formulas that place exactly **0.5/N** at `min` and
+//!   `1−0.5/N` at `max` when the extremal centroid has weight 1.
+//! - When two adjacent centroids are **both singletons**, the interpolation span
+//!   collapses to a **step** over the left singleton (discrete mass).
+//! - When centroids are pathologically close (`gap ≤ 0`), the kernel falls back
+//!   to midpoint mass to preserve monotonicity.
+//!
+//! # Example
+//! ```rust
+//! use tdigest_rs::tdigest::{TDigest, tdigest::TDigestBuilder, ScaleFamily};
+//!
+//! // Build a small digest and evaluate its CDF on a sorted grid
+//! let values: Vec<f64> = (-10..=10).map(|x| x as f64).collect();
+//! let td = TDigestBuilder::new()
+//!     .max_size(64)
+//!     .scale(ScaleFamily::Quad)
+//!     .build()
+//!     .merge_sorted(values.clone());
+//!
+//! let cdf = td.estimate_cdf(&values);
+//! assert_eq!(cdf.len(), values.len());
+//! assert!(cdf.first().unwrap() >= &0.0 && cdf.last().unwrap() <= &1.0);
+//! for w in cdf.windows(2) {
+//!     assert!(w[1] + 1e-12 >= w[0]); // monotone
+//! }
+//! ```
+//!
+//! # Concurrency
+//! The API takes `&self` and performs a read-only snapshot into temporary
+//! vectors. It is safe to call concurrently from multiple threads.
+//!
+//! [`PAR_MIN`]: constant.PAR_MIN
+
 use crate::tdigest::TDigest;
 use rayon::iter::IndexedParallelIterator;
 use rayon::prelude::*;
 
 /// Crossover for parallel evaluation with Rayon.
-/// Keep conservative to avoid overhead dominating small batches.
+///
+/// Keep this conservative: Rayon setup has a fixed cost. Below this size a
+/// scalar loop is typically faster; above it, parallelism wins.
+///
+/// Heuristic, tuned to avoid overhead dominating small batches.
 const PAR_MIN: usize = 32_768;
 
 impl TDigest {
-    /// Estimate the CDF at each `vals[i]`, returning values in [0, 1].
+    /// Estimate the CDF at each `vals[i]`, returning values in **[0, 1]**.
     ///
-    /// Semantics closely follow the reference MergingDigest.cdf():
-    /// - Outside support: clamp to {0, 1}.
-    /// - Left/right tails: guarded linear ramps between min↔first-mean and last-mean↔max,
-    ///   with half-weight treatment at the edge centroids.
-    /// - Exact hits at centroid means: midpoint (prefix + 0.5*w)/N.
-    /// - Between centroids: center-to-center interpolation with singleton exclusion
-    ///   (unit centroids don't contribute half-weight to interpolation span).
+    /// ## Semantics
+    /// Mirrors the reference `MergingDigest.cdf()` with explicit handling of:
+    /// - **Outside support**: clamp to `{0, 1}` using `self.min()`/`self.max()`.
+    /// - **Tails**: linear ramps `min↔mean[0]` and `mean[last]↔max` with
+    ///   **half-weight** at the adjacent edge centroid.
+    /// - **Exact centroid mean**: midpoint mass `(prefix + 0.5·w)/N`.
+    /// - **Between centroids**: center-to-center interpolation that **excludes**
+    ///   singleton half-mass from the interpolation span (atomic piles do not
+    ///   “smear”).
+    ///
+    /// ## Complexity
+    /// - Build “light arrays” once: **O(m)** where `m = #centroids`.
+    /// - Per query: **O(log m)** from binary search on centroid means.
+    /// - For `vals.len() ≥ PAR_MIN`, queries are processed with **Rayon**.
+    ///
+    /// ## Edge cases
+    /// - Empty digest (`m = 0`) → a vector of `NaN` with `vals.len()` entries.
+    /// - Empty `vals` → returns an empty vector.
+    ///
+    /// ## Monotonicity & bounds
+    /// The result is guaranteed to be within **[0, 1]** and non-decreasing in
+    /// each query value.
     pub fn estimate_cdf(&self, vals: &[f64]) -> Vec<f64> {
         // Degenerate cases
         let n = self.centroids().len();
@@ -27,7 +109,7 @@ impl TDigest {
             return Vec::new();
         }
 
-        // Build "light arrays" once per call.
+        // Build "light arrays" once per call (means, weights, prefix, N).
         let CdfLight {
             means,
             weights,
@@ -38,7 +120,7 @@ impl TDigest {
         let min_v = self.min();
         let max_v = self.max();
 
-        // Tiny fast path: ≤ 8 queries, scalar loop (hot for point lookups).
+        // Tiny fast path: ≤ 8 queries → scalar loop. Common for point lookups.
         if vals.len() <= 8 {
             let mut out = Vec::with_capacity(vals.len());
             for &v in vals {
@@ -69,6 +151,10 @@ impl TDigest {
 
 /* ------------------------- PRIVATE HELPERS ------------------------- */
 
+/// Lightweight snapshot of the digest state needed by the CDF kernel.
+///
+/// This avoids repeated virtual dispatch or accessor overhead inside the hot
+/// loop and ensures tight, cache-friendly arrays.
 struct CdfLight {
     means: Vec<f64>,
     weights: Vec<f64>,
@@ -136,10 +222,10 @@ fn cdf_at_val_fast(
                     if val == min_v {
                         return 0.5 / count_f64;
                     }
-                    // guarded ramp from min → mean[0] with half-weight at edge centroid
+                    // Guarded ramp from min → mean[0] with half-weight at edge centroid.
                     return (1.0 + (val - min_v) / gap * (w0 / 2.0 - 1.0)) / count_f64;
                 } else {
-                    // degenerate (all equal); but idx==0 implies val<=min, so:
+                    // Degenerate (all equal); idx==0 implies val<=min.
                     return 0.0;
                 }
             }
@@ -156,7 +242,7 @@ fn cdf_at_val_fast(
                     if val == max_v {
                         return 1.0 - 0.5 / count_f64;
                     }
-                    // guarded ramp from mean[last] → max with half-weight at edge centroid
+                    // Guarded ramp from mean[last] → max with half-weight at edge centroid.
                     let dq = (1.0 + (max_v - val) / gap * (wn / 2.0 - 1.0)) / count_f64;
                     return 1.0 - dq;
                 } else {
@@ -174,26 +260,26 @@ fn cdf_at_val_fast(
 
             let gap = mr - ml;
             if gap <= 0.0 {
-                // Too close / pathological: fall back to midpoint mass
+                // Pathological/too-close: fall back to midpoint mass to preserve monotonicity.
                 let dw = 0.5 * (wl + wr);
                 return (prefix[li] + dw) / count_f64;
             }
 
-            // Two singletons bracketing → no interpolation: step over left singleton
+            // Two singletons bracketing → no interpolation: step over left singleton.
             if wl == 1.0 && wr == 1.0 {
                 return (prefix[li] + 1.0) / count_f64;
             }
 
-            // Singleton exclusion (unit heaps are atomic; exclude 0.5 from interpolation span)
+            // Singleton exclusion (atomic piles do not contribute 0.5 to the span).
             let left_excl = if wl == 1.0 { 0.5 } else { 0.0 };
             let right_excl = if wr == 1.0 { 0.5 } else { 0.0 };
 
             let dw = 0.5 * (wl + wr);
             let dw_no_singleton = dw - left_excl - right_excl;
-            // Safety (mirrors reference asserts)
+            // Safety (mirrors reference invariants):
             // assert dw_no_singleton > dw / 2.0 && gap > 0.0
 
-            // Base mass at left half-weight + any left exclusion
+            // Base mass at left half-weight plus any left exclusion.
             let base = prefix[li] + wl / 2.0 + left_excl;
             let frac = (val - ml) / gap;
             (base + dw_no_singleton * frac) / count_f64

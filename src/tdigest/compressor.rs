@@ -264,19 +264,19 @@ fn klimit_merge(items: &[Centroid], d: f64, family: ScaleFamily) -> Vec<Centroid
     let total_w: f64 = items.iter().map(|c| c.weight()).sum();
 
     // C = mass of completed clusters already emitted.
-    let mut C = 0.0_f64;
+    let mut c_acc = 0.0_f64; // running capacity accumulator
 
     let mut clusters: Vec<Centroid> = Vec::with_capacity(items.len());
     let mut acc = WeightedStats::default();
     let mut cluster_len: usize = 0;
     let mut singleton_head = true;
 
-    let mut q_l = C / total_w;
+    let mut q_l = c_acc / total_w;
     let mut k_left = q_to_k(q_l, d, family);
 
     for c in items {
         let w_next = c.weight();
-        let q_r = (C + acc.w_sum + w_next) / total_w;
+        let q_r = (c_acc + acc.w_sum + w_next) / total_w;
         let k_right = q_to_k(q_r, d, family);
 
         if (k_right - k_left) <= 1.0 + KLIMIT_TOL {
@@ -295,9 +295,9 @@ fn klimit_merge(items: &[Centroid], d: f64, family: ScaleFamily) -> Vec<Centroid
                 &mut singleton_head,
             );
             if let Some(last) = clusters.last() {
-                C += last.weight();
+                c_acc += last.weight();
             }
-            q_l = C / total_w;
+            q_l = c_acc / total_w;
             k_left = q_to_k(q_l, d, family);
 
             acc.add(c.mean(), w_next);

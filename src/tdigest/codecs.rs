@@ -5,16 +5,16 @@
 //! - **Compact**   – reduced precision (f32 centroids; f32 min/max; f64 sum/count)
 //!
 //! Instance API (strict):
-//!   td.try_to_series("td")                 -> PolarsResult<Series>
-//!   td.try_to_series_compact("td")         -> PolarsResult<Series>
-//!   TDigest::try_from_series(&series)      -> Result<Vec<TDigest>, CodecError>
-//!   TDigest::try_from_series_compact(&s)   -> Result<Vec<TDigest>, CodecError>
+//!   td.try_to_series("td")                 -> `PolarsResult<Series>`
+//!   td.try_to_series_compact("td")         -> `PolarsResult<Series>`
+//!   `TDigest::try_from_series(&series)`    -> `Result<Vec<TDigest>, CodecError>`
+//!   `TDigest::try_from_series_compact(&s)` -> `Result<Vec<TDigest>, CodecError>`
 
 use std::fmt;
 
 use polars::prelude::*;
 
-use crate::tdigest::{Centroid, DigestStats, TDigest};
+use crate::tdigest::{centroids::Centroid, DigestStats, TDigest};
 
 // --------------------- field name constants ----------------------------------
 

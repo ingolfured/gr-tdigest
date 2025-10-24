@@ -9,7 +9,9 @@ use std::iter::Peekable;
 /// `out` is non-decreasing by mean, with *adjacent equal means coalesced* into a pile
 /// (i.e., a data-true singleton with `weight > 1` and `singleton=true`).
 ///
-/// The aggregate totals (∑w, ∑w·mean, min, max) allow cheap updates of [`TDigest`] metadata.
+/// The aggregate totals (∑w, ∑w·mean, min, max) allow cheap updates of
+/// [`TDigest`](crate::tdigest::TDigest) metadata.
+
 pub struct NormalizedStream {
     pub out: Vec<Centroid>,
     pub total_w: f64,  // ∑ w

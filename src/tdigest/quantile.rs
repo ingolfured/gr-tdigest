@@ -1,7 +1,54 @@
+//! Quantile evaluation for `TDigest`.
+//!
+//! This module implements `TDigest::estimate_quantile(q)` using the same
+//! **half-weight bracketing** semantics as the reference MergingDigest:
+//!
+//! - **Index mapping**: map `q ∈ [0,1]` to a target cumulative weight index
+//!   `i = q·N`, where `N = ∑w` (total weight).
+//! - **Center-to-center spans**: treat each centroid's *center* as located at
+//!   half its weight from its left boundary. Between adjacent centroids, the
+//!   span weight is `(w_left + w_right)/2`.
+//! - **Edge clamps**: indices `< 1.0` clamp to `min`, and indices `> N−1.0` clamp
+//!   to `max` so boundary cases never run off the interior logic.
+//! - **Piles (discrete mass)**: a centroid with `is_singleton()==true` and `w>1`
+//!   represents multiple identical values (an *atomic pile*). If the target index
+//!   falls **strictly inside** that pile’s half-width, return the centroid mean.
+//! - **Unit singletons**: for a unit centroid (`w==1`), if the target index lies
+//!   within `0.5` of its center, snap exactly to its mean (prevents over-smearing).
+//! - **Interpolation**: otherwise, interpolate *linearly in weight* between
+//!   bracketing centroids, with **dead zones** of `0.5` removed from the span on
+//!   sides that are unit singletons. This mirrors the CDF’s singleton-exclusion.
+//!
+//! # Guarantees
+//! - The result is **monotone** in `q`.
+//! - `estimate_quantile(0.0) == min()` and `estimate_quantile(1.0) == max()`.
+//! - With sufficient capacity (no compression), results match **exact order
+//!   statistics** at mid-ranks `((i+0.5)/N)`.
+//!
+//! # Performance
+//! - `O(m)` pre-pass is avoided: we walk centroids once to find the bracketing
+//!   span. Overall **O(m)** in the worst case, typically close to **O(#spans)**.
+//!   (A binary-searchable prefix cache is possible but usually unnecessary.)
+//! - No allocations.
+//!
+//! # Numerical behavior
+//! - All comparisons are done in weight-space; ties and tiny spans avoid
+//!   division by near-zero by falling back to a mean of bracketing centroids.
+//! - Dead zones ensure unit singletons don’t contribute half-mass to the
+//!   interpolation denominator (consistent with CDF logic).
+//!
+//! See also: [`TDigest::estimate_cdf`] for CDF semantics, which pair with this
+//! quantile implementation via the same center/half-weight rules.
+
 use crate::tdigest::TDigest;
 
 impl TDigest {
-    /// Estimate the value located at quantile `q` (0..=1).
+    /// Estimate the value at quantile `q` (inclusive) using half-weight
+    /// bracketing and singleton-aware interpolation.
+    ///
+    /// - `q` is clamped to `[0, 1]`.
+    /// - For empty digests, returns `0.0`.
+    /// - For single-centroid digests, returns that mean.
     pub fn estimate_quantile(&self, q: f64) -> f64 {
         if self.centroids().is_empty() {
             return 0.0;
@@ -33,15 +80,17 @@ impl TDigest {
         )
     }
 
-    /// Map q∈[0,1] to a cumulative weight index in [0, total_weight].
+    /// Map `q ∈ [0,1]` to a cumulative weight index in `[0, total_weight]`.
     #[inline]
     fn quantile_to_weight_index(&self, q: f64) -> (f64, f64) {
         let total_weight = self.count();
         (q * total_weight, total_weight)
     }
 
-    /// Half-weight bracketing: find adjacent centroids whose center-to-center span contains `index`.
-    /// Returns (left_idx, right_idx, cumulative_weight_at_left_center, center_span_weight).
+    /// Half-weight bracketing: find adjacent centroids whose center-to-center
+    /// span contains `index`.
+    ///
+    /// Returns `(left_idx, right_idx, cumulative_weight_at_left_center, center_span_weight)`.
     fn find_bracketing_centroids(&self, index: f64) -> (usize, usize, f64, f64) {
         let first_w = self.centroids()[0].weight();
         let mut cum_w_at_left_center = first_w / 2.0;
@@ -70,6 +119,12 @@ impl TDigest {
     }
 
     /// Interpolate between bracketing centroids with symmetric singleton/pile logic.
+    ///
+    /// - If the target index lies **strictly inside** a multi-weight singleton pile,
+    ///   return its mean (discrete mass).
+    /// - For **unit** singletons, snap to the mean if within ±0.5 of its center.
+    /// - Otherwise, interpolate linearly in weight after removing `0.5` dead zones
+    ///   on sides that are unit singletons.
     fn interpolate_between_centroids(
         &self,
         left_idx: usize,
@@ -85,6 +140,7 @@ impl TDigest {
         let (m_left, m_right) = (left.mean(), right.mean());
         let right_center_cum_w = cum_w_at_left_center + center_span_weight;
 
+        // Inside a multi-weight singleton "pile" → return exact mean.
         if left.is_singleton()
             && w_left > 1.0
             && Self::inside_pile_strict(target_index, cum_w_at_left_center, w_left)
@@ -98,6 +154,7 @@ impl TDigest {
             return m_right;
         }
 
+        // Unit-singleton snap to avoid over-smearing a point-mass.
         if w_left == 1.0 && (target_index - cum_w_at_left_center) < 0.5 {
             return m_left;
         }
@@ -105,6 +162,7 @@ impl TDigest {
             return m_right;
         }
 
+        // Remove dead zones contributed by unit singletons.
         let dead_left = if w_left == 1.0 { 0.5 } else { 0.0 };
         let dead_right = if w_right == 1.0 { 0.5 } else { 0.0 };
         let weight_toward_right = target_index - cum_w_at_left_center - dead_left;
@@ -129,7 +187,7 @@ impl TDigest {
     }
 
     /// Return the indices of the two centroids that bracket the median (q = 0.5)
-    /// using the same half-weight bracketing as estimate_quantile.
+    /// using the same half-weight bracketing as `estimate_quantile`.
     fn bracket_centroids_for_median(&self) -> (usize, usize) {
         debug_assert!(!self.centroids().is_empty());
         if self.centroids().len() == 1 {
@@ -153,8 +211,9 @@ impl TDigest {
     }
 
     /// Median with an even-count special case to avoid over-interpolation.
-    /// - If total count is even: average the two neighboring centroid means around q=0.5.
-    /// - If odd: fall back to `estimate_quantile(0.5)`.
+    ///
+    /// - If total count is **even**: average the two neighboring centroid means around q=0.5.
+    /// - If **odd**: fall back to `estimate_quantile(0.5)`.
     pub fn estimate_median(&self) -> f64 {
         let total = self.count();
         if total <= 0.0 {

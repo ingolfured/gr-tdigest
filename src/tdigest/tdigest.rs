@@ -18,24 +18,24 @@ use serde::{Deserialize, Serialize};
 ///
 /// 1) **Normalize** — verify non-decreasing means, coalesce adjacent equal means into a
 ///    *singleton pile*, and accumulate running totals for metadata.
-/// 2) **Slice (edges vs. interior)** — derive edge protection/quotas from `SingletonPolicy`.
-/// 3) **Merge (k-limit)** — greedily merge under the selected `ScaleFamily` rule (Δk ≤ 1).
+/// 2) **Slice (edges vs. interior)** — derive edge protection/quotas from [`SingletonPolicy`].
+/// 3) **Merge (k-limit)** — greedily merge under the selected [`ScaleFamily`] rule (Δk ≤ 1).
 /// 4) **Cap (equal-weight bucketization)** — if needed, compress interior to capacity by
-///    order-preserving equal-weight grouping (may emit fewer than N for better stability).
+///    order-preserving equal-weight grouping (may emit fewer than `N` for stability).
 /// 5) **Assemble** — concatenate left edges + interior + right edges without mutation.
-/// 6) **Post (policy finalization)** — policy-specific final pass (e.g. total cap for `Use`).
+/// 6) **Post (policy finalization)** — policy-specific final pass (e.g., total cap for `Use`).
 ///
 /// This structure keeps behavior deterministic and testable while making it obvious **where**
 /// to change things (scale families only affect stage 3; tail policies only affect stages 2/6).
 ///
 /// ## Public ingestion paths
-/// - [`TDigest::merge_sorted`] / [`TDigest::merge_unsorted`]: raw values via [`MergeByMean`].
-/// - [`TDigest::merge_digests`]: multiple digests via [`KWayCentroidMerge`].
-/// - All paths end in the **same** compression pipeline (see [`compress_into`]).
+/// - [`TDigest::merge_sorted`] / [`TDigest::merge_unsorted`]: raw values via a *merge-by-mean* producer.
+/// - [`TDigest::merge_digests`]: multiple digests via a *k-way centroid merge*.
+/// - All paths end in the **same** compression pipeline (see `compress_into`).
 ///
 /// ### Invariants preserved
 /// - Strictly increasing centroid means (no duplicates).
-/// - Total weight conservation (up to expected floating rounding).
+/// - Total weight conservation (up to expected float rounding).
 /// - Clear ownership of semantics:
 ///   - “equal means ⇒ pile” belongs to **Normalize**.
 ///   - edge/tail protection belongs to **Slice**/**Post**.
@@ -75,8 +75,8 @@ impl Default for TDigest {
 /// Seeding helpers:
 /// - [`TDigestBuilder::with_centroids_and_stats`] — pass centroids + [`DigestStats`].
 /// - [`TDigestBuilder::with_centroids`] — convenience to pass raw fields with optional
-///   `max_size_override` (mirrors how [`TDigest::new`] temporarily exceeds capacity and
-///   then merges down).
+///   `max_size_override` (mirrors how [`TDigest::new`] may temporarily exceed capacity and
+///   then compress down).
 #[derive(Debug, Clone)]
 pub struct TDigestBuilder {
     max_size: usize,
@@ -106,16 +106,19 @@ impl TDigestBuilder {
     pub fn new() -> Self {
         Self::default()
     }
+
     /// Set the compression parameter (`max_size`).
     pub fn max_size(mut self, n: usize) -> Self {
         self.max_size = n;
         self
     }
+
     /// Choose the scale family used by the k-limit (Stage **3**).
     pub fn scale(mut self, s: ScaleFamily) -> Self {
         self.scale = s;
         self
     }
+
     /// Set the singleton/edge policy influencing Stages **2** and **6**.
     pub fn singleton_policy(mut self, p: SingletonPolicy) -> Self {
         self.policy = p;
@@ -139,7 +142,7 @@ impl TDigestBuilder {
     /// Seed with centroids and raw stats (convenience mirror of [`TDigest::new`]).
     ///
     /// If the given `centroids.len()` exceeds `max_size_override`, construction will
-    /// mirror the behavior of [`TDigest::new`], i.e. temporarily hold the large set
+    /// mirror the behavior of [`TDigest::new`]: temporarily hold the large set
     /// and compress through the pipeline to respect capacity.
     pub fn with_centroids(
         mut self,
@@ -211,7 +214,7 @@ impl TDigest {
         TDigestBuilder::default()
     }
 
-    // --- internal metadata setters (kept small & inlined) ---
+    // --- internal metadata setters (small & inlined) ---
     #[inline]
     pub(crate) fn set_sum(&mut self, s: f64) {
         self.sum = OrderedFloat(s);
@@ -229,7 +232,7 @@ impl TDigest {
         self.max = OrderedFloat(v);
     }
 
-    /// Build from unsorted values (convenience over [`TDigest::merge_unsorted`]).
+    /// Build from **unsorted** values (convenience over [`TDigest::merge_unsorted`]).
     pub fn from_unsorted(values: &[f64], max_size: usize) -> TDigest {
         let base = TDigest::builder().max_size(max_size).build();
         base.merge_unsorted(values.to_vec())
@@ -247,16 +250,19 @@ impl TDigest {
         self.estimate_cdf(x)
     }
 
-    /// Median convenience wrapper (`quantile(0.5)`).
+    /// Median convenience wrapper with even/odd handling.
     #[inline]
     pub fn median(&self) -> f64 {
-        self.estimate_quantile(0.5)
+        self.estimate_median()
     }
 
+    /// The configured scale family used by the compressor’s k-limit.
     #[inline]
     pub fn scale(&self) -> ScaleFamily {
         self.scale
     }
+
+    /// The configured singleton/edge policy.
     #[inline]
     pub fn singleton_policy(&self) -> SingletonPolicy {
         self.policy
@@ -264,8 +270,8 @@ impl TDigest {
 
     /// Ingest **unsorted** values; behavior matches [`TDigest::merge_sorted`] after sorting.
     ///
-    /// Producer: [`MergeByMean`] over sorted values interleaved with existing centroids.
-    /// Pipeline: passes through **(1→6)** via [`compress_into`].
+    /// Producer: *merge-by-mean* over sorted values interleaved with existing centroids.
+    /// Pipeline: passes through **(1→6)** via `compress_into`.
     pub fn merge_unsorted(&self, mut unsorted_values: Vec<f64>) -> TDigest {
         unsorted_values.sort_by(|a, b| a.total_cmp(b));
         self.merge_sorted(unsorted_values)
@@ -273,7 +279,7 @@ impl TDigest {
 
     /// Ingest **sorted** values by interleaving with existing centroids and running the pipeline.
     ///
-    /// Producer: [`MergeByMean`].
+    /// Producer: *merge-by-mean*.
     /// Pipeline: **(1 Normalize → 2 Slice → 3 k-limit Merge → 4 Cap → 5 Assemble → 6 Post)**.
     pub fn merge_sorted(&self, sorted_values: Vec<f64>) -> TDigest {
         if sorted_values.is_empty() {
@@ -302,10 +308,10 @@ impl TDigest {
     }
 
     /// Merge multiple digests by k-way merging their centroid runs and sending the result through
-    /// the exact same pipeline as raw values.
+    /// the same pipeline used for raw values.
     ///
-    /// Producer: [`KWayCentroidMerge`] (coalesces equal-mean heads).
-    /// Pipeline: **(1→6)** via [`compress_into`].
+    /// Producer: *k-way centroid merge* (coalesces equal-mean heads).
+    /// Pipeline: **(1→6)** via `compress_into`.
     pub fn merge_digests(digests: Vec<TDigest>) -> TDigest {
         // Decide max_size/scale/policy by first non-empty digest to keep semantics stable.
         let mut chosen = TDigest::default();
@@ -343,7 +349,7 @@ impl TDigest {
             policy: chosen.policy,
         };
 
-        // Producer: k-way merge of centroid runs (no coalescing beyond equal-mean heads).
+        // Producer: k-way merge of centroid runs (no extra coalescing beyond equal-mean heads).
         let merged_stream = KWayCentroidMerge::new(runs);
 
         // Same pipeline as values.
@@ -407,43 +413,50 @@ impl TDigest {
             0.0
         }
     }
+
     /// Sum of raw values (∑x).
     #[inline]
     pub fn sum(&self) -> f64 {
         self.sum.into_inner()
     }
+
     /// Total weight (∑w). For raw samples, this equals the sample count.
     #[inline]
     pub fn count(&self) -> f64 {
         self.count.into_inner()
     }
+
     /// Maximum observed raw value.
     #[inline]
     pub fn max(&self) -> f64 {
         self.max.into_inner()
     }
+
     /// Minimum observed raw value.
     #[inline]
     pub fn min(&self) -> f64 {
         self.min.into_inner()
     }
+
     /// Whether the digest currently has no centroids.
     #[inline]
     pub fn is_empty(&self) -> bool {
         self.centroids.is_empty()
     }
+
     /// The configured compression parameter.
     #[inline]
     pub fn max_size(&self) -> usize {
         self.max_size
     }
+
     /// Borrow the internal centroids.
     #[inline]
     pub fn centroids(&self) -> &[Centroid] {
         &self.centroids
     }
 
-    /// Prepare a result shell when ingesting a batch of raw values.
+    /// Prepare a result shell when ingesting a batch of **sorted** raw values.
     ///
     /// Sets `count` to existing `∑w + values.len()`, resets `sum` to be filled by Stage **1**,
     /// and updates min/max by comparing current bounds with the new batch.

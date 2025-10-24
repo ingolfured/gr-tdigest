@@ -1,30 +1,26 @@
+//! t-digest core types and public API.
+//!
+//! - [`TDigest`] — main data structure and builder.
+//! - **Compression** — internal compressor enforces a k-limit ([`ScaleFamily`]) while
+//!   preserving extremes and discrete *singleton piles*.
+//! - **Scales** — see [`ScaleFamily`] for available k-mappings.
+//! - **CDF** — see [`TDigest::estimate_cdf`] for exact semantics and guarantees.
+//!
+//! ### Notes on intra-doc links
+//! If you refer to internal helpers, link to the **module**, not private items.
+//! Example: prefer [`crate::tdigest::merges`] over linking to a private type.
+//! This avoids `rustdoc::private_intra_doc_links` warnings.
+
 pub mod cdf;
 pub mod centroids;
 pub mod codecs;
+pub mod compressor;
+pub mod merges;
 pub mod quantile;
+pub mod scale;
+pub mod singleton_policy;
 
-// Internal building blocks
-mod compressor;
-mod merges;
-mod scale;
-mod singleton_policy;
-#[allow(clippy::module_inception)]
-mod tdigest;
-
-#[cfg(test)]
-pub mod test_helpers;
-
-pub use self::centroids::Centroid;
 pub use self::scale::ScaleFamily;
-pub use self::singleton_policy::SingletonPolicy;
-pub use self::tdigest::{DigestStats, TDigest, TDigestBuilder};
+pub use self::tdigest::*;
 
-// Optional tracing macro (cheap unless env var set)
-#[macro_export]
-macro_rules! ttrace {
-    ($($arg:tt)*) => {
-        if std::env::var("TDIGEST_TRACE").is_ok() {
-            eprintln!($($arg)*);
-        }
-    };
-}
+pub mod tdigest;
