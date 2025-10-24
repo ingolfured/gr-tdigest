@@ -2,7 +2,6 @@ pub mod cdf;
 pub mod centroids;
 pub mod codecs;
 pub mod quantile;
-pub mod test_helpers;
 
 // Internal building blocks
 mod compressor;
@@ -11,6 +10,9 @@ mod scale;
 mod singleton_policy;
 #[allow(clippy::module_inception)]
 mod tdigest;
+
+#[cfg(test)]
+pub mod test_helpers;
 
 pub use self::centroids::Centroid;
 pub use self::scale::ScaleFamily;

@@ -1,6 +1,8 @@
 use serde::{Deserialize, Serialize};
 
 /// Scale families define the q→k mapping that controls compression density.
+///
+/// **Used in Stage 3 (k-limit merge).**
 #[derive(Debug, Copy, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "lowercase")] // accept "quad","k1","k2","k3"
 #[derive(Default)]
@@ -21,7 +23,11 @@ pub(crate) fn clamp(v: f64, lo: f64, hi: f64) -> f64 {
     v.max(lo).min(hi)
 }
 
-/// Family-aware q -> k mapping. `d` is the scale denominator (≈ max_size).
+/// Family-aware `q → k` mapping. `d` is the scale denominator (≈ `max_size`).
+///
+/// This mapping shapes cluster budget along the distribution:
+/// more resolution near tails for some scales, more uniform for others.
+/// Consumed by Stage **3** to evaluate the Δk ≤ 1 condition.
 #[inline]
 pub(crate) fn q_to_k(q: f64, d: f64, family: ScaleFamily) -> f64 {
     use std::f64::consts::{LN_2, PI};

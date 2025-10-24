@@ -1,3 +1,20 @@
+//! Compressor: runs the TDigest pipeline stages **1→6** on an input stream of centroids.
+//!
+//! ### Pipeline (referenced by numbers throughout)
+//! 1. **Normalize**: validate non-decreasing means; coalesce adjacent equal-means into *piles*;
+//!    compute (∑w, ∑w·mean, min, max).
+//! 2. **Slice**: partition `(left edges, interior, right edges)` and compute interior capacity
+//!    from the active [`SingletonPolicy`].
+//! 3. **Merge (k-limit)**: greedily merge interior under Δk ≤ 1 for the selected [`ScaleFamily`].
+//! 4. **Cap**: if interior exceeds its budget, apply order-preserving equal-weight bucketization.
+//! 5. **Assemble**: concatenate `left + core + right`.
+//! 6. **Post**: optional policy finalization (e.g., total-cap for `Use`).
+//!
+//! #### Invariants
+//! - Output centroids are strictly increasing by mean.
+//! - Total weight is preserved (up to floating rounding).
+//! - Stage ownership is explicit: piles are created only in **1**; edge rules only in **2/6**.
+
 use crate::tdigest::centroids::{is_sorted_strict_by_mean, Centroid};
 use crate::tdigest::merges::normalize_stream;
 use crate::tdigest::scale::{q_to_k, ScaleFamily};
@@ -7,8 +24,8 @@ use crate::tdigest::TDigest;
 const KLIMIT_TOL: f64 = 1e-12;
 
 /* =============================================================================
-Compressor: Normalize → Slice → Merge(k-limit) → Cap → Assemble → Post
-============================================================================= */
+ * Internal utilities
+ * ============================================================================= */
 
 #[derive(Clone, Copy, Debug, Default)]
 struct WeightedStats {
@@ -45,8 +62,10 @@ impl WeightedStats {
     }
 }
 
-/// Single-cluster constructor: keep singleton only for single-item clusters that started
-/// with a singleton (raw/pile). Multi-item clusters are always mixed.
+/// Build a centroid from an accumulated cluster (used in **3**).
+///
+/// - Single-item clusters retain `singleton=true` only if the head was a data-true singleton.
+/// - Multi-item clusters are emitted as mixed.
 #[inline]
 fn build_centroid(mean: f64, weight: f64, singleton_head: bool, cluster_len: usize) -> Centroid {
     if singleton_head && cluster_len == 1 {
@@ -56,24 +75,32 @@ fn build_centroid(mean: f64, weight: f64, singleton_head: bool, cluster_len: usi
     }
 }
 
-/// Main pipeline executor. See detailed flow documentation in `tdigest.rs`.
+/// Run the full pipeline (**1→6**) on `items` and write digest-level metadata to `result`.
+///
+/// Stages:
+/// 1) Normalize → `normalize_stream`
+/// 2) Slice     → policy-dependent edge/interior partition
+/// 3) Merge     → `klimit_merge`
+/// 4) Cap       → `cap_core` / `bucketize_equal_weight`
+/// 5) Assemble  → `assemble_with_edges`
+/// 6) Post      → policy-specific finalization
 pub(crate) fn compress_into<I>(result: &mut TDigest, max_size: usize, items: I) -> Vec<Centroid>
 where
     I: IntoIterator<Item = Centroid>,
 {
-    // 1) Normalize: verify order, coalesce equals → piles, collect totals.
+    // -- 1) Normalize ---------------------------------------------------------
     let norm = normalize_stream(items);
     if norm.out.is_empty() {
         return norm.out;
     }
 
-    // Update global metadata on the result digest.
+    // Update digest-level metadata derived from normalized stream.
     result.set_count(norm.total_w);
     result.set_sum(norm.total_mw);
     result.set_min(norm.min);
     result.set_max(norm.max);
 
-    // 2) Slice: compute edges/interior and effective caps from policy.
+    // -- 2) Slice -------------------------------------------------------------
     let policy = policy_from(result.singleton_policy(), max_size);
     if let Some(v) = policy.fast_path(&norm.out) {
         debug_assert!(is_sorted_strict_by_mean(&v));
@@ -81,21 +108,20 @@ where
     }
     let slices = policy.slice(&norm.out);
 
-    // 3) Merge (k-limit): greedy Δk≤1 on the interior under the selected scale family.
+    // -- 3) Merge (k-limit) ---------------------------------------------------
     let family: ScaleFamily = result.scale();
     let d: f64 = result.max_size() as f64;
     let core = klimit_merge(slices.interior, d, family);
 
-    // 4) Cap: equal-weight bucketization if core exceeds its budget.
-    //    Note on precision: we may emit *fewer* than N buckets if the final partial group is small.
-    //    This intentionally avoids generating fragile micro-centroids and typically improves
-    //    quantile stability (especially in tails).
+    // -- 4) Cap ---------------------------------------------------------------
+    // Equal-weight bucketization if the interior exceeds its budget.
+    // We may emit fewer than N to avoid tiny last buckets, which improves tail stability.
     let core_capped = cap_core(core, slices.caps.core_cap);
 
-    // 5) Assemble: concatenate edges with the (capped) core without mutation.
+    // -- 5) Assemble ----------------------------------------------------------
     let assembled = assemble_with_edges(slices.left, core_capped, slices.right);
 
-    // 6) Post: policy-specific finalization (e.g., total cap for `Use`).
+    // -- 6) Post --------------------------------------------------------------
     let compressed = policy.post(assembled);
 
     debug_assert!(is_sorted_strict_by_mean(&compressed));
@@ -103,8 +129,8 @@ where
 }
 
 /* =============================================================================
-Policy (enum – no dynamic dispatch)
-============================================================================= */
+ * Policy (Stages 2 & 6)
+ * ============================================================================= */
 
 #[derive(Clone, Copy, Debug)]
 enum Policy {
@@ -122,7 +148,7 @@ fn policy_from(sp: SingletonPolicy, max: usize) -> Policy {
 }
 
 impl Policy {
-    /// Early exits for trivial/exact cases (fast path).
+    /// Fast-path for trivial/exact cases (part of **2**). Returns `Some` when no further work is needed.
     fn fast_path(&self, out: &[Centroid]) -> Option<Vec<Centroid>> {
         match *self {
             Policy::Off { max } => {
@@ -145,15 +171,17 @@ impl Policy {
         }
     }
 
-    /// Compute edge slices and capacity rules for this policy.
+    /// **(2) Slice** — compute `(left, interior, right)` and interior capacity.
     fn slice<'a>(&self, out: &'a [Centroid]) -> EdgeSlices<'a> {
         match *self {
+            // No edge protection; core capacity equals `max`.
             Policy::Off { max } => EdgeSlices {
                 left: &[],
                 interior: out,
                 right: &[],
                 caps: EdgeCaps { core_cap: max },
             },
+            // Preserve endpoints; core capacity excludes the two edges.
             Policy::Use { max } => {
                 let n = out.len();
                 let l = usize::from(n >= 1);
@@ -171,6 +199,7 @@ impl Policy {
                     caps: EdgeCaps { core_cap },
                 }
             }
+            // Protect up to `k` singleton/pile centroids per edge; interior has independent cap.
             Policy::UseProt { max, k } => {
                 let n = out.len();
                 let l_prot = edge_run_len(out, k, true);
@@ -201,7 +230,7 @@ impl Policy {
         }
     }
 
-    /// Optional policy-specific finalization (e.g., total-cap enforcement for `Use`).
+    /// **(6) Post** — finalize per policy (e.g., total-cap enforcement for `Use`).
     fn post(&self, assembled: Vec<Centroid>) -> Vec<Centroid> {
         match *self {
             Policy::Use { max } => {
@@ -219,19 +248,22 @@ impl Policy {
 }
 
 /* =============================================================================
-Core operations
-============================================================================= */
+ * Core operations (Stages 3, 4, 5)
+ * ============================================================================= */
 
-/// Greedy k-limit merge for the interior region.
-/// - Preserves order and total weight.
-/// - Emits singleton clusters for single-item, singleton-headed groups.
+/// **(3) Merge (k-limit)** — greedy interior merge under Δk ≤ 1.
+///
+/// Guarantees:
+/// - Order and total weight are preserved.
+/// - Single-item clusters remain singletons only when the head was a data-true singleton.
+/// - Multi-item clusters are mixed.
 fn klimit_merge(items: &[Centroid], d: f64, family: ScaleFamily) -> Vec<Centroid> {
     if items.is_empty() {
         return Vec::new();
     }
     let total_w: f64 = items.iter().map(|c| c.weight()).sum();
 
-    // C: cumulative mass already emitted via completed clusters.
+    // C = mass of completed clusters already emitted.
     let mut C = 0.0_f64;
 
     let mut clusters: Vec<Centroid> = Vec::with_capacity(items.len());
@@ -283,13 +315,10 @@ fn klimit_merge(items: &[Centroid], d: f64, family: ScaleFamily) -> Vec<Centroid
     clusters
 }
 
-/// Collapse a vector to at most `core_cap` elements by equal-weight grouping.
+/// **(4) Cap** — reduce to at most `core_cap` by equal-weight grouping.
 ///
-/// ### Why we may emit *fewer* than `core_cap`:
-/// The final partial bucket can be tiny. Forcing an extra centroid there tends to create
-/// very small weights that amplify floating noise and quantile jitter near edges.
-/// Allowing a short fall-through keeps the shape smoother and usually *improves* tail
-/// accuracy without violating overall capacity goals.
+/// The last group may be omitted if it would be too small; this avoids micro-weights that
+/// degrade numerical stability near the tails.
 fn cap_core(core: Vec<Centroid>, core_cap: usize) -> Vec<Centroid> {
     if core.len() <= core_cap {
         return core;
@@ -300,11 +329,10 @@ fn cap_core(core: Vec<Centroid>, core_cap: usize) -> Vec<Centroid> {
     bucketize_equal_weight(&core, core_cap)
 }
 
-/// Bucketize a slice into `buckets` consecutive equal-weight groups.
-/// Preserves ordering and total weight. Each output centroid is mixed.
+/// **(4) Cap** — order-preserving equal-weight bucketization into `buckets` groups.
 ///
-/// Behavior: attempts to emit up to `buckets` outputs; the last partial group
-/// may be skipped if too small (see note in `cap_core`).
+/// - Emits up to `buckets` outputs; a tiny trailing remainder may be skipped (see [`cap_core`]).
+/// - Outputs are **mixed** centroids.
 fn bucketize_equal_weight(cs: &[Centroid], buckets: usize) -> Vec<Centroid> {
     debug_assert!(buckets > 0);
     if cs.is_empty() {
@@ -343,7 +371,7 @@ fn bucketize_equal_weight(cs: &[Centroid], buckets: usize) -> Vec<Centroid> {
     out
 }
 
-/// Assemble edges and interior without modifying elements.
+/// **(5) Assemble** — concatenate `left`, `core`, `right` without element mutation.
 fn assemble_with_edges(
     left: &[Centroid],
     core: Vec<Centroid>,
@@ -357,8 +385,8 @@ fn assemble_with_edges(
 }
 
 /* =============================================================================
-Edge helpers
-============================================================================= */
+ * Edge helpers (used by Stage 2)
+ * ============================================================================= */
 
 #[derive(Debug, Clone, Copy)]
 struct EdgeCaps {
@@ -373,7 +401,9 @@ struct EdgeSlices<'a> {
     caps: EdgeCaps,
 }
 
-/// Count up to `k` consecutive singleton centroids on one edge.
+/// Count up to `k` consecutive *singleton/pile* centroids on one edge.
+///
+/// Stops at the first mixed centroid. When `from_left=false`, scans from the right.
 fn edge_run_len(cs: &[Centroid], k: usize, from_left: bool) -> usize {
     if k == 0 || cs.is_empty() {
         return 0;
@@ -400,10 +430,10 @@ fn edge_run_len(cs: &[Centroid], k: usize, from_left: bool) -> usize {
 }
 
 /* =============================================================================
-Small utilities
-============================================================================= */
+ * Small helpers
+ * ============================================================================= */
 
-/// Flush the current cluster into `clusters` if non-empty.
+/// Emit the current cluster (if any) and reset accumulation (used by **3**).
 fn flush_cluster(
     clusters: &mut Vec<Centroid>,
     acc: &mut WeightedStats,
@@ -422,7 +452,7 @@ fn flush_cluster(
     *singleton_head = true;
 }
 
-/// Collapse a slice into a single mixed centroid (helper for bucketizer).
+/// Collapse a slice into a single **mixed** centroid (helper for **4**).
 fn weighted_collapse_mixed(slice: &[Centroid]) -> Centroid {
     let mut acc = WeightedStats::default();
     for c in slice {

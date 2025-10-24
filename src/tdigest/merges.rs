@@ -4,9 +4,12 @@ use std::cmp::Reverse;
 use std::collections::BinaryHeap;
 use std::iter::Peekable;
 
-/// Normalized stream returned by `normalize_stream`.
-/// `out` is non-decreasing by mean, with *adjacent equal means coalesced* into a pile.
-/// The totals support cheap updates of TDigest metadata.
+/// Output of Stage **1 – Normalize** (see pipeline in `tdigest.rs`).
+///
+/// `out` is non-decreasing by mean, with *adjacent equal means coalesced* into a pile
+/// (i.e., a data-true singleton with `weight > 1` and `singleton=true`).
+///
+/// The aggregate totals (∑w, ∑w·mean, min, max) allow cheap updates of [`TDigest`] metadata.
 pub struct NormalizedStream {
     pub out: Vec<Centroid>,
     pub total_w: f64,  // ∑ w
@@ -15,13 +18,17 @@ pub struct NormalizedStream {
     pub max: f64,
 }
 
+/// **(1) Normalize**
+///
 /// Normalize any centroid iterator into a clean, coalesced stream:
-/// - verify non-decreasing means (panics with a clear message if violated),
-/// - coalesce adjacent equal means into a single *singleton pile*,
+/// - verify non-decreasing means (panics with a clear, test-friendly message if violated),
+/// - coalesce *adjacent equal means* into a single **singleton pile**,
 /// - accumulate (∑w, ∑w·mean, min, max).
 ///
-/// This is the *sole* owner of “equal means ⇒ pile” semantics for producers that
-/// do not already coalesce internally.
+/// This function is the *sole* owner of “equal means ⇒ pile” semantics for producers
+/// that do not fuse internally.
+///
+/// Returns a [`NormalizedStream`] consumed by later stages.
 pub fn normalize_stream<I>(items: I) -> NormalizedStream
 where
     I: IntoIterator<Item = Centroid>,
@@ -68,13 +75,13 @@ where
     }
 }
 
-/// Merge stream that interleaves existing centroids with a run-length
-/// encoding of sorted raw values (grouping identical values into one centroid).
+/// Producer for raw **values + existing centroids**, interleaved by mean.
 ///
-/// IMPORTANT:
-/// - This iterator focuses on correct *ordering* and optional value run-length encoding.
-/// - It does **not** fuse values with existing centroids here; `normalize_stream` or downstream
-///   coalescers own adjacent-equals fusion semantics.
+/// Yields a non-coalesced stream where runs of identical values are grouped into a single
+/// *value centroid* (pile) when `singletons_on_values=true`. **Coalescing is deferred** to
+/// Stage **1** (Normalize).
+///
+/// Used by [`TDigest::merge_sorted`] / [`TDigest::merge_unsorted`].
 pub(crate) struct MergeByMean<'a> {
     centroids: Peekable<std::slice::Iter<'a, Centroid>>,
     values: Peekable<std::slice::Iter<'a, f64>>,
@@ -84,6 +91,10 @@ pub(crate) struct MergeByMean<'a> {
 }
 
 impl<'a> MergeByMean<'a> {
+    /// Build a producer that interleaves `centroids` with sorted `values`.
+    ///
+    /// The `singletons_on_values` flag marks grouped value runs as *singleton piles*
+    /// (data-true singleton), unless the active policy is `Off`.
     pub(crate) fn from_centroids_and_values(
         centroids: &'a [Centroid],
         values: &'a [f64],
@@ -162,14 +173,13 @@ impl<'a> Iterator for MergeByMean<'a> {
     }
 }
 
-/// k-way merge of centroid runs (by increasing mean), **with coalescing of equal means**.
-/// If multiple runs have the same mean at their head, they are merged into a single centroid:
-/// - mean: that value,
-/// - weight: sum of weights,
-/// - singleton: true iff all contributing centroids were singleton.
+/// Producer for **digest–digest** merging.
 ///
-/// Rationale: historical behavior fused equal means at merge time for digest–digest merges,
-/// which stabilizes mass layout and improves tail quantiles in uniform tests.
+/// Performs a k-way merge across centroid runs, **coalescing equal-mean heads** across runs.
+/// The emitted stream is sorted by mean; full coalescing/validation is still handled by
+/// Stage **1**.
+///
+/// Used by [`TDigest::merge_digests`].
 pub(crate) struct KWayCentroidMerge<'a> {
     runs: Vec<&'a [Centroid]>,
     pos: Vec<usize>,
@@ -177,6 +187,7 @@ pub(crate) struct KWayCentroidMerge<'a> {
 }
 
 impl<'a> KWayCentroidMerge<'a> {
+    /// Create a new k-way centroid run merger.
     pub(crate) fn new(runs: Vec<&'a [Centroid]>) -> Self {
         let mut heap = BinaryHeap::with_capacity(runs.len());
         let pos = vec![0; runs.len()];
