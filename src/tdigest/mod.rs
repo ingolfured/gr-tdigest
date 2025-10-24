@@ -12,18 +12,17 @@ mod singleton_policy;
 #[allow(clippy::module_inception)]
 mod tdigest;
 
-// Public surface
-pub use centroids::Centroid;
-pub use scale::ScaleFamily;
-pub use singleton_policy::SingletonPolicy;
-pub use tdigest::TDigest;
+pub use self::centroids::Centroid;
+pub use self::scale::ScaleFamily;
+pub use self::singleton_policy::SingletonPolicy;
+pub use self::tdigest::{DigestStats, TDigest, TDigestBuilder};
 
-// Opt-in tracing (cheap unless env var set)
+// Optional tracing macro (cheap unless env var set)
 #[macro_export]
 macro_rules! ttrace {
     ($($arg:tt)*) => {
         if std::env::var("TDIGEST_TRACE").is_ok() {
             eprintln!($($arg)*);
         }
-    }
+    };
 }

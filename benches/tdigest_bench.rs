@@ -7,9 +7,33 @@
 use std::process::Command;
 use std::time::Duration;
 
-use criterion::{criterion_group, criterion_main, BatchSize, BenchmarkId, Criterion, Throughput};
+use criterion::{BatchSize, BenchmarkId, Criterion, Throughput};
 use tdigest_rs::tdigest::{ScaleFamily, TDigest};
 use tdigest_testdata::{gen_dataset, DistKind};
+
+#[cfg(target_os = "linux")]
+fn rss_peak_kib() -> u64 {
+    // ru_maxrss is in KiB on Linux
+    unsafe {
+        let mut usage: libc::rusage = std::mem::zeroed();
+        libc::getrusage(libc::RUSAGE_SELF, &mut usage);
+        usage.ru_maxrss as u64
+    }
+}
+
+#[cfg(not(target_os = "linux"))]
+fn rss_peak_kib() -> u64 {
+    // Fallback: unknown platform → 0 (you can add macOS proc reading if you want)
+    0
+}
+
+fn build_digest_unsorted(vals: Vec<f64>) -> TDigest {
+    TDigest::builder()
+        .max_size(1_000)
+        .scale(ScaleFamily::K2)
+        .build()
+        .merge_unsorted(vals)
+}
 
 fn bench_merge_unsorted(c: &mut Criterion) {
     let sizes = [1_000usize, 10_000, 1_000_000, 10_000_000];
@@ -35,10 +59,8 @@ fn bench_merge_unsorted(c: &mut Criterion) {
 
         group.bench_with_input(BenchmarkId::new("build", n), &n, |b, &nn| {
             b.iter_batched(
-                || gen_dataset(DistKind::Mixture, nn, 4242), // setup: unsorted data
-                |vals| {
-                    TDigest::new_with_size_and_scale(1_000, ScaleFamily::K2).merge_unsorted(vals);
-                },
+                || gen_dataset(DistKind::Mixture, nn, 4242),
+                |vals| build_digest_unsorted(vals),
                 if nn >= 1_000_000 {
                     BatchSize::LargeInput
                 } else {
@@ -57,7 +79,7 @@ fn bench_merge_unsorted(c: &mut Criterion) {
             .output()
             .expect("spawn peak child");
         if out.status.success() {
-            // Child prints a single line: "[peak] size=... rss_peak=..."
+            // Child prints a single line: "[peak] size=... rss_peak_kib=... (~MiB)"
             eprint!("{}", String::from_utf8_lossy(&out.stdout));
         } else {
             eprintln!(
@@ -69,7 +91,7 @@ fn bench_merge_unsorted(c: &mut Criterion) {
     }
 }
 
-/* ------------------------ registration ------------------------ */
+/* ------------------------ custom harness ------------------------ */
 
 fn configure() -> Criterion {
     Criterion::default()
@@ -79,5 +101,40 @@ fn configure() -> Criterion {
         .sample_size(30)
 }
 
-criterion_group!(name = tdigest_benches; config = configure(); targets = bench_merge_unsorted);
-criterion_main!(tdigest_benches);
+fn run_bench_suite() {
+    let mut c = configure();
+    bench_merge_unsorted(&mut c);
+    c.final_summary();
+}
+
+fn run_peak_once(n: usize) -> anyhow::Result<()> {
+    // Build one digest of size n, then print peak RSS (KiB and MiB)
+    let vals = gen_dataset(DistKind::Mixture, n, 4242);
+    let _td = build_digest_unsorted(vals);
+    let kib = rss_peak_kib();
+    let mib = kib as f64 / 1024.0;
+    println!("[peak] size={} rss_peak_kib={} (~{:.1} MiB)", n, kib, mib);
+    Ok(())
+}
+
+fn main() {
+    let args = std::env::args().skip(1).collect::<Vec<_>>();
+    if args.get(0).map(|s| s.as_str()) == Some("--peak") {
+        match args.get(1).and_then(|s| s.parse::<usize>().ok()) {
+            Some(n) => {
+                if let Err(e) = run_peak_once(n) {
+                    eprintln!("[peak] error: {e}");
+                    std::process::exit(1);
+                }
+                return;
+            }
+            None => {
+                eprintln!("[peak] usage: --peak <size>");
+                std::process::exit(2);
+            }
+        }
+    }
+
+    // No --peak: run the Criterion suite.
+    run_bench_suite();
+}

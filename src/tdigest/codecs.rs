@@ -14,7 +14,7 @@ use std::fmt;
 
 use polars::prelude::*;
 
-use crate::tdigest::{Centroid, TDigest};
+use crate::tdigest::{Centroid, DigestStats, TDigest};
 
 // --------------------- field name constants ----------------------------------
 
@@ -510,7 +510,20 @@ fn parse_tdigests_strict(input: &Series, mode: PrecisionMode) -> Result<Vec<TDig
         };
 
         let cents = unpack_centroids_strict(centroids_list, i, mode)?;
-        out.push(TDigest::new(cents, sum, count, min, max, max_size));
+        out.push(
+            TDigest::builder()
+                .max_size(max_size)
+                .with_centroids_and_stats(
+                    cents,
+                    DigestStats {
+                        data_sum: sum,
+                        total_weight: count,
+                        data_min: min,
+                        data_max: max,
+                    },
+                )
+                .build(),
+        );
     }
 
     Ok(out)

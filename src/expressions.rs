@@ -180,7 +180,7 @@ fn tdigest_impl(
 ) -> PolarsResult<Series> {
     let mut td = tdigest_from_series(inputs, max_size, scale)?;
     if td.is_empty() {
-        td = TDigest::new(Vec::new(), 0.0, 0.0, 0.0, 0.0, 0);
+        td = TDigest::builder().max_size(max_size).scale(scale).build();
     }
     match storage {
         Storage::F64 => td.try_to_series(inputs[0].name()),
@@ -209,7 +209,7 @@ fn tdigest_from_series(
             .downcast_iter()
             .par_bridge()
             .map(|chunk: &Float64Array| {
-                let t = TDigest::new_with_size_and_scale(max_size, scale);
+                let t = TDigest::builder().max_size(max_size).scale(scale).build();
                 t.merge_unsorted(chunk.non_null_values_iter().collect())
             })
             .collect()

@@ -1,4 +1,4 @@
-// benches/codecs.rs
+// benches/codecs_bench.rs
 use std::hint::black_box;
 use std::time::{Duration, Instant};
 use tdigest_rs::tdigest::{Centroid, TDigest};
@@ -17,11 +17,18 @@ fn synth_digest(centroids: usize, shift: f64) -> TDigest {
             Centroid::new(mean, weight)
         })
         .collect();
+
     let sum = cs.iter().map(|c| c.mean() * c.weight()).sum::<f64>();
     let count = cs.iter().map(|c| c.weight()).sum::<f64>();
     let min = cs.first().map(|c| c.mean()).unwrap_or(0.0);
     let max = cs.last().map(|c| c.mean()).unwrap_or(0.0);
-    TDigest::new(cs, sum, count, min, max, MAX_SIZE)
+
+    // NOTE: with_centroids is a *builder* method; include the max_size override.
+    TDigest::builder()
+        .with_centroids(
+            cs, sum, count, /*max:*/ max, /*min:*/ min, /*override:*/ MAX_SIZE,
+        )
+        .build()
 }
 
 fn codec_bench(c: &mut Criterion) {

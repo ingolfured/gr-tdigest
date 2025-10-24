@@ -64,7 +64,7 @@ pub extern "system" fn Java_gr_tdigest_1rs_TDigestNative_create(
         throw_illegal_arg(&mut env, "maxSize must be > 0");
         return 0;
     }
-    let digest = TDigest::new_with_size_and_scale(ms, scale);
+    let digest = TDigest::builder().max_size(ms).scale(scale).build();
     let boxed = Box::new(digest);
     Box::into_raw(boxed) as jlong
 }
@@ -102,7 +102,11 @@ pub extern "system" fn Java_gr_tdigest_1rs_TDigestNative_createFromValues(
 
     // If you have an unsorted merge, replace sort+merge_sorted with that.
     buf.sort_by(|a, b| a.partial_cmp(b).unwrap());
-    let digest = TDigest::new_with_size_and_scale(ms, scale).merge_sorted(buf);
+    let digest = TDigest::builder()
+        .max_size(ms)
+        .scale(scale)
+        .build()
+        .merge_sorted(buf);
     let boxed = Box::new(digest);
     Box::into_raw(boxed) as jlong
 }

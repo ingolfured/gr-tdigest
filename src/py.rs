@@ -1,14 +1,15 @@
 use pyo3::prelude::*;
 use pyo3::types::PyBytes;
 
-use crate::tdigest::{ScaleFamily, TDigest as CoreTDigest};
-
 use bincode::config;
 use bincode::serde::{decode_from_slice, encode_to_vec};
 
+// Pull types from the crate's tdigest public surface
+use crate::tdigest::{ScaleFamily, TDigest, TDigestBuilder};
+
 fn parse_scale(s: Option<&str>) -> Result<ScaleFamily, PyErr> {
     match s.map(|t| t.to_ascii_lowercase()) {
-        None => Ok(ScaleFamily::K2), // default: K2 to match library-wide default
+        None => Ok(ScaleFamily::K2), // library-wide default
         Some(ref v) if v == "quad" => Ok(ScaleFamily::Quad),
         Some(ref v) if v == "k1" => Ok(ScaleFamily::K1),
         Some(ref v) if v == "k2" => Ok(ScaleFamily::K2),
@@ -21,7 +22,7 @@ fn parse_scale(s: Option<&str>) -> Result<ScaleFamily, PyErr> {
 
 #[pyclass(name = "TDigest")]
 pub struct PyTDigest {
-    inner: CoreTDigest,
+    inner: TDigest,
 }
 
 #[pymethods]
@@ -37,7 +38,11 @@ impl PyTDigest {
             ));
         }
         let sc = parse_scale(scale)?;
-        let base = CoreTDigest::new_with_size_and_scale(max_size, sc);
+
+        // Build an empty digest with the chosen params, then merge the data.
+        // Policy: keep default (SingletonPolicy::Use) for parity with Rust defaults.
+        let base = TDigestBuilder::new().max_size(max_size).scale(sc).build();
+
         Ok(Self {
             inner: base.merge_unsorted(xs),
         })
@@ -71,7 +76,7 @@ impl PyTDigest {
     #[staticmethod]
     pub fn from_bytes(b: Bound<'_, PyBytes>) -> PyResult<Self> {
         let cfg = config::standard();
-        let (inner, _len): (CoreTDigest, usize) =
+        let (inner, _len): (TDigest, usize) =
             decode_from_slice(b.as_bytes(), cfg).map_err(|e| {
                 pyo3::exceptions::PyValueError::new_err(format!("deserialize error: {e}"))
             })?;

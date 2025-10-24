@@ -1,7 +1,3 @@
-//! TDigest CDF benchmark: light-only CDF evaluation across sizes.
-//!
-//! Prints jemalloc memory deltas for building the digest and for one CDF eval.
-
 use std::hint::black_box;
 use std::time::Duration;
 
@@ -21,8 +17,12 @@ fn build_digest(
     seed: u64,
 ) -> TDigest {
     let mut data = gen_dataset(kind, n, seed);
-    data.sort_by(|a, b| a.partial_cmp(b).unwrap());
-    TDigest::new_with_size_and_scale(max_size, scale).merge_sorted(data)
+    data.sort_by(|a, b| a.total_cmp(b));
+    TDigest::builder()
+        .max_size(max_size)
+        .scale(scale)
+        .build()
+        .merge_sorted(data)
 }
 
 /// Allocate inside `f`, keep the object alive until after reading jemalloc counters.
@@ -53,9 +53,9 @@ fn bench_cdf_light(c: &mut Criterion) {
         let td = build_digest(DistKind::Mixture, m, 1_000, ScaleFamily::K2, 4242);
 
         // light
-        group.bench_with_input(BenchmarkId::new("estimate_cdf", m), &xs, |b, xs| {
+        group.bench_with_input(BenchmarkId::new("cdf", m), &xs, |b, xs| {
             b.iter(|| {
-                let out = td.estimate_cdf(black_box(xs));
+                let out = td.cdf(black_box(xs));
                 black_box(out[out.len() / 2])
             });
         });
@@ -70,7 +70,7 @@ fn bench_cdf_light(c: &mut Criterion) {
         // 2) One evaluation footprint (keep both digest and output Vec alive)
         let ((_td_eval_hold, _out_hold), eval_bytes) = alloc_bytes_hold(|| {
             let td2 = build_digest(DistKind::Mixture, m, 1_000, ScaleFamily::K2, 4242);
-            let out = td2.estimate_cdf(&xs);
+            let out = td2.cdf(&xs);
             (td2, out)
         });
 

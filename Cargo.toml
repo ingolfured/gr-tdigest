@@ -48,21 +48,22 @@ bytesize      = "1"
 libc          = "0.2"
 ctor          = "0.2"
 jemalloc-ctl  = "0.5"
+anyhow        = "1.0"
 
 [[bin]]
 name = "tdigest-rs"
 path = "src/bin/tdigest_cli.rs"
 
 [[bench]]
-name = "codecs"
+name = "codecs_bench"
 harness = false
 
 [[bench]]
-name = "cdf_quantile"
+name = "cdf_quantile_bench"
 harness = false
 
 [[bench]]
-name = "tdigest"
+name = "tdigest_bench"
 harness = false
 
 [workspace]

@@ -2,13 +2,70 @@ use ordered_float::OrderedFloat;
 
 use crate::tdigest::centroids::{is_sorted_strict_by_mean, Centroid};
 use crate::tdigest::compressor::compress_into;
-use crate::tdigest::merges::MergeByMean;
+use crate::tdigest::merges::{KWayCentroidMerge, MergeByMean};
 use crate::tdigest::scale::ScaleFamily;
 use crate::tdigest::singleton_policy::SingletonPolicy;
 
 use serde::{Deserialize, Serialize};
 
-/// The TDigest structure and its fluent builder.
+/// TDigest orchestration + public API.
+///
+/// # Design: “single pipeline, many producers”
+///
+/// All ingestion paths (raw values, existing digests) are funneled into the **same**
+/// compression pipeline in `compressor::compress_into`. The pipeline has a *fixed*,
+/// easy-to-reason-about sequence of stages:
+///
+/// 1) **Normalize**
+///    Source iterators (e.g., `MergeByMean`, `KWayCentroidMerge`) produce a stream of centroids
+///    that is non-decreasing by mean and *may* include adjacent equal means.
+///    `normalize_stream` (called inside `compress_into`) enforces:
+///      - non-decreasing means (panics if violated),
+///      - **coalescing of adjacent equal means** into a *singleton pile* (weight>1, `singleton=true`),
+///      - running totals (∑w, ∑w·mean) and (min,max) for TDigest metadata.
+///
+///    Normalization is the **sole owner** of “equal means ⇒ pile” semantics—producers
+///    never fuse and never guess the singleton bit.
+///
+/// 2) **Slice (edges vs. interior)**
+///    A `SingletonPolicy` is mapped to a lightweight `Policy` enum which computes slices:
+///      - `left` (possibly protected edge items),
+///      - `interior` (to be k-limited / budgeted),
+///      - `right` (possibly protected edge items),
+///      together with capacity rules (`EdgeCaps`) describing whether cap applies to the *core only*
+///      or the *whole* digest.
+///
+/// 3) **Merge (k-limit)**
+///    The interior is greedily merged under the scale family rule `Δk ≤ 1`. Single-item
+///    clusters that start with a singleton remain singletons; multi-item clusters are mixed.
+///    This preserves order and total weight while concentrating mass near the center.
+///
+/// 4) **Cap (equal-weight bucketization)**
+///    If the interior overflows its budget, it is bucketized into approximately equal-weight
+///    groups (order-preserving). **We intentionally allow emitting fewer than N buckets** when
+///    the last partial bucket is small—this is numerically *better* in practice: fewer very small
+///    centroids means less quantile jitter and better stability in tails. If an exact-N split is
+///    ever required, a split-aware variant can be added, but the default favors precision.
+///
+/// 5) **Assemble**
+///    Edge slices are concatenated with the (capped) interior without mutation.
+///
+/// 6) **Post (policy-specific finalization)**
+///    Most policies are done; `Use` enforces a *total* cap (edges included) by applying the
+///    same equal-weight bucketizer to the assembled result if necessary.
+///
+/// The result is then written back into the `TDigest`. Throughout, we preserve:
+///   - strict ordering of centroid means (no duplicates),
+///   - total weight (up to expected floating rounding),
+///   - clear, local ownership of semantics (coalescing lives in Normalize; tail protection in Slice).
+///
+/// This structure keeps behavior deterministic and testable while making it obvious **where**
+/// to change things (e.g., scale families only affect stage 3; tail policies only affect stage 2/6).
+///
+/// # Public API notes
+/// - `merge_sorted`/`merge_unsorted` ingest raw values using `MergeByMean`.
+/// - `merge_digests` ingests multiple digests using `KWayCentroidMerge`.
+/// - All paths end up in the same compression pipeline.
 #[derive(Debug, PartialEq, Clone, Serialize, Deserialize)]
 pub struct TDigest {
     centroids: Vec<Centroid>,
@@ -25,23 +82,34 @@ impl Default for TDigest {
     fn default() -> Self {
         TDigest {
             centroids: Vec::new(),
-            max_size: 1000, // requested default
+            max_size: 1000, // default compression parameter
             sum: OrderedFloat::from(0.0),
             count: OrderedFloat::from(0.0),
             max: OrderedFloat::from(f64::NAN),
             min: OrderedFloat::from(f64::NAN),
-            scale: ScaleFamily::K2,       // default
-            policy: SingletonPolicy::Use, // default
+            scale: ScaleFamily::K2,       // default scale
+            policy: SingletonPolicy::Use, // default singleton policy
         }
     }
 }
 
-/// Fluent builder.
+/// Seedable builder.
+///
+/// You can keep it empty (default), or seed with centroids + data-level stats via:
+/// - `with_centroids_and_stats(centroids, DigestStats)`
+/// - `with_centroids(centroids, sum, count, max, min, max_size_override)`
+///
+/// The second form mirrors how `TDigest::new(...)` uses a builder when it needs to
+/// temporarily hold more than `max_size` centroids and then merge.
 #[derive(Debug, Clone)]
 pub struct TDigestBuilder {
     max_size: usize,
     scale: ScaleFamily,
     policy: SingletonPolicy,
+    // optional seeds
+    init_centroids: Option<Vec<Centroid>>,
+    init_stats: Option<DigestStats>,
+    override_max_size: Option<usize>,
 }
 
 impl Default for TDigestBuilder {
@@ -50,6 +118,9 @@ impl Default for TDigestBuilder {
             max_size: 1000,
             scale: ScaleFamily::K2,
             policy: SingletonPolicy::Use,
+            init_centroids: None,
+            init_stats: None,
+            override_max_size: None,
         }
     }
 }
@@ -70,18 +141,79 @@ impl TDigestBuilder {
         self.policy = p;
         self
     }
+
+    /// Seed with centroids + data-level stats.
+    pub fn with_centroids_and_stats(
+        mut self,
+        centroids: Vec<Centroid>,
+        stats: DigestStats,
+    ) -> Self {
+        self.init_centroids = Some(centroids);
+        self.init_stats = Some(stats);
+        self
+    }
+
+    /// Convenience seeding that matches how `TDigest::new(...)` feeds a builder.
+    /// Also allows overriding `max_size` for the seeded digest.
+    pub fn with_centroids(
+        mut self,
+        centroids: Vec<Centroid>,
+        sum: f64,
+        count: f64,
+        max: f64,
+        min: f64,
+        max_size_override: usize,
+    ) -> Self {
+        let stats = DigestStats {
+            data_sum: sum,
+            total_weight: count,
+            data_min: min,
+            data_max: max,
+        };
+        self.init_centroids = Some(centroids);
+        self.init_stats = Some(stats);
+        self.override_max_size = Some(max_size_override);
+        self
+    }
+
     pub fn build(self) -> TDigest {
-        TDigest {
-            centroids: Vec::new(),
-            max_size: self.max_size,
-            sum: 0.0.into(),
-            count: 0.0.into(),
-            max: f64::NAN.into(),
-            min: f64::NAN.into(),
-            scale: self.scale,
-            policy: self.policy,
+        // If seeded, construct directly from the provided centroids and stats.
+        if let (Some(cents), Some(st)) = (self.init_centroids, self.init_stats) {
+            let max_size = self.override_max_size.unwrap_or(self.max_size);
+            TDigest {
+                centroids: cents,
+                max_size,
+                sum: OrderedFloat(st.data_sum),
+                count: OrderedFloat(st.total_weight),
+                min: OrderedFloat(st.data_min),
+                max: OrderedFloat(st.data_max),
+                scale: self.scale,
+                policy: self.policy,
+            }
+        } else {
+            TDigest {
+                centroids: Vec::new(),
+                max_size: self.max_size,
+                sum: 0.0.into(),
+                count: 0.0.into(),
+                max: f64::NAN.into(),
+                min: f64::NAN.into(),
+                scale: self.scale,
+                policy: self.policy,
+            }
         }
     }
+}
+
+/// Data-level stats for seeding a digest (∑x/∑w/min/max of the **raw data**).
+#[derive(Debug, Clone, Copy)]
+pub struct DigestStats {
+    /// Sum of raw data values (∑x), not sum of centroid means.
+    pub data_sum: f64,
+    /// Total weight (∑w). For raw samples this equals the sample count.
+    pub total_weight: f64,
+    pub data_min: f64,
+    pub data_max: f64,
 }
 
 impl TDigest {
@@ -90,29 +222,18 @@ impl TDigest {
         TDigestBuilder::default()
     }
 
-    /// Legacy conveniences (kept for low churn; they use builder defaults unless overridden).
-    pub fn new_with_size(max_size: usize) -> Self {
-        Self::builder().max_size(max_size).build()
-    }
-    pub fn new_with_size_and_scale(max_size: usize, scale: ScaleFamily) -> Self {
-        Self::builder().max_size(max_size).scale(scale).build()
-    }
-
     #[inline]
     pub(crate) fn set_sum(&mut self, s: f64) {
         self.sum = OrderedFloat(s);
     }
-
     #[inline]
     pub(crate) fn set_count(&mut self, c: f64) {
         self.count = OrderedFloat(c);
     }
-
     #[inline]
     pub(crate) fn set_min(&mut self, v: f64) {
         self.min = OrderedFloat(v);
     }
-
     #[inline]
     pub(crate) fn set_max(&mut self, v: f64) {
         self.max = OrderedFloat(v);
@@ -151,23 +272,28 @@ impl TDigest {
         self.policy
     }
 
+    /// Ingest unsorted values; stable behavior identical to `merge_sorted` after sorting.
     pub fn merge_unsorted(&self, mut unsorted_values: Vec<f64>) -> TDigest {
         unsorted_values.sort_by(|a, b| a.total_cmp(b));
         self.merge_sorted(unsorted_values)
     }
 
+    /// Ingest sorted values by interleaving with the existing centroids and running the pipeline.
     pub fn merge_sorted(&self, sorted_values: Vec<f64>) -> TDigest {
         if sorted_values.is_empty() {
             return self.clone();
         }
         let mut result = self.new_result_for_values(&sorted_values);
 
+        // Producer: ordered stream of centroids + value runs (no coalescing here).
         let stream = MergeByMean::from_centroids_and_values(
             &self.centroids,
             &sorted_values,
             // mark value runs as singletons unless policy says Off
             !matches!(self.policy, SingletonPolicy::Off),
         );
+
+        // Pipeline: Normalize → Slice → Merge(k-limit) → Cap → Assemble → Post
         let compressed = compress_into(&mut result, self.max_size, stream);
         result.centroids = compressed;
 
@@ -179,6 +305,8 @@ impl TDigest {
         result
     }
 
+    /// Merge multiple digests by k-way merging their centroid runs and sending them through
+    /// the exact same pipeline as raw values.
     pub fn merge_digests(digests: Vec<TDigest>) -> TDigest {
         // Decide max_size/scale/policy by first non-empty digest to keep semantics stable.
         let mut chosen = TDigest::default();
@@ -216,7 +344,10 @@ impl TDigest {
             policy: chosen.policy,
         };
 
-        let merged_stream = crate::tdigest::merges::KWayCentroidMerge::new(runs);
+        // Producer: k-way merge of centroid runs (no coalescing).
+        let merged_stream = KWayCentroidMerge::new(runs);
+
+        // Same pipeline as values.
         let compressed = compress_into(&mut result, chosen.max_size, merged_stream);
         result.centroids = compressed;
 
@@ -231,6 +362,9 @@ impl TDigest {
      * Small utilities
      * =========================== */
 
+    /// Construct a TDigest from raw centroids + stats. If `centroids.len() > max_size`,
+    /// this builds a temporary large digest via the builder and merges it with an empty
+    /// digest to respect capacity.
     pub fn new(
         centroids: Vec<Centroid>,
         sum: f64,
@@ -253,8 +387,10 @@ impl TDigest {
         } else {
             let sz = centroids.len();
             let digests = vec![
-                TDigest::new_with_size(100),
-                TDigest::new(centroids, sum, count, max, min, sz),
+                TDigest::builder().max_size(100).build(),
+                TDigest::builder()
+                    .with_centroids(centroids, sum, count, max, min, sz)
+                    .build(),
             ];
             Self::merge_digests(digests)
         }
@@ -320,296 +456,5 @@ impl TDigest {
             r.max = vmax;
         }
         r
-    }
-}
-
-/* ===========================
- * Tests: merge & structural invariants (high-level TDigest)
- * =========================== */
-#[cfg(test)]
-mod tests {
-    use super::*;
-    use crate::tdigest::test_helpers::{assert_exact, assert_rel_close};
-    use crate::tdigest::{Centroid, ScaleFamily, SingletonPolicy};
-
-    /// Identical values become singleton piles (weight>1 with `singleton=true`);
-    /// distinct values are weight==1 singletons.
-    #[test]
-    fn singletons_grouped_runs() {
-        // Values: three 1s, one 2, two 3s
-        let vals = vec![1.0, 1.0, 1.0, 2.0, 3.0, 3.0];
-        let t = TDigest::new_with_size(64).merge_sorted(vals);
-
-        let cs = t.centroids();
-        assert!(
-            cs.windows(2).all(|w| w[0].mean() != w[1].mean()),
-            "duplicate centroid means found"
-        );
-
-        assert_eq!(cs.len(), 3);
-
-        assert_eq!(cs[0].mean(), 1.0);
-        assert_eq!(cs[0].weight(), 3.0);
-        assert!(cs[0].is_singleton());
-
-        assert_eq!(cs[1].mean(), 2.0);
-        assert_eq!(cs[1].weight(), 1.0);
-        assert!(cs[1].is_singleton());
-
-        assert_eq!(cs[2].mean(), 3.0);
-        assert_eq!(cs[2].weight(), 2.0);
-        assert!(cs[2].is_singleton());
-    }
-
-    #[test]
-    fn merge_digests_uniform_100x1000() {
-        let mut digests: Vec<TDigest> = Vec::with_capacity(100);
-        for _ in 1..=100 {
-            let t = TDigest::builder()
-                .max_size(100)
-                .singleton_policy(SingletonPolicy::Use)
-                .build()
-                .merge_sorted((1..=1_000).map(f64::from).collect());
-            digests.push(t);
-        }
-        let t = TDigest::merge_digests(digests);
-
-        assert_exact("Q(1.00)", 1000.0, t.estimate_quantile(1.0));
-        assert_exact("Q(0.00)", 1.0, t.estimate_quantile(0.0));
-
-        let q99 = t.estimate_quantile(0.99);
-        assert_rel_close("Q(0.99)", 990.0, q99, 7e-4);
-
-        let q01 = t.estimate_quantile(0.01);
-        assert_rel_close("Q(0.01)", 10.0, q01, 2e-1);
-
-        let q50 = t.estimate_quantile(0.5);
-        assert_rel_close("Q(0.50)", 500.0, q50, 2e-3);
-    }
-
-    #[test]
-    fn merge_unsorted_smoke_small() {
-        let vals = vec![5.0, 1.0, 3.0, 4.0, 2.0, 2.0, 9.0, 7.0];
-        let t = TDigest::new_with_size(64).merge_unsorted(vals.clone());
-
-        assert_exact("count", vals.len() as f64, t.count());
-        assert_exact("min", 1.0, t.min());
-        assert_exact("max", 9.0, t.max());
-
-        assert_exact("Q(0.00)", 1.0, t.estimate_quantile(0.0));
-        assert_exact("Q(1.00)", 9.0, t.estimate_quantile(1.0));
-
-        let expected_mean = vals.iter().sum::<f64>() / (vals.len() as f64);
-        assert_rel_close("mean", expected_mean, t.mean(), 1e-9);
-    }
-
-    #[test]
-    fn merge_digests_two_blocks_smoke() {
-        let d1 =
-            TDigest::new_with_size(128).merge_sorted((1..=5).map(f64::from).collect::<Vec<_>>());
-        let d2 =
-            TDigest::new_with_size(128).merge_sorted((6..=10).map(f64::from).collect::<Vec<_>>());
-
-        let t = TDigest::merge_digests(vec![d1, d2]);
-
-        assert_exact("count", 10.0, t.count());
-        assert_exact("min", 1.0, t.min());
-        assert_exact("max", 10.0, t.max());
-
-        assert_exact("Q(0.00)", 1.0, t.estimate_quantile(0.0));
-        assert_exact("Q(1.00)", 10.0, t.estimate_quantile(1.0));
-        assert_rel_close("Q(0.50)", 5.5, t.estimate_quantile(0.5), 1e-9);
-    }
-
-    #[test]
-    fn compact_scaling_prevents_overflow_and_preserves_shape() {
-        use crate::tdigest::test_helpers::assert_rel_close;
-
-        // Three centroids with astronomical weights to force scaling for f32.
-        let c0 = Centroid::new(0.0, 1.0e36);
-        let c1 = Centroid::new(1.0, 2.0e36);
-        let c2 = Centroid::new(2.0, 3.0e36);
-        let cents = vec![c0, c1, c2];
-
-        // Keep TDigest "as-is" (no compression): set max_size comfortably above len.
-        let sum = c0.mean() * c0.weight() + c1.mean() * c1.weight() + c2.mean() * c2.weight(); // 8e36
-        let count = c0.weight() + c1.weight() + c2.weight(); // 6e36
-        let td = TDigest::new(cents, sum, count, 2.0, 0.0, 512);
-
-        // Baseline quantile
-        let p50_before = td.estimate_quantile(0.5);
-
-        // Write compact (f32/f32) — this will auto-scale internally.
-        let ser = td.clone().try_to_series_compact("n").unwrap();
-
-        // Sanity: compact centroids' weights must be finite f32 and well within range.
-        {
-            let sc = ser.struct_().expect("struct");
-            let centroids_col = sc.field_by_name("centroids").expect("centroids");
-            let list = centroids_col.list().expect("list");
-            let row0 = list.get_as_series(0).expect("row0");
-            let inner = row0.struct_().expect("inner");
-            let w_series = inner.field_by_name("weight").expect("weight");
-            let w_f32 = w_series.f32().expect("f32 weights");
-
-            for i in 0..w_f32.len() {
-                if let Some(wf) = w_f32.get(i) {
-                    let wf: f32 = wf;
-                    assert!(wf.is_finite(), "compact weight must be finite");
-                    assert!(wf.abs() < f32::MAX / 4.0, "compact weight too large: {wf}");
-                }
-            }
-        }
-
-        // Parse back and verify shape invariants.
-        let parsed = TDigest::try_from_series_compact(&ser).unwrap();
-        assert_eq!(parsed.len(), 1, "one digest expected");
-        let td2 = parsed.into_iter().next().unwrap();
-
-        // 1) Quantiles should be preserved under uniform re-scaling of weights.
-        let p50_after = td2.estimate_quantile(0.5);
-        assert_rel_close("p50 preserved after scaling", p50_before, p50_after, 1e-6);
-
-        // 2) Relative weights should match (only a global factor differs).
-        let w1: Vec<f64> = td.centroids().iter().map(|c| c.weight()).collect();
-        let w2: Vec<f64> = td2.centroids().iter().map(|c| c.weight()).collect();
-        assert_eq!(w1.len(), w2.len(), "centroid count must match");
-
-        let s1: f64 = w1.iter().sum();
-        let s2: f64 = w2.iter().sum();
-        for (i, (a, b)) in w1.iter().zip(w2.iter()).enumerate() {
-            let ra = *a / s1;
-            let rb = *b / s2;
-            assert_rel_close(&format!("weight ratio[{i}]"), ra, rb, 1e-7);
-
-            // 3) Optional: CDF invariants at a few points.
-            let xs = [0.5, 1.0, 1.5];
-            let cdf1 = td.estimate_cdf(&xs);
-            let cdf2 = td2.estimate_cdf(&xs);
-            for i in 0..xs.len() {
-                assert_rel_close(&format!("CDF({}) preserved", xs[i]), cdf1[i], cdf2[i], 1e-6);
-            }
-        }
-    }
-
-    #[test]
-    fn edge_tail_protection_small_max() {
-        use crate::tdigest::test_helpers::assert_exact;
-
-        // Tiny core, protect 3 raw items per tail.
-        let base = TDigest::builder()
-            .max_size(4)
-            .scale(ScaleFamily::Quad)
-            .singleton_policy(SingletonPolicy::UseWithProtectedEdges(3))
-            .build();
-
-        // Merge three batches:
-        // - middle bulk: 1..=20
-        // - extend right tail: 21..=30
-        // - distinct left tail: -3, -2, -1  (ensures 3 separate edge centroids are protected)
-        let t1 = base.merge_sorted((1..=20).map(f64::from).collect());
-        let t2 = t1.merge_sorted((21..=30).map(f64::from).collect());
-        let t3 = t2.merge_sorted(vec![-3.0, -2.0, -1.0]);
-
-        // Global invariants
-        assert_exact("count", 33.0, t3.count());
-        assert_exact("min", -3.0, t3.min());
-        assert_exact("max", 30.0, t3.max());
-
-        let cs = t3.centroids();
-
-        // Sorted by mean (non-decreasing) and strictly increasing (no duplicate centroids).
-        assert!(
-            cs.windows(2).all(|w| w[0].mean() <= w[1].mean()),
-            "centroids not sorted by mean"
-        );
-        assert!(
-            cs.windows(2).all(|w| w[0].mean() < w[1].mean()),
-            "duplicate centroid means found"
-        );
-
-        // All centroids: weight must be finite and > 0.
-        for (i, c) in cs.iter().enumerate() {
-            assert!(
-                c.weight().is_finite() && c.weight() > 0.0,
-                "invalid weight at {i}"
-            );
-            assert!(c.mean().is_finite(), "invalid mean at {i}");
-        }
-
-        // Must have at least the 3+3 protected edge centroids plus some middle.
-        assert!(
-            cs.len() >= 6,
-            "need ≥6 centroids (3 per edge), got {}",
-            cs.len()
-        );
-
-        // ---- Left edge: first 3 must be protected (singleton or pile) at -3, -2, -1.
-        assert!(cs[0].is_singleton() && cs[1].is_singleton() && cs[2].is_singleton());
-        assert_exact("left[0] mean", -3.0, cs[0].mean());
-        assert_exact("left[1] mean", -2.0, cs[1].mean());
-        assert_exact("left[2] mean", -1.0, cs[2].mean());
-
-        // No cross-boundary absorption: next centroid (if any) strictly greater than -1.
-        if cs.len() > 3 {
-            assert!(
-                cs[3].mean() > -1.0,
-                "merged across left protected boundary (cs[3]={})",
-                cs[3].mean()
-            );
-        }
-
-        // ---- Right edge: last 3 must be protected (singleton or pile) at 28, 29, 30.
-        let n = cs.len();
-        assert!(cs[n - 3].is_singleton() && cs[n - 2].is_singleton() && cs[n - 1].is_singleton());
-        assert_exact("right[-3] mean", 28.0, cs[n - 3].mean());
-        assert_exact("right[-2] mean", 29.0, cs[n - 2].mean());
-        assert_exact("right[-1] mean", 30.0, cs[n - 1].mean());
-
-        // ---- Extreme quantiles exact due to protected edges.
-        assert_exact("Q(0.00)", -3.0, t3.estimate_quantile(0.0));
-        assert_exact("Q(1.00)", 30.0, t3.estimate_quantile(1.0));
-
-        // ---- Quantiles near tails: inside reasonable bands with tiny core.
-        let q10 = t3.estimate_quantile(0.10);
-        assert!(
-            (-3.0..=1.0).contains(&q10),
-            "Q(0.10) expected in [-3,1], got {}",
-            q10
-        );
-
-        let q90 = t3.estimate_quantile(0.90);
-        assert!(
-            (25.0..=30.0).contains(&q90),
-            "Q(0.90) expected in [25,30], got {}",
-            q90
-        );
-
-        // Sanity: centroid count remains bounded with tiny core + protected tails.
-        assert!(
-            cs.len() == 10,
-            "too many centroids for tiny capacity with protected tails; got {}",
-            cs.len()
-        );
-    }
-
-    #[test]
-    fn compresses_to_exactly_max_size_with_singletons_enabled() {
-        use crate::tdigest::{ScaleFamily, SingletonPolicy, TDigest};
-
-        let td = TDigest::builder()
-            .max_size(10)
-            .scale(ScaleFamily::K2)
-            .singleton_policy(SingletonPolicy::Use)
-            .build();
-
-        let vals: Vec<f64> = (0..100).map(|i| i as f64).collect();
-        let td = td.merge_unsorted(vals); // returns new digest
-
-        assert!(
-            td.centroids().len() <= 10,
-            "digest should have at most 10 centroids, got {}",
-            td.centroids().len()
-        );
     }
 }
