@@ -30,10 +30,11 @@ endef
 # ----------------------------------------------------------------------
 PATH := $(HOME)/.local/bin:$(HOME)/.cargo/bin:$(PATH)
 
-CARGO ?= cargo
+CARGO  ?= cargo
 UV     ?= uv
 JAVAC  ?= javac
 JAVA   ?= java
+JAR    ?= jar
 PYTHON ?= python3
 
 JAVA_SRC := src-java
@@ -82,14 +83,12 @@ API_MANIFEST   := $(JAVA_PKG_DIR)/MANIFEST.MF
 NATIVE_JAR_CUR := $(JAVA_PKG_DIR)/tdigest-rs-java-$(VER)-$(PLAT)-$(ARCH).jar
 STAGE          := target/jar-staging
 
-# Prebuilt natives (optional)
-NATIVE_LINUX_X86_64    ?=
-NATIVE_MACOS_AARCH64   ?=
-NATIVE_WINDOWS_X86_64  ?=
-
 # CLI binary
 CLI_BIN  ?= tdigest
 CLI_PATH := $(LIB_DIR)/$(CLI_BIN)
+
+# Distributions
+DIST ?= dist
 
 # ==============================================================================
 # HELP
@@ -107,7 +106,7 @@ help:
 	@printf "\n$(STYLE_BOLD)Rust$(STYLE_RESET)\n"
 	@printf "  %-18s %s\n" "rust-build"   "cargo build --release"
 	@printf "  %-18s %s\n" "rust-test"    "cargo test"
-	@printf "  %-18s %s\n" "rust-cli-smoke" "Smoke: echo '0 1 2 3' | tdigest-rs --stdin --cmd quantile --p 0.5 --no-header == 1.5"
+	@printf "  %-18s %s\n" "rust-cli-smoke" "Smoke: echo '0 1 2 3' | tdigest --stdin --cmd quantile --p 0.5 --no-header == 1.5"
 	@printf "\n$(STYLE_BOLD)Python$(STYLE_RESET)\n"
 	@printf "  %-18s %s\n" "py-build"     "maturin develop -r -F python"
 	@printf "  %-18s %s\n" "py-test"      "pytest -q"
@@ -115,9 +114,9 @@ help:
 	@printf "  %-18s %s\n" "java-build"   "Build JNI lib + compile Java classes to target/java-classes"
 	@printf "  %-18s %s\n" "java-test"    "Run Java demo from classes (uses -Djava.library.path)"
 	@printf "\n$(STYLE_BOLD)Publish$(STYLE_RESET)\n"
-	@printf "  %-18s %s\n" "wheel"        "Build Python wheel (abi3)"
+	@printf "  %-18s %s\n" "wheel"        "Build Python wheel (manylinux_2_28 via zig)"
 	@printf "  %-18s %s\n" "jar"          "Build API JAR + current-platform native JAR"
-	@printf "  %-18s %s\n" "jar-all"      "Build API JAR + Linux/macOS/Windows native JARs"
+	@printf "  %-18s %s\n" "release"      "Build CLI, wheel, JARs and smoke-test all artifacts"
 
 # ==============================================================================
 # Setup
@@ -161,15 +160,22 @@ lint:
 	$(UV) run ruff check .
 
 clean:
-	$(call banner,Clean: Rust target/)
-	$(CARGO) clean
-	$(call banner,Clean: Java classes & jars)
-	 rm -rf $(CP_DEV) $(JAVA_PKG_DIR) $(STAGE) || true
-	 find src-java -type f \( -name '*.class' -o -name '*.java.bak' \) -delete || true
-	$(call banner,Clean: Python artifacts)
-	find . -type d -name "__pycache__" -prune -exec rm -rf {} + || true
-	rm -f tdigest_rs/*.so || true
-	@printf "$(STYLE_OK)✓ cleaned Rust, Python, and Java artifacts$(STYLE_RESET)\n"
+    $(call banner,Clean: Rust target/)
+    rm -rf target/
+    $(CARGO) clean
+
+    $(call banner,Clean: Java classes & jars)
+    rm -rf $(CP_DEV) $(JAVA_PKG_DIR) $(STAGE)
+    rm -rf src-java/**/*.class src-java/**/*.java.bak || true
+
+    $(call banner,Clean: Python artifacts)
+    find . -type d -name "__pycache__" -prune -exec rm -rf {} + || true
+    rm -f tdigest_rs/*.so || true
+
+    $(call banner,Clean: Distribution packages)
+    rm -rf dist/ build/ *.egg-info/
+    @printf "$(STYLE_OK)✓ cleaned Rust, Python, Java, and distribution artifacts$(STYLE_RESET)\n"
+
 
 test: rust-test rust-cli-smoke py-test java-test
 	@echo "✅ all tests passed"
@@ -208,7 +214,7 @@ rust-cli-smoke: $(CLI_PATH)
 	OUT="$$( echo '0 1 2 3' \
 	  | '$(CLI_PATH)' --stdin --cmd quantile --p $(Q) --no-header --output csv \
 	  | cut -d, -f2 )"; \
-	echo "$$OUT"; \
+	printf "CLI p%.3g -> %s\n" "$(Q)" "$$OUT"; \
 	[ "$$OUT" = "1.5" ] || { echo "❌ CLI quantile mismatch (got '$$OUT', want '1.5')"; exit 1; }; \
 	echo "✅ rust_cli_smoke passed"
 
@@ -221,35 +227,10 @@ py-build:
 py-test: py-build
 	$(UV) run pytest -q
 
-# ==============================================================================
-# Java / JNI (classes build + smoke)
-# ==============================================================================
-.PHONY: java-build java-test
-
-java-build:
-	$(call need,javac)
-	$(call need,java)
-	$(CARGO) build --release --no-default-features --features java --lib
-	rm -rf $(CP_DEV)
-	mkdir -p $(CP_DEV)
-	javac -d $(CP_DEV) $(shell find $(JAVA_SRC) -name '*.java')
-
-java-test: java-build
-	@set -e; \
-	OUT="$$( $(JAVA) -Djava.library.path=$(LIB_DIR) -cp $(CP_DEV) TestRun )"; \
-	echo "$$OUT"; \
-	ARR_LINE="$$(printf "%s\n" "$$OUT" | grep -m1 -E '^\[[[:space:]0-9\.,]+\]$$' || true)"; \
-	P50_LINE="$$(printf "%s\n" "$$OUT" | grep -m1 -E '^p50[[:space:]]*=[[:space:]]*1\.5$$' || true)"; \
-	[ "$$ARR_LINE" = "[0.125, 0.5, 0.875]" ] || { echo "❌ array mismatch (classes)"; exit 1; }; \
-	[ -n "$$P50_LINE" ] || { echo "❌ p50 line missing (classes)"; exit 1; }; \
-	echo "✅ java_test (classes) passed"
-
-DIST ?= dist
-
+# Wheels / sdists
 .PHONY: wheel sdist wheel-smoke
-
 wheel:
-	$(call banner,Build Python wheel (abi3))
+	$(call banner,Build Python wheel (manylinux_2_28 + zig))
 	mkdir -p $(DIST)
 	$(UV) run maturin build -r -F python --compatibility manylinux_2_28 --zig -o $(DIST)
 	@printf "$(STYLE_OK)✓ wheel(s) in $(DIST)$(STYLE_RESET)\n"
@@ -263,9 +244,7 @@ sdist:
 wheel-smoke: wheel
 	$(call banner,Smoke test the wheel in a clean venv)
 	rm -rf .venv-wheeltest
-	# Create venv with pip via uv
 	$(UV) venv --python 3.12 --seed .venv-wheeltest
-	# Belt-and-braces: if pip somehow isn't present, bootstrap it
 	.venv-wheeltest/bin/python -m pip --version || .venv-wheeltest/bin/python -m ensurepip --upgrade
 	.venv-wheeltest/bin/python -m pip install --upgrade pip
 	.venv-wheeltest/bin/python -m pip install "polars>=1.34.0,<2.0.0" numpy
@@ -273,3 +252,64 @@ wheel-smoke: wheel
 	.venv-wheeltest/bin/python -c "import tdigest_rs as td; d=td.TDigest.from_array([0.0,1.0,2.0,3.0],max_size=100,scale='k2'); print('p50=',d.quantile(0.5)); print('cdf=',d.cdf([0.0,1.5,3.0]).tolist())"
 	rm -rf .venv-wheeltest
 	@echo "$(STYLE_OK)✓ wheel smoke import ok$(STYLE_RESET)"
+
+# ==============================================================================
+# Java / JNI (classes build + jars)
+# ==============================================================================
+.PHONY: java-build java-test jar
+
+java-build:
+	$(call need,javac)
+	$(call need,java)
+	$(CARGO) build --release --no-default-features --features java --lib
+	rm -rf $(CP_DEV)
+	mkdir -p $(CP_DEV)
+	javac -d $(CP_DEV) $(shell find $(JAVA_SRC) -name '*.java')
+
+java-test: java-build
+	@set -e; \
+	OUT="$$( $(JAVA) -Djava.library.path=$(LIB_DIR) -cp $(CP_DEV) TestRun )"; \
+	echo "• Java smoke output:"; \
+	echo "$$OUT"; \
+	ARR_LINE="$$(printf "%s\n" "$$OUT" | grep -m1 -E '^\[[[:space:]0-9\.,]+\]$$' || true)"; \
+	P50_LINE="$$(printf "%s\n" "$$OUT" | grep -m1 -E '^p50[[:space:]]*=[[:space:]]*1\.5$$' || true)"; \
+	[ "$$ARR_LINE" = "[0.125, 0.5, 0.875]" ] || { echo "❌ array mismatch (classes)"; exit 1; }; \
+	[ -n "$$P50_LINE" ] || { echo "❌ p50 line missing (classes)"; exit 1; }; \
+	echo "✅ java_test (classes) passed"
+
+# Package API JAR (classes only) + native JAR (contains platform lib under /natives/<plat-arch>/)
+jar: java-build
+	$(call banner,Package Java API JAR)
+	mkdir -p $(JAVA_PKG_DIR) $(STAGE)
+	printf "Manifest-Version: 1.0\nAutomatic-Module-Name: gr.tdigest_rs\n" > $(API_MANIFEST)
+	$(JAR) cfm $(API_JAR) $(API_MANIFEST) -C $(CP_DEV) .
+	@printf "$(STYLE_OK)✓ API JAR -> %s$(STYLE_RESET)\n" "$(API_JAR)"
+
+	$(call banner,Package platform native JAR)
+	rm -rf $(STAGE)/natives && mkdir -p $(STAGE)/natives/$(PLAT)-$(ARCH)
+	cp "$(LIB_DIR)/$(LIBBASENAME)" "$(STAGE)/natives/$(PLAT)-$(ARCH)/$(LIBBASENAME)"
+	$(JAR) cf $(NATIVE_JAR_CUR) -C $(STAGE) natives
+	@printf "$(STYLE_OK)✓ Native JAR -> %s$(STYLE_RESET)\n" "$(NATIVE_JAR_CUR)"
+	# Note: we can add macOS/Windows native jars later if needed.
+
+# ==============================================================================
+# One-shot RELEASE: build & smoke-test all three artifacts
+# ==============================================================================
+.PHONY: release
+release:
+	$(call banner,Release: Build Rust CLI binary (release, --bin $(CLI_BIN)))
+	$(CARGO) build --release --bin $(CLI_BIN)
+	@printf "• CLI -> %s\n" "$(CLI_PATH)"
+	$(MAKE) rust-cli-smoke
+
+	$(call banner,Release: Build+Smoke Python wheel)
+	$(MAKE) wheel-smoke
+	@ls -1 $(DIST)/*.whl 2>/dev/null | sed 's/^/• Wheel -> /' || true
+
+	$(call banner,Release: Build JARs and Smoke Java)
+	$(MAKE) jar
+	$(MAKE) java-test
+	@printf "• API JAR    -> %s\n" "$(API_JAR)"
+	@printf "• Native JAR -> %s\n" "$(NATIVE_JAR_CUR)"
+
+	@printf "\n$(STYLE_OK)✓ Release artifacts built & smoke-tested$(STYLE_RESET)\n"

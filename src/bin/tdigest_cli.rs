@@ -341,11 +341,25 @@ fn main() -> Result<(), Box<dyn Error>> {
 
     Ok(())
 }
-
 #[cfg(test)]
 mod cli_smoke {
-    use assert_cmd::Command; // cargo_bin() + write_stdin()
-    use std::fs;
+    use assert_cmd::Command;
+    use std::process::Command as Proc;
+    use std::sync::Once;
+
+    // Run `cargo build --bin tdigest` exactly once before any tests use it.
+    static BUILD_BIN_ONCE: Once = Once::new();
+
+    fn ensure_cli_built() {
+        BUILD_BIN_ONCE.call_once(|| {
+            let status = Proc::new("cargo")
+                .args(["build", "--bin", "tdigest"])
+                .current_dir(env!("CARGO_MANIFEST_DIR")) // crate root
+                .status()
+                .expect("failed to spawn `cargo build --bin tdigest`");
+            assert!(status.success(), "`cargo build --bin tdigest` failed");
+        });
+    }
 
     fn approx(a: f64, b: f64, eps: f64) -> bool {
         (a - b).abs() <= eps
@@ -353,10 +367,10 @@ mod cli_smoke {
 
     #[test]
     fn smoke_stdin_to_file_quantile_and_cdf() -> Result<(), Box<dyn std::error::Error>> {
-        // ---------- (A) QUANTILE via STDIN -> FILE ----------
-        // Data where the median is exactly 2.0
-        let data = "1,2,2,3,100\n";
+        ensure_cli_built(); // <-- pre-hook
 
+        // ---------- QUANTILE ----------
+        let data = "1,2,2,3,100\n";
         let assert = Command::cargo_bin("tdigest")?
             .arg("--stdin")
             .arg("--cmd")
@@ -366,42 +380,23 @@ mod cli_smoke {
             .arg("--output")
             .arg("csv")
             .arg("--max-size")
-            .arg("1000") // minimize drift for tiny N
+            .arg("1000")
             .write_stdin(data)
             .assert()
             .success();
 
-        // Simulate shell redirection: write stdout to a file
         let stdout = String::from_utf8(assert.get_output().stdout.clone())?;
-        let q_file = tempfile::NamedTempFile::new()?;
-        fs::write(q_file.path(), &stdout)?;
-
-        // Parse CSV
         let mut lines = stdout.lines();
-        let header = lines.next().unwrap_or_default();
-        assert_eq!(
-            header, "quantile,value",
-            "CSV header missing/mismatched for quantile"
-        );
-
-        let row = lines.next().expect("expected one data row for quantile");
-        let mut cols = row.split(',');
+        assert_eq!(lines.next().unwrap_or_default(), "quantile,value");
+        let mut cols = lines.next().unwrap().split(',');
         let q: f64 = cols.next().unwrap().parse()?;
         let v: f64 = cols.next().unwrap().parse()?;
-        assert!(
-            approx(q, 0.5, 1e-12),
-            "quantile column should echo 0.5, got {q}"
-        );
-        assert!(approx(v, 2.0, 1e-6), "median should be ≈2.0, got {v}");
-        assert!(
-            lines.next().is_none(),
-            "expected exactly one data row for quantile"
-        );
+        assert!(approx(q, 0.5, 1e-12));
+        assert!(approx(v, 2.0, 1e-6));
+        assert!(lines.next().is_none());
 
-        // ---------- (B) CDF via STDIN -> FILE ----------
-        // For 1..=5 and mid-mass convention, CDF(1)=0.1, CDF(3)=0.5, CDF(5)=0.9
+        // ---------- CDF ----------
         let data2 = "1 2 3 4 5\n";
-
         let assert2 = Command::cargo_bin("tdigest")?
             .arg("--stdin")
             .arg("--cmd")
@@ -414,55 +409,36 @@ mod cli_smoke {
             .assert()
             .success();
 
-        let stdout2 = String::from_utf8(assert2.get_output().stdout.clone())?;
-        let cdf_file = tempfile::NamedTempFile::new()?;
-        fs::write(cdf_file.path(), &stdout2)?;
+        let out2 = String::from_utf8(assert2.get_output().stdout.clone())?;
+        let mut lines2 = out2.lines();
+        assert_eq!(lines2.next().unwrap_or_default(), "x,p");
 
-        // Parse CSV and collect (x,p)
-        let mut lines = stdout2.lines();
-        let header2 = lines.next().unwrap_or_default();
-        assert_eq!(header2, "x,p", "CSV header missing/mismatched for CDF");
-
-        let mut got1 = None;
-        let mut got3 = None;
-        let mut got5 = None;
-
-        for line in lines {
-            let mut cols = line.split(',');
-            let x: f64 = match cols.next().and_then(|s| s.parse().ok()) {
+        let mut p1 = None;
+        let mut p3 = None;
+        let mut p5 = None;
+        for line in lines2 {
+            let mut c = line.split(',');
+            let x: f64 = match c.next().and_then(|s| s.parse().ok()) {
                 Some(v) => v,
                 None => continue,
             };
-            let p: f64 = cols.next().unwrap().parse()?;
+            let p: f64 = c.next().unwrap().parse()?;
             if approx(x, 1.0, 1e-12) {
-                got1 = Some(p);
+                p1 = Some(p)
             }
             if approx(x, 3.0, 1e-12) {
-                got3 = Some(p);
+                p3 = Some(p)
             }
             if approx(x, 5.0, 1e-12) {
-                got5 = Some(p);
+                p5 = Some(p)
             }
-            assert!(
-                p >= -1e-12 && p <= 1.0 + 1e-12,
-                "CDF out of bounds at x={x}: {p}"
-            );
+            assert!(p >= -1e-12 && p <= 1.0 + 1e-12);
         }
-
-        let p1 = got1.expect("missing x=1 CDF row");
-        let p3 = got3.expect("missing x=3 CDF row");
-        let p5 = got5.expect("missing x=5 CDF row");
-
-        // Mid-mass checks
-        assert!(approx(p1, 0.1, 1e-3), "CDF(1) should be ≈0.1, got {p1}");
-        assert!(approx(p3, 0.5, 1e-3), "CDF(3) should be ≈0.5, got {p3}");
-        assert!(approx(p5, 0.9, 1e-3), "CDF(5) should be ≈0.9, got {p5}");
-
-        // Monotonicity sanity
-        assert!(
-            p1 <= p3 && p3 <= p5,
-            "CDF not monotone: p1={p1}, p3={p3}, p5={p5}"
-        );
+        let (p1, p3, p5) = (p1.unwrap(), p3.unwrap(), p5.unwrap());
+        assert!(approx(p1, 0.1, 1e-3));
+        assert!(approx(p3, 0.5, 1e-3));
+        assert!(approx(p5, 0.9, 1e-3));
+        assert!(p1 <= p3 && p3 <= p5);
 
         Ok(())
     }

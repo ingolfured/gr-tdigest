@@ -1,5 +1,5 @@
 use pyo3::prelude::*;
-use pyo3::types::PyBytes;
+use pyo3::types::{PyBytes, PyModule};
 
 use bincode::config;
 use bincode::serde::{decode_from_slice, encode_to_vec};

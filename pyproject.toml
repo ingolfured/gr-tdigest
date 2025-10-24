@@ -41,7 +41,7 @@ dev = [
 [tool.maturin]
 features = ["python"]
 bindings = "pyo3"
-module-name = "tdigest_rs"
+module-name = "tdigest_rs._tdigest_rs"
 strip = true
 manylinux = "2_28"
 zig = true

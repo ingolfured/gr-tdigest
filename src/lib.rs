@@ -42,10 +42,8 @@ use jemallocator::Jemalloc;
 #[global_allocator]
 static ALLOC: Jemalloc = Jemalloc;
 
-// ---- Python extension (behind feature) ---------------------------------------
 #[cfg(feature = "python")]
 mod py;
-
 #[cfg(feature = "python")]
 use pyo3::prelude::*;
 #[cfg(feature = "python")]
@@ -58,8 +56,9 @@ use pyo3::types::PyModuleMethods;
 /// `__version__` from Cargo metadata and delegate registrations to `py::register`.
 #[cfg(feature = "python")]
 #[pymodule]
-fn tdigest_rs(_py: Python<'_>, m: &Bound<'_, PyModule>) -> PyResult<()> {
-    m.add("__version__", env!("CARGO_PKG_VERSION"))?;
+#[pyo3(name = "_tdigest_rs")]
+fn _tdigest_rs(_py: Python<'_>, m: &Bound<'_, PyModule>) -> PyResult<()> {
     py::register(m)?;
+    m.add("__version__", env!("CARGO_PKG_VERSION"))?;
     Ok(())
 }

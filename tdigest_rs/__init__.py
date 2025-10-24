@@ -16,12 +16,11 @@ lib = Path(__file__).parent
 
 # --- native class import (fail loudly so tests don't silently pass with None) ---
 try:
-    # Only import the class; keep Python wrappers below without name collisions
-    from .tdigest_rs import TDigest, __version__
-except Exception as e:  # pragma: no cover
+    from ._tdigest_rs import TDigest, __version__
+except ModuleNotFoundError as e:
     raise ImportError(
-        "Failed to import the native extension 'tdigest_rs'. "
-        "Build/install it with: `uv run maturin develop -r -F python`."
+        "Failed to import the compiled extension '_tdigest_rs'. "
+        "Build it with: `uv run maturin develop -r -F python`."
     ) from e
 
 # Version from package metadata (fallback for editable dev installs)

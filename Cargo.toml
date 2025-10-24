@@ -9,7 +9,13 @@ crate-type = ["rlib", "cdylib"]
 
 [features]
 default = []
-python = ["dep:pyo3", "dep:numpy", "dep:pyo3-polars"]
+python = [
+  "dep:pyo3",
+  "dep:numpy",
+  "pyo3/extension-module",
+  "pyo3/abi3-py312",
+  "dep:pyo3-polars",
+]
 java = ["dep:jni"]
 bench_codecs = []
 
