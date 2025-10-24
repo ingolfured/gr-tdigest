@@ -16,6 +16,7 @@ STYLE_OK    := $(shell tput setaf 2 2>/dev/null || printf '\033[32m')
 STYLE_ERR   := $(shell tput setaf 1 2>/dev/null || printf '\033[31m')
 STYLE_BOLD  := $(shell tput bold 2>/dev/null     || printf '\033[1m')
 STYLE_RESET := $(shell tput sgr0 2>/dev/null     || printf '\033[0m')
+STYLE_CODE  := $(shell tput setaf 6 2>/dev/null || printf '\033[36m')  # cyan for code/examples
 
 define banner
 	@printf "\n$(STYLE_BOLD)==> %s$(STYLE_RESET)\n" "$(1)"
@@ -23,6 +24,9 @@ endef
 define need
 	@command -v $(1) >/dev/null 2>&1 || { printf "$(STYLE_ERR)✗ Missing dependency: $(1)$(STYLE_RESET)\n"; exit 1; }
 	@printf "$(STYLE_OK)✓ $(1)$(STYLE_RESET)\n"
+endef
+define sep
+	@printf "\n$(STYLE_BOLD)====================$(STYLE_RESET)\n"
 endef
 
 # ----------------------------------------------------------------------
@@ -109,7 +113,7 @@ help:
 	@printf "  %-18s %s\n" "fmt"          "Format Rust (rustfmt) and Python (ruff format)"
 	@printf "  %-18s %s\n" "lint"         "Lint Rust (clippy -D warnings) and Python (ruff)"
 	@printf "  %-18s %s\n" "clean"        "Remove Rust, Python, Java, and distribution artifacts"
-	@printf "  %-18s %s\n" "help-me-run"  "Quick examples: Rust CLI, Python API, Polars exprs, Java demo"
+	@printf "  %-18s %s\n" "help-me-run"  "Four examples: CLI, Pure Python, Polars (lazy), Java (inline + run)"
 	@printf "  %-18s %s\n" "release"      "Build & validate CLI (smoke), wheel (smoke), and JARs (smoke)"
 	@printf "\n$(STYLE_BOLD)Rust$(STYLE_RESET)\n"
 	@printf "  %-18s %s\n" "rust-build"   "cargo build --release (lib) + --bin $(CLI_BIN) (CLI), then smoke-test CLI"
@@ -184,35 +188,76 @@ clean:
 test: rust-test py-test
 	@echo "✅ all tests passed"
 
+# ==============================================================================
+# Help me run — four colored examples with separators
+# ==============================================================================
+# ==============================================================================
+# Help me run — four colored examples with separators
+# ==============================================================================
 help-me-run:
-	@printf "\n$(STYLE_BOLD)Rust — CLI$(STYLE_RESET)\n"
-	@printf "  cargo build --release --bin $(CLI_BIN)\n"
-	@printf "  echo '0 1 2 3' | target/release/$(CLI_BIN) --stdin --cmd quantile --p 0.5 --no-header   # -> 1.5\n"
-	@printf "  echo '0 1.5 3' | target/release/$(CLI_BIN) --stdin --cmd cdf                          # -> CSV x,p rows\n"
-	@printf "\n$(STYLE_BOLD)Python — API$(STYLE_RESET)\n"
-	@printf "  uv run python - <<'PY'\n"
-	@printf "import polars as pl\n"
-	@printf "import tdigest_rs as td\n"
-	@printf "values = [0.0, 1.0, 2.0, 3.0]\n"
-	@printf "d = td.TDigest.from_array(values, max_size=100, scale='k2')\n"
-	@printf "print('p50 =', d.quantile(0.5))\n"
-	@printf "print('cdf =', d.cdf([0.0, 1.5, 3.0]).tolist())\n"
-	@printf "# Polars lazy example (requires exprs exported by extension)\n"
-	@printf "try:\n"
-	@printf "    from tdigest_rs import tdigest, quantile  # expr functions\n"
-	@printf "    df = pl.DataFrame({'g':['a']*5, 'x':[0,1,2,3,4]})\n"
-	@printf "    out = (\n"
-	@printf "        df.lazy().group_by('g')\n"
-	@printf "        .agg(tdigest(pl.col('x'), max_size=100, scale='k2').alias('td'))\n"
-	@printf "        .select(quantile('td', 0.5))\n"
-	@printf "        .collect()\n"
-	@printf "    )\n"
-	@printf "    print(out)\n"
-	@printf "except Exception as e:\n"
-	@printf "    print('Polars expr demo skipped:', e)\n"
-	@printf "PY\n"
-	@printf "\n$(STYLE_BOLD)Java — demo$(STYLE_RESET)\n"
-	@printf "  make java-build && java -Djava.library.path=$(LIB_DIR) -cp $(CP_DEV) TestRun\n"
+# ==============================================================================
+# Help me run — four colored examples with separators
+# ==============================================================================
+help-me-run:
+	$(call sep)
+	@printf "$(STYLE_BOLD)1) Rust — CLI$(STYLE_RESET)\n"
+	@printf "$(STYLE_CODE)echo '0 1 2 3' | target/release/$(CLI_BIN) --stdin --cmd quantile --p 0.5 --no-header$(STYLE_RESET)\n"
+	@printf "# output: 0.5,1.5\n"
+
+	$(call sep)
+	@printf "$(STYLE_BOLD)2) Pure Python$(STYLE_RESET)\n"
+	@printf "$(STYLE_CODE)uv run python - <<'PY'$(STYLE_RESET)\n"
+	@printf "$(STYLE_CODE)import tdigest_rs as td$(STYLE_RESET)\n"
+	@printf "$(STYLE_CODE)values = [0.0, 1.0, 2.0, 3.0]$(STYLE_RESET)\n"
+	@printf "$(STYLE_CODE)d = td.TDigest.from_array(values, max_size=100, scale='k2')$(STYLE_RESET)\n"
+	@printf "$(STYLE_CODE)print('p50 =', d.quantile(0.5))          # -> 1.5$(STYLE_RESET)\n"
+	@printf "$(STYLE_CODE)print('cdf =', d.cdf([0.0, 1.5, 3.0]).tolist())  # -> [0.125, 0.5, 0.875]$(STYLE_RESET)\n"
+	@printf "$(STYLE_CODE)PY$(STYLE_RESET)\n"
+
+	$(call sep)
+	@printf "$(STYLE_BOLD)3) Polars (lazy)$(STYLE_RESET)\n"
+	@printf "$(STYLE_CODE)uv run python - <<'PY'$(STYLE_RESET)\n"
+	@printf "$(STYLE_CODE)import polars as pl$(STYLE_RESET)\n"
+	@printf "$(STYLE_CODE)from tdigest_rs import tdigest, quantile  # expr functions$(STYLE_RESET)\n"
+	@printf "$(STYLE_CODE)df = pl.DataFrame({'g':['a']*5, 'x':[0,1,2,3,4]})$(STYLE_RESET)\n"
+	@printf "$(STYLE_CODE)out = ($(STYLE_RESET)\n"
+	@printf "$(STYLE_CODE)    df.lazy().group_by('g')$(STYLE_RESET)\n"
+	@printf "$(STYLE_CODE)    .agg(tdigest(pl.col('x'), max_size=100, scale='k2').alias('td'))$(STYLE_RESET)\n"
+	@printf "$(STYLE_CODE)    .select(quantile('td', 0.5))$(STYLE_RESET)\n"
+	@printf "$(STYLE_CODE)    .collect()$(STYLE_RESET)\n"
+	@printf "$(STYLE_CODE))$(STYLE_RESET)\n"
+	@printf "$(STYLE_CODE)print(out)$(STYLE_RESET)\n"
+	@printf "$(STYLE_CODE)PY$(STYLE_RESET)\n"
+
+	$(call sep)
+	@printf "$(STYLE_BOLD)4) Java — inline Hello + compile + run$(STYLE_RESET)\n"
+	@printf "# Build artifacts (once):\n"
+	@printf "$(STYLE_CODE)make java-build jar$(STYLE_RESET)\n"
+	@printf "$(STYLE_CODE)mkdir -p target/java-hello$(STYLE_RESET)\n"
+	@printf "$(STYLE_CODE)cat <<'JAVA' > target/java-hello/HelloTDigest.java$(STYLE_RESET)\n"
+	@printf "$(STYLE_CODE)import gr.tdigest_rs.TDigest;$(STYLE_RESET)\n"
+	@printf "$(STYLE_CODE)import gr.tdigest_rs.TDigest.Precision;$(STYLE_RESET)\n"
+	@printf "$(STYLE_CODE)import gr.tdigest_rs.TDigest.Scale;$(STYLE_RESET)\n"
+	@printf "$(STYLE_CODE)import gr.tdigest_rs.TDigest.SingletonPolicy;$(STYLE_RESET)\n"
+	@printf "$(STYLE_CODE)import java.util.Arrays;$(STYLE_RESET)\n"
+	@printf "$(STYLE_CODE)public class HelloTDigest {$(STYLE_RESET)\n"
+	@printf "$(STYLE_CODE)  public static void main(String[] args) {$(STYLE_RESET)\n"
+	@printf "$(STYLE_CODE)    try (TDigest digest = TDigest.builder()$(STYLE_RESET)\n"
+	@printf "$(STYLE_CODE)        .maxSize(100)$(STYLE_RESET)\n"
+	@printf "$(STYLE_CODE)        .scale(Scale.K2)$(STYLE_RESET)\n"
+	@printf "$(STYLE_CODE)        .singletonPolicy(SingletonPolicy.EDGES).keep(4)$(STYLE_RESET)\n"
+	@printf "$(STYLE_CODE)        .precision(Precision.F32)$(STYLE_RESET)\n"
+	@printf "$(STYLE_CODE)        .build(new float[]{0, 1, 2, 3})) {$(STYLE_RESET)\n"
+	@printf "$(STYLE_CODE)      System.out.println(Arrays.toString(digest.cdf(new double[]{0.0, 1.5, 3.0})));$(STYLE_RESET)\n"
+	@printf "$(STYLE_CODE)      System.out.println(\"p50 = \" + digest.quantile(0.5));$(STYLE_RESET)\n"
+	@printf "$(STYLE_CODE)    }$(STYLE_RESET)\n"
+	@printf "$(STYLE_CODE)  }$(STYLE_RESET)\n"
+	@printf "$(STYLE_CODE)}$(STYLE_RESET)\n"
+	@printf "$(STYLE_CODE)JAVA$(STYLE_RESET)\n"
+	@printf "$(STYLE_CODE)javac -cp $(API_JAR) -d target/java-hello target/java-hello/HelloTDigest.java$(STYLE_RESET)\n"
+	@printf "$(STYLE_CODE)java -Djava.library.path=$(LIB_DIR) -cp $(API_JAR):target/java-hello HelloTDigest$(STYLE_RESET)\n"
+	$(call sep)
+
 
 # ==============================================================================
 # Rust
