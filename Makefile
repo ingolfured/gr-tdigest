@@ -243,3 +243,33 @@ java-test: java-build
 	[ "$$ARR_LINE" = "[0.125, 0.5, 0.875]" ] || { echo "❌ array mismatch (classes)"; exit 1; }; \
 	[ -n "$$P50_LINE" ] || { echo "❌ p50 line missing (classes)"; exit 1; }; \
 	echo "✅ java_test (classes) passed"
+
+DIST ?= dist
+
+.PHONY: wheel sdist wheel-smoke
+
+wheel:
+	$(call banner,Build Python wheel (abi3))
+	mkdir -p $(DIST)
+	$(UV) run maturin build -r -F python --compatibility manylinux_2_28 --zig -o $(DIST)
+	@printf "$(STYLE_OK)✓ wheel(s) in $(DIST)$(STYLE_RESET)\n"
+
+sdist:
+	$(call banner,Build source distribution)
+	mkdir -p $(DIST)
+	$(UV) run maturin sdist --out $(DIST)
+	@printf "$(STYLE_OK)✓ sdist in $(DIST)$(STYLE_RESET)\n"
+
+wheel-smoke: wheel
+	$(call banner,Smoke test the wheel in a clean venv)
+	rm -rf .venv-wheeltest
+	# Create venv with pip via uv
+	$(UV) venv --python 3.12 --seed .venv-wheeltest
+	# Belt-and-braces: if pip somehow isn't present, bootstrap it
+	.venv-wheeltest/bin/python -m pip --version || .venv-wheeltest/bin/python -m ensurepip --upgrade
+	.venv-wheeltest/bin/python -m pip install --upgrade pip
+	.venv-wheeltest/bin/python -m pip install "polars>=1.34.0,<2.0.0" numpy
+	.venv-wheeltest/bin/python -m pip install --no-index --find-links $(DIST) tdigest_rs
+	.venv-wheeltest/bin/python -c "import tdigest_rs as td; d=td.TDigest.from_array([0.0,1.0,2.0,3.0],max_size=100,scale='k2'); print('p50=',d.quantile(0.5)); print('cdf=',d.cdf([0.0,1.5,3.0]).tolist())"
+	rm -rf .venv-wheeltest
+	@echo "$(STYLE_OK)✓ wheel smoke import ok$(STYLE_RESET)"

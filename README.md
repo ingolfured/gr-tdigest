@@ -1,98 +1,146 @@
-# tdigest-rs
+# 🌀 tdigest-rs
 
-A Polars plugin and Rust library for distributed quantile estimation using [T-Digest](https://docs.rs/tdigest/latest/tdigest/).
+A **Rust t-digest** with **Polars integration** and extensions for **Python** and **Java/JNI**.
+Fast, compact, and built for real-world analytics pipelines.
 
-- Fast, mergeable quantile estimation for large/distributed datasets
-- Native Rust implementation, with Python bindings for Polars
-- Supports both canonical (f64) and compact (32-bit) payloads
-- Easily integrates with Polars DataFrames and expressions
+- 🚀 Mergeable quantiles for large / streaming data
+- 🦀 Single Rust core shared across Rust, Polars, Python, and Java
+- 🧊 Precision modes: canonical `f64` or compact `f32`
+- 🎚️ Scale families: `Quad`, `K1`, `K2`, `K3`
+- 🔩 Singleton handling policy: **edge–precision**, **respect singletons (keep _N_)**, or **uniform merge**
 
-## Example
+---
 
-See the [Yellow Taxi Notebook](./tdigest_yellow_taxi.ipynb) for a usage example.
+## 🔢 Versions & compatibility (tested)
+Rust and Python use **different** Polars versions — that’s expected.
 
-Minimal Python usage:
-```python
-from tdigest_rs import tdigest
-import polars as pl
+| Layer | Package | Version |
+|---|---|---|
+| **Python** | CPython | 3.12.x |
+|  | polars | 1.34.0 |
+|  | polars-runtime-32 | 1.34.0 |
+|  | numpy | 2.3.4 |
+|  | maturin | 1.9.6 |
+|  | pytest | 8.4.2 |
+|  | ruff | 0.14.1 |
+|  | ziglang (manylinux) | 0.12.1 |
+| **Rust** | rustc | ≥ 1.81 (2021 edition) |
+|  | polars (crates) | 0.51.x |
+|  | jemallocator | 0.5.4 |
 
-df = pl.DataFrame({"values": [1, 2, 3, 4, 5]})
-df = df.with_columns(
-    tdigest("values", max_size=100, use_32=True)
-)
+---
+
+## 🧰 Quick start (Makefile-first)
+Clone the repo, then let the **Makefile** drive:
+
+```bash
+make help      # discover the main targets
+make setup     # toolchain + Python env (uv)
+make build     # Rust core + CLI, Python extension, Java classes
+make test      # Rust tests + CLI smoke + Python tests + Java demo
 ```
 
-## Requirements
+Packaging (when you need it):
+```bash
+make wheel     # build manylinux wheel(s) into ./dist
+make jar       # build Java API + native jar for the current platform
+```
 
-- **Python:** 3.12+ recommended (works with 3.8+)
-- **Rust:** 1.70+ (2021 edition)
-- **Polars:** 0.51.x (Rust and Python)
-- **Maturin:** for building Python extensions
+---
 
-## Development Setup
+## 🧪 Usage examples
 
-1. **Python environment:**
-   ```bash
-   python3.12 -m venv .env
-   source .env/bin/activate
-   python -m pip install -r requirements.txt
-   ```
+### Rust CLI
+Compute a median from stdin:
+```bash
+echo "1 2 3 4 5" | target/release/tdigest --stdin --quantile 0.5
+# quantile,value
+# 0.5,3.0
+```
 
-2. **Rust toolchain:**
-   - Install from [rustup.rs](https://rustup.rs/)
-   - Recommended: `rustup update stable`
+From a file to JSON Lines:
+```bash
+target/release/tdigest --file data.txt --cmd cdf --output jsonl > out.jsonl
+```
 
-3. **Build the Python extension:**
-   ```bash
-   maturin develop
-   # or for optimized builds:
-   maturin develop --release
-   ```
+### Python (Polars expression)
+```python
+import polars as pl
+from tdigest_rs import tdigest, quantile, StorageSchema, ScaleFamily
 
-4. **Pre-commit hooks:**
-   - This repo uses [pre-commit](https://pre-commit.com/) to enforce formatting, linting, and test hygiene.
-   - Install pre-commit and set up hooks:
-     ```bash
-     pip install pre-commit
-     pre-commit install
-     ```
-   - To run all checks manually:
-     ```bash
-     pre-commit run --all-files -v
-     ```
-   - The hooks will:
-     - Auto-fix Python with Ruff
-     - Run `cargo build`, `cargo fmt`, `cargo clippy --fix`, and `cargo test` (all)
-     - Fail fast on the first error
+df = pl.DataFrame({"g": ["a"] * 2000, "x": list(range(2000))})
+out = (
+    df.lazy()
+      .group_by("g")
+      .agg(
+          tdigest(
+              pl.col("x"),
+              storage=StorageSchema.F64,   # or StorageSchema.F32
+              scale=ScaleFamily.QUAD,      # Quad/K1/K2/K3
+              max_size=512
+          ).alias("td")
+      )
+      .select(quantile("td", 0.5))
+      .collect()
+)
+print(out)
+```
 
-## Rust Development
+### Java (AutoCloseable builder)
+```java
+import gr.tdigest_rs.TDigest;
+import gr.tdigest_rs.TDigest.Precision;
+import gr.tdigest_rs.TDigest.Scale;
+import gr.tdigest_rs.TDigest.SingletonPolicy;
+import java.util.Arrays;
 
-- To build and test with Cargo:
-  ```bash
-  cargo build
-  cargo test
-  ```
+public class TestRun {
+  public static void main(String[] args) {
+    System.out.println("AutoCloseable example:");
+    try (TDigest digest = TDigest.builder()
+        .maxSize(100)
+        .scale(Scale.K2)
+        .singletonPolicy(SingletonPolicy.EDGES).keep(4)
+        .precision(Precision.F32)             // internal f32 sketch; API uses double[] probes
+        .build(new float[]{0, 1, 2, 3})) {    // build(float[])
+      System.out.println(Arrays.toString(digest.cdf(new double[]{0.0, 1.5, 3.0})));
+      System.out.println("p50 = " + digest.quantile(0.5));
+    }
+  }
+}
+```
 
-## Python API
+---
 
-- The plugin exposes a `tdigest` function for Polars expressions:
-  ```python
-  from tdigest_rs import tdigest
+## 🧱 Project layout
+```
+.
+├── Makefile
+├── src/                 # Rust core + CLI
+│   ├── bin/tdigest_cli.rs
+│   ├── polars_expr.rs   # Polars expressions (Rust side)
+│   ├── py.rs            # Python bindings (maturin/pyo3)
+│   └── tdigest/         # algorithm & internals
+├── src-java/            # Java demo / JNI client
+├── tdigest_rs/          # Python package (abi3 extension)
+└── tests/               # Python tests
+```
 
-  # Use use_32=True for compact 32-bit payloads
-  df.with_columns(
-      tdigest("col", max_size=100, use_32=True)
-  )
-  ```
+---
 
-## Versioning
+## 🤝 Contributing
+This repo ships with a **pre-commit** setup (fail-fast) to keep things tidy.
 
-- All Polars crates are pinned to the same version (`0.51.x`) for compatibility.
-- Python requirements are in `requirements.txt` and support Python 3.12+.
-- See `Cargo.toml` and `pyproject.toml` for details.
+Install & run:
+```bash
+pip install pre-commit
+pre-commit install
+pre-commit run --all-files
+```
 
-## Contributing
+See the pinned hooks in `.pre-commit-config.yaml`.
 
-- Please run all pre-commit hooks and ensure all tests pass before submitting a PR.
-- For Rust code, follow `cargo fmt` and `cargo clippy` suggestions.
-- For Python code, follow Ruff and type-check with `mypy`.
+---
+
+## 🧬 License
+Licensed under **Apache-2.0**.

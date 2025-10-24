@@ -3,8 +3,8 @@ requires = ["maturin[patchelf,zig]>=1.9.5,<2.0"]
 build-backend = "maturin"
 
 [project]
-name = "tdigest-rs"
-version = "0.0.0"                      # kept in lockstep with Cargo.toml by your Makefile
+name = "tdigest_rs"
+dynamic = ["version"]
 description = "Rust TDigest with Python, Polars and JNI"
 readme = "README.md"
 license = { text = "Apache-2.0" }
@@ -34,7 +34,6 @@ dev = [
   "numpy>=2.3.3",
   "mypy>=1.18.2",
 ]
-
 
 # ------------------------------------------------------------
 # Maturin build settings
