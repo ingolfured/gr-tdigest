@@ -2,7 +2,7 @@ import polars as pl
 import pytest
 from polars import Float32, Int32, Utf8, col
 
-from tdigest_rs import estimate_quantile, tdigest
+from tdigest_rs import quantile, tdigest
 
 df_int = pl.DataFrame(
     {
@@ -19,7 +19,7 @@ df_float = pl.DataFrame(
 )
 
 
-def test_estimate_quantile_int64():
+def test_quantile_int64():
     df_median = (
         df_int.with_columns()
         .group_by("group")
@@ -29,12 +29,12 @@ def test_estimate_quantile_int64():
             ]
         )
     )
-    df_merged_median = df_median.select(estimate_quantile("metric-0", 0.5))
+    df_merged_median = df_median.select(quantile("metric-0", 0.5))
 
     assert df_merged_median.item() == 3.0
 
 
-def test_estimate_quantile_int32():
+def test_quantile_int32():
     df_median = (
         df_int.with_columns(col("values").cast(Int32))
         .group_by("group")
@@ -44,23 +44,23 @@ def test_estimate_quantile_int32():
             ]
         )
     )
-    df_merged_median = df_median.select(estimate_quantile("metric-0", 0.5))
+    df_merged_median = df_median.select(quantile("metric-0", 0.5))
 
     assert df_merged_median.item() == 3.0
 
 
-def test_estimate_quantile_f64():
+def test_quantile_f64():
     df_median = df_float.group_by("group").agg(
         [
             tdigest("values").alias("metric-0"),
         ]
     )
-    df_merged_median = df_median.select(estimate_quantile("metric-0", 0.5))
+    df_merged_median = df_median.select(quantile("metric-0", 0.5))
 
     assert df_merged_median.item() == 3.0
 
 
-def test_estimate_quantile_32():
+def test_quantile_32():
     df_median = (
         df_float.with_columns(col("values").cast(Float32))
         .group_by("group")
@@ -70,12 +70,12 @@ def test_estimate_quantile_32():
             ]
         )
     )
-    df_merged_median = df_median.select(estimate_quantile("metric-0", 0.5))
+    df_merged_median = df_median.select(quantile("metric-0", 0.5))
 
     assert df_merged_median.item() == 3.0
 
 
-def test_estimate_quantile_utf8():
+def test_quantile_utf8():
     with pytest.raises(pl.exceptions.ComputeError):
         (
             df_float.with_columns(col("values").cast(Utf8))

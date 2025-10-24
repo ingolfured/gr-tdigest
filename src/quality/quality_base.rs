@@ -1,4 +1,4 @@
-use crate::tdigest::{ScaleFamily, SingletonPolicy, TDigest};
+use crate::tdigest::{singleton_policy::SingletonPolicy, ScaleFamily, TDigest};
 
 pub use tdigest_testdata::{gen_dataset, DistKind};
 

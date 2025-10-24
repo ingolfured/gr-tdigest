@@ -2,7 +2,7 @@ import polars as pl
 
 from tdigest_rs import (
     tdigest,
-    estimate_quantile,
+    quantile,
     ScaleFamily,
     StorageSchema,
 )
@@ -48,7 +48,7 @@ def test_tdigest_f32_has_lower_precision_than_f64():
         df.lazy()
         .group_by("g")
         .agg(tdigest(pl.col("x"), storage=StorageSchema.F64, scale=ScaleFamily.QUAD, max_size=max_size).alias("td"))
-        .select(estimate_quantile("td", q_target))
+        .select(quantile("td", q=q_target))
         .collect()
         .item()
     )
@@ -57,7 +57,7 @@ def test_tdigest_f32_has_lower_precision_than_f64():
         df.lazy()
         .group_by("g")
         .agg(tdigest(pl.col("x"), storage=StorageSchema.F32, scale=ScaleFamily.QUAD, max_size=max_size).alias("td"))
-        .select(estimate_quantile("td", q_target))
+        .select(quantile("td", q=q_target))
         .collect()
         .item()
     )

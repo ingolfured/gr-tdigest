@@ -1,7 +1,7 @@
 //! CDF (cumulative distribution function) evaluation for `TDigest`.
 //!
 //! This module provides a fast, allocation-lean evaluator for
-//! `TDigest::estimate_cdf`, including an optimized scalar kernel and an
+//! `TDigest::cdf`, including an optimized scalar kernel and an
 //! auto-switch to Rayon for large query batches.
 //!
 //! # Semantics
@@ -48,7 +48,7 @@
 //!     .build()
 //!     .merge_sorted(values.clone());
 //!
-//! let cdf = td.estimate_cdf(&values);
+//! let cdf = td.cdf(&values);
 //! assert_eq!(cdf.len(), values.len());
 //! assert!(cdf.first().unwrap() >= &0.0 && cdf.last().unwrap() <= &1.0);
 //! for w in cdf.windows(2) {
@@ -99,7 +99,7 @@ impl TDigest {
     /// ## Monotonicity & bounds
     /// The result is guaranteed to be within **[0, 1]** and non-decreasing in
     /// each query value.
-    pub fn estimate_cdf(&self, vals: &[f64]) -> Vec<f64> {
+    pub fn cdf(&self, vals: &[f64]) -> Vec<f64> {
         // Degenerate cases
         let n = self.centroids().len();
         if n == 0 {
@@ -328,7 +328,7 @@ mod tests {
             .scale(ScaleFamily::Quad)
             .build()
             .merge_sorted(values.clone());
-        let approx = td.estimate_cdf(&values);
+        let approx = td.cdf(&values);
         assert_eq!(approx.len(), values.len());
 
         // 1) bounds + 2) monotone
@@ -379,7 +379,7 @@ mod tests {
             .max_size(N + 1)
             .build()
             .merge_sorted(vals.clone())
-            .estimate_cdf(&vals);
+            .cdf(&vals);
 
         for (i, (&e, &a)) in exact.iter().zip(&approx).enumerate() {
             assert_exact(&format!("CDF[{i}]"), e, a);

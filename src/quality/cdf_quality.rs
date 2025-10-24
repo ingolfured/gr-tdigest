@@ -3,14 +3,14 @@ use super::quality_base::{
 };
 use crate::tdigest::{ScaleFamily, TDigest};
 
-/// Compute empirical CDF at the grid `xs` using the midpoint-ties ECDF.
-fn empirical_cdf_at_grid(sorted: &[f64], ecdf_sorted: &[f64], xs: &[f64]) -> Vec<f64> {
+/// Compute empirical CDF at the grid `values` using the midpoint-ties ECDF.
+fn empirical_cdf_at_grid(sorted: &[f64], ecdf_sorted: &[f64], values: &[f64]) -> Vec<f64> {
     let n = sorted.len();
     if n == 0 {
-        return vec![f64::NAN; xs.len()];
+        return vec![f64::NAN; values.len()];
     }
-    let mut out = Vec::with_capacity(xs.len());
-    for &x in xs {
+    let mut out = Vec::with_capacity(values.len());
+    for &x in values {
         // count of values <= x
         let idx = match sorted.binary_search_by(|v| v.partial_cmp(&x).unwrap()) {
             Ok(mut j) => {
@@ -31,9 +31,9 @@ fn empirical_cdf_at_grid(sorted: &[f64], ecdf_sorted: &[f64], xs: &[f64]) -> Vec
 fn cdf_grid_errors(td: &TDigest, sorted: &[f64]) -> (f64, f64) {
     let ecdf_sorted = exact_ecdf_for_sorted(sorted);
     let steps = 1000usize;
-    let xs: Vec<f64> = (0..=steps).map(|i| (i as f64) / (steps as f64)).collect();
-    let est: Vec<f64> = td.estimate_cdf(&xs);
-    let exp: Vec<f64> = empirical_cdf_at_grid(sorted, &ecdf_sorted, &xs);
+    let values: Vec<f64> = (0..=steps).map(|i| (i as f64) / (steps as f64)).collect();
+    let est: Vec<f64> = td.cdf(&values);
+    let exp: Vec<f64> = empirical_cdf_at_grid(sorted, &ecdf_sorted, &values);
 
     let mut ks_like: f64 = 0.0;
     let mut mae: f64 = 0.0;

@@ -1,4 +1,4 @@
-//! Quality checks for `TDigest::estimate_quantile(q)`.
+//! Quality checks for `TDigest::quantile(q)`.
 //!
 //! Two styles:
 //! 1) A pinned **regression** test at max_size=1000 that FAILS on any change
@@ -20,7 +20,7 @@ fn quantile_grid_errors(td: &TDigest, sorted: &[f64]) -> (f64, f64) {
 
     for i in 1..steps {
         let q = (i as f64) / (steps as f64);
-        let est = td.estimate_quantile(q);
+        let est = td.quantile(q);
         let exp = expected_quantile(sorted, q);
         let err = (est - exp).abs();
         mae += err;

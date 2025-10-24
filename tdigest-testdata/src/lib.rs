@@ -89,9 +89,9 @@ mod tests {
             DistKind::LogNormal { sigma: 1.0 },
             DistKind::Mixture,
         ] {
-            let xs = gen_dataset(kind, 10_000, 123);
-            assert_eq!(xs.len(), 10_000);
-            assert!(xs.iter().all(|&x| (0.0..=1.0).contains(&x)));
+            let values = gen_dataset(kind, 10_000, 123);
+            assert_eq!(values.len(), 10_000);
+            assert!(values.iter().all(|&x| (0.0..=1.0).contains(&x)));
         }
     }
 }

@@ -17,7 +17,7 @@
 //! system allocator, remove the `jemallocator` dependency and the
 //! `#[global_allocator]` block below.
 
-mod expressions;
+mod polars_expr;
 pub mod tdigest;
 
 #[cfg(feature = "java")]

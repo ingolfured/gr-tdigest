@@ -1,14 +1,16 @@
-//! Polars ↔ TDigest codecs (strict).
+//! Unified Polars ↔ TDigest codecs.
 //!
 //! Two precision modes:
-//! - **Canonical** – full precision (f64 centroids; f64 min/max/sum/count)
-//! - **Compact**   – reduced precision (f32 centroids; f32 min/max; f64 sum/count)
+//! - **Canonical** – f64 centroids; f64 min/max/sum/count
+//! - **Compact**   – f32 centroids; f32 min/max; f64 sum/count
 //!
-//! Instance API (strict):
-//!   td.try_to_series("td")                 -> `PolarsResult<Series>`
-//!   td.try_to_series_compact("td")         -> `PolarsResult<Series>`
-//!   `TDigest::try_from_series(&series)`    -> `Result<Vec<TDigest>, CodecError>`
-//!   `TDigest::try_from_series_compact(&s)` -> `Result<Vec<TDigest>, CodecError>`
+//! Front-end API:
+//!   td.to_series(name, compact=false)          → Series
+//!   td.to_series_with_default(name, f32_mode)  → Series
+//!   TDigest::from_series(&series, compact)     → `Vec<TDigest>`
+//!
+//! Internal strict variants still available:
+//!   try_to_series\[_compact], try_from_series\[_compact]
 
 use std::fmt;
 
@@ -69,6 +71,42 @@ impl TDigest {
     }
 }
 
+// --------------------- unified front-end wrappers ---------------------------
+
+impl TDigest {
+    /// Unified Polars codec interface (used by all language fronts).
+    ///
+    /// `compact = false` → Canonical (f64 centroids)
+    /// `compact = true`  → Compact (f32 centroids)
+    pub fn to_series(&self, name: &str, compact: bool) -> PolarsResult<Series> {
+        if compact {
+            self.try_to_series_compact(name)
+        } else {
+            self.try_to_series(name)
+        }
+    }
+
+    /// Convenience variant that follows the digest's in-memory precision flag.
+    ///
+    /// Call this from language bindings if you have an `f32_mode` boolean.
+    pub fn to_series_with_default(&self, name: &str, f32_mode: bool) -> PolarsResult<Series> {
+        if f32_mode {
+            self.try_to_series_compact(name)
+        } else {
+            self.try_to_series(name)
+        }
+    }
+
+    /// Unified strict decoder. `compact=false` → canonical; `true` → compact.
+    pub fn from_series(input: &Series, compact: bool) -> Result<Vec<TDigest>, CodecError> {
+        if compact {
+            Self::try_from_series_compact(input)
+        } else {
+            Self::try_from_series(input)
+        }
+    }
+}
+
 // --------------------- error type (strict) -----------------------------------
 
 #[non_exhaustive]
@@ -122,6 +160,25 @@ impl fmt::Display for CodecError {
             NullCentroid { row, index } =>
                 write!(f, "null in centroids at row {row}, index {index}"),
             Polars(e) => write!(f, "polars error: {e}"),
+        }
+    }
+}
+
+// --------------------- default codec selector --------------------------------
+
+#[derive(Clone, Copy, Debug)]
+pub enum DefaultCodec {
+    Canonical,
+    Compact,
+}
+
+impl DefaultCodec {
+    #[inline]
+    pub fn for_f32_mode(f32_mode: bool) -> Self {
+        if f32_mode {
+            Self::Compact
+        } else {
+            Self::Canonical
         }
     }
 }

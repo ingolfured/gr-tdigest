@@ -66,6 +66,64 @@ impl Default for TDigest {
     }
 }
 
+// Accept both f32 and f64
+pub trait IntoF64Vec {
+    fn into_f64_vec(self) -> Vec<f64>;
+}
+impl IntoF64Vec for &[f64] {
+    fn into_f64_vec(self) -> Vec<f64> {
+        self.to_vec()
+    }
+}
+impl IntoF64Vec for Vec<f64> {
+    fn into_f64_vec(self) -> Vec<f64> {
+        self
+    }
+}
+impl IntoF64Vec for &[f32] {
+    fn into_f64_vec(self) -> Vec<f64> {
+        self.iter().map(|&x| x as f64).collect()
+    }
+}
+impl IntoF64Vec for Vec<f32> {
+    fn into_f64_vec(self) -> Vec<f64> {
+        self.into_iter().map(|x| x as f64).collect()
+    }
+}
+
+#[derive(Debug, Clone, Copy)]
+pub struct DigestOptions {
+    pub max_size: usize,
+    pub scale: ScaleFamily,
+    pub f32_mode: bool,
+    pub singleton_policy: SingletonPolicy,
+}
+impl Default for DigestOptions {
+    fn default() -> Self {
+        Self {
+            max_size: 1000,
+            scale: ScaleFamily::K2,
+            f32_mode: false,
+            singleton_policy: SingletonPolicy::Use,
+        }
+    }
+}
+
+impl TDigest {
+    pub fn from_array<A: IntoF64Vec>(arr: A) -> TDigest {
+        Self::from_array_with(arr, DigestOptions::default())
+    }
+    pub fn from_array_with<A: IntoF64Vec>(arr: A, opts: DigestOptions) -> TDigest {
+        let base = TDigest::builder()
+            .max_size(opts.max_size)
+            .scale(opts.scale)
+            .singleton_policy(opts.singleton_policy)
+            .build();
+        // If/when you add true f32 centroid storage, read opts.f32_mode here.
+        base.merge_unsorted(arr.into_f64_vec())
+    }
+}
+
 /// Builder for [`TDigest`].
 ///
 /// Use the builder when you want to:
@@ -236,24 +294,6 @@ impl TDigest {
     pub fn from_unsorted(values: &[f64], max_size: usize) -> TDigest {
         let base = TDigest::builder().max_size(max_size).build();
         base.merge_unsorted(values.to_vec())
-    }
-
-    /// Quantile convenience wrapper (delegates to `quantile.rs`).
-    #[inline]
-    pub fn quantile(&self, q: f64) -> f64 {
-        self.estimate_quantile(q)
-    }
-
-    /// CDF convenience wrapper (delegates to `cdf.rs`).
-    #[inline]
-    pub fn cdf(&self, x: &[f64]) -> Vec<f64> {
-        self.estimate_cdf(x)
-    }
-
-    /// Median convenience wrapper with even/odd handling.
-    #[inline]
-    pub fn median(&self) -> f64 {
-        self.estimate_median()
     }
 
     /// The configured scale family used by the compressor’s k-limit.

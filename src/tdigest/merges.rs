@@ -11,7 +11,6 @@ use std::iter::Peekable;
 ///
 /// The aggregate totals (∑w, ∑w·mean, min, max) allow cheap updates of
 /// [`TDigest`](crate::tdigest::TDigest) metadata.
-
 pub struct NormalizedStream {
     pub out: Vec<Centroid>,
     pub total_w: f64,  // ∑ w

@@ -718,10 +718,10 @@ mod tests {
             .singleton_policy(SingletonPolicy::Off)
             .build();
 
-        let mut xs = vec![-2.0, -1.0, -1.0, 0.0, 0.5, 1.0, 3.0, 9.0];
-        xs.sort_by(|a, b| a.partial_cmp(b).unwrap());
+        let mut values = vec![-2.0, -1.0, -1.0, 0.0, 0.5, 1.0, 3.0, 9.0];
+        values.sort_by(|a, b| a.partial_cmp(b).unwrap());
 
-        let td = td.merge_sorted(xs.clone());
+        let td = td.merge_sorted(values.clone());
 
         let grid = [-10.0, -2.0, -1.0, -0.5, 0.0, 0.5, 1.0, 6.0, 9.0, 10.0];
         let mut prev = -1.0;
@@ -737,7 +737,7 @@ mod tests {
 
         for &p in &[0.0, 0.1, 0.25, 0.5, 0.9, 1.0] {
             let q = td.quantile(p);
-            assert!(q >= xs[0] - 1e-12 && q <= *xs.last().unwrap() + 1e-12);
+            assert!(q >= values[0] - 1e-12 && q <= *values.last().unwrap() + 1e-12);
         }
     }
 
@@ -749,14 +749,14 @@ mod tests {
             .singleton_policy(SingletonPolicy::Off)
             .build();
 
-        let mut xs: Vec<f64> = (-30..=69).map(|x| x as f64).collect();
-        xs[0] = -1e9;
-        xs[1] = -30.0;
-        xs[98] = 1e-10;
-        xs[99] = 1e9;
-        xs.sort_by(|a, b| a.partial_cmp(b).unwrap());
+        let mut values: Vec<f64> = (-30..=69).map(|x| x as f64).collect();
+        values[0] = -1e9;
+        values[1] = -30.0;
+        values[98] = 1e-10;
+        values[99] = 1e9;
+        values.sort_by(|a, b| a.partial_cmp(b).unwrap());
 
-        let td = td.merge_sorted(xs);
+        let td = td.merge_sorted(values);
 
         let grid = [-1e12, -1e9, -30.0, 0.0, 1e-10, 1.0, 1e9, 1e12];
         let mut prev = -1.0;
@@ -779,14 +779,17 @@ mod tests {
             .singleton_policy(SingletonPolicy::Off)
             .build();
 
-        let mut xs = vec![3.0, 1.0, 2.0, 7.0, 4.0, 6.0, 5.0, 9.0, -2.0, 11.0];
-        xs.sort_by(|a, b| a.partial_cmp(b).unwrap());
-        let td = td.merge_sorted(xs.clone());
+        let mut values = vec![3.0, 1.0, 2.0, 7.0, 4.0, 6.0, 5.0, 9.0, -2.0, 11.0];
+        values.sort_by(|a, b| a.partial_cmp(b).unwrap());
+        let td = td.merge_sorted(values.clone());
 
         let q0 = td.quantile(0.0);
         let q1 = td.quantile(1.0);
-        assert!(approx(q0, xs[0], 1e-12), "p=0 returns min");
-        assert!(approx(q1, *xs.last().unwrap(), 1e-12), "p=1 returns max");
+        assert!(approx(q0, values[0], 1e-12), "p=0 returns min");
+        assert!(
+            approx(q1, *values.last().unwrap(), 1e-12),
+            "p=1 returns max"
+        );
     }
 
     #[test]
@@ -803,20 +806,20 @@ mod tests {
                 .scale(fam)
                 .singleton_policy(SingletonPolicy::Off)
                 .build();
-            let mut xs: Vec<f64> = (0..50)
+            let mut values: Vec<f64> = (0..50)
                 .map(|i| ((i as f64).sin() * 0.7) + (i as f64) * 0.1)
                 .collect();
-            xs.sort_by(|a, b| a.partial_cmp(b).unwrap());
+            values.sort_by(|a, b| a.partial_cmp(b).unwrap());
 
-            let td = td.merge_sorted(xs.clone());
+            let td = td.merge_sorted(values.clone());
 
             let test_x = [
                 -10.0,
-                xs[0],
-                (xs[5] + xs[6]) * 0.5,
-                xs[xs.len() / 2],
-                xs[xs.len() - 5],
-                *xs.last().unwrap(),
+                values[0],
+                (values[5] + values[6]) * 0.5,
+                values[values.len() / 2],
+                values[values.len() - 5],
+                *values.last().unwrap(),
                 999.0,
             ];
 
@@ -883,16 +886,16 @@ mod tests {
             .singleton_policy(SingletonPolicy::Off)
             .build();
 
-        let mut xs: Vec<f64> = (0..200)
+        let mut values: Vec<f64> = (0..200)
             .map(|i| (i as f64).ln_1p() * ((i % 7) as f64 + 1.0))
             .collect();
-        xs.sort_by(|a, b| a.partial_cmp(b).unwrap());
-        let td = td.merge_sorted(xs.clone());
+        values.sort_by(|a, b| a.partial_cmp(b).unwrap());
+        let td = td.merge_sorted(values.clone());
 
         for &p in &[0.0, 0.01, 0.1, 0.25, 0.5, 0.9, 0.99, 1.0] {
             let q = td.quantile(p);
             assert!(
-                q >= xs[0] - 1e-12 && q <= *xs.last().unwrap() + 1e-12,
+                q >= values[0] - 1e-12 && q <= *values.last().unwrap() + 1e-12,
                 "q(p) in data range"
             );
         }

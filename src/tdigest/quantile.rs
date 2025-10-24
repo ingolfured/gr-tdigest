@@ -1,6 +1,6 @@
 //! Quantile evaluation for `TDigest`.
 //!
-//! This module implements `TDigest::estimate_quantile(q)` using the same
+//! This module implements `TDigest::quantile(q)` using the same
 //! **half-weight bracketing** semantics as the reference MergingDigest:
 //!
 //! - **Index mapping**: map `q ∈ [0,1]` to a target cumulative weight index
@@ -21,7 +21,7 @@
 //!
 //! # Guarantees
 //! - The result is **monotone** in `q`.
-//! - `estimate_quantile(0.0) == min()` and `estimate_quantile(1.0) == max()`.
+//! - `quantile(0.0) == min()` and `quantile(1.0) == max()`.
 //! - With sufficient capacity (no compression), results match **exact order
 //!   statistics** at mid-ranks `((i+0.5)/N)`.
 //!
@@ -37,7 +37,7 @@
 //! - Dead zones ensure unit singletons don’t contribute half-mass to the
 //!   interpolation denominator (consistent with CDF logic).
 //!
-//! See also: [`TDigest::estimate_cdf`] for CDF semantics, which pair with this
+//! See also: [`TDigest::cdf`] for CDF semantics, which pair with this
 //! quantile implementation via the same center/half-weight rules.
 
 use crate::tdigest::TDigest;
@@ -49,7 +49,7 @@ impl TDigest {
     /// - `q` is clamped to `[0, 1]`.
     /// - For empty digests, returns `0.0`.
     /// - For single-centroid digests, returns that mean.
-    pub fn estimate_quantile(&self, q: f64) -> f64 {
+    pub fn quantile(&self, q: f64) -> f64 {
         if self.centroids().is_empty() {
             return 0.0;
         }
@@ -187,7 +187,7 @@ impl TDigest {
     }
 
     /// Return the indices of the two centroids that bracket the median (q = 0.5)
-    /// using the same half-weight bracketing as `estimate_quantile`.
+    /// using the same half-weight bracketing as `quantile`.
     fn bracket_centroids_for_median(&self) -> (usize, usize) {
         debug_assert!(!self.centroids().is_empty());
         if self.centroids().len() == 1 {
@@ -213,8 +213,8 @@ impl TDigest {
     /// Median with an even-count special case to avoid over-interpolation.
     ///
     /// - If total count is **even**: average the two neighboring centroid means around q=0.5.
-    /// - If **odd**: fall back to `estimate_quantile(0.5)`.
-    pub fn estimate_median(&self) -> f64 {
+    /// - If **odd**: fall back to `quantile(0.5)`.
+    pub fn median(&self) -> f64 {
         let total = self.count();
         if total <= 0.0 {
             return 0.0;
@@ -235,14 +235,13 @@ mod tests {
 
     #[test]
     fn centroid_addition_regression_pr_1() {
-        // https://github.com/MnO2/t-digest/pull/1
         let vals = vec![1.0, 1.0, 1.0, 2.0, 1.0, 1.0];
         let mut t = TDigestBuilder::new().max_size(10).build();
         for v in vals {
             t = t.merge_unsorted(vec![v]);
         }
-        assert_rel_close("median", 1.0, t.estimate_quantile(0.5), 0.01);
-        assert_rel_close("q=0.95", 2.0, t.estimate_quantile(0.95), 0.01);
+        assert_rel_close("median", 1.0, t.quantile(0.5), 0.01);
+        assert_rel_close("q=0.95", 2.0, t.quantile(0.95), 0.01);
 
         let means: Vec<f64> = t.centroids().iter().map(|c| c.mean()).collect();
         assert_eq!(
@@ -268,21 +267,21 @@ mod tests {
             .build()
             .merge_sorted(values.clone());
 
-        assert_exact("Q(0)", *values.first().unwrap(), t.estimate_quantile(0.0));
-        assert_exact("Q(1)", *values.last().unwrap(), t.estimate_quantile(1.0));
+        assert_exact("Q(0)", *values.first().unwrap(), t.quantile(0.0));
+        assert_exact("Q(1)", *values.last().unwrap(), t.quantile(1.0));
 
         let (lo_m, hi_m, _, _) = bracket(&values, 0.5);
-        let med = t.estimate_quantile(0.5);
+        let med = t.quantile(0.5);
         assert_in_bracket("median", med, lo_m, hi_m, 4, 5);
 
         let grid = [
-            t.estimate_quantile(0.01),
-            t.estimate_quantile(0.10),
-            t.estimate_quantile(0.25),
+            t.quantile(0.01),
+            t.quantile(0.10),
+            t.quantile(0.25),
             med,
-            t.estimate_quantile(0.75),
-            t.estimate_quantile(0.90),
-            t.estimate_quantile(0.99),
+            t.quantile(0.75),
+            t.quantile(0.90),
+            t.quantile(0.99),
         ];
         assert_monotone_chain("quantiles grid", &grid);
     }
@@ -307,7 +306,7 @@ mod tests {
             (0.99_f64, "Q(0.99)"),
         ] {
             let (lo, hi, i_lo, i_hi) = bracket(&values, q);
-            let x = t.estimate_quantile(q);
+            let x = t.quantile(q);
             assert_in_bracket(label, x, lo, hi, i_lo, i_hi);
         }
     }
@@ -324,8 +323,8 @@ mod tests {
                 t = t.merge_sorted(vec![1.0]);
             }
 
-            assert_exact("Q(0.5)", 0.0, t.estimate_quantile(0.5));
-            assert_exact("median()", 0.0, t.estimate_median());
+            assert_exact("Q(0.5)", 0.0, t.quantile(0.5));
+            assert_exact("median()", 0.0, t.median());
         }
     }
 
@@ -345,11 +344,11 @@ mod tests {
             .build()
             .merge_sorted(v.clone());
 
-        assert_exact("Q(0)", v[0], td.estimate_quantile(0.0));
-        assert_exact("Q(1)", v[N - 1], td.estimate_quantile(1.0));
+        assert_exact("Q(0)", v[0], td.quantile(0.0));
+        assert_exact("Q(1)", v[N - 1], td.quantile(1.0));
         for (i, &x) in v.iter().enumerate() {
             let q = (i as f64 + 0.5) / N as f64; // mid-rank → exact order stat
-            assert_exact("Q(mid)", x, td.estimate_quantile(q));
+            assert_exact("Q(mid)", x, td.quantile(q));
         }
     }
 }

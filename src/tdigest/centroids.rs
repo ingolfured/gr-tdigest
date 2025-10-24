@@ -139,13 +139,13 @@ pub fn is_sorted_by_mean(cs: &[Centroid]) -> bool {
 ///
 /// Keeps/sets `singleton=true` and sums weights (because equal-mean runs are piles).
 /// This is used by Stage **1**.
-pub fn coalesce_adjacent_equal_means(xs: Vec<Centroid>) -> Vec<Centroid> {
-    if xs.len() <= 1 {
-        return xs;
+pub fn coalesce_adjacent_equal_means(values: Vec<Centroid>) -> Vec<Centroid> {
+    if values.len() <= 1 {
+        return values;
     }
-    let mut out: Vec<Centroid> = Vec::with_capacity(xs.len());
-    let mut acc = xs[0];
-    for c in xs.into_iter().skip(1) {
+    let mut out: Vec<Centroid> = Vec::with_capacity(values.len());
+    let mut acc = values[0];
+    for c in values.into_iter().skip(1) {
         if c.mean() == acc.mean() {
             let w = acc.weight() + c.weight();
             acc = Centroid::new_singleton(acc.mean(), w);
@@ -160,13 +160,13 @@ pub fn coalesce_adjacent_equal_means(xs: Vec<Centroid>) -> Vec<Centroid> {
 
 /// Same as [`coalesce_adjacent_equal_means`] but never marks the merged result as a singleton.
 /// Useful for producer variants that want to force mixed semantics.
-pub fn coalesce_adjacent_equal_means_no_singleton(xs: Vec<Centroid>) -> Vec<Centroid> {
-    if xs.len() <= 1 {
-        return xs;
+pub fn coalesce_adjacent_equal_means_no_singleton(values: Vec<Centroid>) -> Vec<Centroid> {
+    if values.len() <= 1 {
+        return values;
     }
-    let mut out: Vec<Centroid> = Vec::with_capacity(xs.len());
-    let mut acc = xs[0];
-    for c in xs.into_iter().skip(1) {
+    let mut out: Vec<Centroid> = Vec::with_capacity(values.len());
+    let mut acc = values[0];
+    for c in values.into_iter().skip(1) {
         if c.mean() == acc.mean() {
             let w = acc.weight() + c.weight();
             acc = Centroid::new_mixed(acc.mean(), w);

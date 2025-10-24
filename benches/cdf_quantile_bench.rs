@@ -47,15 +47,15 @@ fn bench_cdf_light(c: &mut Criterion) {
         group.measurement_time(Duration::from_secs(3));
         group.throughput(Throughput::Elements(m as u64));
 
-        let xs: Vec<f64> = (0..m).map(|i| i as f64 / m as f64).collect();
+        let values: Vec<f64> = (0..m).map(|i| i as f64 / m as f64).collect();
 
         // Base digest for this size (Mixture is a nice stressor; K2 is your current fave)
         let td = build_digest(DistKind::Mixture, m, 1_000, ScaleFamily::K2, 4242);
 
         // light
-        group.bench_with_input(BenchmarkId::new("cdf", m), &xs, |b, xs| {
+        group.bench_with_input(BenchmarkId::new("cdf", m), &values, |b, values| {
             b.iter(|| {
-                let out = td.cdf(black_box(xs));
+                let out = td.cdf(black_box(values));
                 black_box(out[out.len() / 2])
             });
         });
@@ -70,7 +70,7 @@ fn bench_cdf_light(c: &mut Criterion) {
         // 2) One evaluation footprint (keep both digest and output Vec alive)
         let ((_td_eval_hold, _out_hold), eval_bytes) = alloc_bytes_hold(|| {
             let td2 = build_digest(DistKind::Mixture, m, 1_000, ScaleFamily::K2, 4242);
-            let out = td2.cdf(&xs);
+            let out = td2.cdf(&values);
             (td2, out)
         });
 

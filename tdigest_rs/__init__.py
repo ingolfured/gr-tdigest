@@ -37,9 +37,9 @@ __all__ = [
     "ScaleFamily",
     "StorageSchema",
     "tdigest",
-    "estimate_quantile",
-    "estimate_cdf",
-    "estimate_median",
+    "quantile",
+    "cdf",
+    "median",
     "merge_tdigests",
 ]
 
@@ -109,38 +109,38 @@ def tdigest(
     )
 
 
-def estimate_quantile(expr: "IntoExpr", quantile: float) -> pl.Expr:
+def quantile(expr: "IntoExpr", q: float) -> pl.Expr:
     """Estimate a quantile from a TDigest column."""
     return register_plugin_function(
         plugin_path=lib,
-        function_name="estimate_quantile",
+        function_name="quantile",
         args=expr,
         is_elementwise=False,
         returns_scalar=True,
-        kwargs={"quantile": quantile},
+        kwargs={"q": q},
     )
 
 
-def estimate_cdf(
+def cdf(
     expr: "IntoExpr",
-    xs: Union[float, int, Sequence[float], pl.Series, pl.Expr],
+    values: Union[float, int, Sequence[float], pl.Series, pl.Expr],
 ) -> pl.Expr:
     """Estimate CDF(x) for one or many x values from a TDigest column."""
     return register_plugin_function(
         plugin_path=lib,
-        function_name="estimate_cdf",
+        function_name="cdf",
         args=expr,
         is_elementwise=False,
         returns_scalar=False,
-        kwargs={"xs": xs},
+        kwargs={"values": values},
     )
 
 
-def estimate_median(expr: "IntoExpr") -> pl.Expr:
+def median(expr: "IntoExpr") -> pl.Expr:
     """Convenience wrapper for the 0.5 quantile."""
     return register_plugin_function(
         plugin_path=lib,
-        function_name="estimate_median",
+        function_name="median",
         args=expr,
         is_elementwise=False,
         returns_scalar=True,
