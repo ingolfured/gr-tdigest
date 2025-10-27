@@ -1,11 +1,11 @@
 from __future__ import annotations
+import polars as pl
 
 from enum import Enum
 from importlib.metadata import PackageNotFoundError, version
 from pathlib import Path
-from typing import TYPE_CHECKING, Sequence, Union
+from typing import TYPE_CHECKING
 
-import polars as pl
 from polars.plugins import register_plugin_function
 
 if TYPE_CHECKING:
@@ -120,18 +120,14 @@ def quantile(expr: "IntoExpr", q: float) -> pl.Expr:
     )
 
 
-def cdf(
-    expr: "IntoExpr",
-    values: Union[float, int, Sequence[float], pl.Series, pl.Expr],
-) -> pl.Expr:
-    """Estimate CDF(x) for one or many x values from a TDigest column."""
+def cdf(td_expr: pl.Expr, values_expr: pl.Expr) -> pl.Expr:
     return register_plugin_function(
         plugin_path=lib,
         function_name="cdf",
-        args=expr,
+        args=[td_expr, values_expr],
         is_elementwise=False,
         returns_scalar=False,
-        kwargs={"values": values},
+        changes_length=True,
     )
 
 

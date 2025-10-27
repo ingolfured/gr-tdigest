@@ -1,6 +1,7 @@
 #![cfg(feature = "python")]
 #![allow(clippy::unused_unit)]
 
+use polars::prelude::ListChunked;
 use polars::prelude::*;
 use polars_core::utils::arrow::array::Float64Array;
 use polars_core::POOL;
@@ -21,9 +22,142 @@ const SUPPORTED_TYPES: &[DataType] = &[
     DataType::UInt32,
 ];
 
+fn cdf_output_dtype(inputs: &[Field]) -> PolarsResult<Field> {
+    let vdt = inputs.get(1).map(|f| f.dtype()).unwrap_or(&DataType::Null);
+    let out = match vdt {
+        DataType::List(inner) => match inner.as_ref() {
+            DataType::Float32 => DataType::List(Box::new(DataType::Float32)),
+            _ => DataType::List(Box::new(DataType::Float64)),
+        },
+        DataType::Float32 => DataType::Float32,
+        _ => DataType::Float64,
+    };
+    Ok(Field::new("".into(), out))
+}
+
 #[polars_expr(output_type_func = cdf_output_dtype)]
-fn cdf(inputs: &[Series], kwargs: CdfKwargs) -> PolarsResult<Series> {
-    cdf_impl(inputs, kwargs.values)
+fn cdf(inputs: &[Series]) -> PolarsResult<Series> {
+    polars_ensure!(inputs.len() == 2, ComputeError: "`cdf` expects (digest, values)");
+    let digest_s = &inputs[0];
+    let values_s = &inputs[1];
+
+    // Decode one TDigest per row (codec handles canonical/compact)
+    let digests = TDigest::from_series(digest_s, false)
+        .or_else(|_| TDigest::from_series(digest_s, true))
+        .unwrap_or_default();
+
+    let digest_len = digest_s.len();
+
+    // Detect broadcast: exactly one non-empty digest across all rows
+    let mut non_empty_iter = digests.iter().filter(|td| !td.is_empty());
+    let single_non_empty = match (non_empty_iter.next(), non_empty_iter.next()) {
+        (Some(td0), None) => Some(td0.clone()), // exactly one non-empty
+        _ => None,
+    };
+
+    match values_s.dtype() {
+        // Per-row list of query points → per-row list of CDFs
+        DataType::List(inner) => {
+            let inner_is_f32 = matches!(inner.as_ref(), DataType::Float32);
+            let lc = values_s.list()?;
+
+            // Special-case: single digest row + single list row → flat vector output
+            if digest_len == 1 && lc.len() == 1 {
+                let td = digests.get(0).cloned().unwrap_or_default();
+                let sub: Series = lc
+                    .get_as_series(0)
+                    .unwrap_or_else(|| Series::new("".into(), Vec::<f64>::new()));
+
+                let vals_f64: Vec<f64> = if sub.dtype() == &DataType::Float64 {
+                    sub.f64()?.into_no_null_iter().collect()
+                } else {
+                    let cast_sub: Series = sub.cast(&DataType::Float64)?;
+                    cast_sub.f64()?.into_no_null_iter().collect()
+                };
+
+                let out_f64 = td.cdf(&vals_f64);
+                return if inner_is_f32 {
+                    Ok(Series::new(
+                        "".into(),
+                        out_f64.into_iter().map(|x| x as f32).collect::<Vec<f32>>(),
+                    ))
+                } else {
+                    Ok(Series::new("".into(), out_f64))
+                };
+            }
+
+            // General case: list-per-row output
+            let mut rows: Vec<Series> = Vec::with_capacity(lc.len());
+            for i in 0..lc.len() {
+                let td = match &single_non_empty {
+                    Some(td0) => td0.clone(),
+                    None => digests.get(i).cloned().unwrap_or_default(),
+                };
+
+                let sub: Series = lc
+                    .get_as_series(i)
+                    .unwrap_or_else(|| Series::new("".into(), Vec::<f64>::new()));
+
+                let vals_f64: Vec<f64> = if sub.dtype() == &DataType::Float64 {
+                    sub.f64()?.into_no_null_iter().collect()
+                } else {
+                    let cast_sub: Series = sub.cast(&DataType::Float64)?;
+                    cast_sub.f64()?.into_no_null_iter().collect()
+                };
+
+                let out_f64 = td.cdf(&vals_f64);
+                if inner_is_f32 {
+                    rows.push(Series::new(
+                        "".into(),
+                        out_f64.into_iter().map(|x| x as f32).collect::<Vec<f32>>(),
+                    ));
+                } else {
+                    rows.push(Series::new("".into(), out_f64));
+                }
+            }
+
+            let out_lc: ListChunked = rows.into_iter().collect();
+            Ok(out_lc.into_series())
+        }
+
+        // Scalar Float32 column (or broadcasted literal) → Float32 output
+        DataType::Float32 => {
+            let vals = values_s.f32()?;
+            let mut out: Vec<Option<f32>> = Vec::with_capacity(values_s.len());
+
+            if let Some(td0) = single_non_empty {
+                // Reuse the single non-empty digest for all rows (handles broadcast)
+                for vx in vals {
+                    out.push(vx.map(|x| td0.cdf(&[x as f64])[0] as f32));
+                }
+            } else {
+                for (i, vx) in vals.into_iter().enumerate() {
+                    let td = digests.get(i).cloned().unwrap_or_default();
+                    out.push(vx.map(|x| td.cdf(&[x as f64])[0] as f32));
+                }
+            }
+            Ok(Series::new("".into(), out))
+        }
+
+        // Scalar (default → Float64) column (or broadcasted literal) → Float64 output
+        _ => {
+            let cast: Series = values_s.cast(&DataType::Float64)?;
+            let vals = cast.f64()?;
+            let mut out: Vec<Option<f64>> = Vec::with_capacity(values_s.len());
+
+            if let Some(td0) = single_non_empty {
+                for vx in vals {
+                    out.push(vx.map(|x| td0.cdf(&[x])[0]));
+                }
+            } else {
+                for (i, vx) in vals.into_iter().enumerate() {
+                    let td = digests.get(i).cloned().unwrap_or_default();
+                    out.push(vx.map(|x| td.cdf(&[x])[0]));
+                }
+            }
+            Ok(Series::new("".into(), out))
+        }
+    }
 }
 
 #[polars_expr(output_type_func = quantile_output_dtype)]
@@ -85,12 +219,6 @@ fn tdigest_summary(inputs: &[Series]) -> PolarsResult<Series> {
 struct QuantileKwargs {
     /// Scalar probability in [0,1]
     q: f64,
-}
-
-#[derive(Debug, Deserialize)]
-struct CdfKwargs {
-    /// Query values
-    values: Vec<f64>,
 }
 
 // Defaults: max_size=1000, scale=K2, singleton_policy=Use
@@ -185,20 +313,6 @@ fn is_compact_digest_dtype(dt: &DataType) -> bool {
         }
     }
     false
-}
-
-/// Output dtype for `cdf`: Float32 if input digest is compact, else Float64.
-fn cdf_output_dtype(input_fields: &[Field]) -> PolarsResult<Field> {
-    let dt = input_fields
-        .get(0)
-        .map(|f| f.dtype())
-        .unwrap_or(&DataType::Null);
-    let out = if is_compact_digest_dtype(dt) {
-        DataType::Float32
-    } else {
-        DataType::Float64
-    };
-    Ok(Field::new("".into(), out))
 }
 
 /// Output dtype for `quantile`: Float32 if input digest is compact, else Float64.
@@ -333,28 +447,5 @@ fn quantile_impl(inputs: &[Series], q: f64) -> PolarsResult<Series> {
         } else {
             Ok(Series::new("".into(), [Some(val)]))
         }
-    }
-}
-
-fn cdf_impl(inputs: &[Series], values: Vec<f64>) -> PolarsResult<Series> {
-    let td = parse_tdigest(&inputs[..1]);
-
-    let digest_dt = inputs[0].dtype();
-    let want_f32 = is_compact_digest_dtype(digest_dt);
-
-    if td.is_empty() {
-        if want_f32 {
-            return Ok(Series::new("".into(), vec![None::<f32>]));
-        } else {
-            return Ok(Series::new("".into(), vec![None::<f64>]));
-        }
-    }
-
-    let out_f64 = td.cdf(&values);
-    if want_f32 {
-        let out_f32: Vec<f32> = out_f64.into_iter().map(|v| v as f32).collect();
-        Ok(Series::new("".into(), out_f32))
-    } else {
-        Ok(Series::new("".into(), out_f64))
     }
 }
