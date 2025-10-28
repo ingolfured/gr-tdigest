@@ -330,7 +330,7 @@ def _cdf_patched(self: Any, x: Any) -> Any:
     """
     # Non-iterables (scalars) raise TypeError on iter()
     try:
-        iter(x)
+        iter(x)  # type: ignore[arg-type]
         return _TDIGEST_CDF_ORIG(self, x)
     except TypeError:
         out = _TDIGEST_CDF_ORIG(self, [x])
