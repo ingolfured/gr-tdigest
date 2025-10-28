@@ -71,7 +71,6 @@ def test_tdigest_f32_has_lower_precision_than_f64():
 def test_groupwise_tdigest_and_cdf():
     import numpy as np
     import polars as pl
-    # import tdigest_rs as tdrs
 
     np.random.seed(42)
     test_df = pl.DataFrame(
@@ -81,7 +80,6 @@ def test_groupwise_tdigest_and_cdf():
         }
     )
 
-    # Build per-group digest (using only positives, as in your original)
     digest_df = test_df.group_by("group").agg(
         tdigest(
             pl.when(pl.col("data") > 0).then(pl.col("data").cast(pl.Float32)).otherwise(pl.lit(None)),

@@ -230,8 +230,8 @@ impl TDigest {
 
 #[cfg(test)]
 mod tests {
-    use crate::tdigest::tdigest::TDigestBuilder;
     use crate::tdigest::test_helpers::*;
+    use crate::tdigest::TDigestBuilder;
 
     #[test]
     fn centroid_addition_regression_pr_1() {

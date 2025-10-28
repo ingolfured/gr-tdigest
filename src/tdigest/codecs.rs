@@ -13,10 +13,47 @@
 //!   try_to_series\[_compact], try_from_series\[_compact]
 
 use std::fmt;
+use std::collections::HashMap;
 
 use polars::prelude::*;
 
 use crate::tdigest::{centroids::Centroid, DigestStats, TDigest};
+use polars::prelude::LargeListArray; // LargeListArray alias exported by Polars
+
+#[inline]
+fn chunk_lengths_of_list(lc: &ListChunked) -> Vec<usize> {
+    lc.chunks().iter().map(|arr| arr.len()).collect()
+}
+
+
+#[inline]
+fn list_element_identity(lc: &ListChunked, row_idx: usize) -> (usize, i64, i64) {
+    let mut base = 0usize;
+    for arr in lc.chunks().iter() {
+        let len = arr.len();
+        if row_idx < base + len {
+            let list = arr
+                .as_any()
+                .downcast_ref::<LargeListArray>()
+                .expect("expected LargeListArray for List dtype");
+
+            let local = row_idx - base;
+            let offs = list.offsets().as_slice();
+            let start = offs[local];
+            let end   = offs[local + 1];
+
+            // Use ONLY the child values buffer pointer as identity root.
+            // This stays stable across joins/takes even when offsets buffers are rebuilt.
+            let values_ptr = (list.values() as *const _) as usize;
+
+            return (values_ptr, start, end);
+        }
+        base += len;
+    }
+    (0, 0, 0)
+}
+
+
 
 // --------------------- field name constants ----------------------------------
 
@@ -497,91 +534,84 @@ fn parse_tdigests_strict(input: &Series, mode: PrecisionMode) -> Result<Vec<TDig
         found: Box::new(maxsz_field.dtype().clone()),
         expected: Box::new(DataType::Int64),
     })?;
-
-    let n = input.len();
+        let n = input.len();
     let mut out = Vec::with_capacity(n);
 
+    // NEW: tiny per-call reuse table keyed by physical list identity.
+    // Size ~ number of UNIQUE digests in this column (often ≪ number of rows).
+    let mut reuse: HashMap<(usize, i64, i64), TDigest> = HashMap::with_capacity(64);
+
+
+    // Optional: speeds up turning row index -> chunk/offset if you need it elsewhere
+    let _chunk_lens = chunk_lengths_of_list(centroids_list);
+
     for i in 0..n {
-        let sum = sum_col.get(i).ok_or(CodecError::NullField {
-            field: F_SUM,
-            row: i,
-        })?;
-        let count = count_col.get(i).ok_or(CodecError::NullField {
-            field: F_COUNT,
-            row: i,
-        })?;
-        let max_size_i64 = maxsz_col.get(i).ok_or(CodecError::NullField {
-            field: F_MAX_SIZE,
-            row: i,
-        })?;
+        let sum = sum_col.get(i).ok_or(CodecError::NullField { field: F_SUM, row: i })?;
+        let count = count_col.get(i).ok_or(CodecError::NullField { field: F_COUNT, row: i })?;
+        let max_size_i64 = maxsz_col.get(i).ok_or(CodecError::NullField { field: F_MAX_SIZE, row: i })?;
         let max_size = max_size_i64 as usize;
 
         let min = match mode {
             PrecisionMode::Canonical => {
                 let col = min_field.f64().map_err(|_| CodecError::WrongDtype {
-                    field: F_MIN,
-                    found: Box::new(min_field.dtype().clone()),
+                    field: F_MIN, found: Box::new(min_field.dtype().clone()),
                     expected: Box::new(DataType::Float64),
                 })?;
-                col.get(i).ok_or(CodecError::NullField {
-                    field: F_MIN,
-                    row: i,
-                })?
+                col.get(i).ok_or(CodecError::NullField { field: F_MIN, row: i })?
             }
             PrecisionMode::Compact => {
                 let col = min_field.f32().map_err(|_| CodecError::WrongDtype {
-                    field: F_MIN,
-                    found: Box::new(min_field.dtype().clone()),
+                    field: F_MIN, found: Box::new(min_field.dtype().clone()),
                     expected: Box::new(DataType::Float32),
                 })?;
-                col.get(i).ok_or(CodecError::NullField {
-                    field: F_MIN,
-                    row: i,
-                })? as f64
+                col.get(i).ok_or(CodecError::NullField { field: F_MIN, row: i })? as f64
             }
         };
 
         let max = match mode {
             PrecisionMode::Canonical => {
                 let col = max_field.f64().map_err(|_| CodecError::WrongDtype {
-                    field: F_MAX,
-                    found: Box::new(max_field.dtype().clone()),
+                    field: F_MAX, found: Box::new(max_field.dtype().clone()),
                     expected: Box::new(DataType::Float64),
                 })?;
-                col.get(i).ok_or(CodecError::NullField {
-                    field: F_MAX,
-                    row: i,
-                })?
+                col.get(i).ok_or(CodecError::NullField { field: F_MAX, row: i })?
             }
             PrecisionMode::Compact => {
                 let col = max_field.f32().map_err(|_| CodecError::WrongDtype {
-                    field: F_MAX,
-                    found: Box::new(max_field.dtype().clone()),
+                    field: F_MAX, found: Box::new(max_field.dtype().clone()),
                     expected: Box::new(DataType::Float32),
                 })?;
-                col.get(i).ok_or(CodecError::NullField {
-                    field: F_MAX,
-                    row: i,
-                })? as f64
+                col.get(i).ok_or(CodecError::NullField { field: F_MAX, row: i })? as f64
             }
         };
 
-        let cents = unpack_centroids_strict(centroids_list, i, mode)?;
-        out.push(
-            TDigest::builder()
-                .max_size(max_size)
-                .with_centroids_and_stats(
-                    cents,
-                    DigestStats {
-                        data_sum: sum,
-                        total_weight: count,
-                        data_min: min,
-                        data_max: max,
-                    },
-                )
-                .build(),
-        );
-    }
+        // 🔑 Physical identity of this row's centroids list element.
+        let key = list_element_identity(centroids_list, i);
 
+        if let Some(td) = reuse.get(&key) {
+            // Cheap clone; shares Arc<Vec<Centroid>>
+            out.push(td.clone());
+            continue;
+        }
+
+        // First time we see this physical list slice → actually unpack it.
+        let cents = unpack_centroids_strict(centroids_list, i, mode)?;
+        let td = TDigest::builder()
+            .max_size(max_size)
+            .with_centroids_and_stats(
+                cents,
+                DigestStats {
+                    data_sum: sum,
+                    total_weight: count,
+                    data_min: min,
+                    data_max: max,
+                },
+            )
+            .build();
+
+        reuse.insert(key, td.clone());
+        out.push(td);
+
+    }
     Ok(out)
 }

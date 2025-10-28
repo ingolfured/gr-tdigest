@@ -1,3 +1,5 @@
+use std::sync::Arc;
+
 use ordered_float::OrderedFloat;
 
 use crate::tdigest::centroids::{is_sorted_strict_by_mean, Centroid};
@@ -6,7 +8,7 @@ use crate::tdigest::merges::{KWayCentroidMerge, MergeByMean};
 use crate::tdigest::scale::ScaleFamily;
 use crate::tdigest::singleton_policy::SingletonPolicy;
 
-use serde::{Deserialize, Serialize};
+use serde::{Deserialize, Deserializer, Serialize, Serializer};
 
 /// TDigest orchestration + public API.
 ///
@@ -25,13 +27,9 @@ use serde::{Deserialize, Serialize};
 /// 5) **Assemble** — concatenate left edges + interior + right edges without mutation.
 /// 6) **Post (policy finalization)** — policy-specific final pass (e.g., total cap for `Use`).
 ///
-/// This structure keeps behavior deterministic and testable while making it obvious **where**
-/// to change things (scale families only affect stage 3; tail policies only affect stages 2/6).
-///
 /// ## Public ingestion paths
 /// - [`TDigest::merge_sorted`] / [`TDigest::merge_unsorted`]: raw values via a *merge-by-mean* producer.
 /// - [`TDigest::merge_digests`]: multiple digests via a *k-way centroid merge*.
-/// - All paths end in the **same** compression pipeline (see `compress_into`).
 ///
 /// ### Invariants preserved
 /// - Strictly increasing centroid means (no duplicates).
@@ -41,7 +39,12 @@ use serde::{Deserialize, Serialize};
 ///   - edge/tail protection belongs to **Slice**/**Post**.
 #[derive(Debug, PartialEq, Clone, Serialize, Deserialize)]
 pub struct TDigest {
-    centroids: Vec<Centroid>,
+    // Heavy payload behind Arc so clones are cheap.
+    #[serde(
+        serialize_with = "ser_arc_vec_centroid",
+        deserialize_with = "de_arc_vec_centroid"
+    )]
+    centroids: Arc<Vec<Centroid>>,
     max_size: usize,
     sum: OrderedFloat<f64>,
     count: OrderedFloat<f64>,
@@ -51,17 +54,31 @@ pub struct TDigest {
     policy: SingletonPolicy,
 }
 
+fn ser_arc_vec_centroid<S>(v: &Arc<Vec<Centroid>>, s: S) -> Result<S::Ok, S::Error>
+where
+    S: Serializer,
+{
+    v.as_ref().serialize(s)
+}
+fn de_arc_vec_centroid<'de, D>(d: D) -> Result<Arc<Vec<Centroid>>, D::Error>
+where
+    D: Deserializer<'de>,
+{
+    let vec = <Vec<Centroid>>::deserialize(d)?;
+    Ok(Arc::new(vec))
+}
+
 impl Default for TDigest {
     fn default() -> Self {
         TDigest {
-            centroids: Vec::new(),
-            max_size: 1000, // default compression parameter
+            centroids: Arc::new(Vec::new()),
+            max_size: 1000,
             sum: OrderedFloat::from(0.0),
             count: OrderedFloat::from(0.0),
             max: OrderedFloat::from(f64::NAN),
             min: OrderedFloat::from(f64::NAN),
-            scale: ScaleFamily::K2,       // default scale
-            policy: SingletonPolicy::Use, // default singleton policy
+            scale: ScaleFamily::K2,
+            policy: SingletonPolicy::Use,
         }
     }
 }
@@ -119,22 +136,11 @@ impl TDigest {
             .scale(opts.scale)
             .singleton_policy(opts.singleton_policy)
             .build();
-        // If/when you add true f32 centroid storage, read opts.f32_mode here.
         base.merge_unsorted(arr.into_f64_vec())
     }
 }
 
 /// Builder for [`TDigest`].
-///
-/// Use the builder when you want to:
-/// - construct an empty digest with chosen parameters, or
-/// - seed a digest with *existing centroids* and *data-level stats*.
-///
-/// Seeding helpers:
-/// - [`TDigestBuilder::with_centroids_and_stats`] — pass centroids + [`DigestStats`].
-/// - [`TDigestBuilder::with_centroids`] — convenience to pass raw fields with optional
-///   `max_size_override` (mirrors how [`TDigest::new`] may temporarily exceed capacity and
-///   then compress down).
 #[derive(Debug, Clone)]
 pub struct TDigestBuilder {
     max_size: usize,
@@ -160,33 +166,21 @@ impl Default for TDigestBuilder {
 }
 
 impl TDigestBuilder {
-    /// Create a new builder with defaults.
     pub fn new() -> Self {
         Self::default()
     }
-
-    /// Set the compression parameter (`max_size`).
     pub fn max_size(mut self, n: usize) -> Self {
         self.max_size = n;
         self
     }
-
-    /// Choose the scale family used by the k-limit (Stage **3**).
     pub fn scale(mut self, s: ScaleFamily) -> Self {
         self.scale = s;
         self
     }
-
-    /// Set the singleton/edge policy influencing Stages **2** and **6**.
     pub fn singleton_policy(mut self, p: SingletonPolicy) -> Self {
         self.policy = p;
         self
     }
-
-    /// Seed with centroids + data-level stats.
-    ///
-    /// Use this to construct a digest from a pre-computed set of centroids where
-    /// you also know the data-level ∑x/∑w/min/max.
     pub fn with_centroids_and_stats(
         mut self,
         centroids: Vec<Centroid>,
@@ -196,12 +190,6 @@ impl TDigestBuilder {
         self.init_stats = Some(stats);
         self
     }
-
-    /// Seed with centroids and raw stats (convenience mirror of [`TDigest::new`]).
-    ///
-    /// If the given `centroids.len()` exceeds `max_size_override`, construction will
-    /// mirror the behavior of [`TDigest::new`]: temporarily hold the large set
-    /// and compress through the pipeline to respect capacity.
     pub fn with_centroids(
         mut self,
         centroids: Vec<Centroid>,
@@ -222,14 +210,11 @@ impl TDigestBuilder {
         self.override_max_size = Some(max_size_override);
         self
     }
-
-    /// Build the digest, seeding if seeds were provided.
     pub fn build(self) -> TDigest {
-        // If seeded, construct directly from the provided centroids and stats.
         if let (Some(cents), Some(st)) = (self.init_centroids, self.init_stats) {
             let max_size = self.override_max_size.unwrap_or(self.max_size);
             TDigest {
-                centroids: cents,
+                centroids: Arc::new(cents),
                 max_size,
                 sum: OrderedFloat(st.data_sum),
                 count: OrderedFloat(st.total_weight),
@@ -240,7 +225,7 @@ impl TDigestBuilder {
             }
         } else {
             TDigest {
-                centroids: Vec::new(),
+                centroids: Arc::new(Vec::new()),
                 max_size: self.max_size,
                 sum: 0.0.into(),
                 count: 0.0.into(),
@@ -253,16 +238,12 @@ impl TDigestBuilder {
     }
 }
 
-/// Data-level stats for seeding a digest (∑x/∑w/min/max of the **raw data**, not centroids).
+/// Data-level stats for seeding a digest.
 #[derive(Debug, Clone, Copy)]
 pub struct DigestStats {
-    /// Sum of raw data values (∑x), not sum of centroid means.
     pub data_sum: f64,
-    /// Total weight (∑w). For raw samples this equals the sample count.
     pub total_weight: f64,
-    /// Minimum observed raw value.
     pub data_min: f64,
-    /// Maximum observed raw value.
     pub data_max: f64,
 }
 
@@ -290,37 +271,28 @@ impl TDigest {
         self.max = OrderedFloat(v);
     }
 
-    /// Build from **unsorted** values (convenience over [`TDigest::merge_unsorted`]).
+    /// Build from **unsorted** values (convenience).
     pub fn from_unsorted(values: &[f64], max_size: usize) -> TDigest {
         let base = TDigest::builder().max_size(max_size).build();
         base.merge_unsorted(values.to_vec())
     }
 
-    /// The configured scale family used by the compressor’s k-limit.
     #[inline]
     pub fn scale(&self) -> ScaleFamily {
         self.scale
     }
-
-    /// The configured singleton/edge policy.
     #[inline]
     pub fn singleton_policy(&self) -> SingletonPolicy {
         self.policy
     }
 
-    /// Ingest **unsorted** values; behavior matches [`TDigest::merge_sorted`] after sorting.
-    ///
-    /// Producer: *merge-by-mean* over sorted values interleaved with existing centroids.
-    /// Pipeline: passes through **(1→6)** via `compress_into`.
+    /// Ingest **unsorted** values; behavior matches `merge_sorted` after sorting.
     pub fn merge_unsorted(&self, mut unsorted_values: Vec<f64>) -> TDigest {
         unsorted_values.sort_by(|a, b| a.total_cmp(b));
         self.merge_sorted(unsorted_values)
     }
 
     /// Ingest **sorted** values by interleaving with existing centroids and running the pipeline.
-    ///
-    /// Producer: *merge-by-mean*.
-    /// Pipeline: **(1 Normalize → 2 Slice → 3 k-limit Merge → 4 Cap → 5 Assemble → 6 Post)**.
     pub fn merge_sorted(&self, sorted_values: Vec<f64>) -> TDigest {
         if sorted_values.is_empty() {
             return self.clone();
@@ -329,31 +301,24 @@ impl TDigest {
 
         // Producer: ordered stream of centroids + value runs (no coalescing here).
         let stream = MergeByMean::from_centroids_and_values(
-            &self.centroids,
+            &self.centroids[..],
             &sorted_values,
-            // mark value runs as singletons unless policy says Off
             !matches!(self.policy, SingletonPolicy::Off),
         );
 
         // Pipeline: Normalize → Slice → Merge(k-limit) → Cap → Assemble → Post
         let compressed = compress_into(&mut result, self.max_size, stream);
-        result.centroids = compressed;
+        result.centroids = Arc::new(compressed);
 
-        // Strong invariant: strictly increasing means (no duplicates).
         debug_assert!(
-            is_sorted_strict_by_mean(&result.centroids),
+            is_sorted_strict_by_mean(&result.centroids[..]),
             "duplicate centroid means after merge"
         );
         result
     }
 
-    /// Merge multiple digests by k-way merging their centroid runs and sending the result through
-    /// the same pipeline used for raw values.
-    ///
-    /// Producer: *k-way centroid merge* (coalesces equal-mean heads).
-    /// Pipeline: **(1→6)** via `compress_into`.
+    /// Merge multiple digests via k-way centroid merge.
     pub fn merge_digests(digests: Vec<TDigest>) -> TDigest {
-        // Decide max_size/scale/policy by first non-empty digest to keep semantics stable.
         let mut chosen = TDigest::default();
         let mut runs: Vec<&[Centroid]> = Vec::with_capacity(digests.len());
         let mut total_count = 0.0;
@@ -371,7 +336,7 @@ impl TDigest {
                 total_count += n;
                 min = std::cmp::min(min, d.min);
                 max = std::cmp::max(max, d.max);
-                runs.push(&d.centroids);
+                runs.push(&d.centroids[..]);
             }
         }
         if total_count == 0.0 {
@@ -379,7 +344,7 @@ impl TDigest {
         }
 
         let mut result = TDigest {
-            centroids: Vec::new(),
+            centroids: Arc::new(Vec::new()),
             max_size: chosen.max_size,
             sum: 0.0.into(),
             count: total_count.into(),
@@ -389,15 +354,13 @@ impl TDigest {
             policy: chosen.policy,
         };
 
-        // Producer: k-way merge of centroid runs (no extra coalescing beyond equal-mean heads).
         let merged_stream = KWayCentroidMerge::new(runs);
 
-        // Same pipeline as values.
         let compressed = compress_into(&mut result, chosen.max_size, merged_stream);
-        result.centroids = compressed;
+        result.centroids = Arc::new(compressed);
 
         debug_assert!(
-            is_sorted_strict_by_mean(&result.centroids),
+            is_sorted_strict_by_mean(&result.centroids[..]),
             "duplicate centroid means after merge_digests"
         );
         result
@@ -408,10 +371,6 @@ impl TDigest {
      * =========================== */
 
     /// Construct a digest from raw centroids + stats.
-    ///
-    /// If `centroids.len() > max_size`, this creates a temporary large digest (via the builder)
-    /// and then merges down through the pipeline to respect capacity. This mirrors the case where
-    /// a producer generates more than `max_size` centroids and requires compression.
     pub fn new(
         centroids: Vec<Centroid>,
         sum: f64,
@@ -422,7 +381,7 @@ impl TDigest {
     ) -> Self {
         if centroids.len() <= max_size {
             TDigest {
-                centroids,
+                centroids: Arc::new(centroids),
                 max_size,
                 sum: OrderedFloat::from(sum),
                 count: OrderedFloat::from(count),
@@ -453,38 +412,26 @@ impl TDigest {
             0.0
         }
     }
-
-    /// Sum of raw values (∑x).
     #[inline]
     pub fn sum(&self) -> f64 {
         self.sum.into_inner()
     }
-
-    /// Total weight (∑w). For raw samples, this equals the sample count.
     #[inline]
     pub fn count(&self) -> f64 {
         self.count.into_inner()
     }
-
-    /// Maximum observed raw value.
     #[inline]
     pub fn max(&self) -> f64 {
         self.max.into_inner()
     }
-
-    /// Minimum observed raw value.
     #[inline]
     pub fn min(&self) -> f64 {
         self.min.into_inner()
     }
-
-    /// Whether the digest currently has no centroids.
     #[inline]
     pub fn is_empty(&self) -> bool {
         self.centroids.is_empty()
     }
-
-    /// The configured compression parameter.
     #[inline]
     pub fn max_size(&self) -> usize {
         self.max_size
@@ -493,16 +440,13 @@ impl TDigest {
     /// Borrow the internal centroids.
     #[inline]
     pub fn centroids(&self) -> &[Centroid] {
-        &self.centroids
+        &self.centroids[..]
     }
 
     /// Prepare a result shell when ingesting a batch of **sorted** raw values.
-    ///
-    /// Sets `count` to existing `∑w + values.len()`, resets `sum` to be filled by Stage **1**,
-    /// and updates min/max by comparing current bounds with the new batch.
     fn new_result_for_values(&self, values: &[f64]) -> TDigest {
         let mut r = TDigest {
-            centroids: Vec::new(),
+            centroids: Arc::new(Vec::new()),
             max_size: self.max_size(),
             sum: 0.0.into(),
             count: (self.count() + values.len() as f64).into(),
