@@ -1,3 +1,4 @@
+#![allow(clippy::module_inception)]
 //! t-digest core types and public API.
 //!
 //! - [`TDigest`] — main data structure and builder.
@@ -20,10 +21,10 @@ pub mod quantile;
 pub mod scale;
 pub mod singleton_policy;
 
-pub use self::scale::ScaleFamily;
-pub use self::tdigest::*;
-
 pub mod tdigest;
+
+pub use self::scale::ScaleFamily;
+pub use self::tdigest::{DigestStats, TDigest, TDigestBuilder};
 
 #[cfg(test)]
 mod test_helpers;

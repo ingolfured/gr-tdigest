@@ -16,7 +16,7 @@ STYLE_OK    := $(shell tput setaf 2 2>/dev/null || printf '\033[32m')
 STYLE_ERR   := $(shell tput setaf 1 2>/dev/null || printf '\033[31m')
 STYLE_BOLD  := $(shell tput bold 2>/dev/null     || printf '\033[1m')
 STYLE_RESET := $(shell tput sgr0 2>/dev/null     || printf '\033[0m')
-STYLE_CODE  := $(shell tput setaf 6 2>/dev/null || printf '\033[36m')  # cyan for code/examples
+STYLE_CODE  := $(shell tput setaf 6 2>/dev/null || printf '\033[36m')
 
 define banner
 	@printf "\n$(STYLE_BOLD)==> %s$(STYLE_RESET)\n" "$(1)"
@@ -39,11 +39,22 @@ UV     ?= uv
 JAVAC  ?= javac
 JAVA   ?= java
 JAR    ?= jar
-PYTHON ?= python3
 
-JAVA_SRC := src-java
-LIB_DIR  := target/release
-CP_DEV   := target/java-classes
+# Java sources
+JAVA_SRC := bindings/java
+
+# Build profile (dev by default). Release only in release-* targets.
+PROFILE ?= dev
+ifeq ($(PROFILE),release)
+  CARGO_PROFILE_FLAG := --release
+  CARGO_DIR := release
+else
+  CARGO_PROFILE_FLAG :=
+  CARGO_DIR := debug
+endif
+
+LIB_DIR  := target/$(CARGO_DIR)
+CP_DEV   := target/java-classes   # compiled .class output
 
 # Version (from Cargo.toml)
 VER := $(shell sed -n 's/^version\s*=\s*"\(.*\)"/\1/p' Cargo.toml | head -1)
@@ -91,40 +102,21 @@ STAGE          := target/jar-staging
 CLI_BIN  ?= tdigest
 CLI_PATH := $(LIB_DIR)/$(CLI_BIN)
 
-# Distributions
-DIST ?= dist
+# Python distributions
+DIST      ?= dist
+DIST_DEV  ?= dist-dev
 
 # ==============================================================================
 # PHONY TARGETS
 # ==============================================================================
-.PHONY: help setup build fmt lint clean test help-me-run \
-        rust-build rust-test rust-cli-smoke \
-        py-build py-test wheel \
-        java-build java-test jar release
+.PHONY: help setup clean \
+        build build-rust build-python build-java \
+        test rust-test py-test \
+        lint \
+        help-me-run \
+        smoke-rust-cli smoke-wheel smoke-java \
+        release-rust release-wheel release-jar release
 
-# ==============================================================================
-# HELP
-# ==============================================================================
-help:
-	@printf "\n$(STYLE_BOLD)Core$(STYLE_RESET)\n"
-	@printf "  %-18s %s\n" "setup"        "Install toolchains and Python env (uv), then smoke-import Polars"
-	@printf "  %-18s %s\n" "build"        "Build Rust lib+CLI (with smoke), Python extension, and Java classes"
-	@printf "  %-18s %s\n" "test"         "Run: Rust tests and Python tests"
-	@printf "  %-18s %s\n" "fmt"          "Format Rust (rustfmt) and Python (ruff format)"
-	@printf "  %-18s %s\n" "lint"         "Lint Rust (clippy -D warnings) and Python (ruff)"
-	@printf "  %-18s %s\n" "clean"        "Remove Rust, Python, Java, and distribution artifacts"
-	@printf "  %-18s %s\n" "help-me-run"  "Four examples: CLI, Pure Python, Polars (lazy), Java (inline + run)"
-	@printf "  %-18s %s\n" "release"      "Build & validate CLI (smoke), wheel (smoke), and JARs (smoke)"
-	@printf "\n$(STYLE_BOLD)Rust$(STYLE_RESET)\n"
-	@printf "  %-18s %s\n" "rust-build"   "cargo build --release (lib) + --bin $(CLI_BIN) (CLI), then smoke-test CLI"
-	@printf "  %-18s %s\n" "rust-test"    "cargo test -- --quiet"
-	@printf "\n$(STYLE_BOLD)Python$(STYLE_RESET)\n"
-	@printf "  %-18s %s\n" "py-build"     "Editable install via maturin develop -r -F python"
-	@printf "  %-18s %s\n" "py-test"      "pytest -q"
-	@printf "  %-18s %s\n" "wheel"        "Build wheel(s) (manylinux_2_28 + zig) into $(DIST)/ and smoke-test install"
-	@printf "\n$(STYLE_BOLD)Java/JNI$(STYLE_RESET)\n"
-	@printf "  %-18s %s\n" "java-build"   "Build native lib (features=java) and compile Java classes to $(CP_DEV)/"
-	@printf "  %-18s %s\n" "jar"          "Package API JAR + native JAR; runs Java smoke after packaging"
 
 # ==============================================================================
 # Setup
@@ -136,249 +128,221 @@ setup:
 	$(call need,git)
 	$(call need,uv)
 	$(UV) --version
-
 	$(call banner,Create .venv and install deps (all groups))
 	$(UV) python install 3.12 || true
 	$(UV) sync --all-groups
-
 	$(call banner,Quick Python import smoke)
 	$(UV) run python -c "import polars as pl, sys; print('python', sys.version.split()[0], '| polars', pl.__version__, '| env ok')"
 
 # ==============================================================================
-# Core dev loop
+# Build (dev by default)
 # ==============================================================================
-build:
-	$(call banner,Build: Rust lib + CLI (with smoke))
-	$(MAKE) rust-build
-	$(call banner,Build: Python extension)
-	$(MAKE) py-build
-	$(call banner,Compile: Java)
-	$(MAKE) java-build
-	@printf "$(STYLE_OK)✓ all components built$(STYLE_RESET)\n"
+build: build-rust build-python build-java
+	@printf "$(STYLE_OK)✓ all components built (PROFILE=dev)$(STYLE_RESET)\n"
 
-fmt:
-	$(CARGO) fmt --all
-	$(UV) run ruff format .
+build-rust:
+	$(call banner,Build: Rust lib + CLI ($(PROFILE)))
+	$(CARGO) build $(CARGO_PROFILE_FLAG)
+	$(CARGO) build $(CARGO_PROFILE_FLAG) --bin $(CLI_BIN)
 
-lint:
-	$(CARGO) clippy --all-targets --all-features -- -D warnings
-	$(UV) run ruff check .
+build-python:
+	$(call banner,Build: Python extension (maturin develop, dev))
+	$(UV) run maturin develop -F python
 
-clean:
-	$(call banner,Clean: Rust target/)
-	rm -rf target/
-	$(CARGO) clean || true
+build-java:
+	$(call banner,Build: Java classes + native lib ($(PROFILE)))
+	$(call need,javac)
+	$(call need,java)
+	$(CARGO) build $(CARGO_PROFILE_FLAG) --no-default-features --features java --lib
+	rm -rf "$(CP_DEV)"; mkdir -p "$(CP_DEV)"
+	javac -d "$(CP_DEV)" $$(find "$(JAVA_SRC)" -type f -name '*.java')
 
-	$(call banner,Clean: Java classes & jars)
-	rm -rf "$(CP_DEV)" "$(JAVA_PKG_DIR)" "$(STAGE)"
-	find "$(JAVA_SRC)" -type f \( -name '*.class' -o -name '*.java.bak' \) -delete || true
-
-	$(call banner,Clean: Python artifacts)
-	find . -type d -name "__pycache__" -prune -exec rm -rf {} + || true
-	# Native extension outputs (Linux/macOS/Windows)
-	rm -f tdigest_rs/*.so tdigest_rs/*.dylib tdigest_rs/*.pyd tdigest_rs/*.dll || true
-	rm -rf .venv-wheeltest || true
-
-	$(call banner,Clean: Distribution packages)
-	rm -rf "$(DIST)" build/ *.egg-info/ || true
-
-	@printf "$(STYLE_OK)✓ cleaned Rust, Python, Java, and distribution artifacts$(STYLE_RESET)\n"
-
-# Only Rust + Python tests in aggregate
+# ==============================================================================
+# Tests
+# ==============================================================================
 test: rust-test py-test
 	@echo "✅ all tests passed"
-
-# ==============================================================================
-# Help me run — four colored examples with separators
-# ==============================================================================
-# ==============================================================================
-# Help me run — four colored examples with separators
-# ==============================================================================
-help-me-run:
-# ==============================================================================
-# Help me run — four colored examples with separators
-# ==============================================================================
-help-me-run:
-	$(call sep)
-	@printf "$(STYLE_BOLD)1) Rust — CLI$(STYLE_RESET)\n"
-	@printf "$(STYLE_CODE)echo '0 1 2 3' | target/release/$(CLI_BIN) --stdin --cmd quantile --p 0.5 --no-header$(STYLE_RESET)\n"
-	@printf "# output: 0.5,1.5\n"
-
-	$(call sep)
-	@printf "$(STYLE_BOLD)2) Pure Python$(STYLE_RESET)\n"
-	@printf "$(STYLE_CODE)uv run python - <<'PY'$(STYLE_RESET)\n"
-	@printf "$(STYLE_CODE)import tdigest_rs as td$(STYLE_RESET)\n"
-	@printf "$(STYLE_CODE)values = [0.0, 1.0, 2.0, 3.0]$(STYLE_RESET)\n"
-	@printf "$(STYLE_CODE)d = td.TDigest.from_array(values, max_size=100, scale='k2')$(STYLE_RESET)\n"
-	@printf "$(STYLE_CODE)print('p50 =', d.quantile(0.5))          # -> 1.5$(STYLE_RESET)\n"
-	@printf "$(STYLE_CODE)print('cdf =', d.cdf([0.0, 1.5, 3.0]).tolist())  # -> [0.125, 0.5, 0.875]$(STYLE_RESET)\n"
-	@printf "$(STYLE_CODE)PY$(STYLE_RESET)\n"
-
-	$(call sep)
-	@printf "$(STYLE_BOLD)3) Polars (lazy)$(STYLE_RESET)\n"
-	@printf "$(STYLE_CODE)uv run python - <<'PY'$(STYLE_RESET)\n"
-	@printf "$(STYLE_CODE)import polars as pl$(STYLE_RESET)\n"
-	@printf "$(STYLE_CODE)from tdigest_rs import tdigest, quantile  # expr functions$(STYLE_RESET)\n"
-	@printf "$(STYLE_CODE)df = pl.DataFrame({'g':['a']*5, 'x':[0,1,2,3,4]})$(STYLE_RESET)\n"
-	@printf "$(STYLE_CODE)out = ($(STYLE_RESET)\n"
-	@printf "$(STYLE_CODE)    df.lazy().group_by('g')$(STYLE_RESET)\n"
-	@printf "$(STYLE_CODE)    .agg(tdigest(pl.col('x'), max_size=100, scale='k2').alias('td'))$(STYLE_RESET)\n"
-	@printf "$(STYLE_CODE)    .select(quantile('td', 0.5))$(STYLE_RESET)\n"
-	@printf "$(STYLE_CODE)    .collect()$(STYLE_RESET)\n"
-	@printf "$(STYLE_CODE))$(STYLE_RESET)\n"
-	@printf "$(STYLE_CODE)print(out)$(STYLE_RESET)\n"
-	@printf "$(STYLE_CODE)PY$(STYLE_RESET)\n"
-
-	$(call sep)
-	@printf "$(STYLE_BOLD)4) Java — inline Hello + compile + run$(STYLE_RESET)\n"
-	@printf "# Build artifacts (once):\n"
-	@printf "$(STYLE_CODE)make java-build jar$(STYLE_RESET)\n"
-	@printf "$(STYLE_CODE)mkdir -p target/java-hello$(STYLE_RESET)\n"
-	@printf "$(STYLE_CODE)cat <<'JAVA' > target/java-hello/HelloTDigest.java$(STYLE_RESET)\n"
-	@printf "$(STYLE_CODE)import gr.tdigest_rs.TDigest;$(STYLE_RESET)\n"
-	@printf "$(STYLE_CODE)import gr.tdigest_rs.TDigest.Precision;$(STYLE_RESET)\n"
-	@printf "$(STYLE_CODE)import gr.tdigest_rs.TDigest.Scale;$(STYLE_RESET)\n"
-	@printf "$(STYLE_CODE)import gr.tdigest_rs.TDigest.SingletonPolicy;$(STYLE_RESET)\n"
-	@printf "$(STYLE_CODE)import java.util.Arrays;$(STYLE_RESET)\n"
-	@printf "$(STYLE_CODE)public class HelloTDigest {$(STYLE_RESET)\n"
-	@printf "$(STYLE_CODE)  public static void main(String[] args) {$(STYLE_RESET)\n"
-	@printf "$(STYLE_CODE)    try (TDigest digest = TDigest.builder()$(STYLE_RESET)\n"
-	@printf "$(STYLE_CODE)        .maxSize(100)$(STYLE_RESET)\n"
-	@printf "$(STYLE_CODE)        .scale(Scale.K2)$(STYLE_RESET)\n"
-	@printf "$(STYLE_CODE)        .singletonPolicy(SingletonPolicy.EDGES).keep(4)$(STYLE_RESET)\n"
-	@printf "$(STYLE_CODE)        .precision(Precision.F32)$(STYLE_RESET)\n"
-	@printf "$(STYLE_CODE)        .build(new float[]{0, 1, 2, 3})) {$(STYLE_RESET)\n"
-	@printf "$(STYLE_CODE)      System.out.println(Arrays.toString(digest.cdf(new double[]{0.0, 1.5, 3.0})));$(STYLE_RESET)\n"
-	@printf "$(STYLE_CODE)      System.out.println(\"p50 = \" + digest.quantile(0.5));$(STYLE_RESET)\n"
-	@printf "$(STYLE_CODE)    }$(STYLE_RESET)\n"
-	@printf "$(STYLE_CODE)  }$(STYLE_RESET)\n"
-	@printf "$(STYLE_CODE)}$(STYLE_RESET)\n"
-	@printf "$(STYLE_CODE)JAVA$(STYLE_RESET)\n"
-	@printf "$(STYLE_CODE)javac -cp $(API_JAR) -d target/java-hello target/java-hello/HelloTDigest.java$(STYLE_RESET)\n"
-	@printf "$(STYLE_CODE)java -Djava.library.path=$(LIB_DIR) -cp $(API_JAR):target/java-hello HelloTDigest$(STYLE_RESET)\n"
-	$(call sep)
-
-
-# ==============================================================================
-# Rust
-# ==============================================================================
-rust-build:
-	# Build full release (lib) and ensure CLI bin is built, then run CLI smoke
-	$(CARGO) build --release
-	$(CARGO) build --release --bin $(CLI_BIN)
-	$(MAKE) rust-cli-smoke
 
 rust-test:
 	$(CARGO) test -- --quiet
 
-Q ?= 0.5
-$(CLI_PATH):
-	$(CARGO) build --release --bin $(CLI_BIN)
-
-# Hidden from help, but always used by rust-build/release
-rust-cli-smoke: $(CLI_PATH)
-	@set -eu; \
-	OUT="$$( echo '0 1 2 3' \
-	  | '$(CLI_PATH)' --stdin --cmd quantile --p $(Q) --no-header --output csv \
-	  | cut -d, -f2 )"; \
-	printf "CLI p%.3g -> %s\n" "$(Q)" "$$OUT"; \
-	[ "$$OUT" = "1.5" ] || { echo "❌ CLI quantile mismatch (got '$$OUT', want '1.5')"; exit 1; }; \
-	echo "✅ rust_cli_smoke passed"
-
-# ==============================================================================
-# Python
-# ==============================================================================
-py-build:
-	$(UV) run maturin develop -r -F python
-
-py-test: py-build
+py-test: build-python
 	$(UV) run pytest -q
 
-# Wheels: build + smoke in one target
-wheel:
-	$(call banner,Build Python wheel (manylinux_2_28 + zig))
+# ==============================================================================
+# Lint (autofix)
+# ==============================================================================
+lint:
+	$(call banner,Format Rust)
+	$(CARGO) fmt --all
+	$(call banner,Rust: clippy --fix (may modify files))
+	$(CARGO) clippy --fix --allow-dirty --allow-staged
+	$(call banner,Python: ruff check --fix + ruff format)
+	$(UV) run ruff check --fix .
+	$(UV) run ruff format .
+
+
+# ==============================================================================
+# Clean (single target)
+# ==============================================================================
+clean:
+	$(call banner,Clean: Rust target/ and cargo)
+	rm -rf target/ || true
+	$(CARGO) clean || true
+	$(call banner,Clean: Java classes & jars)
+	rm -rf "$(CP_DEV)" "$(JAVA_PKG_DIR)" "$(STAGE)" || true
+	find "$(JAVA_SRC)" -type f \( -name '*.class' -o -name '*.java.bak' \) -delete || true
+	$(call banner,Clean: Python build artifacts)
+	find . -type d -name "__pycache__" -prune -exec rm -rf {} + || true
+	rm -f tdigest_rs/*.so tdigest_rs/*.dylib tdigest_rs/*.pyd tdigest_rs/*.dll || true
+	rm -rf build/ *.egg-info/ || true
+	$(call banner,Clean: Wheel dists)
+	rm -rf "$(DIST)" "$(DIST_DEV)" || true
+	@printf "$(STYLE_OK)✓ cleaned all artifacts$(STYLE_RESET)\n"
+
+# ==============================================================================
+# Help me run — one-liners (Demos)
+# ==============================================================================
+help-me-run:
+	$(call sep)
+	@printf '1) Rust — CLI (release)\n'
+	@printf '%s\n' 'make release-rust'
+	@printf '%s\n' "echo '0 1 2 3' | target/release/$(CLI_BIN) --stdin --cmd quantile --p 0.5 --no-header"
+
+	$(call sep)
+	@printf '2) Python — basic import from release wheel\n'
+	@printf '%s\n' 'make release-wheel'
+	@printf '%s\n' 'TMP=$$(mktemp -d)'
+	@printf '%s\n' 'UV_LINK_MODE=copy uv venv --python 3.12 --seed $$TMP'
+	@printf '%s\n' 'UV_LINK_MODE=copy uv pip install --python $$TMP/bin/python --upgrade pip'
+	@printf '%s\n' 'UV_LINK_MODE=copy uv pip install --python $$TMP/bin/python "polars>=1.34.0,<2.0.0" numpy'
+	@printf '%s\n' 'UV_LINK_MODE=copy uv pip install --python $$TMP/bin/python --no-index --find-links dist tdigest_rs'
+	@printf '%s\n' '$$TMP/bin/python -c '\''import tdigest_rs as td; d=td.TDigest.from_array([0,1,2,3], max_size=100, scale="k2"); print("p50=", d.quantile(0.5)); print("cdf=", d.cdf([0.0,1.5,3.0]).tolist())'\'''
+	@printf '%s\n' 'rm -rf $$TMP'
+
+	$(call sep)
+	@printf '3) Polars — groupby + quantile via release wheel\n'
+	@printf '%s\n' 'make release-wheel'
+	@printf '%s\n' 'TMP=$$(mktemp -d)'
+	@printf '%s\n' 'UV_LINK_MODE=copy uv venv --python 3.12 --seed $$TMP'
+	@printf '%s\n' 'UV_LINK_MODE=copy uv pip install --python $$TMP/bin/python --upgrade pip'
+	@printf '%s\n' 'UV_LINK_MODE=copy uv pip install --python $$TMP/bin/python "polars>=1.34.0,<2.0.0" numpy'
+	@printf '%s\n' 'UV_LINK_MODE=copy uv pip install --python $$TMP/bin/python --no-index --find-links dist tdigest_rs'
+	@printf '%s\n' '$$TMP/bin/python -c '\''import polars as pl; from tdigest_rs import tdigest, quantile; df=pl.DataFrame({"g":["a"]*5,"x":[0,1,2,3,4]}); out=(df.lazy().group_by("g").agg(tdigest(pl.col("x"), max_size=100, scale="k2").alias("td")).select(quantile("td",0.5)).collect()); print(out)'\'''
+	@printf '%s\n' 'rm -rf $$TMP'
+		$(call sep)
+	@printf '4) Java — compile & run against release JAR + native lib\n'
+	@printf '%s\n' 'make release-jar'
+	@printf '%s\n' 'mkdir -p target/java-hello'
+	@printf "%s\n" "printf '%s\n' \
+'import gr.tdigest_rs.TDigest;' \
+'import gr.tdigest_rs.TDigest.Precision;' \
+'import gr.tdigest_rs.TDigest.Scale;' \
+'import gr.tdigest_rs.TDigest.SingletonPolicy;' \
+'import java.util.Arrays;' \
+'public class HelloTDigest {' \
+'  public static void main(String[] args) {' \
+'    try (TDigest d = TDigest.builder().maxSize(100).scale(Scale.K2).singletonPolicy(SingletonPolicy.EDGES).keep(4).precision(Precision.F32).build(new float[]{0,1,2,3})) {' \
+'      System.out.println(Arrays.toString(d.cdf(new double[]{0.0,1.5,3.0})));' \
+'      System.out.println(\"p50 = \" + d.quantile(0.5));' \
+'    }' \
+'  }' \
+'}' > target/java-hello/HelloTDigest.java"
+	@printf '%s\n' 'javac -cp $(API_JAR) -d target/java-hello target/java-hello/HelloTDigest.java'
+	@printf '%s\n' 'java --enable-native-access=ALL-UNNAMED -Djava.library.path=target/release -cp $(API_JAR):target/java-hello HelloTDigest'
+	$(call sep)
+
+# ==============================================================================
+# Smoke tests (generic and independent)
+# ==============================================================================
+Q ?= 0.5
+
+smoke-rust-cli:
+	@set -eu; \
+	BIN="target/$(CARGO_DIR)/$(CLI_BIN)"; \
+	[ -x "$$BIN" ] || { echo "❌ missing CLI at $$BIN; build first (PROFILE=$(PROFILE))"; exit 1; }; \
+	OUT="$$( echo '0 1 2 3' | "$$BIN" --stdin --cmd quantile --p $(Q) --no-header --output csv | cut -d, -f2 )"; \
+	printf "CLI p%.3g -> %s\n" "$(Q)" "$$OUT"; \
+	[ "$$OUT" = "1.5" ] || { echo "❌ CLI quantile mismatch (got '$$OUT', want '1.5')"; exit 1; }; \
+	echo "✅ smoke-rust-cli ok (PROFILE=$(PROFILE))"
+
+smoke-wheel:
+	@set -eu; \
+	LATEST="$$(ls -1t "$(DIST)"/*.whl "$(DIST_DEV)"/*.whl 2>/dev/null | head -1 || true)"; \
+	[ -n "$$LATEST" ] || { echo "❌ no wheel found in $(DIST)/ or $(DIST_DEV)/"; exit 1; }; \
+	TMP="$$(mktemp -d)"; \
+	UV_LINK_MODE=copy $(UV) venv --python 3.12 --seed "$$TMP"; \
+	UV_LINK_MODE=copy $(UV) pip install --python "$$TMP/bin/python" --upgrade pip; \
+	UV_LINK_MODE=copy $(UV) pip install --python "$$TMP/bin/python" 'polars>=1.34.0,<2.0.0' numpy; \
+	UV_LINK_MODE=copy $(UV) pip install --python "$$TMP/bin/python" --no-index --find-links "$$(dirname "$$LATEST")" tdigest_rs; \
+	"$$TMP/bin/python" -c "import tdigest_rs as td; d=td.TDigest.from_array([0.0,1.0,2.0,3.0], max_size=100, scale='k2'); print('p50=', d.quantile(0.5)); print('cdf=', d.cdf([0.0,1.5,3.0]).tolist())"; \
+	rm -rf "$$TMP"; \
+	echo "✅ smoke-wheel ok (file=$$LATEST)"
+
+
+smoke-java:
+	@set -eu; \
+	[ -f "$(API_JAR)" ] || { echo "❌ missing API JAR $(API_JAR); run 'make release-jar' (release) or 'make build-java && make jar' (dev)"; exit 1; }; \
+	OUT="$$( $(JAVA) --enable-native-access=ALL-UNNAMED -Djava.library.path=$(LIB_DIR) -cp "$(API_JAR)" TestRun || true)"; \
+	echo "• Java smoke output:"; echo "$$OUT"; \
+	ARR_LINE="$$(printf "%s\n" "$$OUT" | grep -m1 -E '^\[[[:space:]]*0\.125,\s*0\.5,\s*0\.875\]$$' || true)"; \
+	P50_LINE="$$(printf "%s\n" "$$OUT" | grep -m1 -E '^p50[[:space:]]*=[[:space:]]*1\.5$$' || true)"; \
+	[ -n "$$ARR_LINE" ] || { echo "❌ array mismatch"; exit 1; }; \
+	[ -n "$$P50_LINE" ] || { echo "❌ p50 line missing"; exit 1; }; \
+	echo "✅ smoke-java ok (PROFILE=$(PROFILE))"
+
+# ==============================================================================
+# Releases (release profile only)
+# ==============================================================================
+release-rust:
+	$(call banner,Release: Rust CLI (release) + smoke)
+	$(MAKE) build-rust PROFILE=release
+	$(MAKE) smoke-rust-cli PROFILE=release
+	@printf "• CLI binary : %s\n" "target/release/$(CLI_BIN)"
+
+
+release-wheel:
+	$(call banner,Release: Python PROD wheel (manylinux_2_28 + zig) + smoke)
 	mkdir -p "$(DIST)"
 	$(UV) run maturin build -r -F python --compatibility manylinux_2_28 --zig -o "$(DIST)"
 	@printf "$(STYLE_OK)✓ wheel(s) in $(DIST)$(STYLE_RESET)\n"
-	$(call banner,Smoke test the wheel in a clean venv)
-	rm -rf .venv-wheeltest
-	$(UV) venv --python 3.12 --seed .venv-wheeltest
-	.venv-wheeltest/bin/python -m pip --version || .venv-wheeltest/bin/python -m ensurepip --upgrade
-	.venv-wheeltest/bin/python -m pip install --upgrade pip
-	.venv-wheeltest/bin/python -m pip install "polars>=1.34.0,<2.0.0" numpy
-	.venv-wheeltest/bin/python -m pip install --no-index --find-links "$(DIST)" tdigest_rs
-	.venv-wheeltest/bin/python -c "import tdigest_rs as td; d=td.TDigest.from_array([0.0,1.0,2.0,3.0],max_size=100,scale='k2'); print('p50=',d.quantile(0.5)); print('cdf=',d.cdf([0.0,1.5,3.0]).tolist())"
-	rm -rf .venv-wheeltest
-	@echo "$(STYLE_OK)✓ wheel build + smoke ok$(STYLE_RESET)"
+	$(MAKE) smoke-wheel
 
-# ==============================================================================
-# Java / JNI (classes build + jars)
-# ==============================================================================
-java-build:
-	$(call need,javac)
-	$(call need,java)
-	$(CARGO) build --release --no-default-features --features java --lib
-	rm -rf "$(CP_DEV)"
-	mkdir -p "$(CP_DEV)"
-	javac -d "$(CP_DEV)" $(shell find "$(JAVA_SRC)" -type f -name '*.java')
-
-# Hidden from help; called by jar
-java-test:
-	@set -e; \
-	OUT="$$( $(JAVA) -Djava.library.path=$(LIB_DIR) -cp $(CP_DEV) TestRun )"; \
-	echo "• Java smoke output:"; \
-	echo "$$OUT"; \
-	ARR_LINE="$$(printf "%s\n" "$$OUT" | grep -m1 -E '^\[[[:space:]0-9\.,]+\]$$' || true)"; \
-	P50_LINE="$$(printf "%s\n" "$$OUT" | grep -m1 -E '^p50[[:space:]]*=[[:space:]]*1\.5$$' || true)"; \
-	[ "$$ARR_LINE" = "[0.125, 0.5, 0.875]" ] || { echo "❌ array mismatch (classes)"; exit 1; }; \
-	[ -n "$$P50_LINE" ] || { echo "❌ p50 line missing (classes)"; exit 1; }; \
-	echo "✅ java_test (classes) passed"
-
-# Package API JAR (classes only) + native JAR (contains platform lib under /natives/<plat-arch>/)
-jar: java-build
-	$(call banner,Package Java API JAR)
+release-jar:
+	$(call banner,Release: Java (release) + smoke)
+	$(MAKE) build-java PROFILE=release
+	$(call banner,Package Java API/NATIVE JARs (release libs))
 	mkdir -p "$(JAVA_PKG_DIR)" "$(STAGE)"
 	printf "Manifest-Version: 1.0\nAutomatic-Module-Name: gr.tdigest_rs\n" > "$(API_MANIFEST)"
 	$(JAR) cfm "$(API_JAR)" "$(API_MANIFEST)" -C "$(CP_DEV)" .
-	@printf "$(STYLE_OK)✓ API JAR -> %s$(STYLE_RESET)\n" "$(API_JAR)"
-
-	$(call banner,Package platform native JAR)
 	rm -rf "$(STAGE)/natives" && mkdir -p "$(STAGE)/natives/$(PLAT)-$(ARCH)"
-	cp "$(LIB_DIR)/$(LIBBASENAME)" "$(STAGE)/natives/$(PLAT)-$(ARCH)/$(LIBBASENAME)"
+	cp "target/release/$(LIBBASENAME)" "$(STAGE)/natives/$(PLAT)-$(ARCH)/$(LIBBASENAME)"
 	$(JAR) cf "$(NATIVE_JAR_CUR)" -C "$(STAGE)" natives
-	@printf "$(STYLE_OK)✓ Native JAR -> %s$(STYLE_RESET)\n" "$(NATIVE_JAR_CUR)"
+	$(MAKE) smoke-java PROFILE=release
+	@printf "• API JAR    -> %s\n" "$(API_JAR)"; \
+	printf "• Native JAR -> %s\n" "$(NATIVE_JAR_CUR)"
 
-	$(call banner,Java smoke (post-jar))
-	$(MAKE) java-test
+release: release-rust release-wheel release-jar
+	@printf "\n$(STYLE_BOLD)==> Release complete$(STYLE_RESET)\n"
+	@printf "  CLI binary : %s\n" "target/release/$(CLI_BIN)"
+	@printf "  Wheels dir : %s\n" "$(DIST)"
+	@printf "  Native JAR : %s\n" "$(NATIVE_JAR_CUR)"
+	@printf "$(STYLE_OK)✓ All release artifacts built & smoke-tested$(STYLE_RESET)\n"
 
-# ==============================================================================
-# One-shot RELEASE: build & smoke-test all artifacts
-# ==============================================================================
-release:
-	$(call banner,Release: Build Rust CLI (with smoke))
-	$(MAKE) rust-build
-	@printf "• CLI -> %s\n" "$(CLI_PATH)"
-
-	$(call banner,Release: Build Wheel (with smoke))
-	$(MAKE) wheel
-	# Capture latest wheel for summary (most recent by mtime)
-	LAST_WHEEL="$$(ls -1t "$(DIST)"/*.whl 2>/dev/null | head -1 || true)"; \
-	if [ -z "$$LAST_WHEEL" ]; then \
-		printf "$(STYLE_ERR)✗ No wheel found in %s$(STYLE_RESET)\n" "$(DIST)"; exit 1; \
-	fi; \
-	printf "• Wheel -> %s\n" "$$LAST_WHEEL"; \
-	echo "$$LAST_WHEEL" > .last-wheel-path
-
-	$(call banner,Release: Build JARs (with smoke))
-	$(MAKE) jar
-	@printf "• API JAR    -> %s\n" "$(API_JAR)"
-	@printf "• Native JAR -> %s\n" "$(NATIVE_JAR_CUR)"
-
-	# Final clear artifact summary
-	@LAST_WHL="$$(cat .last-wheel-path 2>/dev/null || true)"; \
-	rm -f .last-wheel-path; \
-	printf "\n$(STYLE_BOLD)==> Artifacts$(STYLE_RESET)\n"; \
-	printf "  CLI binary : %s\n" "$(CLI_PATH)"; \
-	printf "  Wheel      : %s\n" "$${LAST_WHL:-<none>}"; \
-	printf "  Native JAR : %s\n" "$(NATIVE_JAR_CUR)"; \
-	printf "\n$(STYLE_OK)✓ Release artifacts built & smoke-tested$(STYLE_RESET)\n"
+help:
+	@printf "\n$(STYLE_BOLD)Core (dev by default)$(STYLE_RESET)\n"
+	@printf "  %-22s %s\n" "setup"          "Install toolchains and sync Python deps (uv)"
+	@printf "  %-22s %s\n" "build"          "Build Rust lib+CLI (dev), Python ext (dev), Java classes (dev)"
+	@printf "  %-22s %s\n" "build-rust"     "Build Rust lib+CLI (dev)"
+	@printf "  %-22s %s\n" "build-python"   "Build Python extension (maturin develop, dev)"
+	@printf "  %-22s %s\n" "build-java"     "Build Java classes + native lib (dev)"
+	@printf "  %-22s %s\n" "test"           "Run tests: rust + python"
+	@printf "  %-22s %s\n" "lint"           "Autofix: cargo fmt, cargo clippy --fix, ruff --fix, ruff format"
+	@printf "  %-22s %s\n" "clean"          "Remove ALL build artifacts, wheels, jars, caches"
+	@printf "\n$(STYLE_BOLD)Releases (release profile)$(STYLE_RESET)\n"
+	@printf "  %-22s %s\n" "release-rust"   "Build CLI (release) and smoke"
+	@printf "  %-22s %s\n" "release-wheel"  "Build PROD wheel (release) inline and smoke"
+	@printf "  %-22s %s\n" "release-jar"    "Build JARs (release) and smoke"
+	@printf "  %-22s %s\n" "release"        "release-rust + release-wheel + release-jar"
+	@printf "\n$(STYLE_BOLD)Demos$(STYLE_RESET)\n"
+	@printf "  %-22s %s\n" "help-me-run"    "One-liner demos using release artifacts"
