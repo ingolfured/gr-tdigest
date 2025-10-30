@@ -40,7 +40,8 @@ PATH := $(HOME)/.local/bin:$(HOME)/.cargo/bin:$(PATH)
 
 CARGO  ?= cargo
 UV     ?= uv
-GRADLE ?= gradle
+GRADLE := $(shell [ -x "$(JAVA_SRC)/gradlew" ] && echo "$(JAVA_SRC)/gradlew" || (command -v gradle || echo "gradle"))
+
 
 # Force uv to use the repo-root venv
 UV_ENV := UV_PROJECT_ENVIRONMENT=$(PWD)/.venv
