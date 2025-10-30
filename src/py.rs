@@ -3,15 +3,16 @@ use pyo3::types::{PyBytes, PyModule};
 
 use bincode::config;
 use bincode::serde::{decode_from_slice, encode_to_vec};
+use serde::{Deserialize, Serialize};
 
-// Pull types from the crate's tdigest public surface
 use crate::tdigest::centroids::Centroid;
 use crate::tdigest::singleton_policy::SingletonPolicy;
 use crate::tdigest::{ScaleFamily, TDigest, TDigestBuilder};
 
+// ---------- strict arg parsers ----------
 fn parse_scale(s: Option<&str>) -> Result<ScaleFamily, PyErr> {
     match s.map(|t| t.to_ascii_lowercase()) {
-        None => Ok(ScaleFamily::K2), // library-wide default
+        None => Ok(ScaleFamily::K2),
         Some(ref v) if v == "quad" => Ok(ScaleFamily::Quad),
         Some(ref v) if v == "k1" => Ok(ScaleFamily::K1),
         Some(ref v) if v == "k2" => Ok(ScaleFamily::K2),
@@ -24,11 +25,21 @@ fn parse_scale(s: Option<&str>) -> Result<ScaleFamily, PyErr> {
 
 fn parse_policy(kind: Option<&str>, edges: Option<usize>) -> Result<SingletonPolicy, PyErr> {
     match kind.map(|k| k.to_ascii_lowercase()) {
-        None => Ok(SingletonPolicy::Use), // library default
+        None => Ok(SingletonPolicy::Use),
         Some(ref v) if v == "off" => Ok(SingletonPolicy::Off),
         Some(ref v) if v == "use" => Ok(SingletonPolicy::Use),
         Some(ref v) if v == "edges" || v == "usewithprotectededges" => {
-            Ok(SingletonPolicy::UseWithProtectedEdges(edges.unwrap_or(3)))
+            let k = edges.ok_or_else(|| {
+                pyo3::exceptions::PyValueError::new_err(
+                    "singleton_policy='edges' requires 'edges' (per-side) >= 1",
+                )
+            })?;
+            if k < 1 {
+                return Err(pyo3::exceptions::PyValueError::new_err(
+                    "edges must be >= 1 when singleton_policy='edges'",
+                ));
+            }
+            Ok(SingletonPolicy::UseWithProtectedEdges(k))
         }
         Some(v) => Err(pyo3::exceptions::PyValueError::new_err(format!(
             "invalid singleton_policy: {v} (expected 'off', 'use', or 'edges')"
@@ -38,21 +49,140 @@ fn parse_policy(kind: Option<&str>, edges: Option<usize>) -> Result<SingletonPol
 
 #[pyclass(name = "TDigest", subclass)]
 pub struct PyTDigest {
-    inner: TDigest,
+    inner: TDigest<f64>,
 }
 
+// ---------- stable bytes blob (SerDigest) ----------
+#[derive(Serialize, Deserialize)]
+struct SerCentroid {
+    mean: f64,
+    weight: f64,
+}
+
+#[derive(Serialize, Deserialize)]
+struct SerPolicy {
+    kind: u8,
+    edges_per_side: Option<usize>,
+}
+
+#[derive(Serialize, Deserialize)]
+struct SerDigest {
+    max_size: usize,
+    scale: String, // "quad"|"k1"|"k2"|"k3"
+    policy: SerPolicy,
+    sum: f64,
+    min: f64,
+    max: f64,
+    count: f64,
+    centroids: Vec<SerCentroid>,
+}
+
+fn scale_to_string(s: ScaleFamily) -> String {
+    match s {
+        ScaleFamily::Quad => "quad",
+        ScaleFamily::K1 => "k1",
+        ScaleFamily::K2 => "k2",
+        ScaleFamily::K3 => "k3",
+    }
+    .to_string()
+}
+
+fn string_to_scale(s: &str) -> Result<ScaleFamily, PyErr> {
+    parse_scale(Some(s))
+}
+
+fn policy_to_ser(p: &SingletonPolicy) -> SerPolicy {
+    match *p {
+        SingletonPolicy::Off => SerPolicy {
+            kind: 0,
+            edges_per_side: None,
+        },
+        SingletonPolicy::Use => SerPolicy {
+            kind: 1,
+            edges_per_side: None,
+        },
+        SingletonPolicy::UseWithProtectedEdges(k) => SerPolicy {
+            kind: 2,
+            edges_per_side: Some(k),
+        },
+    }
+}
+
+fn ser_to_policy(p: &SerPolicy) -> Result<SingletonPolicy, PyErr> {
+    Ok(match p.kind {
+        0 => SingletonPolicy::Off,
+        1 => SingletonPolicy::Use,
+        2 => {
+            let k = p.edges_per_side.ok_or_else(|| {
+                pyo3::exceptions::PyValueError::new_err(
+                    "serialized digest missing edges_per_side for 'edges' policy",
+                )
+            })?;
+            if k < 1 {
+                return Err(pyo3::exceptions::PyValueError::new_err(
+                    "edges_per_side must be >= 1 for 'edges' policy",
+                ));
+            }
+            SingletonPolicy::UseWithProtectedEdges(k)
+        }
+        _ => {
+            return Err(pyo3::exceptions::PyValueError::new_err(
+                "invalid serialized policy code",
+            ))
+        }
+    })
+}
+
+fn td_to_ser(td: &TDigest<f64>) -> SerDigest {
+    let centroids = td
+        .centroids()
+        .iter()
+        .map(|c: &Centroid<f64>| SerCentroid {
+            mean: c.mean(),
+            weight: c.weight(),
+        })
+        .collect();
+
+    SerDigest {
+        max_size: td.max_size(),
+        scale: scale_to_string(td.scale()),
+        policy: policy_to_ser(&td.singleton_policy()),
+        sum: td.sum(),
+        min: td.min(),
+        max: td.max(),
+        count: td.count(),
+        centroids,
+    }
+}
+
+fn ser_to_td(sd: SerDigest) -> Result<TDigest<f64>, PyErr> {
+    let scale = string_to_scale(&sd.scale)?;
+    let policy = ser_to_policy(&sd.policy)?;
+    let cents: Vec<Centroid<f64>> = sd
+        .centroids
+        .into_iter()
+        .map(|c| Centroid::<f64>::new(c.mean, c.weight))
+        .collect();
+
+    Ok(TDigest::<f64>::builder()
+        .max_size(sd.max_size)
+        .scale(scale)
+        .singleton_policy(policy)
+        .with_centroids_and_stats(
+            cents,
+            crate::tdigest::DigestStats {
+                data_sum: sd.sum,
+                total_weight: sd.count,
+                data_min: sd.min,
+                data_max: sd.max,
+            },
+        )
+        .build())
+}
+
+// ---------- Python methods ----------
 #[pymethods]
 impl PyTDigest {
-    /// Build from a Python array-like of floats (float32 or float64).
-    ///
-    /// Example:
-    ///   TDigest.from_array(values, max_size=200, scale="k2",
-    ///                      f32_mode=True,
-    ///                      singleton_policy="edges", edges=4)
-    ///
-    /// Notes:
-    /// - `f32_mode=True` quantizes centroids to 32-bit precision (means & weights).
-    /// - Binary serialization (to_bytes/from_bytes) remains canonical, independent of `f32_mode`.
     #[staticmethod]
     #[pyo3(signature = (values, max_size=1000, scale=None, f32_mode=false, singleton_policy=None, edges=None))]
     pub fn from_array(
@@ -72,40 +202,38 @@ impl PyTDigest {
         let sc = parse_scale(scale)?;
         let policy = parse_policy(singleton_policy, edges)?;
 
-        // Coerce to NumPy float64 and extract
         let np = py.import("numpy")?;
         let arr = np.call_method1("asarray", (values,))?;
         let values: Vec<f64> = arr.extract()?;
 
-        // Build/ingest
-        let base = TDigestBuilder::new()
+        let base = TDigestBuilder::<f64>::new()
             .max_size(max_size)
             .scale(sc)
             .singleton_policy(policy)
             .build();
         let digest = base.merge_unsorted(values);
 
-        // If f32_mode, quantize centroids to ~32-bit precision
         let inner = if f32_mode {
             quantize_digest_to_f32(&digest)
         } else {
             digest
         };
-
         Ok(Self { inner })
     }
 
-    /// Median (p=0.5)
     pub fn median(&self) -> PyResult<f64> {
         Ok(self.inner.median())
     }
 
-    /// Quantile for scalar probability p in [0,1]
     pub fn quantile(&self, q: f64) -> PyResult<f64> {
+        if !(0.0..=1.0).contains(&q) {
+            return Err(pyo3::exceptions::PyValueError::new_err(
+                "q must be in [0, 1]. Example: quantile(0.95) for the 95th percentile",
+            ));
+        }
         Ok(self.inner.quantile(q))
     }
 
-    /// CDF evaluated at array-like x (returns a NumPy array)
     pub fn cdf(&self, py: Python<'_>, x: PyObject) -> PyResult<PyObject> {
         let np = py.import("numpy")?;
         let arr = np.call_method1("asarray", (x,))?;
@@ -115,24 +243,25 @@ impl PyTDigest {
         Ok(out.unbind())
     }
 
-    /// Serialize digest to bytes (canonical bincode of the TDigest itself).
     pub fn to_bytes<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyBytes>> {
         let cfg = config::standard();
-        let bytes = encode_to_vec(&self.inner, cfg).map_err(|e| {
+        let ser = td_to_ser(&self.inner);
+        let bytes = encode_to_vec(&ser, cfg).map_err(|e| {
             pyo3::exceptions::PyValueError::new_err(format!("serialize error: {e}"))
         })?;
         Ok(PyBytes::new(py, &bytes))
     }
 
-    /// Deserialize digest from bytes produced by `to_bytes`.
     #[staticmethod]
     pub fn from_bytes(b: Bound<'_, PyBytes>) -> PyResult<Self> {
         let cfg = config::standard();
-        let (inner, _len): (TDigest, usize) =
+        let (ser, _len): (SerDigest, usize) =
             decode_from_slice(b.as_bytes(), cfg).map_err(|e| {
                 pyo3::exceptions::PyValueError::new_err(format!("deserialize error: {e}"))
             })?;
-        Ok(Self { inner })
+        Ok(Self {
+            inner: ser_to_td(ser)?,
+        })
     }
 }
 
@@ -141,22 +270,19 @@ pub(crate) fn register(m: &Bound<'_, PyModule>) -> PyResult<()> {
     Ok(())
 }
 
-/* ==================== private helpers ==================== */
-
-/// Rebuild a digest with centroids quantized to f32 (means & weights).
-/// Keeps sum/count/min/max as-is to preserve global stats.
-fn quantize_digest_to_f32(td: &TDigest) -> TDigest {
-    let cents_q: Vec<Centroid> = td
+// ---------- helpers ----------
+fn quantize_digest_to_f32(td: &TDigest<f64>) -> TDigest<f64> {
+    let cents_q: Vec<Centroid<f64>> = td
         .centroids()
         .iter()
         .map(|c| {
             let m = c.mean() as f32 as f64;
             let w = c.weight() as f32 as f64;
-            Centroid::new(m, w)
+            Centroid::<f64>::new(m, w)
         })
         .collect();
 
-    TDigest::builder()
+    TDigest::<f64>::builder()
         .max_size(td.max_size())
         .scale(td.scale())
         .singleton_policy(td.singleton_policy())

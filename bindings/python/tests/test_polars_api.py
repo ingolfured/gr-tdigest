@@ -146,7 +146,6 @@ def test_list_of_quantile_expressions():
         ("use", None),
         (SingletonPolicy.OFF, None),
         ("off", None),
-        (SingletonPolicy.EDGE, 0),
         (SingletonPolicy.EDGE, 2),
         ("edge", 3),
     ],

@@ -26,7 +26,7 @@ public class TestRun {
     try (TDigest digest = TDigest.builder()
         .maxSize(100)
         .scale(Scale.K2)
-        .singletonPolicy(SingletonPolicy.EDGES).keep(4)
+        .singletonPolicy(SingletonPolicy.USE_WITH_PROTECTED_EDGES).keep(4)
         .precision(Precision.F32) // internal f32 sketch; API still uses double[] probes
         .build(new float[]{0, 1, 2, 3})) {    // <-- use build(float[])
       System.out.println(Arrays.toString(digest.cdf(new double[]{0.0, 1.5, 3.0})));

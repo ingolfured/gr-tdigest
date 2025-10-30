@@ -54,7 +54,16 @@ public final class TDigest implements AutoCloseable {
 
   /** Singleton handling policy. Matches Rust {@code SingletonPolicy}. */
   public enum SingletonPolicy {
-    OFF, USE, EDGES
+    OFF, USE, USE_WITH_PROTECTED_EDGES;
+
+    int toNativeCode() {
+      switch (this) {
+        case OFF:  return 0;
+        case USE:  return 1;
+        case USE_WITH_PROTECTED_EDGES: return 2;
+        default:   return 1;
+      }
+    }
   }
 
   /**
@@ -111,7 +120,7 @@ public final class TDigest implements AutoCloseable {
     switch (p) {
       case OFF:  return 0;
       case USE:  return 1;
-      case EDGES:return 2;
+      case USE_WITH_PROTECTED_EDGES:return 2;
       default:   return 1;
     }
   }
@@ -159,54 +168,67 @@ public final class TDigest implements AutoCloseable {
     private int maxSize = 1000;
     private Scale scale = Scale.K2;
     private SingletonPolicy policy = SingletonPolicy.USE;
-    private int keep = 3;               // only used when policy==EDGES
+    private int edgesPerSide = 3;                 // was: keep
     private Precision precision = Precision.F64;
 
-    /** Set maximum centroid count; must be &gt; 0. */
+    /** Set maximum centroid count; must be > 0. */
     public Builder maxSize(int n) {
       if (n <= 0) throw new IllegalArgumentException("maxSize must be > 0");
-      this.maxSize = n; return this;
+      this.maxSize = n;
+      return this;
     }
 
     /** Choose scale family (QUAD, K1, K2, K3). */
     public Builder scale(Scale s) {
-      this.scale = Objects.requireNonNull(s, "scale"); return this;
+      this.scale = Objects.requireNonNull(s, "scale");
+      return this;
     }
 
-    /** Choose singleton policy (OFF, USE, EDGES). */
+    /** Choose singleton policy (OFF, USE, USE_WITH_PROTECTED_EDGES). */
     public Builder singletonPolicy(SingletonPolicy p) {
-      this.policy = Objects.requireNonNull(p, "policy"); return this;
-    }
-
-    /**
-     * Number of edge singletons to protect when {@link SingletonPolicy#EDGES}.
-     * Ignored otherwise. Negative values are clamped to 0.
-     */
-    public Builder keep(int k) {
-      this.keep = Math.max(0, k); return this;
+      this.policy = Objects.requireNonNull(p, "policy");
+      return this;
     }
 
     /** Internal centroid storage precision (F64 or F32). */
     public Builder precision(Precision p) {
-      this.precision = Objects.requireNonNull(p, "precision"); return this;
+      this.precision = Objects.requireNonNull(p, "precision");
+      return this;
+    }
+
+    /** Alias kept for back-compat with older code. */
+    public Builder keep(int k) {
+      this.edgesPerSide = Math.max(0, k);
+      return this;
+    }
+
+    /** Name the test looks for. */
+    public Builder edgesPerSide(int k) {
+      this.edgesPerSide = Math.max(0, k);
+      return this;
     }
 
     /** Build from {@code double[]} input. */
     public TDigest build(double[] values) {
       Objects.requireNonNull(values, "values");
+      final boolean f32 = (precision == Precision.F32);
+      final int edges = (policy == SingletonPolicy.USE_WITH_PROTECTED_EDGES) ? edgesPerSide : 0;
       long h = TDigestNative.fromArray(
-          values, maxSize, scale.asWire(), policyCode(policy), keep, precision == Precision.F32);
+          values, maxSize, scale.asWire(), policy.toNativeCode(), edges, f32);
       return new TDigest(h);
     }
 
-    /** Build from {@code float[]} input (values are upcast to double for ingestion). */
+    /** Build from {@code float[]} input (values are upcast to double). */
     public TDigest build(float[] values) {
       Objects.requireNonNull(values, "values");
+      final boolean f32 = (precision == Precision.F32);
+      final int edges = (policy == SingletonPolicy.USE_WITH_PROTECTED_EDGES) ? edgesPerSide : 0;
       long h = TDigestNative.fromArray(
-          values, maxSize, scale.asWire(), policyCode(policy), keep, precision == Precision.F32);
+          values, maxSize, scale.asWire(), policy.toNativeCode(), edges, f32);
       return new TDigest(h);
     }
   }
+
 
   /** Start a fluent builder with sensible defaults. */
   public static Builder builder() { return new Builder(); }

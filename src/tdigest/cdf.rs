@@ -62,7 +62,9 @@
 //!
 //! [`PAR_MIN`]: constant.PAR_MIN
 
+use crate::tdigest::precision::FloatLike;
 use crate::tdigest::TDigest;
+use ordered_float::FloatCore;
 use rayon::iter::IndexedParallelIterator;
 use rayon::prelude::*;
 
@@ -74,7 +76,7 @@ use rayon::prelude::*;
 /// Heuristic, tuned to avoid overhead dominating small batches.
 const PAR_MIN: usize = 32_768;
 
-impl TDigest {
+impl<F: FloatLike + FloatCore> TDigest<F> {
     /// Estimate the CDF at each `vals[i]`, returning values in **[0, 1]**.
     ///
     /// ## Semantics
@@ -163,19 +165,20 @@ struct CdfLight {
 }
 
 #[inline]
-fn build_arrays_light(td: &TDigest) -> CdfLight {
+fn build_arrays_light<F: FloatLike + FloatCore>(td: &TDigest<F>) -> CdfLight {
     let n = td.centroids().len();
 
-    let mut means = Vec::with_capacity(n);
-    let mut weights = Vec::with_capacity(n);
+    // NOTE: switch to the new f64-facing helpers on Centroid<F>
+    let mut means: Vec<f64> = Vec::with_capacity(n);
+    let mut weights: Vec<f64> = Vec::with_capacity(n);
     for c in td.centroids() {
-        means.push(c.mean());
-        weights.push(c.weight());
+        means.push(c.mean_f64());
+        weights.push(c.weight_f64());
     }
 
-    // prefix[i] = sum(weights[0..i])
-    let mut prefix = Vec::with_capacity(n);
-    let mut run = 0.0;
+    // prefix[i] = sum(weights[0..i]) in f64
+    let mut prefix: Vec<f64> = Vec::with_capacity(n);
+    let mut run: f64 = 0.0;
     for &w in &weights {
         prefix.push(run);
         run += w;
@@ -276,8 +279,6 @@ fn cdf_at_val_fast(
 
             let dw = 0.5 * (wl + wr);
             let dw_no_singleton = dw - left_excl - right_excl;
-            // Safety (mirrors reference invariants):
-            // assert dw_no_singleton > dw / 2.0 && gap > 0.0
 
             // Base mass at left half-weight plus any left exclusion.
             let base = prefix[li] + wl / 2.0 + left_excl;

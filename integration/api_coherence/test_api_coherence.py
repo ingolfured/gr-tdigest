@@ -1,6 +1,7 @@
 # integration/api_coherence/test_api_coherence.py
 from __future__ import annotations
 
+import inspect
 import subprocess
 import textwrap
 from pathlib import Path
@@ -8,43 +9,82 @@ from pathlib import Path
 from conftest import assert_close, run_cli
 
 
+def _maybe_add_edge_pins_kw(func, kwargs: dict, pin_per_side: int | None):
+    """
+    Add the correct kwarg for edge-pinning depending on what `func` accepts.
+    Prefers `edges_per_side`; falls back to `edges_to_preserve` for older builds.
+    """
+    if pin_per_side is None:
+        return
+    try:
+        sig = inspect.signature(func)
+        params = sig.parameters
+        if "edges_per_side" in params:
+            kwargs["edges_per_side"] = int(pin_per_side)
+        elif "edges_to_preserve" in params:
+            kwargs["edges_to_preserve"] = int(pin_per_side)
+        else:
+            # No supported parameter; let the call fail loudly later.
+            pass
+    except (ValueError, TypeError):
+        # If we can't inspect (shouldn't happen for Python callables), do nothing.
+        pass
+
+
 def test_cli_quantile_and_cdf(paths, dataset, expect, cfg):
-    assert paths.cli_bin.exists() and paths.cli_bin.stat().st_mode & 0o111, f"missing CLI: {paths.cli_bin}"
+    assert paths.cli_bin.exists() and paths.cli_bin.stat().st_mode & 0o111, (
+        f"missing CLI: {paths.cli_bin}"
+    )
     data = dataset["DATA"]
 
     # QUANTILE with unified params
-    out = run_cli(
-        paths.cli_bin,
-        [
-            "--stdin",
-            "--cmd", "quantile",
-            "--p", str(expect["P"]),
-            "--no-header", "--output", "csv",
-            "--max-size", str(cfg["max_size"]),
-            "--scale", cfg["scale_cli"],                    # "k2"
-            "--singleton-policy", cfg["singleton_cli"],     # "use"
-            "--precision", cfg["precision_cli"],            # "f32"|"f64" (TTD in CLI)
-        ],
-        data,
-    )
+    q_args = [
+        "--stdin",
+        "--cmd",
+        "quantile",
+        "--p",
+        str(expect["P"]),
+        "--no-header",
+        "--output",
+        "csv",
+        "--max-size",
+        str(cfg["max_size"]),
+        "--scale",
+        cfg["scale_cli"],  # "k2"
+        "--singleton-policy",
+        cfg["singleton_cli"],  # "use"|"use_edges"
+        "--precision",
+        cfg["precision_cli"],  # "f32"|"f64" (TTD in CLI)
+    ]
+    if cfg["singleton_cli"] == "use_edges" and cfg["pin_per_side"] is not None:
+        q_args += ["--pin-per-side", str(int(cfg["pin_per_side"]))]
+
+    out = run_cli(paths.cli_bin, q_args, data)
     p_str, v_str = out.split(",", 1)
     assert_close(float(p_str), expect["P"], expect["EPS"])
     assert_close(float(v_str), expect["Q50"], expect["EPS"])
 
     # CDF with unified params (rows: x,p)
-    out = run_cli(
-        paths.cli_bin,
-        [
-            "--stdin",
-            "--cmd", "cdf",
-            "--no-header", "--output", "csv",
-            "--max-size", str(cfg["max_size"]),
-            "--scale", cfg["scale_cli"],
-            "--singleton-policy", cfg["singleton_cli"],
-            "--precision", cfg["precision_cli"],
-        ],
-        data,
-    )
+    c_args = [
+        "--stdin",
+        "--cmd",
+        "cdf",
+        "--no-header",
+        "--output",
+        "csv",
+        "--max-size",
+        str(cfg["max_size"]),
+        "--scale",
+        cfg["scale_cli"],
+        "--singleton-policy",
+        cfg["singleton_cli"],
+        "--precision",
+        cfg["precision_cli"],
+    ]
+    if cfg["singleton_cli"] == "use_edges" and cfg["pin_per_side"] is not None:
+        c_args += ["--pin-per-side", str(int(cfg["pin_per_side"]))]
+
+    out = run_cli(paths.cli_bin, c_args, data)
     p_at_x = None
     for line in out.splitlines():
         xs, ps = line.split(",", 1)
@@ -57,15 +97,20 @@ def test_cli_quantile_and_cdf(paths, dataset, expect, cfg):
 
 def test_python_module_quantile_and_cdf(dataset, expect, cfg):
     import gr_tdigest as td
-    d = td.TDigest.from_array(
-        dataset["DATA"],
+
+    kwargs = dict(
         max_size=cfg["max_size"],
-        scale=cfg["scale_py"],                      # "k2" (case-insensitive)
-        singleton_policy=cfg["singleton_py"],       # "use"
-        precision=cfg["precision_py"],              # "f32"|"f64" (TTD in Python)
+        scale=cfg["scale_py"],  # "k2" (case-insensitive)
+        singleton_policy=cfg["singleton_py"],  # "use"|"use_edges"
+        precision=cfg["precision_py"],  # "f32"|"f64" (TTD in Python)
     )
+    if cfg["singleton_py"] == "use_edges" and cfg["pin_per_side"] is not None:
+        # Choose edges kwarg based on the installed API
+        _maybe_add_edge_pins_kw(td.TDigest.from_array, kwargs, int(cfg["pin_per_side"]))
+
+    d = td.TDigest.from_array(dataset["DATA"], **kwargs)
     assert_close(d.quantile(expect["P"]), expect["Q50"], expect["EPS"])
-    assert_close(d.cdf(expect["X"]),        expect["CDF2"], expect["EPS"])
+    assert_close(d.cdf(expect["X"]), expect["CDF2"], expect["EPS"])
 
 
 def test_polars_plugin_quantile_and_cdf(dataset, expect, cfg):
@@ -73,15 +118,18 @@ def test_polars_plugin_quantile_and_cdf(dataset, expect, cfg):
     import gr_tdigest as td
 
     df = pl.DataFrame({"x": dataset["DATA"]})
-    df2 = df.with_columns(
-        td_col=td.tdigest(
-            "x",
-            max_size=cfg["max_size"],
-            scale=cfg["scale_pl"],                   # "k2"
-            singleton_policy=cfg["singleton_pl"],    # "use"
-            precision=cfg["precision_pl"],           # "f32"|"f64" (TTD in plugin; storage alias deprecated)
-        )
+
+    td_kwargs = dict(
+        max_size=cfg["max_size"],
+        scale=cfg["scale_pl"],  # "k2"
+        singleton_policy=cfg["singleton_pl"],  # "use"|"use_edges"
+        precision=cfg["precision_pl"],  # "f32"|"f64" (TTD in plugin)
     )
+    if cfg["singleton_pl"] == "use_edges" and cfg["pin_per_side"] is not None:
+        # Adapt to either signature for td.tdigest(...)
+        _maybe_add_edge_pins_kw(td.tdigest, td_kwargs, int(cfg["pin_per_side"]))
+
+    df2 = df.with_columns(td_col=td.tdigest("x", **td_kwargs))
     out_df = df2.select(
         p50=td.quantile("td_col", expect["P"]),
         cdf2=td.cdf("td_col", "x"),
@@ -105,9 +153,13 @@ def test_java_jni_quantile_and_cdf(paths, dataset, expect, cfg, tmp_path: Path):
     x_lit = str(expect["X"])
     max_size_lit = str(cfg["max_size"])
     # Map from unified tokens to Java enums
-    scale_enum = cfg["scale_java"]              # "K2"
-    policy_enum = cfg["singleton_java"]         # "USE"
-    precision_enum = cfg["precision_java"]      # "F32"|"F64"
+    scale_enum = cfg["scale_java"]  # "K2"
+    policy_enum = cfg["singleton_java"]  # "USE"|"USE_WITH_PROTECTED_EDGES"
+    precision_enum = cfg["precision_java"]  # "F32"|"F64"
+
+    extra_java = ""
+    if policy_enum == "USE_WITH_PROTECTED_EDGES" and cfg["pin_per_side"] is not None:
+        extra_java = f".edgesPerSide({int(cfg['pin_per_side'])})"
 
     java_src = textwrap.dedent(
         f"""
@@ -124,6 +176,7 @@ def test_java_jni_quantile_and_cdf(paths, dataset, expect, cfg, tmp_path: Path):
                     .scale(Scale.{scale_enum})
                     .singletonPolicy(SingletonPolicy.{policy_enum})
                     .precision(Precision.{precision_enum})
+                    {extra_java}
                     .build(data)) {{
               double p50 = d.quantile({p_lit});
               double[] ps = d.cdf(new double[]{{{x_lit}}});
@@ -140,7 +193,9 @@ def test_java_jni_quantile_and_cdf(paths, dataset, expect, cfg, tmp_path: Path):
 
     # Ensure Gradle classes (project) exist (we don't depend on a JAR here)
     classes_dir = paths.classes_dir
-    assert classes_dir.exists(), f"Java classes not found at {classes_dir}; run gradle classes"
+    assert classes_dir.exists(), (
+        f"Java classes not found at {classes_dir}; run gradle classes"
+    )
 
     # Compile runner against project classes
     try:
@@ -163,15 +218,22 @@ def test_java_jni_quantile_and_cdf(paths, dataset, expect, cfg, tmp_path: Path):
     native_dir = next((p for p in paths.native_dirs if p.exists()), None)
     if native_dir is None:
         raise AssertionError(
-            "Could not find Gradle-native dir; checked:\n  - " +
-            "\n  - ".join(str(p) for p in paths.native_dirs)
+            "Could not find Gradle-native dir; checked:\n  - "
+            + "\n  - ".join(str(p) for p in paths.native_dirs)
         )
 
     classpath = f".{paths.classpath_sep}{classes_dir}"
     jvm_args = []
     # For JDK 22+: jvm_args.append("--enable-native-access=ALL-UNNAMED")
 
-    cmd = ["java", *jvm_args, f"-Djava.library.path={native_dir}", "-cp", classpath, "TDigestSmoke"]
+    cmd = [
+        "java",
+        *jvm_args,
+        f"-Djava.library.path={native_dir}",
+        "-cp",
+        classpath,
+        "TDigestSmoke",
+    ]
 
     try:
         out = subprocess.check_output(cmd, cwd=tmp_path, text=True).strip()

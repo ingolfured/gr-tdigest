@@ -1,3 +1,4 @@
+// src/tdigest/codecs.rs
 //! Unified Polars ↔ TDigest codecs.
 //!
 //! Two precision modes:
@@ -7,16 +8,19 @@
 //! Front-end API:
 //!   td.to_series(name, compact=false)          → Series
 //!   td.to_series_with_default(name, f32_mode)  → Series
-//!   TDigest::from_series(&series, compact)     → `Vec<TDigest>`
+//!   TDigest::from_series(&series, compact)     → `Vec<TDigest<F>>`
 //!
 //! Internal strict variants still available:
 //!   try_to_series\[_compact], try_from_series\[_compact]
 
 use std::fmt;
 
+use ordered_float::FloatCore;
 use polars::prelude::*;
 
-use crate::tdigest::{centroids::Centroid, DigestStats, TDigest};
+use crate::tdigest::centroids::Centroid;
+use crate::tdigest::precision::{FloatLike, Precision};
+use crate::tdigest::tdigest::{DigestStats, TDigest};
 
 // --------------------- field name constants ----------------------------------
 
@@ -39,7 +43,7 @@ pub enum PrecisionMode {
 
 // --------------------- public API on TDigest ---------------------------------
 
-impl TDigest {
+impl<F: FloatLike + FloatCore> TDigest<F> {
     /// Canonical encoding: f64 centroids and f64 min/max/sum/count.
     pub fn try_to_series(&self, name: &str) -> PolarsResult<Series> {
         tdigest_to_series_with(self, name, PrecisionMode::Canonical)
@@ -51,13 +55,13 @@ impl TDigest {
     }
 
     /// Strict parse of canonical schema.
-    pub fn try_from_series(input: &Series) -> Result<Vec<TDigest>, CodecError> {
-        parse_tdigests_strict(input, PrecisionMode::Canonical)
+    pub fn try_from_series(input: &Series) -> Result<Vec<TDigest<F>>, CodecError> {
+        parse_tdigests_strict::<F>(input, PrecisionMode::Canonical)
     }
 
     /// Strict parse of compact schema.
-    pub fn try_from_series_compact(input: &Series) -> Result<Vec<TDigest>, CodecError> {
-        parse_tdigests_strict(input, PrecisionMode::Compact)
+    pub fn try_from_series_compact(input: &Series) -> Result<Vec<TDigest<F>>, CodecError> {
+        parse_tdigests_strict::<F>(input, PrecisionMode::Compact)
     }
 
     /// Canonical Polars dtype for a TDigest row (struct of 6 fields).
@@ -73,7 +77,7 @@ impl TDigest {
 
 // --------------------- unified front-end wrappers ---------------------------
 
-impl TDigest {
+impl<F: FloatLike + FloatCore> TDigest<F> {
     /// Unified Polars codec interface (used by all language fronts).
     ///
     /// `compact = false` → Canonical (f64 centroids)
@@ -86,9 +90,8 @@ impl TDigest {
         }
     }
 
-    /// Convenience variant that follows the digest's in-memory precision flag.
-    ///
-    /// Call this from language bindings if you have an `f32_mode` boolean.
+    /// Convenience variant that follows the digest's in-memory precision.
+    /// Uses [`Precision::F32`] → compact; otherwise canonical.
     pub fn to_series_with_default(&self, name: &str, f32_mode: bool) -> PolarsResult<Series> {
         if f32_mode {
             self.try_to_series_compact(name)
@@ -97,16 +100,19 @@ impl TDigest {
         }
     }
 
+    /// Same as `to_series_with_default`, but derives the default from the digest precision.
+    pub fn to_series_default(&self, name: &str) -> PolarsResult<Series> {
+        let f32_mode = matches!(self.precision(), Precision::F32);
+        self.to_series_with_default(name, f32_mode)
+    }
+
     /// Unified strict decoder. `compact=false` → canonical; `true` → compact.
-    pub fn from_series(input: &Series, compact: bool) -> Result<Vec<TDigest>, CodecError> {
+    pub fn from_series(input: &Series, compact: bool) -> Result<Vec<TDigest<F>>, CodecError> {
         if compact {
             Self::try_from_series_compact(input)
         } else {
             Self::try_from_series(input)
         }
-    }
-    pub fn to_series_default(&self, name: &str) -> PolarsResult<Series> {
-        self.to_series_with_default(name, self.is_f32_mode())
     }
 }
 
@@ -283,7 +289,11 @@ fn validate_schema_strict(s: &StructChunked, mode: PrecisionMode) -> Result<(), 
 
 // --------------------- private writer core -----------------------------------
 
-fn tdigest_to_series_with(td: &TDigest, name: &str, mode: PrecisionMode) -> PolarsResult<Series> {
+fn tdigest_to_series_with<F: FloatLike + FloatCore>(
+    td: &TDigest<F>,
+    name: &str,
+    mode: PrecisionMode,
+) -> PolarsResult<Series> {
     let cents = td.centroids();
     match mode {
         PrecisionMode::Canonical => {
@@ -326,9 +336,9 @@ fn centroid_struct(mean_s: &Series, weight_s: &Series) -> PolarsResult<Series> {
 }
 
 /// Build `List<Struct{mean, weight}>` with f64 inner fields
-fn pack_centroids_f64(cents: &[Centroid]) -> PolarsResult<Series> {
-    let means: Vec<f64> = cents.iter().map(|c| c.mean()).collect();
-    let wgts: Vec<f64> = cents.iter().map(|c| c.weight()).collect();
+fn pack_centroids_f64<F: FloatLike + FloatCore>(cents: &[Centroid<F>]) -> PolarsResult<Series> {
+    let means: Vec<f64> = cents.iter().map(|c| c.mean_f64()).collect();
+    let wgts: Vec<f64> = cents.iter().map(|c| c.weight_f64()).collect();
     let mean_s = Series::new(F_MEAN.into(), means);
     let weight_s = Series::new(F_WEIGHT.into(), wgts);
     let inner = centroid_struct(&mean_s, &weight_s)?;
@@ -336,9 +346,9 @@ fn pack_centroids_f64(cents: &[Centroid]) -> PolarsResult<Series> {
 }
 
 /// Build `List<Struct{mean, weight}>` with f32 inner fields (compact)
-fn pack_centroids_f32(cents: &[Centroid]) -> PolarsResult<Series> {
-    let means: Vec<f32> = cents.iter().map(|c| c.mean() as f32).collect();
-    let wgts: Vec<f32> = cents.iter().map(|c| c.weight() as f32).collect();
+fn pack_centroids_f32<F: FloatLike + FloatCore>(cents: &[Centroid<F>]) -> PolarsResult<Series> {
+    let means: Vec<f32> = cents.iter().map(|c| c.mean_f64() as f32).collect();
+    let wgts: Vec<f32> = cents.iter().map(|c| c.weight_f64() as f32).collect();
     let mean_s = Series::new(F_MEAN.into(), means);
     let weight_s = Series::new(F_WEIGHT.into(), wgts);
     let inner = centroid_struct(&mean_s, &weight_s)?;
@@ -367,12 +377,12 @@ fn build_outer_struct(
     .map(|sc| sc.into_series())
 }
 
-/// Parse one row’s centroids into `Vec<Centroid>` with strict null/shape checks.
-fn unpack_centroids_strict(
+/// Parse one row’s centroids into `Vec<Centroid<F>>` with strict null/shape checks.
+fn unpack_centroids_strict<F: FloatLike + FloatCore>(
     centroids_list: &ListChunked,
     row: usize,
     mode: PrecisionMode,
-) -> Result<Vec<Centroid>, CodecError> {
+) -> Result<Vec<Centroid<F>>, CodecError> {
     let Some(row_ser) = centroids_list.get_as_series(row) else {
         return Ok(Vec::new());
     };
@@ -415,7 +425,7 @@ fn unpack_centroids_strict(
                 let (Some(mv), Some(wv)) = (mm, ww) else {
                     return Err(CodecError::NullCentroid { row, index: idx });
                 };
-                out.push(Centroid::new(mv, wv));
+                out.push(Centroid::<F>::new(mv, wv));
             }
             Ok(out)
         }
@@ -443,7 +453,7 @@ fn unpack_centroids_strict(
                 let (Some(mv), Some(wv)) = (mm, ww) else {
                     return Err(CodecError::NullCentroid { row, index: idx });
                 };
-                out.push(Centroid::new(mv as f64, wv as f64));
+                out.push(Centroid::<F>::new(mv as f64, wv as f64));
             }
             Ok(out)
         }
@@ -452,7 +462,10 @@ fn unpack_centroids_strict(
 
 // --------------------- strict parser entry -----------------------------------
 
-fn parse_tdigests_strict(input: &Series, mode: PrecisionMode) -> Result<Vec<TDigest>, CodecError> {
+fn parse_tdigests_strict<F: FloatLike + FloatCore>(
+    input: &Series,
+    mode: PrecisionMode,
+) -> Result<Vec<TDigest<F>>, CodecError> {
     let s = input.struct_().map_err(|_| CodecError::NotAStruct {
         series_name: input.name().to_string(),
     })?;
@@ -569,9 +582,9 @@ fn parse_tdigests_strict(input: &Series, mode: PrecisionMode) -> Result<Vec<TDig
             }
         };
 
-        let cents = unpack_centroids_strict(centroids_list, i, mode)?;
+        let cents = unpack_centroids_strict::<F>(centroids_list, i, mode)?;
         out.push(
-            TDigest::builder()
+            TDigest::<F>::builder()
                 .max_size(max_size)
                 .with_centroids_and_stats(
                     cents,

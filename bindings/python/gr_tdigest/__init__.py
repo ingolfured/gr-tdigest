@@ -5,6 +5,7 @@ from importlib.metadata import PackageNotFoundError, version
 from pathlib import Path
 from typing import TYPE_CHECKING, Any, Callable, Dict, List, Literal, Optional, Tuple, cast
 from numbers import Real
+from math import ceil, isfinite
 
 import polars as pl
 from polars.plugins import register_plugin_function
@@ -18,16 +19,19 @@ lib = Path(__file__).parent
 # --- native import (fail loudly so tests don't silently pass with None) ---
 try:
     # Native module produced by PyO3
-    from ._gr_tdigest import TDigest as _NativeTDigest, __version__
-except ModuleNotFoundError as e:  # pragma: no cover
+    from ._gr_tdigest import TDigest as _NativeTDigest, __version__ as __native_version__
+
+    __version__ = __native_version__
+except ModuleNotFoundError as exc:  # pragma: no cover
     raise ImportError(
         "Failed to import the compiled extension '_gr_tdigest'. Build it with: `uv run maturin develop -r -F python`."
-    ) from e
+    ) from exc
 
 # Fallback for editable/dev installs where importlib.metadata might not see the wheel
 try:  # pragma: no cover
     __version__ = version("gr-tdigest")
 except PackageNotFoundError:  # pragma: no cover
+    # Keep the native version if package metadata isn't available
     pass
 
 
@@ -50,14 +54,14 @@ def _coerce_scale_for_class(scale: ScaleFamily | str) -> str:
     s = scale.value if isinstance(scale, ScaleFamily) else str(scale).strip().upper()
     if s in {"QUAD", "K1", "K2", "K3"}:
         return s
-    raise ValueError(f"Unknown scale family: {scale!r}")
+    raise ValueError(f"Unknown scale family: {scale!r}. Use one of: 'QUAD'|'K1'|'K2'|'K3' (case-insensitive).")
 
 
 def _coerce_scale_for_plugin(scale: ScaleFamily | str) -> str:
     s = scale.value.lower() if isinstance(scale, ScaleFamily) else str(scale).strip().lower()
     if s in {"quad", "k1", "k2", "k3"}:
         return s
-    raise ValueError(f"Unknown scale family: {scale!r}")
+    raise ValueError(f"Unknown scale family: {scale!r}. Use one of: 'quad'|'k1'|'k2'|'k3' (case-insensitive).")
 
 
 def _coerce_precision(precision: str | None) -> str:
@@ -66,21 +70,39 @@ def _coerce_precision(precision: str | None) -> str:
     s = str(precision).strip().lower()
     if s in {"f64", "f32"}:
         return s
-    raise ValueError(f"Unknown precision: {precision!r}")
+    raise ValueError(f"Unknown precision: {precision!r}. Use 'f64' (default) or 'f32'.")
 
 
 def _norm_policy(mode: SingletonPolicy | str | None) -> str:
+    """
+    Normalize policy tokens to: "off" | "use" | "edge"
+
+    Accepted synonyms:
+      - off:  "off"
+      - use:  "use", "on", "respect"
+      - edge: "edge", "edges", "use_edges", "useedge", "useedges",
+              "protectededges", "use_with_protected_edges", "usewithprotectededges"
+    """
     if mode is None:
         return "use"
     if isinstance(mode, SingletonPolicy):
         return mode.value
 
-    s = str(mode).strip().lower().replace("_", "").replace(" ", "")
+    s = str(mode).strip().lower()
+    s = s.replace("_", "").replace("-", "").replace(" ", "")
+
     if s in {"off"}:
         return "off"
     if s in {"use", "on", "respect"}:
         return "use"
-    if s in {"edge", "edges", "protectededges", "usewithprotectededges"}:
+    if s in {
+        "edge",
+        "edges",
+        "useedge",
+        "useedges",  # handles "use_edges"
+        "protectededges",
+        "usewithprotectededges",  # handles "use_with_protected_edges"
+    }:
         return "edge"
 
     raise ValueError("singleton_policy must be one of 'off'|'use'|'edge'")
@@ -103,6 +125,86 @@ def _into_expr(x: "IntoExpr | Any") -> pl.Expr:
     return pl.lit(x)
 
 
+def _validate_max_size(max_size: int) -> int:
+    """
+    Enforce a practical, explicit range for cluster budget.
+    - Lower bound avoids degenerate accuracy,
+    - Upper bound guards accidental explosions.
+    """
+    try:
+        m = int(max_size)
+    except Exception as exc:  # noqa: BLE001
+        raise TypeError(f"max_size must be an integer; got {type(max_size).__name__}.") from exc
+
+    if m < 10:
+        raise ValueError(
+            f"max_size must be >= 10; got {m}. Tip: 100–200 is a good starting point; increase for tighter tails."
+        )
+    if m > 20000:
+        raise ValueError(
+            f"max_size too large ({m}). "
+            "Choose <= 20_000 to avoid excessive memory/CPU. If you truly need more, "
+            "increase gradually while monitoring accuracy and resources."
+        )
+    return m
+
+
+def _validate_edges_per_side(eps: Optional[int], max_size: int) -> Optional[int]:
+    if eps is None:
+        return None
+    try:
+        e = int(eps)
+    except Exception as exc:  # noqa: BLE001
+        raise TypeError(f"edges_per_side must be an integer; got {type(eps).__name__}.") from exc
+    if e < 1:
+        raise ValueError("edges_per_side must be >= 1.")
+    # Keep a strict, predictable bound relative to the budget.
+    # We require <= max_size//2 to leave capacity for interior centroids.
+    hard_cap = max_size // 2
+    if e > hard_cap:
+        raise ValueError(
+            f"edges_per_side={e} exceeds the limit for max_size={max_size} "
+            f"(must be <= {hard_cap}). "
+            "Reduce edges_per_side or increase max_size."
+        )
+    return e
+
+
+def _normalize_edges_per_side(
+    mode_norm: str,
+    *,
+    edges_per_side: Optional[int] = None,
+    edges_total: Optional[int] = None,
+    edges_to_preserve: Optional[int] = None,
+) -> Optional[int]:
+    """
+    Canonicalize the 'edge pins' configuration to a per-side integer.
+    - Only valid when mode_norm == 'edge'
+    - Accepts aliases:
+        * edges_per_side (canonical)
+        * edges_total (interpreted as overall across both tails; ceil(total/2) per side)
+        * edges_to_preserve (legacy alias; interpreted as per-side)
+    """
+    if mode_norm != "edge":
+        if any(v is not None for v in (edges_per_side, edges_total, edges_to_preserve)):
+            raise ValueError("edges_* is only allowed when singleton_policy='edge'")
+        return None
+
+    # prefer canonical; fallback to aliases
+    eps = edges_per_side
+    if eps is None and edges_to_preserve is not None:
+        eps = int(edges_to_preserve)
+    if eps is None and edges_total is not None:
+        eps = int(ceil(edges_total / 2))
+
+    if eps is None:
+        raise ValueError("singleton_policy='edge' requires edges_per_side")
+    if eps < 1:
+        raise ValueError("edges_per_side must be >= 1")
+
+    return int(eps)
+
+
 # --- Python-side shim: TDigest.from_array() argument normalization ------------
 _native_from_array_raw: Any = getattr(_NativeTDigest, "from_array", None)
 if _native_from_array_raw is None:  # pragma: no cover
@@ -117,22 +219,29 @@ def _from_array_cls(
     max_size: int = 200,
     scale: ScaleFamily | str = "k2",
     singleton_policy: SingletonPolicy | str | None = "use",
-    edges_to_preserve: Optional[int] = None,
+    # canonical + aliases:
+    edges_per_side: Optional[int] = None,
+    edges_total: Optional[int] = None,
+    edges_to_preserve: Optional[int] = None,  # legacy alias (per-side)
     **kwargs: Any,
 ) -> _NativeTDigest:
     s = _coerce_scale_for_class(scale)  # "QUAD"|"K1"|"K2"|"K3"
     m = _norm_policy(singleton_policy)  # "off"|"use"|"edge"
+    max_size = _validate_max_size(max_size)
 
-    if m == "edge" and edges_to_preserve is None:
-        raise ValueError("edges_to_preserve is required when singleton_policy='edge'")
-    if m != "edge" and edges_to_preserve is not None:
-        raise ValueError("edges_to_preserve is only allowed when singleton_policy='edge'")
+    eps = _normalize_edges_per_side(
+        m,
+        edges_per_side=edges_per_side,
+        edges_total=edges_total,
+        edges_to_preserve=edges_to_preserve,
+    )
+    eps = _validate_edges_per_side(eps, max_size)
 
-    # Native expects: singleton_policy ("off"|"use"|"edges") and edges (usize)
+    # Native expects: singleton_policy ("off"|"use"|"edges") and edges (usize, per side)
     policy_str = {"off": "off", "use": "use", "edge": "edges"}[m]
 
     # Accept precision="f64"/"f32" for API coherence, but the native constructor
-    # doesn't take it yet — strip it out here (TTD: wire through later if added).
+    # doesn't take it yet — strip it out here (TODO: wire through later if added).
     _ = kwargs.pop("precision", None)
 
     call_kwargs: Dict[str, Any] = {
@@ -140,8 +249,9 @@ def _from_array_cls(
         "scale": s,
         "singleton_policy": policy_str,
     }
-    if edges_to_preserve is not None:
-        call_kwargs["edges"] = int(edges_to_preserve)
+    if eps is not None:
+        call_kwargs["edges"] = int(eps)
+
     call_kwargs.update(kwargs)
 
     # native from_array is a staticmethod; call directly
@@ -202,6 +312,13 @@ def _cdf_patched(self: _NativeTDigest, xs: Any) -> Any:
         kind = "iterable"
         flat = [float(x) for x in it]
 
+    # Reject NaN/Inf inputs early with a precise hint
+    if any(not isfinite(v) for v in flat):
+        raise ValueError(
+            "cdf() probe values must be finite real numbers (no NaN/±inf). "
+            "Tip: clean your inputs or filter invalid entries before calling cdf()."
+        )
+
     out_list = _native_cdf(self, flat)
 
     if kind == "scalar":
@@ -235,7 +352,10 @@ def tdigest(
     scale: ScaleFamily | str = "k2",
     precision: str = "f64",
     singleton_policy: SingletonPolicy | str | None = "use",
-    edges_to_preserve: Optional[int] = None,
+    # canonical + aliases:
+    edges_per_side: Optional[int] = None,
+    edges_total: Optional[int] = None,
+    edges_to_preserve: Optional[int] = None,  # legacy alias (per-side)
 ) -> pl.Expr:
     """
     Build a TDigest per group/column.
@@ -244,21 +364,26 @@ def tdigest(
       {
         "max_size": int,
         "scale": "quad"|"k1"|"k2"|"k3",
-        "singleton_mode": "off"|"use"|"edge",     # wire key (policy on the Python side)
-        "edges_to_preserve": Optional[int],       # required iff mode == "edge"
-        "precision": "f64"|"f32"                  # canonical wire flag
+        "singleton_mode": "off"|"use"|"edge",
+        "edges_per_side": Optional[int],   # canonical wire key (edge mode only)
+        # (temporary compat) "edges_to_preserve": Optional[int],  # legacy wire key
+        "precision": "f64"|"f32"
       }
     """
     v_expr = _into_expr(values)
 
+    max_size = _validate_max_size(max_size)
     scale_norm = _coerce_scale_for_plugin(scale)  # lower-case "quad"|"k1"|"k2"|"k3"
     prec_norm = _coerce_precision(precision)  # "f64"|"f32"
     mode_norm = _norm_policy(singleton_policy)  # "off"|"use"|"edge"
 
-    if mode_norm == "edge" and edges_to_preserve is None:
-        raise ValueError("edges_to_preserve is required when singleton_policy='edge'")
-    if mode_norm != "edge" and edges_to_preserve is not None:
-        raise ValueError("edges_to_preserve is only allowed when singleton_policy='edge'")
+    eps = _normalize_edges_per_side(
+        mode_norm,
+        edges_per_side=edges_per_side,
+        edges_total=edges_total,
+        edges_to_preserve=edges_to_preserve,
+    )
+    eps = _validate_edges_per_side(eps, max_size)
 
     kwargs: Dict[str, Any] = {
         "max_size": int(max_size),
@@ -266,8 +391,11 @@ def tdigest(
         "singleton_mode": mode_norm,  # wire name expected by Rust
         "precision": prec_norm,
     }
-    if edges_to_preserve is not None:
-        kwargs["edges_to_preserve"] = int(edges_to_preserve)
+    if eps is not None:
+        # Canonical wire arg:
+        kwargs["edges_per_side"] = int(eps)
+        # Temporary back-compat for older plugin handlers (safe to remove later):
+        kwargs["edges_to_preserve"] = int(eps)
 
     # function name: f64 → canonical tdigest; f32 → compact
     func = "tdigest" if prec_norm == "f64" else "_tdigest_f32"
@@ -317,6 +445,8 @@ def quantile(digest: "IntoExpr", q: "IntoExpr | float") -> pl.Expr:
     if is_expr_like:
         q_expr = _into_expr(q)
         # 2-arg form: (digest_expr, q_expr)
+        # NOTE: When passing an expression for q, ensure q∈[0,1]. You can clamp:
+        #   q_expr = pl.col("q").clip(min=0.0, max=1.0)
         return register_plugin_function(
             plugin_path=str(lib),
             function_name="quantile",
@@ -326,7 +456,19 @@ def quantile(digest: "IntoExpr", q: "IntoExpr | float") -> pl.Expr:
         )
 
     # Otherwise, treat q as a scalar and use the kwarg form expected by the plugin.
-    q_val = float(cast(float, q))
+    try:
+        q_val = float(cast(float, q))
+    except Exception as exc:  # noqa: BLE001
+        raise TypeError(f"q must be a float in [0, 1]; got {type(q).__name__}.") from exc
+
+    if not (0.0 <= q_val <= 1.0):
+        # Be precise and helpful about the common mistakes.
+        hint = (
+            "If you meant a percent, divide by 100 (e.g., 95 → 0.95). "
+            "If you meant an absolute data value (not a probability), use cdf() instead."
+        )
+        raise ValueError(f"q must be within [0, 1]; got {q_val}. {hint}")
+
     return register_plugin_function(
         plugin_path=str(lib),
         function_name="quantile",

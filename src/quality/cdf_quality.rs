@@ -28,10 +28,25 @@ fn empirical_cdf_at_grid(sorted: &[f64], ecdf_sorted: &[f64], values: &[f64]) ->
 }
 
 /// Returns (ks_like, mae) between digest-estimated CDF and empirical CDF on a dense grid.
-fn cdf_grid_errors(td: &TDigest, sorted: &[f64]) -> (f64, f64) {
-    let ecdf_sorted = exact_ecdf_for_sorted(sorted);
+fn cdf_grid_errors(td: &TDigest<f64>, sorted: &[f64]) -> (f64, f64) {
+    let n = sorted.len();
+    if n == 0 {
+        return (f64::NAN, f64::NAN);
+    }
+
+    // Sample a linear grid across the observed data range.
     let steps = 1000usize;
-    let values: Vec<f64> = (0..=steps).map(|i| (i as f64) / (steps as f64)).collect();
+    let (xmin, xmax) = (sorted[0], sorted[n - 1]);
+    let span = xmax - xmin;
+    let values: Vec<f64> = if span == 0.0 {
+        vec![xmin; steps + 1]
+    } else {
+        (0..=steps)
+            .map(|i| xmin + (i as f64) * span / (steps as f64))
+            .collect()
+    };
+
+    let ecdf_sorted = exact_ecdf_for_sorted(sorted);
     let est: Vec<f64> = td.cdf(&values);
     let exp: Vec<f64> = empirical_cdf_at_grid(sorted, &ecdf_sorted, &values);
 
@@ -60,7 +75,7 @@ pub fn assess_cdf_with(
     let mut data: Vec<f64> = gen_dataset(kind, n, seed);
     data.sort_by(|a: &f64, b: &f64| a.total_cmp(b));
 
-    let td = build_digest_sorted(data.clone(), max_size, scale, precision);
+    let td: TDigest<f64> = build_digest_sorted(data.clone(), max_size, scale, precision);
     let (ks, mae) = cdf_grid_errors(&td, &data);
     QualityReport::from_metrics(n, ks, mae)
 }

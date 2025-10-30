@@ -4,7 +4,7 @@
 //! 1) A pinned **regression** test at max_size=1000 that FAILS on any change
 //!    (even improvements). You update the baseline constants to bless changes.
 //! 2) A **story** printer comparing max_size=100 vs 1000 across all scale
-//!    families and Precision {F64, F32Inputs} so you can *see* what moved.
+//!    families and Precision {F64, F32} so you can *see* what moved.
 
 use super::quality_base::{
     build_digest_sorted, expected_quantile, gen_dataset, DistKind, Precision, QualityReport,
@@ -13,11 +13,12 @@ use crate::tdigest::{ScaleFamily, TDigest};
 
 /// Evaluate by sampling a quantile grid and comparing to order-stat interpolation.
 /// Returns (ks_like, mae).
-fn quantile_grid_errors(td: &TDigest, sorted: &[f64]) -> (f64, f64) {
+fn quantile_grid_errors(td: &TDigest<f64>, sorted: &[f64]) -> (f64, f64) {
     let steps = 1000usize;
     let mut ks_like = 0.0f64;
     let mut mae = 0.0f64;
 
+    // Exclude exact 0/1 to avoid edge clamping biases; 1..(steps-1) gives (0,1).
     for i in 1..steps {
         let q = (i as f64) / (steps as f64);
         let est = td.quantile(q);
@@ -41,8 +42,8 @@ pub fn assess_quantiles_with(
     seed: u64,
 ) -> QualityReport {
     let mut data = gen_dataset(kind, n, seed);
-    data.sort_by(|a, b| a.partial_cmp(b).unwrap());
-    let td = build_digest_sorted(data.clone(), max_size, scale, precision);
+    data.sort_by(|a, b| a.total_cmp(b));
+    let td: TDigest<f64> = build_digest_sorted(data.clone(), max_size, scale, precision);
     let (ks, mae) = quantile_grid_errors(&td, &data);
     QualityReport::from_metrics(n, ks, mae)
 }
@@ -99,7 +100,7 @@ mod tests {
     /// ========= 2) STORY: print a readable matrix you can eyeball =========
     ///
     /// Runs all 4 distributions [Uniform, Normal, LogNormal(σ=1), Mixture].
-    /// For each dist: max_size = [100,1000] × scales [Quad,K1,K2,K3] × precision [F64,F32Inputs].
+    /// For each dist: max_size = [100,1000] × scales [Quad,K1,K2,K3] × precision [F64,F32].
     /// Prints clear separators so you can scroll the output easily.
     /// No assertions — this is diagnostic and narrative only.
     #[test]

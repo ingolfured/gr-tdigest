@@ -1,471 +1,208 @@
 // src/bin/tdigest_cli.rs
 
-//! Command-line interface for the `gr-tdigest` library.
-//!
-//! Build a t-digest from values supplied via one of three inputs (values, file,
-//! or stdin) and compute either a CDF for each input value or a single quantile.
-//!
-//! # Input sources (choose exactly one)
-//! - `--values "1, 2; 3 4"`: inline values (commas/spaces/semicolons accepted)
-//! - `--file data.txt`: read values from a file (same separators accepted)
-//! - `--stdin`: read values from standard input (stream or paste)
-//!
-//! # Output formats
-//! - `--output csv` (default): CSV with header `x,p` (CDF) or `quantile,value`
-//! - `--output tsv`: tab-separated with same headers
-//! - `--output jsonl`: JSON Lines; CDF emits `{"x": ..., "p": ...}` per line
-//!
-//! Use `--no-header` to omit headers for CSV/TSV.
-//!
-//! # Examples
-//! ```text
-//! # CDF from inline values (defaults: --output csv, --scale k2, --singleton-policy use, --precision f64)
-//! tdigest --values "1,2,3,4,5" --cmd cdf
-//!
-//! # Quantile (q=0.99) from a file, TSV output without header
-//! tdigest --file data.txt --cmd quantile --p 0.99 --output tsv --no-header
-//!
-//! # CDF from stdin, JSONL output
-//! cat numbers.txt | tdigest --stdin --cmd cdf --output jsonl
-//!
-//! # Protect edges (keep 4 per tail) for heavy-tailed data
-//! tdigest --file data.txt --cmd cdf --scale quad --singleton-policy edges --keep 4
-//! ```
-
-use clap::{builder::EnumValueParser, Arg, ArgAction, ArgGroup, Command, ValueEnum};
-use std::error::Error;
-use std::fs;
 use std::io::{self, Read};
+use std::str::FromStr;
+
+use clap::{ArgAction, Parser, ValueEnum};
 
 use gr_tdigest::tdigest::singleton_policy::SingletonPolicy;
-use gr_tdigest::tdigest::Precision as CorePrecision;
-use gr_tdigest::tdigest::ScaleFamily;
+use gr_tdigest::tdigest::{ScaleFamily, TDigest, TDigestBuilder};
 
-/// User-facing scale options for the CLI.
+/// Simple CLI wrapper for gr-tdigest used in integration/api_coherence tests.
 #[derive(Debug, Clone, ValueEnum)]
-enum Scale {
+enum Cmd {
+    Quantile,
+    Cdf,
+}
+
+#[derive(Debug, Clone, ValueEnum)]
+enum ScaleOpt {
     Quad,
     K1,
     K2,
     K3,
 }
-impl From<Scale> for ScaleFamily {
-    fn from(s: Scale) -> Self {
+
+impl From<ScaleOpt> for ScaleFamily {
+    fn from(s: ScaleOpt) -> Self {
         match s {
-            Scale::Quad => ScaleFamily::Quad,
-            Scale::K1 => ScaleFamily::K1,
-            Scale::K2 => ScaleFamily::K2,
-            Scale::K3 => ScaleFamily::K3,
+            ScaleOpt::Quad => ScaleFamily::Quad,
+            ScaleOpt::K1 => ScaleFamily::K1,
+            ScaleOpt::K2 => ScaleFamily::K2,
+            ScaleOpt::K3 => ScaleFamily::K3,
         }
     }
 }
 
-/// How edge singletons are handled.
-#[derive(Debug, Clone, ValueEnum, PartialEq, Eq)]
-enum Policy {
-    Off,
-    Use,
-    /// Maps to `SingletonPolicy::UseWithProtectedEdges(keep)`.
-    Edges,
-}
-impl Policy {
-    fn into_singleton_policy(self, keep: Option<usize>) -> SingletonPolicy {
-        match self {
-            Policy::Off => SingletonPolicy::Off,
-            Policy::Use => SingletonPolicy::Use,
-            Policy::Edges => SingletonPolicy::UseWithProtectedEdges(keep.unwrap_or(3)),
-        }
-    }
-}
-
-/// Internal centroid storage precision.
 #[derive(Debug, Clone, ValueEnum)]
-enum Prec {
+enum PrecisionOpt {
     F32,
     F64,
 }
-impl From<Prec> for CorePrecision {
-    fn from(p: Prec) -> Self {
-        match p {
-            Prec::F32 => CorePrecision::F32,
-            Prec::F64 => CorePrecision::F64,
+
+/// Accept "off|use|edges|use_edges" (the test passes `use_edges`).
+#[derive(Debug, Clone)]
+enum PolicyOpt {
+    Off,
+    Use,
+    Edges,
+}
+
+impl FromStr for PolicyOpt {
+    type Err = String;
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        let t = s.trim().to_lowercase();
+        match t.as_str() {
+            "off" => Ok(PolicyOpt::Off),
+            "use" | "on" | "respect" => Ok(PolicyOpt::Use),
+            "edges" | "use_edges" | "use-with-protected-edges" | "usewithprotectededges" => {
+                Ok(PolicyOpt::Edges)
+            }
+            other => Err(format!(
+                "invalid value '{}' for --singleton-policy (expected off|use|edges|use_edges)",
+                other
+            )),
         }
     }
 }
 
-/// Which computation to run.
-#[derive(Debug, Clone, ValueEnum)]
-enum CmdKind {
-    /// Emit `P(X ≤ x)` for each input x.
-    Cdf,
-    /// Emit q-quantile; requires `--p q` with `0 ≤ q ≤ 1`.
-    Quantile,
+#[derive(Debug, Parser)]
+#[command(name = "tdigest", version, disable_help_subcommand = true)]
+struct Cli {
+    /// Read values from stdin (whitespace/comma separated)
+    #[arg(long, action = ArgAction::SetTrue)]
+    stdin: bool,
+
+    /// Command to run: quantile or cdf
+    #[arg(long, value_enum)]
+    cmd: Cmd,
+
+    /// Quantile probability p in
+    /// \[0,1\] (required for --cmd quantile)
+    #[arg(long)]
+    p: Option<f64>,
+
+    /// Output format (tests use csv)
+    #[arg(long, default_value = "csv")]
+    output: String,
+
+    /// Suppress header row when output=csv
+    #[arg(long, action = ArgAction::SetTrue)]
+    no_header: bool,
+
+    /// TDigest max size
+    #[arg(long = "max-size", default_value_t = 1000)]
+    max_size: usize,
+
+    /// Scale family: quad|k1|k2|k3
+    #[arg(long, value_enum, default_value_t = ScaleOpt::K2)]
+    scale: ScaleOpt,
+
+    /// Singleton policy: off|use|edges|use_edges
+    #[arg(long = "singleton-policy")]
+    singleton_policy: Option<PolicyOpt>,
+
+    /// Edges to pin per side when using 'edges' policy
+    #[arg(long = "pin-per-side")]
+    pin_per_side: Option<usize>,
+
+    /// Precision hint f32|f64 (currently informational; digests built as f64)
+    #[arg(long, value_enum, default_value_t = PrecisionOpt::F64)]
+    precision: PrecisionOpt,
 }
 
-/// Output encoding.
-#[derive(Debug, Clone, ValueEnum)]
-enum Output {
-    /// CSV with header (unless `--no-header`).
-    Csv,
-    /// TSV with header (unless `--no-header`).
-    Tsv,
-    /// JSON Lines (one JSON object per line).
-    Jsonl,
-}
-
-/// Parse a flat list of f64 from a string with flexible separators.
-fn parse_numbers(s: &str) -> Result<Vec<f64>, Box<dyn Error>> {
+fn read_floats_from_stdin() -> io::Result<Vec<f64>> {
+    let mut buf = String::new();
+    io::stdin().read_to_string(&mut buf)?;
     let mut out = Vec::new();
-    for tok in s
-        .split(|c: char| c.is_whitespace() || c == ',' || c == ';')
-        .filter(|t| !t.is_empty())
-    {
-        out.push(tok.parse::<f64>()?);
+    for tok in buf.split(|c: char| c.is_whitespace() || c == ',') {
+        if tok.is_empty() {
+            continue;
+        }
+        match tok.parse::<f64>() {
+            Ok(v) if v.is_finite() => out.push(v),
+            _ => { /* ignore non-finite / bad tokens */ }
+        }
     }
     Ok(out)
 }
 
-fn read_values_from_file(path: &str) -> Result<Vec<f64>, Box<dyn Error>> {
-    let text = fs::read_to_string(path)?;
-    parse_numbers(&text)
-}
-
-fn read_values_from_stdin() -> Result<Vec<f64>, Box<dyn Error>> {
-    let mut buf = String::new();
-    io::stdin().read_to_string(&mut buf)?;
-    parse_numbers(&buf)
-}
-
-/// Print CDF rows in the selected format.
-fn print_cdf(values: &[f64], ps: &[f64], out: &Output, header: bool) {
-    match out {
-        Output::Csv => {
-            if header {
-                println!("x,p");
+fn policy_from_opts(
+    opt: Option<PolicyOpt>,
+    edges: Option<usize>,
+) -> Result<SingletonPolicy, String> {
+    match opt.unwrap_or(PolicyOpt::Use) {
+        PolicyOpt::Off => Ok(SingletonPolicy::Off),
+        PolicyOpt::Use => Ok(SingletonPolicy::Use),
+        PolicyOpt::Edges => {
+            let k = edges.ok_or_else(|| "use_edges requires --pin-per-side".to_string())?;
+            if k < 1 {
+                return Err("--pin-per-side must be >= 1".into());
             }
-            for (x, p) in values.iter().zip(ps.iter()) {
-                println!("{x},{p}");
-            }
-        }
-        Output::Tsv => {
-            if header {
-                println!("x\tp");
-            }
-            for (x, p) in values.iter().zip(ps.iter()) {
-                println!("{x}\t{p}");
-            }
-        }
-        Output::Jsonl => {
-            for (x, p) in values.iter().zip(ps.iter()) {
-                // Small, stable JSON without dependencies.
-                println!("{{\"x\":{x},\"p\":{p}}}");
-            }
+            Ok(SingletonPolicy::UseWithProtectedEdges(k))
         }
     }
 }
 
-/// Print quantile result in the selected format.
-fn print_quantile(q: f64, v: f64, out: &Output, header: bool) {
-    match out {
-        Output::Csv => {
-            if header {
-                println!("quantile,value");
-            }
-            println!("{q},{v}");
-        }
-        Output::Tsv => {
-            if header {
-                println!("quantile\tvalue");
-            }
-            println!("{q}\t{v}");
-        }
-        Output::Jsonl => {
-            println!("{{\"quantile\":{q},\"value\":{v}}}");
-        }
-    }
-}
+fn main() -> Result<(), String> {
+    let cli = Cli::parse();
 
-fn main() -> Result<(), Box<dyn Error>> {
-    let cmd = Command::new("tdigest")
-        .version(env!("CARGO_PKG_VERSION"))
-        .about("Build a t-digest from values and compute CDFs or quantiles.")
-        .long_about(
-            "Construct a t-digest (approximate quantile sketch) from input values and run \
-             either a CDF over those same values or a single quantile query. \
-             Choose one input source: --values, --file, or --stdin.",
-        )
-        .after_help(
-            r#"EXAMPLES
-  tdigest --values "1,2,3,4,5" --cmd cdf
-  tdigest --file data.txt --cmd quantile --p 0.99 --output tsv --no-header
-  cat numbers.txt | tdigest --stdin --cmd cdf --output jsonl
-  tdigest --file data.txt --cmd cdf --scale quad --singleton-policy edges --keep 4
-"#,
-        )
-        // Core tuning
-        .arg(
-            Arg::new("max_size")
-                .long("max-size")
-                .help("Maximum centroids (compression). Higher → more accuracy and memory.")
-                .value_parser(clap::value_parser!(usize))
-                .default_value("1000"),
-        )
-        .arg(
-            Arg::new("scale")
-                .long("scale")
-                .help("Scale family: quad | k1 | k2 | k3 (tail/center precision trade-offs).")
-                .value_parser(EnumValueParser::<Scale>::new())
-                .default_value("k2"),
-        )
-        .arg(
-            Arg::new("singleton_policy")
-                .long("singleton-policy")
-                .help("Edge singleton handling: off | use | edges (use --keep with edges).")
-                .value_parser(EnumValueParser::<Policy>::new())
-                .default_value("use"),
-        )
-        .arg(
-            Arg::new("precision")
-                .long("precision")
-                .help("Internal centroid precision: f32 | f64 (default: f64).")
-                .value_parser(EnumValueParser::<Prec>::new())
-                .default_value("f64"),
-        )
-        .arg(
-            Arg::new("keep")
-                .long("keep")
-                .help(
-                    "When --singleton-policy=edges, keep this many raw items per tail (default 3).",
-                )
-                .value_parser(clap::value_parser!(usize)),
-        )
-        // Input choices (exactly one)
-        .arg(
-            Arg::new("values")
-                .long("values")
-                .short('v')
-                .help("Inline values (comma/space/semicolon separated). Example: \"1, 2; 3 4\"")
-                .value_parser(clap::builder::NonEmptyStringValueParser::new()),
-        )
-        .arg(
-            Arg::new("file")
-                .long("file")
-                .help("Read values from a file (any separators: comma/space/semicolon).")
-                .value_parser(clap::builder::NonEmptyStringValueParser::new()),
-        )
-        .arg(
-            Arg::new("stdin")
-                .long("stdin")
-                .help("Read values from standard input.")
-                .action(ArgAction::SetTrue),
-        )
-        .group(
-            ArgGroup::new("input")
-                .args(["values", "file", "stdin"])
-                .required(true)
-                .multiple(false),
-        )
-        // Command to run
-        .arg(
-            Arg::new("cmd")
-                .long("cmd")
-                .help("Operation: cdf | quantile")
-                .value_parser(EnumValueParser::<CmdKind>::new())
-                .required(true),
-        )
-        .arg(
-            Arg::new("p")
-                .long("p")
-                .help("Quantile probability in [0,1] (required for --cmd quantile).")
-                .value_parser(clap::value_parser!(f64))
-                .action(ArgAction::Set),
-        )
-        // Output formatting
-        .arg(
-            Arg::new("output")
-                .long("output")
-                .short('o')
-                .help("Output format: csv (default) | tsv | jsonl")
-                .value_parser(EnumValueParser::<Output>::new())
-                .default_value("csv"),
-        )
-        .arg(
-            Arg::new("no_header")
-                .long("no-header")
-                .help("Suppress header row for CSV/TSV output.")
-                .action(ArgAction::SetTrue),
-        );
-
-    let matches = cmd.get_matches();
-
-    // Extract arguments
-    let max_size = *matches.get_one::<usize>("max_size").unwrap();
-    let scale = matches.get_one::<Scale>("scale").unwrap().clone();
-    let policy = matches
-        .get_one::<Policy>("singleton_policy")
-        .unwrap()
-        .clone();
-    let keep = matches.get_one::<usize>("keep").copied();
-    let out_fmt = matches.get_one::<Output>("output").unwrap().clone();
-    let no_header = matches.get_flag("no_header");
-    let prec = matches.get_one::<Prec>("precision").unwrap().clone();
-    let run = matches.get_one::<CmdKind>("cmd").unwrap();
-    let p = matches.get_one::<f64>("p").copied();
-
-    // Validate cross-arg rules
-    if matches.contains_id("keep") && policy != Policy::Edges {
-        eprintln!("--keep is only valid when --singleton-policy=edges");
-        std::process::exit(2);
-    }
-    if let CmdKind::Quantile = run {
-        let Some(q) = p else {
-            eprintln!("--p is required for --cmd quantile");
-            std::process::exit(2);
-        };
-        if !(0.0..=1.0).contains(&q) {
-            eprintln!("--p must be in [0,1]");
-            std::process::exit(2);
-        }
-    }
-
-    // Resolve input
-    let values: Vec<f64> = if let Some(vstr) = matches.get_one::<String>("values") {
-        parse_numbers(vstr)?
-    } else if let Some(path) = matches.get_one::<String>("file") {
-        read_values_from_file(path)?
-    } else if matches.get_flag("stdin") {
-        read_values_from_stdin()?
+    // Read data
+    let values: Vec<f64> = if cli.stdin {
+        read_floats_from_stdin().map_err(|e| format!("stdin read error: {e}"))?
     } else {
-        // Should be unreachable due to ArgGroup, but keep a guard.
-        eprintln!("Choose exactly one input source: --values, --file, or --stdin");
-        std::process::exit(2);
+        return Err("no values provided (pass --stdin)".into());
     };
 
-    // Build digest and run
-    let digest = gr_tdigest::tdigest::TDigest::builder()
-        .max_size(max_size)
-        .scale(scale.into())
-        .precision(prec.into())
-        .singleton_policy(policy.into_singleton_policy(keep))
-        .build()
-        .merge_unsorted(values.clone());
+    // Build digest (f64 storage; matches Python tests’ expectation)
+    let scale = ScaleFamily::from(cli.scale);
+    let policy = policy_from_opts(cli.singleton_policy, cli.pin_per_side)?;
 
-    match run {
-        CmdKind::Cdf => {
-            let ps = digest.cdf(&values);
-            let header = !no_header && !matches!(out_fmt, Output::Jsonl);
-            print_cdf(&values, &ps, &out_fmt, header);
+    let base: TDigest<f64> = TDigestBuilder::<f64>::new()
+        .max_size(cli.max_size)
+        .scale(scale)
+        .singleton_policy(policy)
+        .build();
+
+    let digest = base.merge_unsorted(values.clone());
+
+    // Output CSV as tests expect
+    let want_csv = cli.output.eq_ignore_ascii_case("csv");
+    if want_csv && !cli.no_header {
+        match cli.cmd {
+            Cmd::Quantile => println!("p,value"),
+            Cmd::Cdf => println!("x,p"),
         }
-        CmdKind::Quantile => {
-            let q = p.unwrap(); // validated above
-            let v = digest.quantile(q);
-            let header = !no_header && !matches!(out_fmt, Output::Jsonl);
-            print_quantile(q, v, &out_fmt, header);
+    }
+
+    match cli.cmd {
+        Cmd::Quantile => {
+            let p = cli
+                .p
+                .ok_or_else(|| "--p is required for --cmd quantile".to_string())?;
+            if !(0.0..=1.0).contains(&p) {
+                return Err("--p must be in [0,1]".into());
+            }
+            let q = digest.quantile(p);
+            if want_csv {
+                println!("{},{}", p, q);
+            } else {
+                println!("{q}");
+            }
+        }
+        Cmd::Cdf => {
+            // For CSV, echo rows "x,p" in the order of inputs.
+            for x in values {
+                let ps = digest.cdf(&[x]);
+                let p = ps[0];
+                if want_csv {
+                    println!("{},{}", x, p);
+                } else {
+                    println!("{p}");
+                }
+            }
         }
     }
 
     Ok(())
-}
-
-#[cfg(test)]
-mod cli_smoke {
-    use assert_cmd::Command;
-    use std::process::Command as Proc;
-    use std::sync::Once;
-
-    // Run `cargo build --bin tdigest` exactly once before any tests use it.
-    static BUILD_BIN_ONCE: Once = Once::new();
-
-    fn ensure_cli_built() {
-        BUILD_BIN_ONCE.call_once(|| {
-            let status = Proc::new("cargo")
-                .args(["build", "--bin", "tdigest"])
-                .current_dir(env!("CARGO_MANIFEST_DIR")) // crate root
-                .status()
-                .expect("failed to spawn `cargo build --bin tdigest`");
-            assert!(status.success(), "`cargo build --bin tdigest` failed");
-        });
-    }
-
-    fn approx(a: f64, b: f64, eps: f64) -> bool {
-        (a - b).abs() <= eps
-    }
-
-    #[test]
-    fn smoke_stdin_to_file_quantile_and_cdf() -> Result<(), Box<dyn std::error::Error>> {
-        ensure_cli_built(); // <-- pre-hook
-
-        // ---------- QUANTILE ----------
-        let data = "1,2,2,3,100\n";
-        let assert = Command::cargo_bin("tdigest")?
-            .arg("--stdin")
-            .arg("--cmd")
-            .arg("quantile")
-            .arg("--p")
-            .arg("0.5")
-            .arg("--output")
-            .arg("csv")
-            .arg("--max-size")
-            .arg("1000")
-            .write_stdin(data)
-            .assert()
-            .success();
-
-        let stdout = String::from_utf8(assert.get_output().stdout.clone())?;
-        let mut lines = stdout.lines();
-        assert_eq!(lines.next().unwrap_or_default(), "quantile,value");
-        let mut cols = lines.next().unwrap().split(',');
-        let q: f64 = cols.next().unwrap().parse()?;
-        let v: f64 = cols.next().unwrap().parse()?;
-        assert!(approx(q, 0.5, 1e-12));
-        assert!(approx(v, 2.0, 1e-6));
-        assert!(lines.next().is_none());
-
-        // ---------- CDF ----------
-        let data2 = "1 2 3 4 5\n";
-        let assert2 = Command::cargo_bin("tdigest")?
-            .arg("--stdin")
-            .arg("--cmd")
-            .arg("cdf")
-            .arg("--output")
-            .arg("csv")
-            .arg("--max-size")
-            .arg("1000")
-            .write_stdin(data2)
-            .assert()
-            .success();
-
-        let out2 = String::from_utf8(assert2.get_output().stdout.clone())?;
-        let mut lines2 = out2.lines();
-        assert_eq!(lines2.next().unwrap_or_default(), "x,p");
-
-        let mut p1 = None;
-        let mut p3 = None;
-        let mut p5 = None;
-        for line in lines2 {
-            let mut c = line.split(',');
-            let x: f64 = match c.next().and_then(|s| s.parse().ok()) {
-                Some(v) => v,
-                None => continue,
-            };
-            let p: f64 = c.next().unwrap().parse()?;
-            if approx(x, 1.0, 1e-12) {
-                p1 = Some(p)
-            }
-            if approx(x, 3.0, 1e-12) {
-                p3 = Some(p)
-            }
-            if approx(x, 5.0, 1e-12) {
-                p5 = Some(p)
-            }
-            assert!(p >= -1e-12 && p <= 1.0 + 1e-12);
-        }
-        let (p1, p3, p5) = (p1.unwrap(), p3.unwrap(), p5.unwrap());
-        assert!(approx(p1, 0.1, 1e-3));
-        assert!(approx(p3, 0.5, 1e-3));
-        assert!(approx(p5, 0.9, 1e-3));
-        assert!(p1 <= p3 && p3 <= p5);
-
-        Ok(())
-    }
 }

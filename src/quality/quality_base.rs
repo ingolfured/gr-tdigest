@@ -101,12 +101,19 @@ pub fn exact_ecdf_for_sorted(sorted: &[f64]) -> Vec<f64> {
 }
 
 pub fn build_digest_sorted(
-    data: Vec<f64>,
+    mut data: Vec<f64>,
     max_size: usize,
     scale: ScaleFamily,
-    _precision: Precision, // don't switch to "exact" based on this
-) -> TDigest {
-    TDigest::builder()
+    precision: Precision,
+) -> TDigest<f64> {
+    // Apply input “precision” policy (affects only inputs; TDigest math still in f64).
+    if let Precision::F32 = precision {
+        for x in &mut data {
+            *x = (*x as f32) as f64;
+        }
+    }
+
+    TDigest::<f64>::builder()
         .max_size(max_size)
         .scale(scale)
         .singleton_policy(SingletonPolicy::Use)

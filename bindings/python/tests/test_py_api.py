@@ -58,7 +58,6 @@ def test_class_cdf_numpy_vector():
         ("use", None),
         (SingletonPolicy.OFF, None),
         ("off", None),
-        (SingletonPolicy.EDGE, 0),
         (SingletonPolicy.EDGE, 1),
         ("edge", 3),
     ],

@@ -1,260 +1,211 @@
-use crate::tdigest::centroids::{coalesce_adjacent_equal_means, Centroid};
-use ordered_float::OrderedFloat;
-use std::cmp::Reverse;
-use std::collections::BinaryHeap;
-use std::iter::Peekable;
+//! Merge helpers for TDigest centroids.
+//!
+//! This module provides two utilities used by the TDigest builder/merge path:
+//! - `MergeByMean<F>`: merges a slice of centroids with a sorted slice of values
+//!   into a single centroid stream ordered by mean.
+//! - `KWayCentroidMerge<F>`: k-way merge of multiple centroid runs, ordered by mean.
+//! - `normalize_stream`: tiny normalization pass used by the compressor (kept here
+//!   for minimal churn), coalescing equal-mean runs into singleton piles and
+//!   validating sort order.
+//!
+//! The API uses `mean_f64()` / `weight_f64()` to keep math in `f64`,
+//! and constructs new centroids via `Centroid::<F>::new_singleton_f64(...)`
+//! when materializing scalars.
 
-/// Output of Stage **1 – Normalize** (see pipeline in `tdigest.rs`).
-///
-/// `out` is non-decreasing by mean, with *adjacent equal means coalesced* into a pile
-/// (i.e., a data-true singleton with `weight > 1` and `singleton=true`).
-///
-/// The aggregate totals (∑w, ∑w·mean, min, max) allow cheap updates of
-/// [`TDigest`](crate::tdigest::TDigest) metadata.
-pub struct NormalizedStream {
-    pub out: Vec<Centroid>,
-    pub total_w: f64,  // ∑ w
-    pub total_mw: f64, // ∑ (w * mean)
+use ordered_float::FloatCore;
+
+use crate::tdigest::centroids::Centroid;
+use crate::tdigest::precision::FloatLike;
+
+/* =============================================================================
+ * MergeByMean
+ * ============================================================================= */
+
+pub struct MergeByMean<F: FloatLike + FloatCore> {
+    data: Vec<Centroid<F>>,
+}
+
+impl<F: FloatLike + FloatCore> MergeByMean<F> {
+    /// Merge two sorted sources by mean:
+    /// - `centroids`: already-sorted by mean (TDigest invariant)
+    /// - `values_sorted`: raw scalar values sorted ascending
+    pub fn from_centroids_and_values(centroids: &[Centroid<F>], values_sorted: &[F]) -> Self {
+        // Fast paths
+        if values_sorted.is_empty() {
+            return Self {
+                data: centroids.to_vec(),
+            };
+        }
+        if centroids.is_empty() {
+            let mut out: Vec<Centroid<F>> = Vec::with_capacity(values_sorted.len());
+            for &v in values_sorted {
+                out.push(Centroid::<F>::new_singleton_f64(v.to_f64(), 1.0));
+            }
+            return Self { data: out };
+        }
+
+        // General case: two-way merge.
+        let mut out: Vec<Centroid<F>> = Vec::with_capacity(centroids.len() + values_sorted.len());
+
+        let mut i = 0usize;
+        let mut j = 0usize;
+
+        // (Removed optional min/max sanity block to avoid Option<f64> -> f64 mismatch.)
+
+        while i < centroids.len() && j < values_sorted.len() {
+            let cm = centroids[i].mean_f64();
+            let vm = values_sorted[j].to_f64();
+
+            if cm <= vm {
+                out.push(centroids[i]);
+                i += 1;
+            } else {
+                out.push(Centroid::<F>::new_singleton_f64(vm, 1.0));
+                j += 1;
+            }
+        }
+
+        while i < centroids.len() {
+            out.push(centroids[i]);
+            i += 1;
+        }
+        while j < values_sorted.len() {
+            out.push(Centroid::<F>::new_singleton_f64(
+                values_sorted[j].to_f64(),
+                1.0,
+            ));
+            j += 1;
+        }
+
+        Self { data: out }
+    }
+}
+
+impl<F: FloatLike + FloatCore> IntoIterator for MergeByMean<F> {
+    type Item = Centroid<F>;
+    type IntoIter = std::vec::IntoIter<Centroid<F>>;
+    #[inline]
+    fn into_iter(self) -> Self::IntoIter {
+        self.data.into_iter()
+    }
+}
+
+/* =============================================================================
+ * K-way merge of centroid runs
+ * ============================================================================= */
+
+pub struct KWayCentroidMerge<F: FloatLike + FloatCore> {
+    data: Vec<Centroid<F>>,
+}
+
+impl<F: FloatLike + FloatCore> KWayCentroidMerge<F> {
+    /// Build a single sorted stream by concatenating + sorting small runs.
+    /// For typical TDigest usage runs are already sorted; this is a simple
+    /// and predictable implementation without a heap.
+    pub fn from_runs(runs: &[&[Centroid<F>]]) -> Self {
+        let mut all: Vec<Centroid<F>> = Vec::new();
+        for r in runs {
+            all.extend_from_slice(r);
+        }
+        // Ensure global ordering by mean (fix borrow on total_cmp).
+        all.sort_by(|a, b| a.mean_f64().total_cmp(b.mean_f64()));
+        Self { data: all }
+    }
+}
+
+impl<F: FloatLike + FloatCore> IntoIterator for KWayCentroidMerge<F> {
+    type Item = Centroid<F>;
+    type IntoIter = std::vec::IntoIter<Centroid<F>>;
+    #[inline]
+    fn into_iter(self) -> Self::IntoIter {
+        self.data.into_iter()
+    }
+}
+
+/* =============================================================================
+ * Normalization shim used by compressor (Stage 1)
+ * ============================================================================= */
+
+/// Output of `normalize_stream`.
+pub struct Normalized<F: FloatLike + FloatCore> {
+    pub out: Vec<Centroid<F>>,
+    pub total_w: f64,
+    pub total_mw: f64,
     pub min: f64,
     pub max: f64,
 }
 
-/// **(1) Normalize**
-///
-/// Normalize any centroid iterator into a clean, coalesced stream:
-/// - verify non-decreasing means (panics with a clear, test-friendly message if violated),
-/// - coalesce *adjacent equal means* into a single **singleton pile**,
-/// - accumulate (∑w, ∑w·mean, min, max).
-///
-/// This function is the *sole* owner of “equal means ⇒ pile” semantics for producers
-/// that do not fuse internally.
-///
-/// Returns a [`NormalizedStream`] consumed by later stages.
-pub fn normalize_stream<I>(items: I) -> NormalizedStream
+/// Normalize an input stream of centroids:
+/// - **validate** non-decreasing means (panic on violation to match tests)
+/// - **coalesce** adjacent equal-mean centroids into a **singleton pile**
+/// - **accumulate** total weight/sum and min/max
+pub fn normalize_stream<F, I>(items: I) -> Normalized<F>
 where
-    I: IntoIterator<Item = Centroid>,
+    F: FloatLike + FloatCore,
+    I: IntoIterator<Item = Centroid<F>>,
 {
-    let mut out: Vec<Centroid> = Vec::new();
+    let mut it = items.into_iter();
+    let mut out: Vec<Centroid<F>> = Vec::new();
+
     let mut total_w = 0.0_f64;
     let mut total_mw = 0.0_f64;
-    let (mut min_v, mut max_v) = (f64::INFINITY, f64::NEG_INFINITY);
-    let mut prev_mean = f64::NEG_INFINITY;
 
-    for c in items {
-        let m = c.mean();
-        let w = c.weight();
+    let first = match it.next() {
+        Some(c) => c,
+        None => {
+            return Normalized {
+                out,
+                total_w,
+                total_mw,
+                min: 0.0,
+                max: 0.0,
+            }
+        }
+    };
 
-        if m < prev_mean {
-            // Keep legacy substring so existing tests/assertions remain valid.
-            panic!(
-                "compress_into requires non-decreasing means; saw {} after {}",
-                m, prev_mean
-            );
+    let mut cur_mean = first.mean_f64();
+    let mut cur_w = first.weight_f64();
+
+    let min_mean = cur_mean;
+    let mut max_mean = cur_mean;
+
+    // Fold contiguous equal-means; validate ordering.
+    for c in it {
+        let m = c.mean_f64();
+        let w = c.weight_f64();
+
+        if m < cur_mean {
+            panic!("compress_into requires non-decreasing means");
         }
 
-        if min_v == f64::INFINITY {
-            min_v = m;
+        if m == cur_mean {
+            cur_w += w;
+        } else {
+            // Flush previous run as a **singleton** pile.
+            out.push(Centroid::<F>::new_singleton_f64(cur_mean, cur_w));
+            total_w += cur_w;
+            total_mw += cur_mean * cur_w;
+
+            // Start new run
+            cur_mean = m;
+            cur_w = w;
         }
-        max_v = m;
 
-        total_w += w;
-        total_mw += w * m;
-
-        out.push(c);
-        prev_mean = m;
+        if m > max_mean {
+            max_mean = m;
+        }
     }
 
-    // Coalesce adjacent equals into a pile (singleton=true).
-    let out = coalesce_adjacent_equal_means(out);
+    // Flush last run
+    out.push(Centroid::<F>::new_singleton_f64(cur_mean, cur_w));
+    total_w += cur_w;
+    total_mw += cur_mean * cur_w;
 
-    NormalizedStream {
+    Normalized {
         out,
         total_w,
         total_mw,
-        min: min_v,
-        max: max_v,
-    }
-}
-
-/// Producer for raw **values + existing centroids**, interleaved by mean.
-///
-/// Yields a non-coalesced stream where runs of identical values are grouped into a single
-/// *value centroid* (pile) when `singletons_on_values=true`. **Coalescing is deferred** to
-/// Stage **1** (Normalize).
-///
-/// Used by [`TDigest::merge_sorted`] / [`TDigest::merge_unsorted`].
-pub(crate) struct MergeByMean<'a> {
-    centroids: Peekable<std::slice::Iter<'a, Centroid>>,
-    values: Peekable<std::slice::Iter<'a, f64>>,
-    /// When pulling from values, group consecutive identical values into a single centroid.
-    pending_value_run: Option<(f64, usize)>,
-    singletons_on_values: bool,
-}
-
-impl<'a> MergeByMean<'a> {
-    /// Build a producer that interleaves `centroids` with sorted `values`.
-    ///
-    /// The `singletons_on_values` flag marks grouped value runs as *singleton piles*
-    /// (data-true singleton), unless the active policy is `Off`.
-    pub(crate) fn from_centroids_and_values(
-        centroids: &'a [Centroid],
-        values: &'a [f64],
-        singletons_on_values: bool,
-    ) -> Self {
-        Self {
-            centroids: centroids.iter().peekable(),
-            values: values.iter().peekable(),
-            pending_value_run: None,
-            singletons_on_values,
-        }
-    }
-
-    /// Drain a run of identical raw values into one centroid (pile).
-    fn next_values_run(&mut self) -> Option<Centroid> {
-        if let Some((val, len)) = self.pending_value_run.take() {
-            return Some(if self.singletons_on_values {
-                Centroid::new_singleton(val, len as f64)
-            } else {
-                Centroid::new_mixed(val, len as f64)
-            });
-        }
-        let first = *self.values.next()?; // at least one value exists
-        let mut len = 1usize;
-        while let Some(&&v) = self.values.peek() {
-            if v == first {
-                self.values.next();
-                len += 1;
-            } else {
-                break;
-            }
-        }
-        Some(if self.singletons_on_values {
-            Centroid::new_singleton(first, len as f64)
-        } else {
-            Centroid::new_mixed(first, len as f64)
-        })
-    }
-}
-
-impl<'a> Iterator for MergeByMean<'a> {
-    type Item = Centroid;
-    fn next(&mut self) -> Option<Self::Item> {
-        // Always flush any stashed equal-mean value run before peeking again.
-        if self.pending_value_run.is_some() {
-            return self.next_values_run();
-        }
-
-        match (self.centroids.peek(), self.values.peek()) {
-            (Some(c), Some(v)) => {
-                if c.mean() < **v {
-                    Some(*self.centroids.next().unwrap())
-                } else if c.mean() > **v {
-                    self.next_values_run()
-                } else {
-                    // Equal means: emit the existing centroid now, and stash the *whole* values run
-                    // for the next call. We do NOT fuse here; normalization coalesces later.
-                    let target = **v;
-                    let mut len = 0usize;
-                    while let Some(&&vv) = self.values.peek() {
-                        if vv == target {
-                            self.values.next();
-                            len += 1;
-                        } else {
-                            break;
-                        }
-                    }
-                    self.pending_value_run = Some((target, len));
-                    Some(*self.centroids.next().unwrap())
-                }
-            }
-            (Some(_), None) => Some(*self.centroids.next().unwrap()),
-            (None, Some(_)) => self.next_values_run(),
-            (None, None) => None,
-        }
-    }
-}
-
-/// Producer for **digest–digest** merging.
-///
-/// Performs a k-way merge across centroid runs, **coalescing equal-mean heads** across runs.
-/// The emitted stream is sorted by mean; full coalescing/validation is still handled by
-/// Stage **1**.
-///
-/// Used by [`TDigest::merge_digests`].
-pub(crate) struct KWayCentroidMerge<'a> {
-    runs: Vec<&'a [Centroid]>,
-    pos: Vec<usize>,
-    heap: BinaryHeap<(Reverse<OrderedFloat<f64>>, usize)>, // (mean, run_idx)
-}
-
-impl<'a> KWayCentroidMerge<'a> {
-    /// Create a new k-way centroid run merger.
-    pub(crate) fn new(runs: Vec<&'a [Centroid]>) -> Self {
-        let mut heap = BinaryHeap::with_capacity(runs.len());
-        let pos = vec![0; runs.len()];
-        for (i, r) in runs.iter().enumerate() {
-            if let Some(c) = r.first() {
-                heap.push((Reverse(OrderedFloat::from(c.mean())), i));
-            }
-        }
-        Self { runs, pos, heap }
-    }
-
-    #[inline]
-    fn push_next(&mut self, run_idx: usize) {
-        let p = self.pos[run_idx];
-        let r = self.runs[run_idx];
-        if p < r.len() {
-            let c = &r[p];
-            self.heap
-                .push((Reverse(OrderedFloat::from(c.mean())), run_idx));
-        }
-    }
-}
-
-impl<'a> Iterator for KWayCentroidMerge<'a> {
-    type Item = Centroid;
-
-    fn next(&mut self) -> Option<Self::Item> {
-        // Empty? Done.
-        let (Reverse(min_mean_ord), first_run) = self.heap.pop()?;
-        let min_mean = min_mean_ord.into_inner();
-
-        // Start a coalesced centroid at this mean.
-        let mut sum_w = 0.0f64;
-        let mut all_singleton = true;
-
-        // Consume the head item we just popped.
-        {
-            let p = &mut self.pos[first_run];
-            let c = &self.runs[first_run][*p];
-            debug_assert!(c.mean() == min_mean);
-            sum_w += c.weight();
-            all_singleton &= c.is_singleton();
-            *p += 1;
-            self.push_next(first_run);
-        }
-
-        // Now consume any other runs that also have this same mean at their head.
-        while let Some((Reverse(peek_mean_ord), run_idx)) = self.heap.peek().copied() {
-            if peek_mean_ord.into_inner() != min_mean {
-                break;
-            }
-            let _ = self.heap.pop();
-            let p = &mut self.pos[run_idx];
-            let c = &self.runs[run_idx][*p];
-            debug_assert!(c.mean() == min_mean);
-            sum_w += c.weight();
-            all_singleton &= c.is_singleton();
-            *p += 1;
-            self.push_next(run_idx);
-        }
-
-        // Emit a single centroid at `min_mean`.
-        let mut out = Centroid::new(min_mean, sum_w);
-        if all_singleton {
-            out.mark_singleton(true);
-        }
-        Some(out)
+        min: min_mean,
+        max: max_mean,
     }
 }

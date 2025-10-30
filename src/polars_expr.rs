@@ -11,7 +11,7 @@ use rayon::prelude::*;
 use serde::Deserialize;
 
 use crate::tdigest::singleton_policy::SingletonPolicy;
-use crate::tdigest::Precision as CorePrecision;
+// Removed CorePrecision (builder has no .precision(...))
 use crate::tdigest::{ScaleFamily, TDigest};
 
 const SUPPORTED_TYPES: &[DataType] = &[
@@ -43,8 +43,8 @@ fn cdf(inputs: &[Series]) -> PolarsResult<Series> {
     let values_s = &inputs[1];
 
     // Decode one TDigest per row (codec handles canonical/compact)
-    let digests = TDigest::from_series(digest_s, false)
-        .or_else(|_| TDigest::from_series(digest_s, true))
+    let digests = TDigest::<f64>::from_series(digest_s, false)
+        .or_else(|_| TDigest::<f64>::from_series(digest_s, true))
         .unwrap_or_default();
 
     let digest_len = digest_s.len();
@@ -257,11 +257,13 @@ struct TDigestKwargs {
     precision: String,
 }
 
-fn parse_precision_kw(prec_raw: &str) -> PolarsResult<(CorePrecision, bool)> {
+/// precision kw → whether to emit compact schema (f32 centroids, f64 sum).
+/// We keep core computation in f64; precision affects only the **on-wire schema**.
+fn parse_precision_kw(prec_raw: &str) -> PolarsResult<bool> {
     let p = prec_raw.trim().to_lowercase();
     match p.as_str() {
-        "f32" => Ok((CorePrecision::F32, true)),  // compact codec
-        "f64" => Ok((CorePrecision::F64, false)), // canonical codec
+        "f32" => Ok(true),  // compact codec
+        "f64" => Ok(false), // canonical codec
         _ => Err(PolarsError::ComputeError(
             format!("unknown precision={prec_raw:?}; expected 'f32' or 'f64'").into(),
         )),
@@ -356,15 +358,8 @@ fn quantile_output_dtype(input_fields: &[Field]) -> PolarsResult<Field> {
 
 fn tdigest_from_array_helper(inputs: &[Series], kwargs: &TDigestKwargs) -> PolarsResult<Series> {
     let policy = parse_singleton_policy(&kwargs.singleton_mode, kwargs.edges_to_preserve)?;
-    let (core_prec, compact) = parse_precision_kw(&kwargs.precision)?;
-    tdigest_impl(
-        inputs,
-        kwargs.max_size,
-        kwargs.scale,
-        policy,
-        core_prec,
-        compact,
-    )
+    let compact = parse_precision_kw(&kwargs.precision)?;
+    tdigest_impl(inputs, kwargs.max_size, kwargs.scale, policy, compact)
 }
 
 fn tdigest_from_array_f32_helper(
@@ -378,7 +373,6 @@ fn tdigest_from_array_f32_helper(
         kwargs.max_size,
         kwargs.scale,
         policy,
-        CorePrecision::F32,
         /*compact=*/ true,
     )
 }
@@ -388,16 +382,14 @@ fn tdigest_impl(
     max_size: usize,
     scale: ScaleFamily,
     singleton_policy: SingletonPolicy,
-    core_precision: CorePrecision,
     compact: bool,
 ) -> PolarsResult<Series> {
     let mut td = tdigest_from_series(inputs, max_size, scale, singleton_policy)?;
     if td.is_empty() {
-        td = TDigest::builder()
+        td = TDigest::<f64>::builder()
             .max_size(max_size)
             .scale(scale)
             .singleton_policy(singleton_policy)
-            .precision(core_precision)
             .build();
     }
     td.to_series(inputs[0].name(), compact)
@@ -408,7 +400,7 @@ fn tdigest_from_series(
     max_size: usize,
     scale: ScaleFamily,
     singleton_policy: SingletonPolicy,
-) -> PolarsResult<TDigest> {
+) -> PolarsResult<TDigest<f64>> {
     let series = &inputs[0];
 
     if !SUPPORTED_TYPES.contains(series.dtype()) {
@@ -422,36 +414,39 @@ fn tdigest_from_series(
     };
 
     let values = series_casted.f64()?;
-    let chunks: Vec<TDigest> = POOL.install(|| {
+    let chunks: Vec<TDigest<f64>> = POOL.install(|| {
         values
             .downcast_iter()
             .par_bridge()
             .map(|chunk: &Float64Array| {
-                let t = TDigest::builder()
+                let t = TDigest::<f64>::builder()
                     .max_size(max_size)
                     .scale(scale)
                     .singleton_policy(singleton_policy)
-                    .precision(CorePrecision::F64)
                     .build();
                 t.merge_unsorted(chunk.non_null_values_iter().collect())
             })
             .collect()
     });
 
-    Ok(TDigest::merge_digests(chunks))
+    Ok(TDigest::<f64>::merge_digests(chunks))
 }
 
 /// Parse a TDigest struct column via unified strict API:
 /// try canonical first, then compact (so callers needn’t know the on-wire precision).
-fn parse_tdigest(inputs: &[Series]) -> TDigest {
+fn parse_tdigest(inputs: &[Series]) -> TDigest<f64> {
     let s = &inputs[0];
-    let parsed = TDigest::from_series(s, /*compact=*/ false)
-        .or_else(|_| TDigest::from_series(s, /*compact=*/ true))
+    let parsed = TDigest::<f64>::from_series(s, /*compact=*/ false)
+        .or_else(|_| TDigest::<f64>::from_series(s, /*compact=*/ true))
         .unwrap_or_default();
-    TDigest::merge_digests(parsed)
+    TDigest::<f64>::merge_digests(parsed)
 }
 
 fn quantile_impl(inputs: &[Series], q: f64) -> PolarsResult<Series> {
+    if !(0.0..=1.0).contains(&q) {
+        polars_bail!(ComputeError: "q must be in [0, 1]. Example: quantile(q=0.95) for the 95th percentile");
+    }
+
     let td = parse_tdigest(inputs);
 
     // Decide requested dtype from the digest’s dtype
@@ -496,9 +491,12 @@ fn parse_singleton_policy(mode_raw: &str, k_opt: Option<usize>) -> PolarsResult<
         "edge" | "edges" | "usewithprotectededges" => {
             let k = k_opt.ok_or_else(|| {
                 PolarsError::ComputeError(
-                    "singleton_mode='edge' requires 'edges_to_preserve'".into(),
+                    "singleton_mode='edge' requires 'edges_to_preserve' (per side, >= 1)".into(),
                 )
             })?;
+            if k < 1 {
+                polars_bail!(ComputeError: "edges_to_preserve must be >= 1 when singleton_mode='edge'");
+            }
             Ok(SingletonPolicy::UseWithProtectedEdges(k))
         }
         _ => Err(PolarsError::ComputeError(

@@ -59,8 +59,11 @@ fn map_policy(code: jint, edges: jint) -> SingletonPolicy {
 
 // --------------- Native handle that owns the REAL Rust TDigest ---------------
 
+// Pin JNI backing to f64 to avoid generic type issues and keep results stable.
+type TD64 = TDigest<f64>;
+
 struct NativeDigest {
-    inner: TDigest,
+    inner: TD64,
 }
 
 impl NativeDigest {
@@ -69,10 +72,10 @@ impl NativeDigest {
         max_size: usize,
         scale: ScaleFamily,
         policy: SingletonPolicy,
-        _f32mode: bool, // for coherence tests we pin F64 storage
+        _f32mode: bool, // accepted for API coherence; f64 backing for now
     ) -> Self {
         // Build and ingest
-        let d = TDigest::builder()
+        let d = TD64::builder()
             .max_size(max_size)
             .scale(scale)
             .singleton_policy(policy)

@@ -40,9 +40,12 @@
 //! See also: [`TDigest::cdf`] for CDF semantics, which pair with this
 //! quantile implementation via the same center/half-weight rules.
 
-use crate::tdigest::TDigest;
+use ordered_float::FloatCore;
 
-impl TDigest {
+use crate::tdigest::precision::FloatLike;
+use crate::tdigest::tdigest::TDigest;
+
+impl<F: FloatLike + FloatCore> TDigest<F> {
     /// Estimate the value at quantile `q` (inclusive) using half-weight
     /// bracketing and singleton-aware interpolation.
     ///
@@ -54,7 +57,7 @@ impl TDigest {
             return 0.0;
         }
         if self.centroids().len() == 1 {
-            return self.centroids()[0].mean();
+            return self.centroids()[0].mean_f64();
         }
 
         let q = q.clamp(0.0, 1.0);
@@ -92,12 +95,12 @@ impl TDigest {
     ///
     /// Returns `(left_idx, right_idx, cumulative_weight_at_left_center, center_span_weight)`.
     fn find_bracketing_centroids(&self, index: f64) -> (usize, usize, f64, f64) {
-        let first_w = self.centroids()[0].weight();
+        let first_w = self.centroids()[0].weight_f64();
         let mut cum_w_at_left_center = first_w / 2.0;
 
         for left_idx in 0..(self.centroids().len() - 1) {
-            let w_left = self.centroids()[left_idx].weight();
-            let w_right = self.centroids()[left_idx + 1].weight();
+            let w_left = self.centroids()[left_idx].weight_f64();
+            let w_right = self.centroids()[left_idx + 1].weight_f64();
             let center_span_weight = (w_left + w_right) / 2.0;
 
             if cum_w_at_left_center + center_span_weight > index {
@@ -113,8 +116,8 @@ impl TDigest {
 
         // Fallback: last pair (shouldn't happen in normal flow).
         let m = self.centroids().len();
-        let w_last = self.centroids()[m - 1].weight();
-        let span_w = (self.centroids()[m - 2].weight() + w_last) / 2.0;
+        let w_last = self.centroids()[m - 1].weight_f64();
+        let span_w = (self.centroids()[m - 2].weight_f64() + w_last) / 2.0;
         (m - 2, m - 1, self.count() - w_last / 2.0, span_w)
     }
 
@@ -136,8 +139,8 @@ impl TDigest {
         let left = &self.centroids()[left_idx];
         let right = &self.centroids()[right_idx];
 
-        let (w_left, w_right) = (left.weight(), right.weight());
-        let (m_left, m_right) = (left.mean(), right.mean());
+        let (w_left, w_right) = (left.weight_f64(), right.weight_f64());
+        let (m_left, m_right) = (left.mean_f64(), right.mean_f64());
         let right_center_cum_w = cum_w_at_left_center + center_span_weight;
 
         // Inside a multi-weight singleton "pile" → return exact mean.
@@ -223,7 +226,10 @@ impl TDigest {
             return self.quantile(0.5);
         }
         let (li, ri) = self.bracket_centroids_for_median();
-        let (ml, mr) = (self.centroids()[li].mean(), self.centroids()[ri].mean());
+        let (ml, mr) = (
+            self.centroids()[li].mean_f64(),
+            self.centroids()[ri].mean_f64(),
+        );
         (ml + mr) * 0.5
     }
 }
@@ -243,7 +249,7 @@ mod tests {
         assert_rel_close("median", 1.0, t.quantile(0.5), 0.01);
         assert_rel_close("q=0.95", 2.0, t.quantile(0.95), 0.01);
 
-        let means: Vec<f64> = t.centroids().iter().map(|c| c.mean()).collect();
+        let means: Vec<f64> = t.centroids().iter().map(|c| c.mean_f64()).collect();
         assert_eq!(
             means.len(),
             2,
