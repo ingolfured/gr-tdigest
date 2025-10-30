@@ -128,7 +128,7 @@ def test_plugin_storage_affects_inner_mean_dtype():
     assert _means_dtype(StorageSchema.F64) == pl.Float64
 
 
-def test_list_of_cdf_expressions_select_keyword_style():
+def test_list_of_cdf_expressions():
     df = pl.DataFrame({"x": [0.0, 1.0, 2.0, 3.0], "y": [3.0, 3.0, 1.0, 0.0]})
     df2 = df.with_columns(td_x=tdigest("x"), td_y=tdigest("y"))
 
@@ -146,6 +146,22 @@ def test_list_of_cdf_expressions_select_keyword_style():
         pl.max_horizontal(pl.all()).max().le(1).alias("le1"),
     ).row(0)
     assert ge0 and le1 and out["cx"].is_sorted()
+
+
+def test_list_of_quantile_expressions():
+    df = pl.DataFrame({"x": [0.0, 1.0, 2.0, 3.0], "y": [3.0, 3.0, 1.0, 0.0]})
+    df2 = df.with_columns(td_x=tdigest("x"), td_y=tdigest("y"))
+
+    out = df2.select(
+        [
+            quantile(pl.col("td_x"), 0.5).alias("qx"),
+            quantile("td_y", 0.5).alias("qy"),
+        ]
+    )
+
+    assert out.columns == ["qx", "qy"]
+    assert out["qx"].item() == pytest.approx(1.5, abs=1e-9)
+    assert out["qy"].item() == pytest.approx(1.6666666666666667, abs=1e-9)
 
 
 @pytest.mark.parametrize("scale_arg", [ScaleFamily.QUAD, "QUAD", "quad"])
