@@ -3,7 +3,7 @@ import numpy as np
 import polars as pl
 import pytest
 
-from tdigest_rs import (
+from gr_tdigest import (
     tdigest,
     quantile,
     cdf,

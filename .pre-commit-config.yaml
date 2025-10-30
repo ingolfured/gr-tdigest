@@ -3,7 +3,6 @@ default_language_version:
 
 fail_fast: true
 minimum_pre_commit_version: "4.3.0"
-
 repos:
   - repo: https://github.com/pre-commit/pre-commit-hooks
     rev: v6.0.0
@@ -17,54 +16,25 @@ repos:
       - id: pretty-format-json
         args: ["--autofix"]
 
-  - repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: v0.6.9
-    hooks:
-      - id: ruff
-        args: ["--fix"]
-      - id: ruff-format
-
   - repo: local
     hooks:
-      # ---------- Python ----------
-      - id: mypy
-        name: mypy (uv)
+      - id: make-build
+        name: make build
         language: system
-        entry: uv run python -m mypy
-        files: ^tdigest_rs/.*\.pyi?$
-        types_or: [python, pyi]
-        require_serial: true
-
-      # ---------- Rust formatting & lints ----------
-      - id: cargo-fmt-fix
-        name: cargo fmt --fix
-        language: system
-        entry: bash -lc 'cargo fmt'
-        pass_filenames: false
-
-      - id: cargo-clippy-fix
-        name: cargo clippy --fix
-        language: system
-        entry: bash -lc 'cargo clippy --fix --allow-dirty --allow-staged'
-        pass_filenames: false
-
-      # ---------- Tests (quick) ----------
-      - id: fast-smoke
-        name: pytest quick
-        language: system
-        entry: uv run pytest -q
+        entry: bash -lc 'make build'
         pass_filenames: false
         stages: [pre-commit]
 
-      - id: cargo-doc-strict
-        name: cargo doc (deny warnings)
+      - id: make-lint
+        name: make lint
         language: system
-        entry: bash -lc
+        entry: bash -lc 'make lint'
         pass_filenames: false
-        require_serial: true
         stages: [pre-commit]
-        args:
-          - |
-            set -euo pipefail
-            export RUSTDOCFLAGS="-D warnings -D rustdoc::private_intra_doc_links -D rustdoc::broken_intra_doc_links"
-            cargo doc --no-deps
+
+      - id: make-test
+        name: make test
+        language: system
+        entry: bash -lc 'make test'
+        pass_filenames: false
+        stages: [pre-commit]

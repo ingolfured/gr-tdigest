@@ -36,7 +36,7 @@ fn parse_policy(kind: Option<&str>, edges: Option<usize>) -> Result<SingletonPol
     }
 }
 
-#[pyclass(name = "TDigest")]
+#[pyclass(name = "TDigest", subclass)]
 pub struct PyTDigest {
     inner: TDigest,
 }

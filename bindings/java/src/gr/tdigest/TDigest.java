@@ -1,4 +1,4 @@
-package gr.tdigest_rs;
+package gr.tdigest;
 
 import java.lang.ref.Cleaner;
 import java.util.Arrays;

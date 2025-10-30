@@ -221,7 +221,7 @@ struct QuantileKwargs {
     q: f64,
 }
 
-// Defaults: max_size=1000, scale=K2, singleton_policy=Use
+// Defaults: max_size=1000, scale=K2, singleton_mode="use"
 #[inline]
 fn default_max_size() -> usize {
     1000
@@ -231,8 +231,8 @@ fn default_scale() -> ScaleFamily {
     ScaleFamily::K2
 }
 #[inline]
-fn default_singleton_policy() -> SingletonPolicy {
-    SingletonPolicy::Use
+fn default_singleton_mode() -> String {
+    "use".to_string()
 }
 
 #[derive(Debug, Deserialize)]
@@ -241,8 +241,12 @@ struct TDigestKwargs {
     max_size: usize,
     #[serde(default = "default_scale")]
     scale: ScaleFamily,
-    #[serde(default = "default_singleton_policy")]
-    singleton_policy: SingletonPolicy,
+    // accept forgiving string; we map it to SingletonPolicy ourselves
+    #[serde(default = "default_singleton_mode")]
+    singleton_mode: String,
+    // optional K used only when singleton_mode == "edge"
+    #[serde(default)]
+    edges_to_preserve: Option<usize>,
 }
 
 fn tdigest_output_f64(_input_fields: &[Field]) -> PolarsResult<Field> {
@@ -332,11 +336,12 @@ fn quantile_output_dtype(input_fields: &[Field]) -> PolarsResult<Field> {
 /* ==================== core helpers ==================== */
 
 fn tdigest_from_array_helper(inputs: &[Series], kwargs: &TDigestKwargs) -> PolarsResult<Series> {
+    let policy = parse_singleton_policy(&kwargs.singleton_mode, kwargs.edges_to_preserve)?;
     tdigest_impl(
         inputs,
         kwargs.max_size,
         kwargs.scale,
-        kwargs.singleton_policy,
+        policy,
         /*compact=*/ false,
     )
 }
@@ -345,11 +350,12 @@ fn tdigest_from_array_f32_helper(
     inputs: &[Series],
     kwargs: &TDigestKwargs,
 ) -> PolarsResult<Series> {
+    let policy = parse_singleton_policy(&kwargs.singleton_mode, kwargs.edges_to_preserve)?;
     tdigest_impl(
         inputs,
         kwargs.max_size,
         kwargs.scale,
-        kwargs.singleton_policy,
+        policy,
         /*compact=*/ true,
     )
 }
@@ -447,5 +453,30 @@ fn quantile_impl(inputs: &[Series], q: f64) -> PolarsResult<Series> {
         } else {
             Ok(Series::new("".into(), [Some(val)]))
         }
+    }
+}
+
+/* ==================== policy parsing ==================== */
+
+fn parse_singleton_policy(mode_raw: &str, k_opt: Option<usize>) -> PolarsResult<SingletonPolicy> {
+    let m = mode_raw
+        .trim()
+        .to_lowercase()
+        .replace('_', "")
+        .replace(' ', "");
+    match m.as_str() {
+        "off" => Ok(SingletonPolicy::Off),
+        "use" | "on" | "respect" => Ok(SingletonPolicy::Use),
+        "edge" | "edges" | "usewithprotectededges" => {
+            let k = k_opt.ok_or_else(|| {
+                PolarsError::ComputeError(
+                    "singleton_mode='edge' requires 'edges_to_preserve'".into(),
+                )
+            })?;
+            Ok(SingletonPolicy::UseWithProtectedEdges(k))
+        }
+        _ => Err(PolarsError::ComputeError(
+            format!("unknown singleton_mode={mode_raw:?}; expected 'off'|'use'|'edge'").into(),
+        )),
     }
 }

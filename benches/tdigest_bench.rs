@@ -8,8 +8,8 @@ use std::process::Command;
 use std::time::Duration;
 
 use criterion::{BatchSize, BenchmarkId, Criterion, Throughput};
-use tdigest_rs::tdigest::{ScaleFamily, TDigest};
-use tdigest_testdata::{gen_dataset, DistKind};
+use gr_tdigest::tdigest::{ScaleFamily, TDigest};
+use testdata::{gen_dataset, DistKind};
 
 #[cfg(target_os = "linux")]
 fn rss_peak_kib() -> u64 {

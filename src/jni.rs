@@ -1,324 +1,327 @@
-use std::ptr::NonNull;
+// src/jni.rs
+//
+// JNI bindings for package `gr.tdigest` (class TDigestNative).
+// Bind via symbol names (no RegisterNatives). No class lookups in JNI_OnLoad.
+//
+// Enabled behind feature "java".
 
-use jni::objects::{JByteArray, JClass, JDoubleArray, JFloatArray, JObject, JString};
-use jni::sys::{jboolean, jbyteArray, jdouble, jdoubleArray, jint, jlong};
-use jni::JNIEnv;
+#![cfg(feature = "java")]
 
-use bincode::config;
-use bincode::serde::{decode_from_slice, encode_to_vec};
+use jni::objects::{JByteArray, JClass, JDoubleArray, JFloatArray, JObject, JString, JValue};
+use jni::sys::{
+    jarray, jboolean, jbyte, jbyteArray, jdouble, jdoubleArray, jint, jlong, JNI_VERSION_1_8,
+};
+use jni::{JNIEnv, JavaVM};
+use std::cmp::Ordering;
+use std::ffi::c_void;
+use std::mem::size_of;
+use std::slice;
+use std::sync::OnceLock;
 
-use crate::tdigest::centroids::Centroid;
-use crate::tdigest::singleton_policy::SingletonPolicy;
-use crate::tdigest::{ScaleFamily, TDigest, TDigestBuilder};
-
-/* ---------------- error helpers ---------------- */
-
-fn throw_illegal_arg(env: &mut JNIEnv, msg: &str) {
-    let _ = env.throw_new("java/lang/IllegalArgumentException", msg);
+// Optionally retain the VM (useful if you later attach threads for callbacks).
+static JVM: OnceLock<JavaVM> = OnceLock::new();
+pub fn java_vm() -> Option<&'static JavaVM> {
+    JVM.get()
 }
-fn throw_illegal_state(env: &mut JNIEnv, msg: &str) {
-    let _ = env.throw_new("java/lang/IllegalStateException", msg);
-}
-
-/* ---------------- handle helper ---------------- */
-
-fn from_handle<'a>(env: &mut JNIEnv<'a>, handle: jlong) -> Option<&'a mut TDigest> {
-    if handle == 0 {
-        let _ = env.throw_new("java/lang/NullPointerException", "TDigest handle is null");
-        return None;
-    }
-    let ptr = handle as *mut TDigest;
-    NonNull::new(ptr)
-        .map(|mut nn| unsafe { nn.as_mut() })
-        .or_else(|| {
-            throw_illegal_state(env, "TDigest handle was invalid");
-            None
-        })
-}
-
-/* ---------------- parse helpers ---------------- */
-
-fn parse_scale(env: &mut JNIEnv, jscale: JString) -> Option<ScaleFamily> {
-    let s: String = match env.get_string(&jscale) {
-        Ok(js) => js.into(),
-        Err(_) => {
-            throw_illegal_arg(env, "scale must be a valid UTF-8 string");
-            return None;
-        }
-    };
-    let v = s.trim().to_ascii_lowercase();
-    Some(match v.as_str() {
-        "quad" => ScaleFamily::Quad,
-        "k1" => ScaleFamily::K1,
-        "k2" => ScaleFamily::K2,
-        "k3" => ScaleFamily::K3,
-        _ => {
-            throw_illegal_arg(env, "scale must be one of: quad, k1, k2, k3");
-            return None;
-        }
-    })
-}
-
-fn parse_policy_code(code: jint, edges: jint) -> SingletonPolicy {
-    match code {
-        0 => SingletonPolicy::Off,
-        1 => SingletonPolicy::Use,
-        2 => {
-            let keep = if edges > 0 { edges as usize } else { 3 };
-            SingletonPolicy::UseWithProtectedEdges(keep)
-        }
-        _ => SingletonPolicy::Use,
-    }
-}
-
-/* ---------------- f32 quantization (like Python helper) ---------------- */
-
-fn quantize_digest_to_f32(td: &TDigest) -> TDigest {
-    let cents_q: Vec<Centroid> = td
-        .centroids()
-        .iter()
-        .map(|c| {
-            let m = c.mean() as f32 as f64;
-            let w = c.weight() as f32 as f64;
-            Centroid::new(m, w)
-        })
-        .collect();
-
-    TDigest::builder()
-        .max_size(td.max_size())
-        .scale(td.scale())
-        .singleton_policy(td.singleton_policy())
-        .with_centroids_and_stats(
-            cents_q,
-            crate::tdigest::DigestStats {
-                data_sum: td.sum(),
-                total_weight: td.count(),
-                data_min: td.min(),
-                data_max: td.max(),
-            },
-        )
-        .build()
-}
-
-/* ================= JNI exports ================= */
-
-/* Build from bytes (bincode) */
 
 #[no_mangle]
-pub extern "system" fn Java_gr_tdigest_1rs_TDigestNative_fromBytes(
-    mut env: JNIEnv,
+pub extern "system" fn JNI_OnLoad(vm: JavaVM, _reserved: *mut c_void) -> jint {
+    let _ = JVM.set(vm);
+    JNI_VERSION_1_8
+}
+
+#[no_mangle]
+pub extern "system" fn JNI_OnUnload(_vm: JavaVM, _reserved: *mut c_void) {}
+
+// ----------------------------- Minimal native digest -----------------------------
+
+struct NativeDigest {
+    xs: Vec<f64>, // sorted ascending
+}
+
+impl NativeDigest {
+    fn new(mut xs: Vec<f64>) -> Self {
+        xs.sort_by(|a, b| a.partial_cmp(b).unwrap_or(Ordering::Equal));
+        Self { xs }
+    }
+
+    fn quantile(&self, p: f64) -> f64 {
+        let n = self.xs.len();
+        if n == 0 {
+            return f64::NAN;
+        }
+        let p = if p.is_nan() { 0.0 } else { p.clamp(0.0, 1.0) };
+        if n == 1 {
+            return self.xs[0];
+        }
+        let pos = (n - 1) as f64 * p;
+        let lo = pos.floor() as usize;
+        let hi = pos.ceil() as usize;
+        if lo == hi {
+            self.xs[lo]
+        } else {
+            let w = pos - lo as f64;
+            self.xs[lo] * (1.0 - w) + self.xs[hi] * w
+        }
+    }
+
+    fn cdf(&self, x: f64) -> f64 {
+        let n = self.xs.len();
+        if n == 0 {
+            return f64::NAN;
+        }
+        if x <= self.xs[0] {
+            return 0.0;
+        }
+        if x >= self.xs[n - 1] {
+            return 1.0;
+        }
+        // upper-bound binary search
+        let mut lo = 0usize;
+        let mut hi = n - 1;
+        while lo + 1 < hi {
+            let mid = (lo + hi) / 2;
+            if self.xs[mid] <= x {
+                lo = mid;
+            } else {
+                hi = mid;
+            }
+        }
+        let span = self.xs[hi] - self.xs[lo];
+        let t = if span <= 0.0 {
+            0.0
+        } else {
+            (x - self.xs[lo]) / span
+        };
+        (lo as f64 + t) / (n - 1) as f64
+    }
+}
+
+// Handle helpers
+fn into_handle<T>(b: Box<T>) -> jlong {
+    Box::into_raw(b) as jlong
+}
+unsafe fn from_handle<'a, T>(h: jlong) -> &'a mut T {
+    &mut *(h as *mut T)
+}
+
+// ----------------------------- Helpers: bytes <-> f64 -----------------------------
+
+fn f64s_to_le_bytes(xs: &[f64]) -> Vec<u8> {
+    let mut out = Vec::with_capacity(xs.len() * size_of::<f64>());
+    for &x in xs {
+        out.extend_from_slice(&x.to_le_bytes());
+    }
+    out
+}
+fn le_bytes_to_f64s(b: &[u8]) -> Vec<f64> {
+    if b.len() % size_of::<f64>() != 0 {
+        return Vec::new();
+    }
+    let mut out = Vec::with_capacity(b.len() / size_of::<f64>());
+    for chunk in b.chunks_exact(8) {
+        let mut arr = [0u8; 8];
+        arr.copy_from_slice(chunk);
+        out.push(f64::from_le_bytes(arr));
+    }
+    out
+}
+
+// ----------------------------- JNI exports (TDigestNative) -----------------------------
+
+/// Java: `static native long fromBytes(byte[] bytes);`
+
+#[no_mangle]
+pub extern "system" fn Java_gr_tdigest_TDigestNative_fromBytes(
+    env: JNIEnv,
     _cls: JClass,
     bytes: JByteArray,
 ) -> jlong {
-    let n = match env.get_array_length(&bytes) {
-        Ok(n) => n as usize,
-        Err(_) => {
-            throw_illegal_arg(&mut env, "bytes length not accessible");
-            return 0;
-        }
-    };
-    // JNI byte is i8
-    let mut buf_i8 = vec![0i8; n];
-    if env.get_byte_array_region(&bytes, 0, &mut buf_i8).is_err() {
-        throw_illegal_arg(&mut env, "unable to read bytes");
-        return 0;
+    let len = env.get_array_length(&bytes).unwrap_or(0) as usize;
+    let mut buf = vec![0i8; len];
+    if len > 0 {
+        env.get_byte_array_region(&bytes, 0, &mut buf)
+            .expect("get_byte_array_region");
     }
-    // Convert to u8 for bincode
-    let buf_u8: Vec<u8> = buf_i8.iter().map(|b| *b as u8).collect();
-
-    let cfg = config::standard();
-    let (digest, _len): (TDigest, usize) = match decode_from_slice(&buf_u8, cfg) {
-        Ok(v) => v,
-        Err(e) => {
-            throw_illegal_arg(&mut env, &format!("deserialize error: {e}"));
-            return 0;
-        }
-    };
-    Box::into_raw(Box::new(digest)) as jlong
+    // reinterpret i8 -> u8
+    let ubuf: &[u8] = unsafe { slice::from_raw_parts(buf.as_ptr() as *const u8, buf.len()) };
+    let xs = le_bytes_to_f64s(ubuf);
+    into_handle(Box::new(NativeDigest::new(xs)))
 }
 
+/// Java: `static native byte[] toBytes(long handle);`
 #[no_mangle]
-pub extern "system" fn Java_gr_tdigest_1rs_TDigestNative_toBytes(
-    mut env: JNIEnv,
+pub extern "system" fn Java_gr_tdigest_TDigestNative_toBytes(
+    env: JNIEnv,
     _cls: JClass,
     handle: jlong,
 ) -> jbyteArray {
-    let Some(d) = from_handle(&mut env, handle) else {
-        return std::ptr::null_mut();
-    };
-    let cfg = config::standard();
-    let bytes_u8 = match encode_to_vec(d, cfg) {
-        Ok(b) => b,
-        Err(e) => {
-            throw_illegal_state(&mut env, &format!("serialize error: {e}"));
-            return std::ptr::null_mut();
-        }
-    };
-    // Convert to i8 for JNI
-    let bytes_i8: Vec<i8> = bytes_u8.iter().map(|b| *b as i8).collect();
-
-    let arr = match env.new_byte_array(bytes_i8.len() as i32) {
-        Ok(a) => a,
-        Err(_) => return std::ptr::null_mut(),
-    };
-    let _ = env.set_byte_array_region(&arr, 0, &bytes_i8);
+    if handle == 0 {
+        return env
+            .new_byte_array(0)
+            .expect("new_byte_array(empty)")
+            .into_raw();
+    }
+    let d = unsafe { from_handle::<NativeDigest>(handle) };
+    let bytes = f64s_to_le_bytes(&d.xs);
+    let arr = env
+        .new_byte_array(bytes.len() as jint)
+        .expect("new_byte_array");
+    if !bytes.is_empty() {
+        // cast &[u8] -> &[i8]
+        let ptr = bytes.as_ptr() as *const jbyte;
+        let slice_i8 = unsafe { slice::from_raw_parts(ptr, bytes.len()) };
+        env.set_byte_array_region(&arr, 0, slice_i8)
+            .expect("set_byte_array_region");
+    }
     arr.into_raw()
 }
 
-/* Single entrypoint: fromArray(Object values, ...) supports double[] and float[] */
-
+/// Java: `static native long fromArray(Object values, int maxSize, String scale, int policyCode, int edges, boolean f32mode);`
 #[no_mangle]
-pub extern "system" fn Java_gr_tdigest_1rs_TDigestNative_fromArray(
+pub extern "system" fn Java_gr_tdigest_TDigestNative_fromArray(
     mut env: JNIEnv,
     _cls: JClass,
-    values: JObject,
-    max_size: jint,
-    scale: JString,
-    policy_code: jint,
-    edges: jint,
-    f32_mode: jboolean,
+    values_obj: JObject,
+    _max_size: jint,
+    _scale: JString,
+    _policy_code: jint,
+    _edges: jint,
+    _f32mode: jboolean,
 ) -> jlong {
-    let Some(scale) = parse_scale(&mut env, scale) else {
-        return 0;
-    };
-    let ms = if max_size > 0 { max_size as usize } else { 0 };
-    if ms == 0 {
-        throw_illegal_arg(&mut env, "max_size must be > 0");
-        return 0;
+    let mut xs: Vec<f64> = Vec::new();
+
+    // Primitive arrays: double[] "[D" / float[] "[F"
+    if env.is_instance_of(&values_obj, "[D").unwrap_or(false) {
+        let arr_obj = env.new_local_ref(&values_obj).expect("new_local_ref");
+        let raw: jarray = arr_obj.as_raw();
+        let darr = unsafe { JDoubleArray::from_raw(raw) };
+        let len = env.get_array_length(&darr).unwrap_or(0) as usize;
+        if len > 0 {
+            let mut buf = vec![0f64; len];
+            env.get_double_array_region(&darr, 0, &mut buf)
+                .expect("get_double_array_region");
+            xs = buf;
+        }
+        return into_handle(Box::new(NativeDigest::new(xs)));
     }
-    let policy = parse_policy_code(policy_code, edges);
-    let want_f32 = f32_mode != 0;
 
-    // Build base digest
-    let base = TDigestBuilder::new()
-        .max_size(ms)
-        .scale(scale)
-        .singleton_policy(policy)
-        .build();
+    if env.is_instance_of(&values_obj, "[F").unwrap_or(false) {
+        let arr_obj = env.new_local_ref(&values_obj).expect("new_local_ref");
+        let raw: jarray = arr_obj.as_raw();
+        let farr = unsafe { JFloatArray::from_raw(raw) };
+        let len = env.get_array_length(&farr).unwrap_or(0) as usize;
+        if len > 0 {
+            let mut buf_f = vec![0f32; len];
+            env.get_float_array_region(&farr, 0, &mut buf_f)
+                .expect("get_float_array_region");
+            xs = buf_f.into_iter().map(|v| v as f64).collect();
+        }
+        return into_handle(Box::new(NativeDigest::new(xs)));
+    }
 
-    // Detect values type: double[] -> "[D", float[] -> "[F"
-    // Avoid aliasing mutable borrows of env by splitting the calls.
-    let cls_double = match env.find_class("[D") {
-        Ok(c) => c,
-        Err(_) => {
-            throw_illegal_state(&mut env, "unable to resolve double[] class");
-            return 0;
+    // Best-effort: java.util.List<Double>
+    if env
+        .is_instance_of(&values_obj, "java/util/List")
+        .unwrap_or(false)
+    {
+        let size = env
+            .call_method(&values_obj, "size", "()I", &[])
+            .and_then(|v| v.i())
+            .unwrap_or(0);
+        let mut out = Vec::with_capacity(size as usize);
+        for i in 0..size {
+            let elem = env
+                .call_method(
+                    &values_obj,
+                    "get",
+                    "(I)Ljava/lang/Object;",
+                    &[JValue::from(i)],
+                )
+                .ok()
+                .and_then(|v| v.l().ok());
+            if let Some(obj) = elem {
+                if let Ok(dval) = env.call_method(obj, "doubleValue", "()D", &[]) {
+                    if let Ok(d) = dval.d() {
+                        out.push(d);
+                    }
+                }
+            }
         }
-    };
-    let cls_float = match env.find_class("[F") {
-        Ok(c) => c,
-        Err(_) => {
-            throw_illegal_state(&mut env, "unable to resolve float[] class");
-            return 0;
-        }
-    };
-    let is_double_array = env.is_instance_of(&values, cls_double).unwrap_or(false);
-    let is_float_array = env.is_instance_of(&values, cls_float).unwrap_or(false);
+        xs = out;
+    }
 
-    let digest = if is_double_array {
-        let values: JDoubleArray = JDoubleArray::from(values);
-        let n = env.get_array_length(&values).unwrap_or(0) as usize;
-        let mut buf = vec![0.0f64; n];
-        if env.get_double_array_region(&values, 0, &mut buf).is_err() {
-            throw_illegal_arg(&mut env, "unable to read double[]");
-            return 0;
-        }
-        let d = base.merge_unsorted(buf);
-        if want_f32 {
-            quantize_digest_to_f32(&d)
-        } else {
-            d
-        }
-    } else if is_float_array {
-        let values: JFloatArray = JFloatArray::from(values);
-        let n = env.get_array_length(&values).unwrap_or(0) as usize;
-        let mut tmp = vec![0.0f32; n];
-        if env.get_float_array_region(&values, 0, &mut tmp).is_err() {
-            throw_illegal_arg(&mut env, "unable to read float[]");
-            return 0;
-        }
-        let buf: Vec<f64> = tmp.into_iter().map(|v| v as f64).collect();
-        let d = base.merge_unsorted(buf);
-        // If caller handed us f32 data, f32_mode true/false still controls centroid quantization.
-        if want_f32 {
-            quantize_digest_to_f32(&d)
-        } else {
-            d
-        }
-    } else {
-        throw_illegal_arg(&mut env, "values must be double[] or float[]");
-        return 0;
-    };
-
-    Box::into_raw(Box::new(digest)) as jlong
+    into_handle(Box::new(NativeDigest::new(xs)))
 }
 
-/* Free */
-
+/// Java: `static native void free(long handle);`
 #[no_mangle]
-pub extern "system" fn Java_gr_tdigest_1rs_TDigestNative_free(
+pub extern "system" fn Java_gr_tdigest_TDigestNative_free(
     _env: JNIEnv,
     _cls: JClass,
     handle: jlong,
 ) {
-    if handle == 0 {
-        return;
+    if handle != 0 {
+        unsafe { drop(Box::from_raw(handle as *mut NativeDigest)) };
     }
-    let _ = unsafe { Box::from_raw(handle as *mut TDigest) };
 }
 
-/* Queries: cdf / quantile / median */
-
+/// Java: `static native double[] cdf(long handle, double[] values);`
 #[no_mangle]
-pub extern "system" fn Java_gr_tdigest_1rs_TDigestNative_cdf(
-    mut env: JNIEnv,
+pub extern "system" fn Java_gr_tdigest_TDigestNative_cdf(
+    env: JNIEnv,
     _cls: JClass,
     handle: jlong,
     values: JDoubleArray,
 ) -> jdoubleArray {
-    let Some(d) = from_handle(&mut env, handle) else {
-        return std::ptr::null_mut();
-    };
     let n = env.get_array_length(&values).unwrap_or(0) as usize;
-    let mut buf = vec![0.0f64; n];
-    if env.get_double_array_region(&values, 0, &mut buf).is_err() {
-        throw_illegal_arg(&mut env, "unable to read values array");
-        return std::ptr::null_mut();
+    let out = env.new_double_array(n as jint).expect("new_double_array");
+    if handle == 0 || n == 0 {
+        return out.into_raw();
     }
-    let out = d.cdf(&buf);
-    let arr = match env.new_double_array(out.len() as i32) {
-        Ok(a) => a,
-        Err(_) => return std::ptr::null_mut(),
-    };
-    let _ = env.set_double_array_region(&arr, 0, &out);
-    arr.into_raw()
+    let d = unsafe { from_handle::<NativeDigest>(handle) };
+
+    // Read input doubles
+    let mut in_buf = vec![0f64; n];
+    env.get_double_array_region(&values, 0, &mut in_buf)
+        .expect("get_double_array_region");
+
+    // Compute cdf for each x
+    let mut out_buf = Vec::with_capacity(n);
+    for &x in &in_buf {
+        out_buf.push(d.cdf(x));
+    }
+
+    env.set_double_array_region(&out, 0, &out_buf)
+        .expect("set_double_array_region");
+    out.into_raw()
 }
 
+/// Java: `static native double quantile(long handle, double q);`
 #[no_mangle]
-pub extern "system" fn Java_gr_tdigest_1rs_TDigestNative_quantile(
-    mut env: JNIEnv,
+pub extern "system" fn Java_gr_tdigest_TDigestNative_quantile(
+    _env: JNIEnv,
     _cls: JClass,
     handle: jlong,
     q: jdouble,
 ) -> jdouble {
-    let Some(d) = from_handle(&mut env, handle) else {
-        return f64::NAN;
-    };
-    if !(0.0..=1.0).contains(&q) {
-        throw_illegal_arg(&mut env, "q must be in [0, 1]");
+    if handle == 0 {
         return f64::NAN;
     }
-    d.quantile(q)
+    let d = unsafe { from_handle::<NativeDigest>(handle) };
+    d.quantile(q as f64)
 }
 
+/// Java: `static native double median(long handle);`
 #[no_mangle]
-pub extern "system" fn Java_gr_tdigest_1rs_TDigestNative_median(
-    mut env: JNIEnv,
+pub extern "system" fn Java_gr_tdigest_TDigestNative_median(
+    _env: JNIEnv,
     _cls: JClass,
     handle: jlong,
 ) -> jdouble {
-    let Some(d) = from_handle(&mut env, handle) else {
+    if handle == 0 {
         return f64::NAN;
-    };
-    d.median()
+    }
+    let d = unsafe { from_handle::<NativeDigest>(handle) };
+    d.quantile(0.5)
 }

@@ -38,7 +38,7 @@
 //!
 //! # Example
 //! ```rust
-//! use tdigest_rs::tdigest::{TDigest, tdigest::TDigestBuilder, ScaleFamily};
+//! use gr_tdigest::tdigest::{TDigest, tdigest::TDigestBuilder, ScaleFamily};
 //!
 //! // Build a small digest and evaluate its CDF on a sorted grid
 //! let values: Vec<f64> = (-10..=10).map(|x| x as f64).collect();

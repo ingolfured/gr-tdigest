@@ -1,0 +1,140 @@
+// bindings/java/build.gradle
+
+plugins {
+  id 'java'
+  id 'maven-publish'
+}
+
+repositories { mavenCentral() }
+
+/* -------- Read version from ../../Cargo.toml (no external deps) -------- */
+def repoRoot  = file('../../')
+def cargoToml = new File(repoRoot, 'Cargo.toml')
+if (!cargoToml.exists()) {
+  throw new GradleException("Cargo.toml not found at ${cargoToml.absolutePath}")
+}
+def cargoText = cargoToml.getText('UTF-8')
+
+// Grab the version from the first [package] block's version="..."
+def cargoVersion = {
+  def inPkg = false
+  for (line in cargoText.readLines()) {
+    if (line =~ /^\s*\[package\]\s*$/) { inPkg = true; continue }
+    if (inPkg && (line =~ /^\s*\[.*\]\s*$/)) break
+    if (inPkg) {
+      def m = (line =~ /^\s*version\s*=\s*"([^"]+)"\s*$/)
+      if (m.find()) return m.group(1)
+    }
+  }
+  throw new GradleException("Unable to find version in [package] of Cargo.toml")
+}.call()
+
+/* -------- Coordinates -------- */
+group   = 'gr.tdigest'
+version = cargoVersion
+
+/* -------- Java target (broad compatibility) -------- */
+java {
+  sourceCompatibility = JavaVersion.VERSION_11
+  targetCompatibility = JavaVersion.VERSION_11
+}
+tasks.withType(JavaCompile).configureEach { options.release = 11 }
+
+/* -------- Paths -------- */
+def targetRel = new File(repoRoot, 'target/release')
+def genResDir = new File(buildDir, 'generated-resources')
+
+/* -------- Build native with feature `java` -------- */
+tasks.register('cargoBuild', Exec) {
+  workingDir repoRoot
+  commandLine 'cargo', 'build', '--release', '--features', 'java'
+  standardOutput = System.out
+  errorOutput    = System.err
+}
+
+/* -------- Copy native into JAR resources (canonical name only) -------- */
+/* Library base name must match System.loadLibrary("gr_tdigest") */
+def libBase = "gr_tdigest"
+def os = org.gradle.internal.os.OperatingSystem.current()
+def libFile = os.isWindows() ? "${libBase}.dll"
+           : os.isMacOsX()   ? "lib${libBase}.dylib"
+                              : "lib${libBase}.so"
+
+tasks.register('copyNative') {
+  dependsOn tasks.named('cargoBuild')
+  outputs.dir(genResDir)
+  doLast {
+    def src = new File(targetRel, libFile)
+    if (!src.exists()) {
+      throw new GradleException("Native not found: ${src.absolutePath} — ensure Cargo built the cdylib named '${libBase}'.")
+    }
+
+    def arch = System.getProperty('os.arch').toLowerCase(Locale.ROOT)
+    arch = (arch in ['x86_64','amd64']) ? 'x86_64'
+        : (arch in ['aarch64','arm64']) ? 'aarch64'
+        : arch
+    def plat = os.isWindows() ? 'windows' : (os.isMacOsX() ? 'macos' : 'linux')
+
+    def dest = new File(genResDir, "META-INF/native/${plat}-${arch}")
+    dest.mkdirs()
+
+    copy { from src; into dest }
+    println "Packaged native -> ${new File(dest, libFile).absolutePath}"
+  }
+}
+
+/* -------- Source layout: Java + generated resources -------- */
+sourceSets {
+  main {
+    java.srcDirs = ['src']
+    resources.srcDirs = [genResDir]   // include META-INF/native/... in jar
+  }
+}
+
+/* -------- Jar configuration -------- */
+tasks.named('processResources').configure { dependsOn tasks.named('copyNative') }
+
+tasks.named('jar').configure {
+  dependsOn tasks.named('copyNative')
+  // TestRun is in package 'gr'
+  manifest { attributes('Main-Class': 'gr.TestRun') }
+  doLast {
+    def jarFile = archiveFile.get().asFile
+    def mb = jarFile.length() / (1024.0 * 1024.0)
+    println String.format("Built JAR: %s (%.2f MB)", jarFile.absolutePath, mb)
+  }
+}
+
+/* -------- Smoke test: run TestRun from the built JAR -------- */
+tasks.register('smoke', JavaExec) {
+  dependsOn tasks.named('jar')
+  def jarTask = tasks.named('jar').get()
+  classpath files(jarTask.archiveFile)
+  mainClass = 'gr.TestRun'
+  if ((JavaVersion.current().majorVersion as int) >= 22) {
+    jvmArgs '--enable-native-access=ALL-UNNAMED'
+  }
+}
+
+/* -------- Dev-run without re-jar (fast iteration) -------- */
+tasks.register('runSmoke', JavaExec) {
+  dependsOn tasks.named('copyNative'), tasks.named('classes'), tasks.named('processResources')
+  classpath sourceSets.main.runtimeClasspath
+  mainClass = 'gr.TestRun'
+  if ((JavaVersion.current().majorVersion as int) >= 22) {
+    jvmArgs '--enable-native-access=ALL-UNNAMED'
+  }
+}
+
+/* -------- Clean generated resources too -------- */
+tasks.named('clean').configure { doLast { delete genResDir } }
+
+/* -------- Publishing (optional) -------- */
+publishing {
+  publications {
+    mavenJava(MavenPublication) {
+      from components.java
+      artifactId = "gr-tdigest"
+    }
+  }
+}

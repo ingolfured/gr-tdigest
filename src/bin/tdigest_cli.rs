@@ -37,8 +37,8 @@ use std::error::Error;
 use std::fs;
 use std::io::{self, Read};
 
-use tdigest_rs::tdigest::singleton_policy::SingletonPolicy;
-use tdigest_rs::tdigest::ScaleFamily;
+use gr_tdigest::tdigest::singleton_policy::SingletonPolicy;
+use gr_tdigest::tdigest::ScaleFamily;
 
 /// User-facing scale options for the CLI.
 #[derive(Debug, Clone, ValueEnum)]
@@ -318,7 +318,7 @@ fn main() -> Result<(), Box<dyn Error>> {
     };
 
     // Build digest and run
-    let digest = tdigest_rs::tdigest::TDigest::builder()
+    let digest = gr_tdigest::tdigest::TDigest::builder()
         .max_size(max_size)
         .scale(scale.into())
         .singleton_policy(policy.into_singleton_policy(keep))

@@ -1,9 +1,10 @@
-import gr.tdigest_rs.TDigest;
-import gr.tdigest_rs.TDigest.Precision;
-import gr.tdigest_rs.TDigest.Scale;
-import gr.tdigest_rs.TDigest.SingletonPolicy;
-
+package gr;
 import java.util.Arrays;
+
+import gr.tdigest.TDigest;
+import gr.tdigest.TDigest.Precision;
+import gr.tdigest.TDigest.Scale;
+import gr.tdigest.TDigest.SingletonPolicy;
 
 public class TestRun {
   public static void main(String[] args) {

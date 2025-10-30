@@ -1,7 +1,7 @@
 // benches/codecs_bench.rs
+use gr_tdigest::tdigest::{Centroid, TDigest};
 use std::hint::black_box;
 use std::time::{Duration, Instant};
-use tdigest_rs::tdigest::{Centroid, TDigest};
 
 use criterion::{criterion_group, criterion_main, Criterion, SamplingMode};
 

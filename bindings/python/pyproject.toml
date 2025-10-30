@@ -3,10 +3,10 @@ requires = ["maturin[patchelf,zig]>=1.9.5,<2.0"]
 build-backend = "maturin"
 
 [project]
-name = "tdigest_rs"
+name = "gr-tdigest"
 dynamic = ["version"]
 description = "Rust TDigest with Python, Polars and JNI"
-readme = "README.md"
+readme = "../../README.md"
 license = { text = "Apache-2.0" }
 requires-python = ">=3.12,<3.13"
 authors = [{ name = "Ingolfur Edvardsson", email = "ingo.edvardsson@gresearch.co.uk" }]
@@ -39,9 +39,10 @@ dev = [
 # Maturin build settings
 # ------------------------------------------------------------
 [tool.maturin]
+manifest-path = "../../Cargo.toml"
 features = ["python"]
 bindings = "pyo3"
-module-name = "tdigest_rs._tdigest_rs"
+module-name = "gr_tdigest._gr_tdigest"
 strip = true
 manylinux = "2_28"
 zig = true
@@ -59,7 +60,7 @@ extend-exclude = ["target","dist","build",".venv",".maturin",".pytest_cache",".r
 # ------------------------------------------------------------
 [tool.pytest.ini_options]
 addopts = "-q"
-testpaths = ["tests"]
+testpaths = ["bindings/python/test"]
 pythonpath = ["."]
 
 # ------------------------------------------------------------

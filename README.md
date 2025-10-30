@@ -1,146 +1,119 @@
 # 🌀 tdigest-rs
+T-Digest provides a mergeable summary of a distribution, enabling **approximate quantiles and CDF** with strong tail accuracy. **tdigest-rs** delivers a production-ready Rust core with Python and Polars APIs plus Java (JNI), emphasizing compact memory, stable merge behavior, and easy adoption in data pipelines.
 
-A **Rust t-digest** with **Polars integration** and extensions for **Python** and **Java/JNI**.
-Fast, compact, and built for real-world analytics pipelines.
 
+
+## ✨ Features
 - 🚀 Mergeable quantiles for large / streaming data
 - 🦀 Single Rust core shared across Rust, Polars, Python, and Java
 - 🧊 Precision modes: canonical `f64` or compact `f32`
 - 🎚️ Scale families: `Quad`, `K1`, `K2`, `K3`
-- 🔩 Singleton handling policy: **edge–precision**, **respect singletons (keep _N_)**, or **uniform merge**
+- 🔩 Singleton handling policy: **edge–precision (keep _N_)**, **respect singletons**, or **uniform merge**
 
----
+## 📜 License
+Apache-2.0
 
-## 🔢 Versions & compatibility (tested)
-Rust and Python use **different** Polars versions — that’s expected.
-
-| Layer | Package | Version |
-|---|---|---|
-| **Python** | CPython | 3.12.x |
-|  | polars | 1.34.0 |
-|  | polars-runtime-32 | 1.34.0 |
-|  | numpy | 2.3.4 |
-|  | maturin | 1.9.6 |
-|  | pytest | 8.4.2 |
-|  | ruff | 0.14.1 |
-|  | ziglang (manylinux) | 0.12.1 |
-| **Rust** | rustc | ≥ 1.81 (2021 edition) |
-|  | polars (crates) | 0.51.x |
-|  | jemallocator | 0.5.4 |
-
----
-
-## 🧰 Quick start (Makefile-first)
-Clone the repo, then let the **Makefile** drive:
-
+## ⚡ Quick start
 ```bash
-make help      # discover the main targets
-make setup     # toolchain + Python env (uv)
-make build     # Rust core + CLI, Python extension, Java classes
-make test      # Rust tests + CLI smoke + Python tests + Java demo
+make setup    # toolchains + Python deps
+make build    # Rust lib+CLI, Python ext, Java classes (dev)
+make test     # Rust + Python tests
+make release  # release CLI + wheel + JARs
 ```
 
-Packaging (when you need it):
+## 🧪 Usage
+
+**Rust CLI**
 ```bash
-make wheel     # build manylinux wheel(s) into ./dist
-make jar       # build Java API + native jar for the current platform
+echo '0 1 2 3' | target/release/tdigest --stdin --cmd quantile --p 0.5 --no-header
 ```
 
----
-
-## 🧪 Usage examples
-
-### Rust CLI
-Compute a median from stdin:
-```bash
-echo "1 2 3 4 5" | target/release/tdigest --stdin --quantile 0.5
-# quantile,value
-# 0.5,3.0
+**Python**
+```python
+import gr_tdigest as td
+d = td.TDigest.from_array([0,1,2,3], max_size=100, scale="k2")
+print("p50 =", d.quantile(0.5))
+print("cdf  =", d.cdf([0.0, 1.5, 3.0]).tolist())
 ```
 
-From a file to JSON Lines:
-```bash
-target/release/tdigest --file data.txt --cmd cdf --output jsonl > out.jsonl
-```
-
-### Python (Polars expression)
+**Polars**
 ```python
 import polars as pl
-from tdigest_rs import tdigest, quantile, StorageSchema, ScaleFamily
+from gr_tdigest import tdigest, quantile
 
-df = pl.DataFrame({"g": ["a"] * 2000, "x": list(range(2000))})
+df = pl.DataFrame({"g": ["a"]*5, "x": [0,1,2,3,4]})
 out = (
     df.lazy()
       .group_by("g")
-      .agg(
-          tdigest(
-              pl.col("x"),
-              storage=StorageSchema.F64,   # or StorageSchema.F32
-              scale=ScaleFamily.QUAD,      # Quad/K1/K2/K3
-              max_size=512
-          ).alias("td")
-      )
+      .agg(tdigest(pl.col("x"), max_size=100, scale="k2").alias("td"))
       .select(quantile("td", 0.5))
       .collect()
 )
 print(out)
 ```
 
-### Java (AutoCloseable builder)
+**Java (AutoCloseable)**
 ```java
-import gr.tdigest_rs.TDigest;
-import gr.tdigest_rs.TDigest.Precision;
-import gr.tdigest_rs.TDigest.Scale;
-import gr.tdigest_rs.TDigest.SingletonPolicy;
+import gr.tdigest.TDigest;
+import gr.tdigest.TDigest.Precision;
+import gr.tdigest.TDigest.Scale;
+import gr.tdigest.TDigest.SingletonPolicy;
+
 import java.util.Arrays;
 
 public class TestRun {
   public static void main(String[] args) {
-    System.out.println("AutoCloseable example:");
     try (TDigest digest = TDigest.builder()
         .maxSize(100)
         .scale(Scale.K2)
         .singletonPolicy(SingletonPolicy.EDGES).keep(4)
-        .precision(Precision.F32)             // internal f32 sketch; API uses double[] probes
-        .build(new float[]{0, 1, 2, 3})) {    // build(float[])
-      System.out.println(Arrays.toString(digest.cdf(new double[]{0.0, 1.5, 3.0})));
-      System.out.println("p50 = " + digest.quantile(0.5));
+        .precision(Precision.F32)
+        .build(new float[]{0, 1, 2, 3})) {
+      double[] c = digest.cdf(new double[]{0.0, 1.5, 3.0});
+      double p50 = digest.quantile(0.5);
     }
   }
 }
 ```
 
----
+**Compile & run the Java example**
+```bash
+make release-jar
 
-## 🧱 Project layout
+# Assume:
+#   API JAR:      target/tdigest-rs-api.jar
+#   Native libs:  target/release (contains libtdigest_rs.*)
+# Adjust paths if your build uses different names/locations.
+
+mkdir -p target/java-hello
+javac -cp target/tdigest-rs-api.jar -d target/java-hello TestRun.java
+java --enable-native-access=ALL-UNNAMED      -Djava.library.path=target/release      -cp target/tdigest-rs-api.jar:target/java-hello      TestRun
+```
+
+## 🗂️ Project layout
 ```
 .
-├── Makefile
-├── src/                 # Rust core + CLI
+├── src/                # Rust core + CLI + bindings (Polars exprs, Python, JNI)
 │   ├── bin/tdigest_cli.rs
-│   ├── polars_expr.rs   # Polars expressions (Rust side)
-│   ├── py.rs            # Python bindings (maturin/pyo3)
-│   └── tdigest/         # algorithm & internals
-├── src-java/            # Java demo / JNI client
-├── tdigest_rs/          # Python package (abi3 extension)
-└── tests/               # Python tests
+│   ├── polars_expr.rs
+│   ├── py.rs
+│   ├── jni.rs
+│   └── tdigest/…       # algorithm & internals
+├── bindings/
+│   ├── python/         # wheel via maturin
+│   └── java/src/…      # Java API + JNI shims
+├── gr_tdigest/         # Python package (abi3 extension & __init__)
+├── tests/              # Python tests
+├── benches/            # Rust benches
+├── dist/               # Built wheels/JARs
+└── Makefile
 ```
 
----
+## 🧩 Versions & compatibility
+- **Rust**: stable (2021 edition)
+- **Python**: CPython 3.12; packaged with **maturin**
+- **Polars**: current 1.x (Python); Rust crate versions tracked in `Cargo.toml`
 
-## 🤝 Contributing
-This repo ships with a **pre-commit** setup (fail-fast) to keep things tidy.
-
-Install & run:
-```bash
-pip install pre-commit
-pre-commit install
-pre-commit run --all-files
-```
-
-See the pinned hooks in `.pre-commit-config.yaml`.
-
----
-
-## 🧬 License
-Licensed under **Apache-2.0**.
+## 🔮 Future improvements
+- Guard against centroid weight overflow
+- Ensure no leaks in CDF and quantile paths

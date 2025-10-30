@@ -3,9 +3,9 @@ use std::time::Duration;
 
 use bytesize::ByteSize;
 use criterion::{criterion_group, criterion_main, BenchmarkId, Criterion, Throughput};
+use gr_tdigest::tdigest::{ScaleFamily, TDigest};
 use jemalloc_ctl::{epoch, stats};
-use tdigest_rs::tdigest::{ScaleFamily, TDigest};
-use tdigest_testdata::{gen_dataset, DistKind};
+use testdata::{gen_dataset, DistKind};
 
 /* ------------------------ helpers ------------------------ */
 

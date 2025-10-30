@@ -3,7 +3,7 @@ import math
 import numpy as np
 import pytest
 
-from tdigest_rs import TDigest, ScaleFamily, SingletonMode
+from gr_tdigest import TDigest, ScaleFamily, SingletonMode
 
 
 def _arange_float(n: int) -> np.ndarray:
