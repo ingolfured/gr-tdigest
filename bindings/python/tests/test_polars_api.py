@@ -9,7 +9,7 @@ from gr_tdigest import (
     cdf,
     ScaleFamily,
     StorageSchema,
-    SingletonMode,  # NEW API
+    SingletonMode,
 )
 
 
@@ -53,42 +53,6 @@ def test_plugin_quantile_and_cdf_simple_exactish():
     # Scalar CDF
     y = df_d.select(cdf("td", 1.5)).item()
     assert y == pytest.approx(0.5, abs=1e-9)
-
-
-@pytest.mark.parametrize("scale_arg", [ScaleFamily.QUAD, "QUAD", "quad"])
-@pytest.mark.parametrize(
-    ("mode_arg", "k"),
-    [
-        (SingletonMode.USE, None),
-        ("use", None),
-        (SingletonMode.OFF, None),
-        ("off", None),
-        (SingletonMode.EDGE, 0),
-        (SingletonMode.EDGE, 2),
-        ("edge", 3),
-    ],
-)
-@pytest.mark.parametrize("storage_arg", [StorageSchema.F64, StorageSchema.F32, "f64", "f32"])
-def test_plugin_params_variants(scale_arg, mode_arg, k, storage_arg):
-    df = _toy_df_for_groups()
-
-    # Build per-group digest with different parameter forms (new API)
-    agg = df.group_by("g").agg(
-        tdigest(
-            pl.col("x"),
-            max_size=64,
-            scale=scale_arg,
-            storage=storage_arg,
-            singleton_mode=mode_arg,
-            edges_to_preserve=k,
-        ).alias("td")
-    )
-
-    # Quantile reduces across the digest column -> single scalar
-    q_series = agg.select(quantile("td", 0.5).alias("q50")).to_series()
-    assert q_series.len() == 1
-    assert q_series.is_not_null().all()
-    assert np.isfinite(q_series.item())
 
 
 def test_plugin_cdf_with_list_column_and_explode():
@@ -162,3 +126,59 @@ def test_plugin_storage_affects_inner_mean_dtype():
 
     assert _means_dtype(StorageSchema.F32) == pl.Float32
     assert _means_dtype(StorageSchema.F64) == pl.Float64
+
+
+def test_list_of_cdf_expressions_select_keyword_style():
+    df = pl.DataFrame({"x": [0.0, 1.0, 2.0, 3.0], "y": [3.0, 3.0, 1.0, 0.0]})
+    df2 = df.with_columns(td_x=tdigest("x"), td_y=tdigest("y"))
+
+    out = df2.select(
+        [
+            cdf(pl.col("td_x"), "x").alias("cx"),
+            cdf("td_y", pl.col("y")).alias("cy"),
+        ]
+    )
+
+    assert out.columns == ["cx", "cy"]
+
+    ge0, le1 = out.select(
+        pl.min_horizontal(pl.all()).min().ge(0).alias("ge0"),
+        pl.max_horizontal(pl.all()).max().le(1).alias("le1"),
+    ).row(0)
+    assert ge0 and le1 and out["cx"].is_sorted()
+
+
+@pytest.mark.parametrize("scale_arg", [ScaleFamily.QUAD, "QUAD", "quad"])
+@pytest.mark.parametrize(
+    ("mode_arg", "k"),
+    [
+        (SingletonMode.USE, None),
+        ("use", None),
+        (SingletonMode.OFF, None),
+        ("off", None),
+        (SingletonMode.EDGE, 0),
+        (SingletonMode.EDGE, 2),
+        ("edge", 3),
+    ],
+)
+@pytest.mark.parametrize("storage_arg", [StorageSchema.F64, StorageSchema.F32, "f64", "f32"])
+def test_plugin_params_variants(scale_arg, mode_arg, k, storage_arg):
+    df = _toy_df_for_groups()
+
+    # Build per-group digest with different parameter forms (new API)
+    agg = df.group_by("g").agg(
+        tdigest(
+            pl.col("x"),
+            max_size=64,
+            scale=scale_arg,
+            storage=storage_arg,
+            singleton_mode=mode_arg,
+            edges_to_preserve=k,
+        ).alias("td")
+    )
+
+    # Quantile reduces across the digest column -> single scalar
+    q_series = agg.select(quantile("td", 0.5).alias("q50")).to_series()
+    assert q_series.len() == 1
+    assert q_series.is_not_null().all()
+    assert np.isfinite(q_series.item())

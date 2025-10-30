@@ -280,20 +280,52 @@ def tdigest(
     )
 
 
-def cdf(digest: "IntoExpr", values: "IntoExpr | Any") -> pl.Expr:
+def _output_name_or_raise(e: pl.Expr, ctx: str) -> str:
+    name = e.meta.output_name()
+    if not isinstance(name, str) or name == "":
+        raise ValueError(f"{ctx}: 'values' must be a named column/expression.")
+    return name
+
+
+def cdf(digest: "IntoExpr", values: "IntoExpr") -> pl.Expr:
+    """
+    cdf(digest, values) -> Expr
+      - digest: column name or Expr holding a TDigest
+      - values: named column or Expr to probe (must have output name)
+    Output name is '<values>_cdf' (internal).
+    """
     d_expr = _into_expr(digest)
     v_expr = _into_expr(values)
-    return register_plugin_function(
+
+    expr = register_plugin_function(
         plugin_path=str(lib),
         function_name="cdf",
         args=[d_expr, v_expr],
         kwargs=None,
+        returns_scalar=False,  # explicit: element-wise over 'values'
     )
+
+    vname = _output_name_or_raise(v_expr, "cdf(values)")
+    return expr.alias(f"{vname}_cdf")
 
 
 def quantile(digest: "IntoExpr", q: "IntoExpr | float") -> pl.Expr:
     d_expr = _into_expr(digest)
-    q_val = float(q) if not isinstance(q, pl.Expr) else q
+
+    is_expr_like = isinstance(q, pl.Expr) or isinstance(q, str)
+    if is_expr_like:
+        q_expr = _into_expr(q)
+        # 2-arg form: (digest_expr, q_expr)
+        return register_plugin_function(
+            plugin_path=str(lib),
+            function_name="quantile",
+            args=[d_expr, q_expr],
+            kwargs=None,
+            returns_scalar=True,
+        )
+
+    # Otherwise, treat q as a scalar and use the kwarg form expected by the plugin.
+    q_val = float(cast(float, q))
     return register_plugin_function(
         plugin_path=str(lib),
         function_name="quantile",
