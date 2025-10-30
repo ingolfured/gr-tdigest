@@ -1,4 +1,3 @@
-// src-java/gr/tdigest_rs/TDigestNative.java
 package gr.tdigest;
 
 /**

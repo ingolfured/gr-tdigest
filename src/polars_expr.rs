@@ -11,6 +11,7 @@ use rayon::prelude::*;
 use serde::Deserialize;
 
 use crate::tdigest::singleton_policy::SingletonPolicy;
+use crate::tdigest::Precision as CorePrecision;
 use crate::tdigest::{ScaleFamily, TDigest};
 
 const SUPPORTED_TYPES: &[DataType] = &[
@@ -235,6 +236,11 @@ fn default_singleton_mode() -> String {
     "use".to_string()
 }
 
+#[inline]
+fn default_precision() -> String {
+    "f64".to_string()
+}
+
 #[derive(Debug, Deserialize)]
 struct TDigestKwargs {
     #[serde(default = "default_max_size")]
@@ -247,6 +253,19 @@ struct TDigestKwargs {
     // optional K used only when singleton_mode == "edge"
     #[serde(default)]
     edges_to_preserve: Option<usize>,
+    #[serde(default = "default_precision")]
+    precision: String,
+}
+
+fn parse_precision_kw(prec_raw: &str) -> PolarsResult<(CorePrecision, bool)> {
+    let p = prec_raw.trim().to_lowercase();
+    match p.as_str() {
+        "f32" => Ok((CorePrecision::F32, true)),  // compact codec
+        "f64" => Ok((CorePrecision::F64, false)), // canonical codec
+        _ => Err(PolarsError::ComputeError(
+            format!("unknown precision={prec_raw:?}; expected 'f32' or 'f64'").into(),
+        )),
+    }
 }
 
 fn tdigest_output_f64(_input_fields: &[Field]) -> PolarsResult<Field> {
@@ -337,12 +356,14 @@ fn quantile_output_dtype(input_fields: &[Field]) -> PolarsResult<Field> {
 
 fn tdigest_from_array_helper(inputs: &[Series], kwargs: &TDigestKwargs) -> PolarsResult<Series> {
     let policy = parse_singleton_policy(&kwargs.singleton_mode, kwargs.edges_to_preserve)?;
+    let (core_prec, compact) = parse_precision_kw(&kwargs.precision)?;
     tdigest_impl(
         inputs,
         kwargs.max_size,
         kwargs.scale,
         policy,
-        /*compact=*/ false,
+        core_prec,
+        compact,
     )
 }
 
@@ -350,12 +371,14 @@ fn tdigest_from_array_f32_helper(
     inputs: &[Series],
     kwargs: &TDigestKwargs,
 ) -> PolarsResult<Series> {
+    // keep legacy entry point but force f32
     let policy = parse_singleton_policy(&kwargs.singleton_mode, kwargs.edges_to_preserve)?;
     tdigest_impl(
         inputs,
         kwargs.max_size,
         kwargs.scale,
         policy,
+        CorePrecision::F32,
         /*compact=*/ true,
     )
 }
@@ -365,6 +388,7 @@ fn tdigest_impl(
     max_size: usize,
     scale: ScaleFamily,
     singleton_policy: SingletonPolicy,
+    core_precision: CorePrecision,
     compact: bool,
 ) -> PolarsResult<Series> {
     let mut td = tdigest_from_series(inputs, max_size, scale, singleton_policy)?;
@@ -373,6 +397,7 @@ fn tdigest_impl(
             .max_size(max_size)
             .scale(scale)
             .singleton_policy(singleton_policy)
+            .precision(core_precision)
             .build();
     }
     td.to_series(inputs[0].name(), compact)
@@ -406,6 +431,7 @@ fn tdigest_from_series(
                     .max_size(max_size)
                     .scale(scale)
                     .singleton_policy(singleton_policy)
+                    .precision(CorePrecision::F64)
                     .build();
                 t.merge_unsorted(chunk.non_null_values_iter().collect())
             })

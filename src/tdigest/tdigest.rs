@@ -5,6 +5,8 @@ use crate::tdigest::compressor::compress_into;
 use crate::tdigest::merges::{KWayCentroidMerge, MergeByMean};
 use crate::tdigest::scale::ScaleFamily;
 use crate::tdigest::singleton_policy::SingletonPolicy;
+// ⬇️ bring Precision into scope (re-exported from tdigest/mod.rs)
+use crate::tdigest::Precision;
 
 use serde::{Deserialize, Serialize};
 
@@ -49,6 +51,7 @@ pub struct TDigest {
     min: OrderedFloat<f64>,
     scale: ScaleFamily,
     policy: SingletonPolicy,
+    precision: Precision,
 }
 
 impl Default for TDigest {
@@ -62,6 +65,7 @@ impl Default for TDigest {
             min: OrderedFloat::from(f64::NAN),
             scale: ScaleFamily::K2,       // default scale
             policy: SingletonPolicy::Use, // default singleton policy
+            precision: Precision::F64,    // default in-memory precision
         }
     }
 }
@@ -110,6 +114,15 @@ impl Default for DigestOptions {
 }
 
 impl TDigest {
+    #[inline]
+    pub fn precision(&self) -> Precision {
+        self.precision
+    }
+    #[inline]
+    pub fn is_f32_mode(&self) -> bool {
+        matches!(self.precision, Precision::F32)
+    }
+
     pub fn from_array<A: IntoF64Vec>(arr: A) -> TDigest {
         Self::from_array_with(arr, DigestOptions::default())
     }
@@ -118,8 +131,13 @@ impl TDigest {
             .max_size(opts.max_size)
             .scale(opts.scale)
             .singleton_policy(opts.singleton_policy)
+            // NOTE: if/when you wire true f32 storage, map opts.f32_mode here
+            .precision(if opts.f32_mode {
+                Precision::F32
+            } else {
+                Precision::F64
+            })
             .build();
-        // If/when you add true f32 centroid storage, read opts.f32_mode here.
         base.merge_unsorted(arr.into_f64_vec())
     }
 }
@@ -144,6 +162,7 @@ pub struct TDigestBuilder {
     init_centroids: Option<Vec<Centroid>>,
     init_stats: Option<DigestStats>,
     override_max_size: Option<usize>,
+    precision: Precision,
 }
 
 impl Default for TDigestBuilder {
@@ -155,6 +174,7 @@ impl Default for TDigestBuilder {
             init_centroids: None,
             init_stats: None,
             override_max_size: None,
+            precision: Precision::F64,
         }
     }
 }
@@ -184,9 +204,6 @@ impl TDigestBuilder {
     }
 
     /// Seed with centroids + data-level stats.
-    ///
-    /// Use this to construct a digest from a pre-computed set of centroids where
-    /// you also know the data-level ∑x/∑w/min/max.
     pub fn with_centroids_and_stats(
         mut self,
         centroids: Vec<Centroid>,
@@ -198,10 +215,6 @@ impl TDigestBuilder {
     }
 
     /// Seed with centroids and raw stats (convenience mirror of [`TDigest::new`]).
-    ///
-    /// If the given `centroids.len()` exceeds `max_size_override`, construction will
-    /// mirror the behavior of [`TDigest::new`]: temporarily hold the large set
-    /// and compress through the pipeline to respect capacity.
     pub fn with_centroids(
         mut self,
         centroids: Vec<Centroid>,
@@ -223,6 +236,11 @@ impl TDigestBuilder {
         self
     }
 
+    pub fn precision(mut self, p: Precision) -> Self {
+        self.precision = p;
+        self
+    }
+
     /// Build the digest, seeding if seeds were provided.
     pub fn build(self) -> TDigest {
         // If seeded, construct directly from the provided centroids and stats.
@@ -237,6 +255,7 @@ impl TDigestBuilder {
                 max: OrderedFloat(st.data_max),
                 scale: self.scale,
                 policy: self.policy,
+                precision: self.precision,
             }
         } else {
             TDigest {
@@ -248,6 +267,7 @@ impl TDigestBuilder {
                 min: f64::NAN.into(),
                 scale: self.scale,
                 policy: self.policy,
+                precision: self.precision,
             }
         }
     }
@@ -309,18 +329,12 @@ impl TDigest {
     }
 
     /// Ingest **unsorted** values; behavior matches [`TDigest::merge_sorted`] after sorting.
-    ///
-    /// Producer: *merge-by-mean* over sorted values interleaved with existing centroids.
-    /// Pipeline: passes through **(1→6)** via `compress_into`.
     pub fn merge_unsorted(&self, mut unsorted_values: Vec<f64>) -> TDigest {
         unsorted_values.sort_by(|a, b| a.total_cmp(b));
         self.merge_sorted(unsorted_values)
     }
 
     /// Ingest **sorted** values by interleaving with existing centroids and running the pipeline.
-    ///
-    /// Producer: *merge-by-mean*.
-    /// Pipeline: **(1 Normalize → 2 Slice → 3 k-limit Merge → 4 Cap → 5 Assemble → 6 Post)**.
     pub fn merge_sorted(&self, sorted_values: Vec<f64>) -> TDigest {
         if sorted_values.is_empty() {
             return self.clone();
@@ -349,11 +363,8 @@ impl TDigest {
 
     /// Merge multiple digests by k-way merging their centroid runs and sending the result through
     /// the same pipeline used for raw values.
-    ///
-    /// Producer: *k-way centroid merge* (coalesces equal-mean heads).
-    /// Pipeline: **(1→6)** via `compress_into`.
     pub fn merge_digests(digests: Vec<TDigest>) -> TDigest {
-        // Decide max_size/scale/policy by first non-empty digest to keep semantics stable.
+        // Decide defaults by first non-empty digest to keep semantics stable.
         let mut chosen = TDigest::default();
         let mut runs: Vec<&[Centroid]> = Vec::with_capacity(digests.len());
         let mut total_count = 0.0;
@@ -367,6 +378,7 @@ impl TDigest {
                     chosen.max_size = d.max_size;
                     chosen.scale = d.scale;
                     chosen.policy = d.policy;
+                    chosen.precision = d.precision;
                 }
                 total_count += n;
                 min = std::cmp::min(min, d.min);
@@ -387,6 +399,7 @@ impl TDigest {
             min,
             scale: chosen.scale,
             policy: chosen.policy,
+            precision: chosen.precision,
         };
 
         // Producer: k-way merge of centroid runs (no extra coalescing beyond equal-mean heads).
@@ -430,6 +443,7 @@ impl TDigest {
                 min: OrderedFloat::from(min),
                 scale: ScaleFamily::K2,
                 policy: SingletonPolicy::Use,
+                precision: Precision::F64,
             }
         } else {
             let sz = centroids.len();
@@ -510,6 +524,7 @@ impl TDigest {
             min: OrderedFloat::from(f64::NAN),
             scale: self.scale,
             policy: self.policy,
+            precision: self.precision,
         };
 
         let vmin = OrderedFloat::from(values[0]);

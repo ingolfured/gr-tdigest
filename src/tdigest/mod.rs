@@ -17,12 +17,14 @@ pub mod centroids;
 pub mod codecs;
 pub mod compressor;
 pub mod merges;
+pub mod precision;
 pub mod quantile;
 pub mod scale;
 pub mod singleton_policy;
 
 pub mod tdigest;
 
+pub use self::precision::Precision;
 pub use self::scale::ScaleFamily;
 pub use self::tdigest::{DigestStats, TDigest, TDigestBuilder};
 

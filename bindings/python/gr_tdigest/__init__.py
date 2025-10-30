@@ -1,4 +1,3 @@
-# bindings/python/gr_tdigest/__init__.py
 from __future__ import annotations
 
 from enum import Enum
@@ -40,12 +39,7 @@ class ScaleFamily(str, Enum):
     K3 = "K3"
 
 
-class StorageSchema(str, Enum):
-    F64 = "f64"
-    F32 = "f32"
-
-
-class SingletonMode(str, Enum):
+class SingletonPolicy(str, Enum):
     OFF = "off"
     USE = "use"
     EDGE = "edge"
@@ -66,17 +60,19 @@ def _coerce_scale_for_plugin(scale: ScaleFamily | str) -> str:
     raise ValueError(f"Unknown scale family: {scale!r}")
 
 
-def _coerce_storage(storage: StorageSchema | str) -> str:
-    s = storage.value if isinstance(storage, StorageSchema) else str(storage).strip().lower()
+def _coerce_precision(precision: str | None) -> str:
+    if precision is None:
+        return "f64"
+    s = str(precision).strip().lower()
     if s in {"f64", "f32"}:
         return s
-    raise ValueError(f"Unknown storage schema: {storage!r}")
+    raise ValueError(f"Unknown precision: {precision!r}")
 
 
-def _norm_mode(mode: SingletonMode | str | None) -> str:
+def _norm_policy(mode: SingletonPolicy | str | None) -> str:
     if mode is None:
         return "use"
-    if isinstance(mode, SingletonMode):
+    if isinstance(mode, SingletonPolicy):
         return mode.value
 
     s = str(mode).strip().lower().replace("_", "").replace(" ", "")
@@ -87,7 +83,7 @@ def _norm_mode(mode: SingletonMode | str | None) -> str:
     if s in {"edge", "edges", "protectededges", "usewithprotectededges"}:
         return "edge"
 
-    raise ValueError("singleton_mode must be one of 'off'|'use'|'edge'")
+    raise ValueError("singleton_policy must be one of 'off'|'use'|'edge'")
 
 
 def _into_expr(x: "IntoExpr | Any") -> pl.Expr:
@@ -119,21 +115,25 @@ def _from_array_cls(
     data: Any,
     *,
     max_size: int = 200,
-    scale: ScaleFamily | str = ScaleFamily.K2,
-    singleton_mode: SingletonMode | str | None = SingletonMode.USE,
+    scale: ScaleFamily | str = "k2",
+    singleton_policy: SingletonPolicy | str | None = "use",
     edges_to_preserve: Optional[int] = None,
     **kwargs: Any,
 ) -> _NativeTDigest:
     s = _coerce_scale_for_class(scale)  # "QUAD"|"K1"|"K2"|"K3"
-    m = _norm_mode(singleton_mode)  # "off"|"use"|"edge"
+    m = _norm_policy(singleton_policy)  # "off"|"use"|"edge"
 
     if m == "edge" and edges_to_preserve is None:
-        raise ValueError("edges_to_preserve is required when singleton_mode='edge'")
+        raise ValueError("edges_to_preserve is required when singleton_policy='edge'")
     if m != "edge" and edges_to_preserve is not None:
-        raise ValueError("edges_to_preserve is only allowed when singleton_mode='edge'")
+        raise ValueError("edges_to_preserve is only allowed when singleton_policy='edge'")
 
     # Native expects: singleton_policy ("off"|"use"|"edges") and edges (usize)
     policy_str = {"off": "off", "use": "use", "edge": "edges"}[m]
+
+    # Accept precision="f64"/"f32" for API coherence, but the native constructor
+    # doesn't take it yet — strip it out here (TTD: wire through later if added).
+    _ = kwargs.pop("precision", None)
 
     call_kwargs: Dict[str, Any] = {
         "max_size": int(max_size),
@@ -146,7 +146,6 @@ def _from_array_cls(
 
     # native from_array is a staticmethod; call directly
     out = _native_from_array(data, **call_kwargs)
-    # The native returns an instance already; mypy doesn't know the exact type
     return cast(_NativeTDigest, out)
 
 
@@ -203,7 +202,6 @@ def _cdf_patched(self: _NativeTDigest, xs: Any) -> Any:
         kind = "iterable"
         flat = [float(x) for x in it]
 
-    # call the saved native function to avoid recursion
     out_list = _native_cdf(self, flat)
 
     if kind == "scalar":
@@ -234,9 +232,9 @@ def tdigest(
     values: "IntoExpr",
     max_size: int = 200,
     *,
-    scale: ScaleFamily | str = ScaleFamily.K2,
-    storage: StorageSchema | str = StorageSchema.F64,
-    singleton_mode: SingletonMode | str | None = SingletonMode.USE,
+    scale: ScaleFamily | str = "k2",
+    precision: str = "f64",
+    singleton_policy: SingletonPolicy | str | None = "use",
     edges_to_preserve: Optional[int] = None,
 ) -> pl.Expr:
     """
@@ -246,30 +244,33 @@ def tdigest(
       {
         "max_size": int,
         "scale": "quad"|"k1"|"k2"|"k3",
-        "singleton_mode": "off"|"use"|"edge",
-        "edges_to_preserve": Optional[int]  # required iff mode == "edge"
+        "singleton_mode": "off"|"use"|"edge",     # wire key (policy on the Python side)
+        "edges_to_preserve": Optional[int],       # required iff mode == "edge"
+        "precision": "f64"|"f32"                  # canonical wire flag
       }
     """
     v_expr = _into_expr(values)
 
-    scale_norm = _coerce_scale_for_plugin(scale)  # lower-case
-    storage_norm = _coerce_storage(storage)  # "f64"|"f32"
-    mode_norm = _norm_mode(singleton_mode)  # lower-case
+    scale_norm = _coerce_scale_for_plugin(scale)  # lower-case "quad"|"k1"|"k2"|"k3"
+    prec_norm = _coerce_precision(precision)  # "f64"|"f32"
+    mode_norm = _norm_policy(singleton_policy)  # "off"|"use"|"edge"
 
     if mode_norm == "edge" and edges_to_preserve is None:
-        raise ValueError("edges_to_preserve is required when singleton_mode='edge'")
+        raise ValueError("edges_to_preserve is required when singleton_policy='edge'")
     if mode_norm != "edge" and edges_to_preserve is not None:
-        raise ValueError("edges_to_preserve is only allowed when singleton_mode='edge'")
-
-    func = "tdigest" if storage_norm == "f64" else "_tdigest_f32"
+        raise ValueError("edges_to_preserve is only allowed when singleton_policy='edge'")
 
     kwargs: Dict[str, Any] = {
         "max_size": int(max_size),
         "scale": scale_norm,
-        "singleton_mode": mode_norm,
+        "singleton_mode": mode_norm,  # wire name expected by Rust
+        "precision": prec_norm,
     }
     if edges_to_preserve is not None:
         kwargs["edges_to_preserve"] = int(edges_to_preserve)
+
+    # function name: f64 → canonical tdigest; f32 → compact
+    func = "tdigest" if prec_norm == "f64" else "_tdigest_f32"
 
     return register_plugin_function(
         plugin_path=str(lib),
@@ -339,8 +340,7 @@ __all__ = [
     "TDigest",
     "__version__",
     "ScaleFamily",
-    "StorageSchema",
-    "SingletonMode",
+    "SingletonPolicy",
     "tdigest",
     "cdf",
     "quantile",

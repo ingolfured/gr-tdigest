@@ -1,6 +1,6 @@
 // src/bin/tdigest_cli.rs
 
-//! Command-line interface for the `tdigest-rs` library.
+//! Command-line interface for the `gr-tdigest` library.
 //!
 //! Build a t-digest from values supplied via one of three inputs (values, file,
 //! or stdin) and compute either a CDF for each input value or a single quantile.
@@ -19,7 +19,7 @@
 //!
 //! # Examples
 //! ```text
-//! # CDF from inline values (defaults: --output csv, --scale k2, --singleton-policy use)
+//! # CDF from inline values (defaults: --output csv, --scale k2, --singleton-policy use, --precision f64)
 //! tdigest --values "1,2,3,4,5" --cmd cdf
 //!
 //! # Quantile (q=0.99) from a file, TSV output without header
@@ -38,6 +38,7 @@ use std::fs;
 use std::io::{self, Read};
 
 use gr_tdigest::tdigest::singleton_policy::SingletonPolicy;
+use gr_tdigest::tdigest::Precision as CorePrecision;
 use gr_tdigest::tdigest::ScaleFamily;
 
 /// User-facing scale options for the CLI.
@@ -73,6 +74,21 @@ impl Policy {
             Policy::Off => SingletonPolicy::Off,
             Policy::Use => SingletonPolicy::Use,
             Policy::Edges => SingletonPolicy::UseWithProtectedEdges(keep.unwrap_or(3)),
+        }
+    }
+}
+
+/// Internal centroid storage precision.
+#[derive(Debug, Clone, ValueEnum)]
+enum Prec {
+    F32,
+    F64,
+}
+impl From<Prec> for CorePrecision {
+    fn from(p: Prec) -> Self {
+        match p {
+            Prec::F32 => CorePrecision::F32,
+            Prec::F64 => CorePrecision::F64,
         }
     }
 }
@@ -209,6 +225,13 @@ fn main() -> Result<(), Box<dyn Error>> {
                 .default_value("use"),
         )
         .arg(
+            Arg::new("precision")
+                .long("precision")
+                .help("Internal centroid precision: f32 | f64 (default: f64).")
+                .value_parser(EnumValueParser::<Prec>::new())
+                .default_value("f64"),
+        )
+        .arg(
             Arg::new("keep")
                 .long("keep")
                 .help(
@@ -285,6 +308,7 @@ fn main() -> Result<(), Box<dyn Error>> {
     let keep = matches.get_one::<usize>("keep").copied();
     let out_fmt = matches.get_one::<Output>("output").unwrap().clone();
     let no_header = matches.get_flag("no_header");
+    let prec = matches.get_one::<Prec>("precision").unwrap().clone();
     let run = matches.get_one::<CmdKind>("cmd").unwrap();
     let p = matches.get_one::<f64>("p").copied();
 
@@ -321,6 +345,7 @@ fn main() -> Result<(), Box<dyn Error>> {
     let digest = gr_tdigest::tdigest::TDigest::builder()
         .max_size(max_size)
         .scale(scale.into())
+        .precision(prec.into())
         .singleton_policy(policy.into_singleton_policy(keep))
         .build()
         .merge_unsorted(values.clone());
@@ -341,6 +366,7 @@ fn main() -> Result<(), Box<dyn Error>> {
 
     Ok(())
 }
+
 #[cfg(test)]
 mod cli_smoke {
     use assert_cmd::Command;

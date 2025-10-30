@@ -105,6 +105,9 @@ impl TDigest {
             Self::try_from_series(input)
         }
     }
+    pub fn to_series_default(&self, name: &str) -> PolarsResult<Series> {
+        self.to_series_with_default(name, self.is_f32_mode())
+    }
 }
 
 // --------------------- error type (strict) -----------------------------------

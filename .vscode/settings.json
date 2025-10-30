@@ -4,9 +4,10 @@
   ],
   "python.defaultInterpreterPath": "${workspaceFolder}/.venv/bin/python",
   "python.terminal.activateEnvironment": true,
-  "python.testing.cwd": "${workspaceFolder}/bindings/python",
+  "python.testing.cwd": "${workspaceFolder}",
   "python.testing.pytestArgs": [
-    "tests"
+    "bindings/python/tests",
+    "integration/api_coherence"
   ],
   "python.testing.pytestEnabled": true,
   "python.testing.pytestPath": "${workspaceFolder}/.venv/bin/pytest",

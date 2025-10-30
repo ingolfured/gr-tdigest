@@ -60,7 +60,7 @@ extend-exclude = ["target","dist","build",".venv",".maturin",".pytest_cache",".r
 # ------------------------------------------------------------
 [tool.pytest.ini_options]
 addopts = "-q"
-testpaths = ["bindings/python/test"]
+testpaths = ["bindings/python/tests", "integration/api_coherence"]
 pythonpath = ["."]
 
 # ------------------------------------------------------------

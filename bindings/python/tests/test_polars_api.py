@@ -1,4 +1,4 @@
-# tests/test_polars_api.py
+# bindings/python/tests/test_polars_api.py
 import numpy as np
 import polars as pl
 import pytest
@@ -8,8 +8,7 @@ from gr_tdigest import (
     quantile,
     cdf,
     ScaleFamily,
-    StorageSchema,
-    SingletonMode,
+    SingletonPolicy,
 )
 
 
@@ -39,7 +38,7 @@ def test_plugin_quantile_and_cdf_simple_exactish():
     # Small, controlled dataset
     df = pl.DataFrame({"x": [0.0, 1.0, 2.0, 3.0]})
     # Build digest via plugin (positional max_size + string scale)
-    df_d = df.select(tdigest("x", 100, scale="K2", storage="f64").alias("td"))
+    df_d = df.select(tdigest("x", 100, scale="k2").alias("td"))
 
     # Quantile as scalar
     q = df_d.select(quantile("td", 0.5)).item()
@@ -59,14 +58,13 @@ def test_plugin_cdf_with_list_column_and_explode():
     rng = np.random.default_rng(42)
     df = pl.DataFrame({"g": np.repeat(["A", "B", "C"], 10), "x": rng.standard_normal(30).astype(np.float32)})
 
-    # Build digest per group (new API; previously used legacy singleton_policy)
+    # Build digest per group with unified params
     d = df.group_by("g").agg(
         tdigest(
             pl.col("x"),
             max_size=100,
             scale=ScaleFamily.K2,
-            storage=StorageSchema.F64,
-            singleton_mode="use",
+            singleton_policy="use",
         ).alias("td")
     )
 
@@ -88,7 +86,7 @@ def test_plugin_cdf_with_list_column_and_explode():
 
 def test_plugin_cdf_all_input_shapes():
     df = pl.DataFrame({"x": [0.0, 1.0, 2.0, 3.0]})
-    d = df.select(tdigest("x", max_size=64, scale="K2", storage="f64").alias("td"))
+    d = df.select(tdigest("x", max_size=64, scale="k2").alias("td"))
 
     # 1) Python list → vector (list-scalar or numeric column)
     ys = _extract_vector(d.select(cdf("td", [0.0, 1.5, 3.0]).alias("cdf")), "cdf")
@@ -102,30 +100,6 @@ def test_plugin_cdf_all_input_shapes():
     values_np = np.array([0.0, 1.5, 3.0], dtype=float)
     ys_np = _extract_vector(d.select(cdf("td", values_np).alias("cdf")), "cdf")
     assert ys_np == pytest.approx([0.125, 0.5, 0.875], abs=1e-9)
-
-
-def test_plugin_storage_affects_inner_mean_dtype():
-    # Ensure f32 storage yields f32 centroid means; f64 yields f64
-    df = pl.DataFrame({"g": ["a"] * 3, "x": [1.0, 2.0, 3.0]})
-
-    def _means_dtype(storage):
-        out = (
-            df.lazy()
-            .group_by("g")
-            .agg(tdigest(pl.col("x"), max_size=64, scale=ScaleFamily.QUAD, storage=storage).alias("td"))
-            .collect()
-        )
-        return (
-            out.lazy()
-            .select(pl.col("td").struct.field("centroids").alias("c"))
-            .explode("c")
-            .select(pl.col("c").struct.field("mean").alias("m"))
-            .collect()["m"]
-            .dtype
-        )
-
-    assert _means_dtype(StorageSchema.F32) == pl.Float32
-    assert _means_dtype(StorageSchema.F64) == pl.Float64
 
 
 def test_list_of_cdf_expressions():
@@ -166,29 +140,27 @@ def test_list_of_quantile_expressions():
 
 @pytest.mark.parametrize("scale_arg", [ScaleFamily.QUAD, "QUAD", "quad"])
 @pytest.mark.parametrize(
-    ("mode_arg", "k"),
+    ("policy_arg", "k"),
     [
-        (SingletonMode.USE, None),
+        (SingletonPolicy.USE, None),
         ("use", None),
-        (SingletonMode.OFF, None),
+        (SingletonPolicy.OFF, None),
         ("off", None),
-        (SingletonMode.EDGE, 0),
-        (SingletonMode.EDGE, 2),
+        (SingletonPolicy.EDGE, 0),
+        (SingletonPolicy.EDGE, 2),
         ("edge", 3),
     ],
 )
-@pytest.mark.parametrize("storage_arg", [StorageSchema.F64, StorageSchema.F32, "f64", "f32"])
-def test_plugin_params_variants(scale_arg, mode_arg, k, storage_arg):
+def test_plugin_params_variants(scale_arg, policy_arg, k):
     df = _toy_df_for_groups()
 
-    # Build per-group digest with different parameter forms (new API)
+    # Build per-group digest with different parameter forms
     agg = df.group_by("g").agg(
         tdigest(
             pl.col("x"),
             max_size=64,
             scale=scale_arg,
-            storage=storage_arg,
-            singleton_mode=mode_arg,
+            singleton_policy=policy_arg,
             edges_to_preserve=k,
         ).alias("td")
     )

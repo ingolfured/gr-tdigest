@@ -56,6 +56,9 @@ JAVA_SRC        := bindings/java
 JAVA_BUILD_REL  := build
 JAVA_LIBS_REL   := $(JAVA_BUILD_REL)/libs
 
+INTEG_DIR       := integration/api_coherence
+INTEG_TESTS_DIR := $(INTEG_DIR)
+
 # Build profile (dev by default). Release only in release-* targets.
 PROFILE ?= dev
 ifeq ($(PROFILE),release)
@@ -168,15 +171,18 @@ build-java:
 # ==============================================================================
 # Tests
 # ==============================================================================
+.PHONY: test rust-test py-test
+
 test: rust-test py-test
-	@echo "✅ all tests passed"
+	@echo "✅ all unit tests passed"
 
 rust-test:
 	$(CARGO) test -- --quiet
 
 # Explicit path to bindings/python/tests
 py-test: build-python
-	$(UV_ENV) $(UV) run pytest -q $(PY_TESTS_DIR)
+	$(UV_ENV) $(UV) run pytest
+
 
 # ==============================================================================
 # Lint (autofix where possible) + docs must be warning-free
