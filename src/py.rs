@@ -1,3 +1,4 @@
+use pyo3::exceptions::PyValueError;
 use pyo3::prelude::*;
 use pyo3::types::{PyBytes, PyModule};
 
@@ -23,26 +24,28 @@ fn parse_scale(s: Option<&str>) -> Result<ScaleFamily, PyErr> {
     }
 }
 
+// -- replace the whole parse_policy with this --
 fn parse_policy(kind: Option<&str>, pin_per_side: Option<usize>) -> Result<SingletonPolicy, PyErr> {
     match kind.map(|k| k.to_ascii_lowercase().replace('_', "").replace(' ', "")) {
         None => Ok(SingletonPolicy::Use),
         Some(ref v) if v == "off" => Ok(SingletonPolicy::Off),
         Some(ref v) if v == "use" => Ok(SingletonPolicy::Use),
-        // accept "edges" or "edges"
-        Some(ref v) if v == "edges" || v == "edges" || v == "usewithprotectededges" => {
+        // ONLY accept "edges" (singular "edge" no longer allowed). Keep the legacy
+        // internal alias "usewithprotectededges" to round-trip serialized digests.
+        Some(ref v) if v == "edges" || v == "usewithprotectededges" => {
             let k = pin_per_side.ok_or_else(|| {
-                pyo3::exceptions::PyValueError::new_err(
+                PyValueError::new_err(
                     "singleton_policy='edges' requires 'pin_per_side' (per-side) >= 1",
                 )
             })?;
             if k < 1 {
-                return Err(pyo3::exceptions::PyValueError::new_err(
+                return Err(PyValueError::new_err(
                     "pin_per_side must be >= 1 when singleton_policy='edges'",
                 ));
             }
             Ok(SingletonPolicy::UseWithProtectedEdges(k))
         }
-        Some(v) => Err(pyo3::exceptions::PyValueError::new_err(format!(
+        Some(v) => Err(PyValueError::new_err(format!(
             "invalid singleton_policy: {v} (expected 'off', 'use', or 'edges')"
         ))),
     }
@@ -109,28 +112,23 @@ fn policy_to_ser(p: &SingletonPolicy) -> SerPolicy {
     }
 }
 
+// -- in ser_to_policy, update the error strings so they only say 'edges' --
 fn ser_to_policy(p: &SerPolicy) -> Result<SingletonPolicy, PyErr> {
     Ok(match p.kind {
         0 => SingletonPolicy::Off,
         1 => SingletonPolicy::Use,
         2 => {
             let k = p.edges_per_side.ok_or_else(|| {
-                pyo3::exceptions::PyValueError::new_err(
-                    "serialized digest missing edges_per_side for 'edges' policy",
-                )
+                PyValueError::new_err("serialized digest missing edges_per_side for 'edges' policy")
             })?;
             if k < 1 {
-                return Err(pyo3::exceptions::PyValueError::new_err(
+                return Err(PyValueError::new_err(
                     "edges_per_side must be >= 1 for 'edges' policy",
                 ));
             }
             SingletonPolicy::UseWithProtectedEdges(k)
         }
-        _ => {
-            return Err(pyo3::exceptions::PyValueError::new_err(
-                "invalid serialized policy code",
-            ))
-        }
+        _ => return Err(PyValueError::new_err("invalid serialized policy code")),
     })
 }
 
@@ -212,13 +210,17 @@ impl PyTDigest {
             .scale(sc)
             .singleton_policy(policy)
             .build();
-        let digest = base.merge_unsorted(values);
+
+        let digest: TDigest<f64> = base
+            .merge_unsorted(values.clone())
+            .map_err(|e| PyErr::new::<PyValueError, _>(e.to_string()))?;
 
         let inner = if f32_mode {
             quantize_digest_to_f32(&digest)
         } else {
             digest
         };
+
         Ok(Self { inner })
     }
 

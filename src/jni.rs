@@ -19,6 +19,7 @@ use std::slice;
 use std::sync::OnceLock;
 
 use crate::tdigest::{singleton_policy::SingletonPolicy, ScaleFamily, TDigest};
+use crate::{TdError, TdResult};
 
 // Retain VM if needed later
 static JVM: OnceLock<JavaVM> = OnceLock::new();
@@ -73,19 +74,25 @@ impl NativeDigest {
         scale: ScaleFamily,
         policy: SingletonPolicy,
         _f32mode: bool, // accepted for API coherence; f64 backing for now
-    ) -> Self {
-        // Build and ingest
+    ) -> TdResult<Self> {
+        // Hard error on NaN to match cross-language behavior
+        if values.iter().any(|v| v.is_nan()) {
+            return Err(TdError::NaNInput {
+                context: "sample value",
+            });
+        }
+
+        // Drop non-finite values (preserve previous forgiving ±inf behavior)
+        values.retain(|v| v.is_finite());
+
         let d = TD64::builder()
             .max_size(max_size)
             .scale(scale)
             .singleton_policy(policy)
             .build()
-            .merge_unsorted({
-                // ensure finite values only
-                values.retain(|v| v.is_finite());
-                values
-            });
-        Self { inner: d }
+            .merge_unsorted(values)?; // forward core Result
+
+        Ok(Self { inner: d })
     }
 
     fn cdf(&self, xs: &[f64]) -> Vec<f64> {
@@ -103,6 +110,11 @@ fn into_handle<T>(b: Box<T>) -> jlong {
 }
 unsafe fn from_handle<'a, T>(h: jlong) -> &'a mut T {
     &mut *(h as *mut T)
+}
+
+// Throw helper (needs &mut JNIEnv)
+fn throw_illegal_arg(env: &mut JNIEnv, msg: String) {
+    let _ = env.throw_new("java/lang/IllegalArgumentException", msg);
 }
 
 // ----------------------------- Bytes helpers (no-op serialization for tests) -----------------------------
@@ -133,20 +145,31 @@ fn le_bytes_to_f64s(b: &[u8]) -> Vec<f64> {
 /// Not used in coherence tests; treat as "build from raw doubles".
 #[no_mangle]
 pub extern "system" fn Java_gr_tdigest_TDigestNative_fromBytes(
-    env: JNIEnv,
+    mut env: JNIEnv,
     _cls: JClass,
     bytes: JByteArray,
 ) -> jlong {
     let len = env.get_array_length(&bytes).unwrap_or(0) as usize;
     let mut buf = vec![0i8; len];
     if len > 0 {
-        env.get_byte_array_region(&bytes, 0, &mut buf)
-            .expect("get_byte_array_region");
+        if let Err(e) = env.get_byte_array_region(&bytes, 0, &mut buf) {
+            throw_illegal_arg(
+                &mut env,
+                format!("jni: get_byte_array_region failed: {e:?}"),
+            );
+            return 0;
+        }
     }
     let ubuf: &[u8] = unsafe { slice::from_raw_parts(buf.as_ptr() as *const u8, buf.len()) };
     let xs = le_bytes_to_f64s(ubuf);
-    let nd = NativeDigest::from_values(xs, 1000, ScaleFamily::K2, SingletonPolicy::Use, false);
-    into_handle(Box::new(nd))
+
+    match NativeDigest::from_values(xs, 1000, ScaleFamily::K2, SingletonPolicy::Use, false) {
+        Ok(nd) => into_handle(Box::new(nd)),
+        Err(e) => {
+            throw_illegal_arg(&mut env, e.to_string());
+            0
+        }
+    }
 }
 
 /// Java: `static native byte[] toBytes(long handle);`
@@ -202,8 +225,13 @@ pub extern "system" fn Java_gr_tdigest_TDigestNative_fromArray(
         let len = env.get_array_length(&darr).unwrap_or(0) as usize;
         if len > 0 {
             let mut buf = vec![0f64; len];
-            env.get_double_array_region(&darr, 0, &mut buf)
-                .expect("get_double_array_region");
+            if let Err(e) = env.get_double_array_region(&darr, 0, &mut buf) {
+                throw_illegal_arg(
+                    &mut env,
+                    format!("jni: get_double_array_region failed: {e:?}"),
+                );
+                return 0;
+            }
             xs = buf;
         }
     } else if env.is_instance_of(&values_obj, "[F").unwrap_or(false) {
@@ -215,8 +243,13 @@ pub extern "system" fn Java_gr_tdigest_TDigestNative_fromArray(
         let len = env.get_array_length(&farr).unwrap_or(0) as usize;
         if len > 0 {
             let mut buf_f = vec![0f32; len];
-            env.get_float_array_region(&farr, 0, &mut buf_f)
-                .expect("get_float_array_region");
+            if let Err(e) = env.get_float_array_region(&farr, 0, &mut buf_f) {
+                throw_illegal_arg(
+                    &mut env,
+                    format!("jni: get_float_array_region failed: {e:?}"),
+                );
+                return 0;
+            }
             xs = buf_f.into_iter().map(|v| v as f64).collect();
         }
     } else if env
@@ -260,8 +293,13 @@ pub extern "system" fn Java_gr_tdigest_TDigestNative_fromArray(
     let policy = map_policy(policy_code, edges);
     let f32 = f32mode != 0;
 
-    let nd = NativeDigest::from_values(xs, max_size.max(1) as usize, sf, policy, f32);
-    into_handle(Box::new(nd))
+    match NativeDigest::from_values(xs, max_size.max(1) as usize, sf, policy, f32) {
+        Ok(nd) => into_handle(Box::new(nd)),
+        Err(e) => {
+            throw_illegal_arg(&mut env, e.to_string());
+            0
+        }
+    }
 }
 
 /// Java: `static native void free(long handle);`
@@ -292,8 +330,11 @@ pub extern "system" fn Java_gr_tdigest_TDigestNative_cdf(
     let d = unsafe { from_handle::<NativeDigest>(handle) };
 
     let mut in_buf = vec![0f64; n];
-    env.get_double_array_region(&values, 0, &mut in_buf)
-        .expect("get_double_array_region");
+    if let Err(e) = env.get_double_array_region(&values, 0, &mut in_buf) {
+        // If we can't read, return empty array; Java side can decide how to handle.
+        eprintln!("jni: get_double_array_region failed: {e:?}");
+        return out.into_raw();
+    }
 
     let ps = d.cdf(&in_buf);
     env.set_double_array_region(&out, 0, &ps)

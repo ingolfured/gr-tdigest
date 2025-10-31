@@ -110,4 +110,5 @@ pub fn build_digest_sorted(
         .singleton_policy(SingletonPolicy::Use)
         .build()
         .merge_sorted(data)
+        .expect("no NaNs")
 }

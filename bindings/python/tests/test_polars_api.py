@@ -169,3 +169,10 @@ def test_plugin_params_variants(scale_arg, policy_arg, k):
     assert q_series.len() == 1
     assert q_series.is_not_null().all()
     assert np.isfinite(q_series.item())
+
+
+def test_tdigest_raises_on_nan_in_values():
+    for dtype in (pl.Float32, pl.Float64):
+        df = pl.DataFrame({"x": [0.0, 1.0, float("nan"), 2.0]}, schema={"x": dtype})
+        with pytest.raises(pl.exceptions.ComputeError, match=r"(?i)nan"):
+            df.select(tdigest("x"))

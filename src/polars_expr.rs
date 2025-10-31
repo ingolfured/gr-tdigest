@@ -316,7 +316,8 @@ where
     };
 
     // Build with the requested max_size, then reconfigure scale/policy via builder
-    let td0 = TDigest::<F>::from_unsorted(&vf, max_size);
+    let td0: TDigest<F> = TDigest::<F>::from_unsorted(&vf, max_size)
+        .map_err(|e| PolarsError::ComputeError(e.to_string().into()))?;
 
     // If defaults already match, keep it; else rebuild with desired options
     if td0.scale() == scale && td0.singleton_policy() == policy {

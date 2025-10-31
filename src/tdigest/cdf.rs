@@ -46,7 +46,8 @@
 //!     .max_size(64)
 //!     .scale(ScaleFamily::Quad)
 //!     .build()
-//!     .merge_sorted(values.clone());
+//!     .merge_sorted(values.clone())
+//!     .expect("no NaNs");
 //!
 //! let cdf = td.cdf(&values);
 //! assert_eq!(cdf.len(), values.len());
@@ -328,7 +329,8 @@ mod tests {
             .max_size(10)
             .scale(ScaleFamily::Quad)
             .build()
-            .merge_sorted(values.clone());
+            .merge_sorted(values.clone())
+            .expect("no NaNs");
         let approx = td.cdf(&values);
         assert_eq!(approx.len(), values.len());
 
@@ -380,6 +382,7 @@ mod tests {
             .max_size(N + 1)
             .build()
             .merge_sorted(vals.clone())
+            .expect("no NaNs")
             .cdf(&vals);
 
         for (i, (&e, &a)) in exact.iter().zip(&approx).enumerate() {

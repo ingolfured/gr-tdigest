@@ -1,7 +1,6 @@
 // src/bin/tdigest_cli.rs
 
 use std::io::{self, Read};
-use std::str::FromStr;
 
 use clap::{ArgAction, Parser, ValueEnum};
 
@@ -40,30 +39,12 @@ enum PrecisionOpt {
     F64,
 }
 
-/// Accept "off|use|edges|use_edges" (the test passes `use_edges`).
-#[derive(Debug, Clone)]
+/// Accept only: off | use | edges
+#[derive(Debug, Clone, Copy, ValueEnum)]
 enum PolicyOpt {
     Off,
     Use,
     Edges,
-}
-
-impl FromStr for PolicyOpt {
-    type Err = String;
-    fn from_str(s: &str) -> Result<Self, Self::Err> {
-        let t = s.trim().to_lowercase();
-        match t.as_str() {
-            "off" => Ok(PolicyOpt::Off),
-            "use" | "on" | "respect" => Ok(PolicyOpt::Use),
-            "edges" | "use_edges" | "use-with-protected-edges" | "usewithprotectededges" => {
-                Ok(PolicyOpt::Edges)
-            }
-            other => Err(format!(
-                "invalid value '{}' for --singleton-policy (expected off|use|edges|use_edges)",
-                other
-            )),
-        }
-    }
 }
 
 #[derive(Debug, Parser)]
@@ -98,8 +79,8 @@ struct Cli {
     #[arg(long, value_enum, default_value_t = ScaleOpt::K2)]
     scale: ScaleOpt,
 
-    /// Singleton policy: off|use|edges|use_edges
-    #[arg(long = "singleton-policy")]
+    /// Singleton policy: off|use|edges
+    #[arg(long = "singleton-policy", value_enum)]
     singleton_policy: Option<PolicyOpt>,
 
     /// Edges to pin per side when using 'edges' policy
@@ -111,17 +92,31 @@ struct Cli {
     precision: PrecisionOpt,
 }
 
-fn read_floats_from_stdin() -> io::Result<Vec<f64>> {
+fn read_floats_from_stdin() -> Result<Vec<f64>, String> {
     let mut buf = String::new();
-    io::stdin().read_to_string(&mut buf)?;
+    io::stdin()
+        .read_to_string(&mut buf)
+        .map_err(|e| format!("stdin read error: {e}"))?;
+
     let mut out = Vec::new();
     for tok in buf.split(|c: char| c.is_whitespace() || c == ',') {
         if tok.is_empty() {
             continue;
         }
         match tok.parse::<f64>() {
-            Ok(v) if v.is_finite() => out.push(v),
-            _ => { /* ignore non-finite / bad tokens */ }
+            Ok(v) => {
+                if v.is_nan() {
+                    // Standardized message from the core
+                    return Err("tdigest: NaN values are not allowed (got sample value). hint: clean your data or drop NaNs before building the digest".to_string());
+                }
+                if v.is_finite() {
+                    out.push(v);
+                }
+                // Ignore ±inf and non-finite values, preserving forgiving parsing.
+            }
+            Err(_) => {
+                // Ignore junk tokens to match previous forgiving parsing.
+            }
         }
     }
     Ok(out)
@@ -135,7 +130,7 @@ fn policy_from_opts(
         PolicyOpt::Off => Ok(SingletonPolicy::Off),
         PolicyOpt::Use => Ok(SingletonPolicy::Use),
         PolicyOpt::Edges => {
-            let k = edges.ok_or_else(|| "use_edges requires --pin-per-side".to_string())?;
+            let k = edges.ok_or_else(|| "edges policy requires --pin-per-side".to_string())?;
             if k < 1 {
                 return Err("--pin-per-side must be >= 1".into());
             }
@@ -149,7 +144,7 @@ fn main() -> Result<(), String> {
 
     // Read data
     let values: Vec<f64> = if cli.stdin {
-        read_floats_from_stdin().map_err(|e| format!("stdin read error: {e}"))?
+        read_floats_from_stdin()?
     } else {
         return Err("no values provided (pass --stdin)".into());
     };
@@ -164,7 +159,10 @@ fn main() -> Result<(), String> {
         .singleton_policy(policy)
         .build();
 
-    let digest = base.merge_unsorted(values.clone());
+    // merge_unsorted returns a Result; unwrap once to a TDigest
+    let digest: TDigest<f64> = base
+        .merge_unsorted(values.clone())
+        .map_err(|e| e.to_string())?;
 
     // Output CSV as tests expect
     let want_csv = cli.output.eq_ignore_ascii_case("csv");
@@ -191,7 +189,6 @@ fn main() -> Result<(), String> {
             }
         }
         Cmd::Cdf => {
-            // For CSV, echo rows "x,p" in the order of inputs.
             for x in values {
                 let ps = digest.cdf(&[x]);
                 let p = ps[0];

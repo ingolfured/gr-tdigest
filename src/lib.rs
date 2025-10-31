@@ -20,6 +20,9 @@
 mod polars_expr;
 pub mod tdigest;
 
+mod error;
+pub use error::{TdError, TdResult};
+
 #[cfg(feature = "java")]
 pub mod jni;
 

@@ -1,4 +1,5 @@
 // src/tdigest/tdigest.rs
+use crate::{TdError, TdResult};
 use ordered_float::{FloatCore, OrderedFloat};
 
 use crate::tdigest::centroids::{is_sorted_strict_by_mean, Centroid};
@@ -62,6 +63,16 @@ impl<F: FloatLike> IntoVecF<F> for &[F] {
     fn into_vec_f(self) -> Vec<F> {
         self.to_vec()
     }
+}
+
+#[inline]
+fn ensure_no_nan_values<F: FloatLike + FloatCore>(values: &[F]) -> TdResult<()> {
+    if values.iter().any(|v| v.is_nan()) {
+        return Err(TdError::NaNInput {
+            context: "sample value",
+        });
+    }
+    Ok(())
 }
 
 /* =============================================================================
@@ -270,7 +281,8 @@ impl<F: FloatLike + FloatCore> TDigest<F> {
     }
 
     /// Build from **unsorted** values (convenience over [`TDigest::merge_unsorted`]).
-    pub fn from_unsorted(values: &[F], max_size: usize) -> TDigest<F> {
+    pub fn from_unsorted(values: &[F], max_size: usize) -> TdResult<TDigest<F>> {
+        ensure_no_nan_values(values)?;
         let base = Self::builder().max_size(max_size).build();
         base.merge_unsorted(values.to_vec())
     }
@@ -288,15 +300,17 @@ impl<F: FloatLike + FloatCore> TDigest<F> {
     }
 
     /// Ingest **unsorted** values; behavior matches [`TDigest::merge_sorted`] after sorting.
-    pub fn merge_unsorted(&self, mut unsorted_values: Vec<F>) -> TDigest<F> {
+    pub fn merge_unsorted(&self, mut unsorted_values: Vec<F>) -> TdResult<TDigest<F>> {
+        ensure_no_nan_values(&unsorted_values)?;
         unsorted_values.sort_by(|a, b| a.total_cmp(*b));
         self.merge_sorted(unsorted_values)
     }
 
     /// Ingest **sorted** values by interleaving with existing centroids and running the pipeline.
-    pub fn merge_sorted(&self, sorted_values: Vec<F>) -> TDigest<F> {
+    pub fn merge_sorted(&self, sorted_values: Vec<F>) -> TdResult<TDigest<F>> {
+        ensure_no_nan_values(&sorted_values)?;
         if sorted_values.is_empty() {
-            return self.clone();
+            return Ok(self.clone());
         }
         let mut result = self.new_result_for_values(&sorted_values);
 
@@ -306,12 +320,11 @@ impl<F: FloatLike + FloatCore> TDigest<F> {
         let compressed: Vec<Centroid<F>> = compress_into(&mut result, self.max_size, stream);
         result.centroids = compressed;
 
-        // Strong invariant: strictly increasing means (no duplicates).
         debug_assert!(
             is_sorted_strict_by_mean(&result.centroids),
             "duplicate centroid means after merge"
         );
-        result
+        Ok(result)
     }
 
     /// Merge multiple digests by k-way merging their centroid runs and sending the result through
@@ -475,17 +488,19 @@ impl<F: FloatLike + FloatCore> TDigest<F> {
      * =========================== */
 
     /// Convenience: build from an arbitrary numeric container already typed as `F`, using options.
-    pub fn from_array_with<A: IntoVecF<F>>(arr: A, opts: DigestOptions<F>) -> TDigest<F> {
+    pub fn from_array_with<A: IntoVecF<F>>(arr: A, opts: DigestOptions<F>) -> TdResult<TDigest<F>> {
+        let vals = arr.into_vec_f();
+        ensure_no_nan_values(&vals)?;
         let base = TDigest::<F>::builder()
             .max_size(opts.max_size)
             .scale(opts.scale)
             .singleton_policy(opts.singleton_policy)
             .build();
-        base.merge_unsorted(arr.into_vec_f())
+        base.merge_unsorted(vals)
     }
 
     /// Convenience: defaults (max_size=1000, scale=K2, singleton=Use).
-    pub fn from_array<A: IntoVecF<F>>(arr: A) -> TDigest<F> {
+    pub fn from_array<A: IntoVecF<F>>(arr: A) -> TdResult<TDigest<F>> {
         Self::from_array_with(arr, DigestOptions::<F>::default())
     }
 }

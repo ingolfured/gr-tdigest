@@ -244,7 +244,7 @@ mod tests {
         let vals = vec![1.0, 1.0, 1.0, 2.0, 1.0, 1.0];
         let mut t = TDigestBuilder::new().max_size(10).build();
         for v in vals {
-            t = t.merge_unsorted(vec![v]);
+            t = t.merge_unsorted(vec![v]).expect("no NaNs");
         }
         assert_rel_close("median", 1.0, t.quantile(0.5), 0.01);
         assert_rel_close("q=0.95", 2.0, t.quantile(0.95), 0.01);
@@ -271,7 +271,8 @@ mod tests {
         let t = TDigestBuilder::new()
             .max_size(10)
             .build()
-            .merge_sorted(values.clone());
+            .merge_sorted(values.clone())
+            .expect("no NaNs");
 
         assert_exact("Q(0)", *values.first().unwrap(), t.quantile(0.0));
         assert_exact("Q(1)", *values.last().unwrap(), t.quantile(1.0));
@@ -300,7 +301,8 @@ mod tests {
         let t = TDigestBuilder::new()
             .max_size(10)
             .build()
-            .merge_sorted(values.clone());
+            .merge_sorted(values.clone())
+            .expect("no NaNs");
 
         for &(q, label) in &[
             (0.01_f64, "Q(0.01)"),
@@ -323,10 +325,10 @@ mod tests {
         for num in [1, 2, 3, 10, 20] {
             let mut t = TDigestBuilder::new().max_size(100).build();
             for _ in 0..num {
-                t = t.merge_sorted(vec![-1.0]);
+                t = t.merge_sorted(vec![-1.0]).expect("no NaNs");
             }
             for _ in 0..num {
-                t = t.merge_sorted(vec![1.0]);
+                t = t.merge_sorted(vec![1.0]).expect("no NaNs");
             }
 
             assert_exact("Q(0.5)", 0.0, t.quantile(0.5));
@@ -348,7 +350,8 @@ mod tests {
         let td = TDigestBuilder::new()
             .max_size(N + 1)
             .build()
-            .merge_sorted(v.clone());
+            .merge_sorted(v.clone())
+            .expect("no NaNs");
 
         assert_exact("Q(0)", v[0], td.quantile(0.0));
         assert_exact("Q(1)", v[N - 1], td.quantile(1.0));
