@@ -52,17 +52,17 @@ def test_class_cdf_numpy_vector():
     [ScaleFamily.QUAD, "QUAD", "quad"],
 )
 @pytest.mark.parametrize(
-    ("policy_arg", "k"),
+    ("policy_arg", "pins"),
     [
         (SingletonPolicy.USE, None),
         ("use", None),
         (SingletonPolicy.OFF, None),
         ("off", None),
-        (SingletonPolicy.EDGE, 1),
-        ("edge", 3),
+        (SingletonPolicy.EDGES, 1),
+        ("edges", 3),
     ],
 )
-def test_class_params_variants(scale_arg, policy_arg, k):
+def test_class_params_variants(scale_arg, policy_arg, pins):
     # Accepts params and returns sane answers
     data = _arange_float(8)  # [0..7], true median = 3.5
     t = TDigest.from_array(
@@ -70,7 +70,7 @@ def test_class_params_variants(scale_arg, policy_arg, k):
         max_size=64,
         scale=scale_arg,
         singleton_policy=policy_arg,
-        edges_to_preserve=k,
+        pin_per_side=pins,
     )
     med = t.median()
     q50 = t.quantile(0.5)
@@ -80,19 +80,19 @@ def test_class_params_variants(scale_arg, policy_arg, k):
     assert t.cdf(3.5) == pytest.approx(0.5, rel=0.05, abs=0.05)
 
 
-def test_class_params_edge_requires_k():
+def test_class_params_edges_requires_k():
     data = _arange_float(8)
     with pytest.raises(ValueError):
         TDigest.from_array(
             data,
             max_size=64,
             scale="k2",
-            singleton_policy="edge",
-            # edges_to_preserve omitted -> should error
+            singleton_policy="edges",
+            # pin_per_side omitted -> should error
         )
 
 
-def test_class_params_edges_disallowed_when_not_edge():
+def test_class_params_edges_disallowed_when_not_edges():
     data = _arange_float(8)
     with pytest.raises(ValueError):
         TDigest.from_array(
@@ -100,7 +100,7 @@ def test_class_params_edges_disallowed_when_not_edge():
             max_size=64,
             scale="k2",
             singleton_policy="use",
-            edges_to_preserve=3,  # not allowed unless policy='edge'
+            pin_per_side=3,  # not allowed unless policy='edges'
         )
 
 

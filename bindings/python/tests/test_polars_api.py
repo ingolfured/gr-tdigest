@@ -146,8 +146,8 @@ def test_list_of_quantile_expressions():
         ("use", None),
         (SingletonPolicy.OFF, None),
         ("off", None),
-        (SingletonPolicy.EDGE, 2),
-        ("edge", 3),
+        (SingletonPolicy.EDGES, 2),
+        ("edges", 3),
     ],
 )
 def test_plugin_params_variants(scale_arg, policy_arg, k):
@@ -160,7 +160,7 @@ def test_plugin_params_variants(scale_arg, policy_arg, k):
             max_size=64,
             scale=scale_arg,
             singleton_policy=policy_arg,
-            edges_to_preserve=k,
+            pin_per_side=k,
         ).alias("td")
     )
 

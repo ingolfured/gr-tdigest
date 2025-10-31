@@ -1,7 +1,7 @@
 use super::quality_base::{
-    build_digest_sorted, exact_ecdf_for_sorted, gen_dataset, DistKind, Precision, QualityReport,
+    build_digest_sorted, exact_ecdf_for_sorted, gen_dataset, DistKind, QualityReport,
 };
-use crate::tdigest::{ScaleFamily, TDigest};
+use crate::tdigest::{Precision, ScaleFamily, TDigest};
 
 /// Compute empirical CDF at the grid `values` using the midpoint-ties ECDF.
 fn empirical_cdf_at_grid(sorted: &[f64], ecdf_sorted: &[f64], values: &[f64]) -> Vec<f64> {

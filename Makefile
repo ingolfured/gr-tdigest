@@ -40,7 +40,6 @@ PATH := $(HOME)/.local/bin:$(HOME)/.cargo/bin:$(PATH)
 
 CARGO  ?= cargo
 UV     ?= uv
-GRADLE := $(shell [ -x "$(JAVA_SRC)/gradlew" ] && echo "$(JAVA_SRC)/gradlew" || (command -v gradle || echo "gradle"))
 
 
 # Force uv to use the repo-root venv
@@ -55,6 +54,7 @@ PY_TESTS_DIR    := $(PY_DIR)/tests
 JAVA_SRC        := bindings/java
 JAVA_BUILD_REL  := build
 JAVA_LIBS_REL   := $(JAVA_BUILD_REL)/libs
+GRADLE          := $(shell [ -x "./gradlew" ] && echo "$(JAVA_SRC)/gradlew" || (command -v gradle || echo "gradle"))
 
 INTEG_DIR       := integration/api_coherence
 INTEG_TESTS_DIR := $(INTEG_DIR)

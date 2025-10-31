@@ -7,9 +7,9 @@
 //!    families and Precision {F64, F32} so you can *see* what moved.
 
 use super::quality_base::{
-    build_digest_sorted, expected_quantile, gen_dataset, DistKind, Precision, QualityReport,
+    build_digest_sorted, expected_quantile, gen_dataset, DistKind, QualityReport,
 };
-use crate::tdigest::{ScaleFamily, TDigest};
+use crate::tdigest::{Precision, ScaleFamily, TDigest};
 
 /// Evaluate by sampling a quantile grid and comparing to order-stat interpolation.
 /// Returns (ks_like, mae).

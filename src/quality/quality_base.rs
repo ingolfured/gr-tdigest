@@ -1,4 +1,4 @@
-use crate::tdigest::{singleton_policy::SingletonPolicy, ScaleFamily, TDigest};
+use crate::tdigest::{singleton_policy::SingletonPolicy, Precision, ScaleFamily, TDigest};
 
 pub use testdata::{gen_dataset, DistKind};
 
@@ -20,15 +20,6 @@ impl QualityReport {
         let score = (-((1200.0 * mae) + (18.0 * ks))).exp();
         QualityReport { n, ks, mae, score }
     }
-}
-
-/// Simulate building digests with different numeric precision.
-#[derive(Debug, Clone, Copy)]
-pub enum Precision {
-    F64,
-    /// “F32 mode”: round inputs to f32 first, then back to f64 before building the digest.
-    /// This isolates input precision from internal math, giving a realistic lower-precision signal.
-    F32,
 }
 
 /// Pretty banner for section headings in story-style tests.

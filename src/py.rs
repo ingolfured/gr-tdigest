@@ -23,20 +23,21 @@ fn parse_scale(s: Option<&str>) -> Result<ScaleFamily, PyErr> {
     }
 }
 
-fn parse_policy(kind: Option<&str>, edges: Option<usize>) -> Result<SingletonPolicy, PyErr> {
-    match kind.map(|k| k.to_ascii_lowercase()) {
+fn parse_policy(kind: Option<&str>, pin_per_side: Option<usize>) -> Result<SingletonPolicy, PyErr> {
+    match kind.map(|k| k.to_ascii_lowercase().replace('_', "").replace(' ', "")) {
         None => Ok(SingletonPolicy::Use),
         Some(ref v) if v == "off" => Ok(SingletonPolicy::Off),
         Some(ref v) if v == "use" => Ok(SingletonPolicy::Use),
-        Some(ref v) if v == "edges" || v == "usewithprotectededges" => {
-            let k = edges.ok_or_else(|| {
+        // accept "edges" or "edges"
+        Some(ref v) if v == "edges" || v == "edges" || v == "usewithprotectededges" => {
+            let k = pin_per_side.ok_or_else(|| {
                 pyo3::exceptions::PyValueError::new_err(
-                    "singleton_policy='edges' requires 'edges' (per-side) >= 1",
+                    "singleton_policy='edges' requires 'pin_per_side' (per-side) >= 1",
                 )
             })?;
             if k < 1 {
                 return Err(pyo3::exceptions::PyValueError::new_err(
-                    "edges must be >= 1 when singleton_policy='edges'",
+                    "pin_per_side must be >= 1 when singleton_policy='edges'",
                 ));
             }
             Ok(SingletonPolicy::UseWithProtectedEdges(k))
@@ -184,7 +185,7 @@ fn ser_to_td(sd: SerDigest) -> Result<TDigest<f64>, PyErr> {
 #[pymethods]
 impl PyTDigest {
     #[staticmethod]
-    #[pyo3(signature = (values, max_size=1000, scale=None, f32_mode=false, singleton_policy=None, edges=None))]
+    #[pyo3(signature = (values, max_size=1000, scale=None, f32_mode=false, singleton_policy=None, pin_per_side=None))]
     pub fn from_array(
         py: Python<'_>,
         values: PyObject,
@@ -192,7 +193,7 @@ impl PyTDigest {
         scale: Option<&str>,
         f32_mode: bool,
         singleton_policy: Option<&str>,
-        edges: Option<usize>,
+        pin_per_side: Option<usize>,
     ) -> PyResult<Self> {
         if max_size == 0 {
             return Err(pyo3::exceptions::PyValueError::new_err(
@@ -200,7 +201,7 @@ impl PyTDigest {
             ));
         }
         let sc = parse_scale(scale)?;
-        let policy = parse_policy(singleton_policy, edges)?;
+        let policy = parse_policy(singleton_policy, pin_per_side)?;
 
         let np = py.import("numpy")?;
         let arr = np.call_method1("asarray", (values,))?;

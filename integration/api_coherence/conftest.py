@@ -130,7 +130,7 @@ def scale_case(request) -> tuple[str, str]:
 # - off                  -> OFF
 # - use                  -> USE
 # - use_edges            -> USE_WITH_PROTECTED_EDGES
-# In edge mode we also carry pin-per-side; choose a couple of values to exercise.
+# In edges mode we also carry pin-per-side; choose a couple of values to exercise.
 PIN_PER_SIDE_CANDIDATES = [1, 2]
 SINGLETON_CASES = [
     ("off", "OFF", None),
@@ -177,7 +177,7 @@ def cfg(
     - precision: strings for CLI/Python/Polars ('f32'|'f64'); Java enums upper ('F32'|'F64')
     - scale:     lowercase for CLI/Python/Polars (e.g. 'k2'); Java enum uppercase (e.g. 'K2')
     - singleton: lowercase for CLI/Python/Polars (e.g. 'use'); Java enum uppercase (e.g. 'USE')
-    - pin-per-side: integer required only when singleton == edge; otherwise None
+    - pin-per-side: integer required only when singleton == edges; otherwise None
     """
     scale_lc, scale_java = scale_case
     singleton_lc, singleton_java, pins_opts = singleton_case
@@ -204,7 +204,7 @@ def cfg(
         }
     )
 
-    # Canonical pin-per-side (required only in edge mode)
+    # Canonical pin-per-side (required only in edges mode)
     out["pin_per_side"] = pins_opts[0] if pins_opts is not None else None
 
     return out

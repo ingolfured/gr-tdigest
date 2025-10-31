@@ -495,9 +495,6 @@ mod tests {
     fn approx(a: f64, b: f64, eps: f64) -> bool {
         (a - b).abs() <= eps * (1.0 + a.abs() + b.abs())
     }
-    fn cdf1<F: FloatLike + FloatCore>(td: &TDigest<F>, x: f64) -> f64 {
-        td.cdf(&[x])[0]
-    }
 
     type Fp = f64; // run these tests in f64 storage; f32 is covered elsewhere
 

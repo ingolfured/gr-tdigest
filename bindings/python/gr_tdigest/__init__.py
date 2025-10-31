@@ -5,7 +5,7 @@ from importlib.metadata import PackageNotFoundError, version
 from pathlib import Path
 from typing import TYPE_CHECKING, Any, Callable, Dict, List, Literal, Optional, Tuple, cast
 from numbers import Real
-from math import ceil, isfinite
+from math import isfinite
 
 import polars as pl
 from polars.plugins import register_plugin_function
@@ -46,7 +46,7 @@ class ScaleFamily(str, Enum):
 class SingletonPolicy(str, Enum):
     OFF = "off"
     USE = "use"
-    EDGE = "edge"
+    EDGES = "edges"
 
 
 # --- helpers ------------------------------------------------------------------
@@ -65,47 +65,33 @@ def _coerce_scale_for_plugin(scale: ScaleFamily | str) -> str:
 
 
 def _coerce_precision(precision: str | None) -> str:
+    """
+    Allow: 'auto' (default), 'f64', 'f32'
+    - 'auto' means: Float32 input → f32 digest schema; otherwise f64 schema.
+    - Explicit 'f32'/'f64' will be validated by the Rust plugin against train dtype.
+    """
     if precision is None:
-        return "f64"
+        return "auto"
     s = str(precision).strip().lower()
-    if s in {"f64", "f32"}:
+    if s in {"auto", "f64", "f32"}:
         return s
-    raise ValueError(f"Unknown precision: {precision!r}. Use 'f64' (default) or 'f32'.")
+    raise ValueError(f"Unknown precision: {precision!r}. Use 'auto' (default), 'f64', or 'f32'.")
 
 
 def _norm_policy(mode: SingletonPolicy | str | None) -> str:
     """
-    Normalize policy tokens to: "off" | "use" | "edge"
-
-    Accepted synonyms:
-      - off:  "off"
-      - use:  "use", "on", "respect"
-      - edge: "edge", "edges", "use_edges", "useedge", "useedges",
-              "protectededges", "use_with_protected_edges", "usewithprotectededges"
+    Strict normalization to: 'off' | 'use' | 'edges'
+    - Accepts the enum `SingletonPolicy` or the exact lowercase strings above.
+    - No fuzzy/synonym parsing.
     """
     if mode is None:
         return "use"
     if isinstance(mode, SingletonPolicy):
         return mode.value
-
     s = str(mode).strip().lower()
-    s = s.replace("_", "").replace("-", "").replace(" ", "")
-
-    if s in {"off"}:
-        return "off"
-    if s in {"use", "on", "respect"}:
-        return "use"
-    if s in {
-        "edge",
-        "edges",
-        "useedge",
-        "useedges",  # handles "use_edges"
-        "protectededges",
-        "usewithprotectededges",  # handles "use_with_protected_edges"
-    }:
-        return "edge"
-
-    raise ValueError("singleton_policy must be one of 'off'|'use'|'edge'")
+    if s in {"off", "use", "edges"}:
+        return s
+    raise ValueError("singleton_policy must be one of 'off'|'use'|'edges' (lowercase) or a SingletonPolicy enum.")
 
 
 def _into_expr(x: "IntoExpr | Any") -> pl.Expr:
@@ -149,60 +135,23 @@ def _validate_max_size(max_size: int) -> int:
     return m
 
 
-def _validate_edges_per_side(eps: Optional[int], max_size: int) -> Optional[int]:
-    if eps is None:
+def _validate_pin_per_side(pin_per_side: Optional[int], max_size: int) -> Optional[int]:
+    if pin_per_side is None:
         return None
     try:
-        e = int(eps)
+        p = int(pin_per_side)
     except Exception as exc:  # noqa: BLE001
-        raise TypeError(f"edges_per_side must be an integer; got {type(eps).__name__}.") from exc
-    if e < 1:
-        raise ValueError("edges_per_side must be >= 1.")
+        raise TypeError(f"pin_per_side must be an integer; got {type(pin_per_side).__name__}.") from exc
+    if p < 1:
+        raise ValueError("pin_per_side must be >= 1.")
     # Keep a strict, predictable bound relative to the budget.
-    # We require <= max_size//2 to leave capacity for interior centroids.
     hard_cap = max_size // 2
-    if e > hard_cap:
+    if p > hard_cap:
         raise ValueError(
-            f"edges_per_side={e} exceeds the limit for max_size={max_size} "
-            f"(must be <= {hard_cap}). "
-            "Reduce edges_per_side or increase max_size."
+            f"pin_per_side={p} exceeds the limit for max_size={max_size} "
+            f"(must be <= {hard_cap}). Reduce it or increase max_size."
         )
-    return e
-
-
-def _normalize_edges_per_side(
-    mode_norm: str,
-    *,
-    edges_per_side: Optional[int] = None,
-    edges_total: Optional[int] = None,
-    edges_to_preserve: Optional[int] = None,
-) -> Optional[int]:
-    """
-    Canonicalize the 'edge pins' configuration to a per-side integer.
-    - Only valid when mode_norm == 'edge'
-    - Accepts aliases:
-        * edges_per_side (canonical)
-        * edges_total (interpreted as overall across both tails; ceil(total/2) per side)
-        * edges_to_preserve (legacy alias; interpreted as per-side)
-    """
-    if mode_norm != "edge":
-        if any(v is not None for v in (edges_per_side, edges_total, edges_to_preserve)):
-            raise ValueError("edges_* is only allowed when singleton_policy='edge'")
-        return None
-
-    # prefer canonical; fallback to aliases
-    eps = edges_per_side
-    if eps is None and edges_to_preserve is not None:
-        eps = int(edges_to_preserve)
-    if eps is None and edges_total is not None:
-        eps = int(ceil(edges_total / 2))
-
-    if eps is None:
-        raise ValueError("singleton_policy='edge' requires edges_per_side")
-    if eps < 1:
-        raise ValueError("edges_per_side must be >= 1")
-
-    return int(eps)
+    return p
 
 
 # --- Python-side shim: TDigest.from_array() argument normalization ------------
@@ -219,26 +168,21 @@ def _from_array_cls(
     max_size: int = 200,
     scale: ScaleFamily | str = "k2",
     singleton_policy: SingletonPolicy | str | None = "use",
-    # canonical + aliases:
-    edges_per_side: Optional[int] = None,
-    edges_total: Optional[int] = None,
-    edges_to_preserve: Optional[int] = None,  # legacy alias (per-side)
+    pin_per_side: Optional[int] = None,
     **kwargs: Any,
 ) -> _NativeTDigest:
+    # Coerce and validate user inputs
     s = _coerce_scale_for_class(scale)  # "QUAD"|"K1"|"K2"|"K3"
-    m = _norm_policy(singleton_policy)  # "off"|"use"|"edge"
+    m = _norm_policy(singleton_policy)  # "off"|"use"|"edges"
     max_size = _validate_max_size(max_size)
 
-    eps = _normalize_edges_per_side(
-        m,
-        edges_per_side=edges_per_side,
-        edges_total=edges_total,
-        edges_to_preserve=edges_to_preserve,
-    )
-    eps = _validate_edges_per_side(eps, max_size)
+    # Validate pin_per_side rules
+    if m != "edges" and pin_per_side is not None:
+        raise ValueError("pin_per_side is only allowed when singleton_policy='edges'")
+    eps = _validate_pin_per_side(pin_per_side, max_size) if m == "edges" else None
 
-    # Native expects: singleton_policy ("off"|"use"|"edges") and edges (usize, per side)
-    policy_str = {"off": "off", "use": "use", "edge": "edges"}[m]
+    # Native expects: singleton_policy ("off"|"use"|"edges") and pin_per_side (usize, per side)
+    policy_str = {"off": "off", "use": "use", "edges": "edges"}[m]
 
     # Accept precision="f64"/"f32" for API coherence, but the native constructor
     # doesn't take it yet — strip it out here (TODO: wire through later if added).
@@ -250,13 +194,15 @@ def _from_array_cls(
         "singleton_policy": policy_str,
     }
     if eps is not None:
-        call_kwargs["edges"] = int(eps)
+        # IMPORTANT: the native binding expects 'pin_per_side', not 'edges'
+        call_kwargs["pin_per_side"] = int(eps)
 
+    # Pass through any additional supported kwargs unchanged
     call_kwargs.update(kwargs)
 
     # native from_array is a staticmethod; call directly
     out = _native_from_array(data, **call_kwargs)
-    return cast(_NativeTDigest, out)
+    return out
 
 
 # Replace the classmethod on the native class
@@ -350,59 +296,53 @@ def tdigest(
     max_size: int = 200,
     *,
     scale: ScaleFamily | str = "k2",
-    precision: str = "f64",
+    precision: str = "auto",
     singleton_policy: SingletonPolicy | str | None = "use",
-    # canonical + aliases:
-    edges_per_side: Optional[int] = None,
-    edges_total: Optional[int] = None,
-    edges_to_preserve: Optional[int] = None,  # legacy alias (per-side)
+    pin_per_side: Optional[int] = None,
 ) -> pl.Expr:
     """
     Build a TDigest per group/column.
+
+    IMPORTANT:
+      - `precision` controls how centroids are STORED: "auto" (default), "f32", or "f64".
+      - With precision="auto", storage precision is inferred from the input column dtype:
+          Float32 input → compact (f32) digest schema
+          otherwise     → f64 digest schema
+      - If you explicitly set "f32"/"f64", the plugin will *error* if it conflicts with
+        the input training dtype.
 
     Rust kwargs expected (see src/polars_expr.rs TDigestKwargs):
       {
         "max_size": int,
         "scale": "quad"|"k1"|"k2"|"k3",
-        "singleton_mode": "off"|"use"|"edge",
-        "edges_per_side": Optional[int],   # canonical wire key (edge mode only)
-        # (temporary compat) "edges_to_preserve": Optional[int],  # legacy wire key
-        "precision": "f64"|"f32"
+        "singleton_mode": "off"|"use"|"edges",
+        "edges_per_side": Optional[int],   # edges mode only
+        "precision": "auto"|"f32"|"f64"
       }
     """
     v_expr = _into_expr(values)
 
     max_size = _validate_max_size(max_size)
-    scale_norm = _coerce_scale_for_plugin(scale)  # lower-case "quad"|"k1"|"k2"|"k3"
-    prec_norm = _coerce_precision(precision)  # "f64"|"f32"
-    mode_norm = _norm_policy(singleton_policy)  # "off"|"use"|"edge"
+    scale_norm = _coerce_scale_for_plugin(scale)  # "quad"|"k1"|"k2"|"k3"
+    prec_norm = _coerce_precision(precision)  # "auto"|"f32"|"f64"
+    mode_norm = _norm_policy(singleton_policy)  # "off"|"use"|"edges"
 
-    eps = _normalize_edges_per_side(
-        mode_norm,
-        edges_per_side=edges_per_side,
-        edges_total=edges_total,
-        edges_to_preserve=edges_to_preserve,
-    )
-    eps = _validate_edges_per_side(eps, max_size)
+    if mode_norm != "edges" and pin_per_side is not None:
+        raise ValueError("pin_per_side is only allowed when singleton_policy='edges'")
+    eps = _validate_pin_per_side(pin_per_side, max_size) if mode_norm == "edges" else None
 
     kwargs: Dict[str, Any] = {
         "max_size": int(max_size),
         "scale": scale_norm,
-        "singleton_mode": mode_norm,  # wire name expected by Rust
-        "precision": prec_norm,
+        "singleton_mode": mode_norm,  # expected by Rust
+        "precision": prec_norm,  # "auto"|"f32"|"f64"
     }
     if eps is not None:
-        # Canonical wire arg:
         kwargs["edges_per_side"] = int(eps)
-        # Temporary back-compat for older plugin handlers (safe to remove later):
-        kwargs["edges_to_preserve"] = int(eps)
-
-    # function name: f64 → canonical tdigest; f32 → compact
-    func = "tdigest" if prec_norm == "f64" else "_tdigest_f32"
 
     return register_plugin_function(
         plugin_path=str(lib),
-        function_name=func,
+        function_name="tdigest",
         args=[v_expr],
         kwargs=kwargs,
         returns_scalar=True,  # per-group aggregation → unit length
@@ -438,31 +378,20 @@ def cdf(digest: "IntoExpr", values: "IntoExpr") -> pl.Expr:
     return expr.alias(f"{vname}_cdf")
 
 
-def quantile(digest: "IntoExpr", q: "IntoExpr | float") -> pl.Expr:
+def quantile(digest: "IntoExpr", q: float) -> pl.Expr:
+    """
+    quantile(digest, q) -> Expr
+      - Only scalar q is supported here (0..1). For vectorized evaluation,
+        compute multiple scalars or use the native Python class directly.
+    """
     d_expr = _into_expr(digest)
 
-    is_expr_like = isinstance(q, pl.Expr) or isinstance(q, str)
-    if is_expr_like:
-        q_expr = _into_expr(q)
-        # 2-arg form: (digest_expr, q_expr)
-        # NOTE: When passing an expression for q, ensure q∈[0,1]. You can clamp:
-        #   q_expr = pl.col("q").clip(min=0.0, max=1.0)
-        return register_plugin_function(
-            plugin_path=str(lib),
-            function_name="quantile",
-            args=[d_expr, q_expr],
-            kwargs=None,
-            returns_scalar=True,
-        )
-
-    # Otherwise, treat q as a scalar and use the kwarg form expected by the plugin.
     try:
         q_val = float(cast(float, q))
     except Exception as exc:  # noqa: BLE001
         raise TypeError(f"q must be a float in [0, 1]; got {type(q).__name__}.") from exc
 
     if not (0.0 <= q_val <= 1.0):
-        # Be precise and helpful about the common mistakes.
         hint = (
             "If you meant a percent, divide by 100 (e.g., 95 → 0.95). "
             "If you meant an absolute data value (not a probability), use cdf() instead."
