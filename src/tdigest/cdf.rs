@@ -16,10 +16,14 @@
 //!   form a discrete step.
 //!
 //! # Guarantees
-//! - Output is in **[0, 1]**.
+//! - Output is in **[0, 1]** (except for explicit NaN propagation / empty digest, see below).
 //! - Output is **non-decreasing** in the query value.
 //! - With sufficient capacity (no compression), the result matches the
 //!   **midpoint ECDF** over ties.
+//!
+//! # Edge cases (explicit semantics)
+//! - **Empty digest** → CDF returns a vector of **NaN** (one per input probe).
+//! - **NaN probe**    → that output element is **NaN**.
 //!
 //! # Performance
 //! - Per query is **O(log n)** due to a binary search on centroid means.
@@ -90,22 +94,19 @@ impl<F: FloatLike + FloatCore> TDigest<F> {
     ///   singleton half-mass from the interpolation span (atomic piles do not
     ///   “smear”).
     ///
-    /// ## Complexity
-    /// - Build “light arrays” once: **O(m)** where `m = #centroids`.
-    /// - Per query: **O(log m)** from binary search on centroid means.
-    /// - For `vals.len() ≥ PAR_MIN`, queries are processed with **Rayon**.
-    ///
     /// ## Edge cases
     /// - Empty digest (`m = 0`) → a vector of `NaN` with `vals.len()` entries.
     /// - Empty `vals` → returns an empty vector.
+    /// - **NaN probe** → that output element is `NaN`.
     ///
     /// ## Monotonicity & bounds
-    /// The result is guaranteed to be within **[0, 1]** and non-decreasing in
-    /// each query value.
+    /// The non-NaN results are guaranteed to be within **[0, 1]** and
+    /// non-decreasing in each query value.
     pub fn cdf(&self, vals: &[f64]) -> Vec<f64> {
         // Degenerate cases
         let n = self.centroids().len();
         if n == 0 {
+            // Empty digest → NaN per probe
             return vec![f64::NAN; vals.len()];
         }
         if vals.is_empty() {
@@ -127,6 +128,11 @@ impl<F: FloatLike + FloatCore> TDigest<F> {
         if vals.len() <= 8 {
             let mut out = Vec::with_capacity(vals.len());
             for &v in vals {
+                // Propagate NaN probe
+                if v.is_nan() {
+                    out.push(f64::NAN);
+                    continue;
+                }
                 out.push(cdf_at_val_fast(
                     v, &means, &weights, &prefix, count_f64, min_v, max_v,
                 ));
@@ -138,11 +144,20 @@ impl<F: FloatLike + FloatCore> TDigest<F> {
         if vals.len() >= PAR_MIN {
             vals.par_iter()
                 .with_min_len(4096)
-                .map(|&v| cdf_at_val_fast(v, &means, &weights, &prefix, count_f64, min_v, max_v))
+                .map(|&v| {
+                    if v.is_nan() {
+                        return f64::NAN;
+                    }
+                    cdf_at_val_fast(v, &means, &weights, &prefix, count_f64, min_v, max_v)
+                })
                 .collect()
         } else {
             let mut out = Vec::with_capacity(vals.len());
             for &v in vals {
+                if v.is_nan() {
+                    out.push(f64::NAN);
+                    continue;
+                }
                 out.push(cdf_at_val_fast(
                     v, &means, &weights, &prefix, count_f64, min_v, max_v,
                 ));
@@ -169,7 +184,7 @@ struct CdfLight {
 fn build_arrays_light<F: FloatLike + FloatCore>(td: &TDigest<F>) -> CdfLight {
     let n = td.centroids().len();
 
-    // NOTE: switch to the new f64-facing helpers on Centroid<F>
+    // f64-facing helpers on Centroid<F>
     let mut means: Vec<f64> = Vec::with_capacity(n);
     let mut weights: Vec<f64> = Vec::with_capacity(n);
     for c in td.centroids() {

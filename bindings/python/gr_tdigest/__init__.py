@@ -5,7 +5,7 @@ from importlib.metadata import PackageNotFoundError, version
 from pathlib import Path
 from typing import TYPE_CHECKING, Any, Callable, Dict, List, Literal, Optional, Tuple, cast
 from numbers import Real
-from math import isfinite
+from math import isinf, isnan
 
 import polars as pl
 from polars.plugins import register_plugin_function
@@ -18,7 +18,6 @@ lib = Path(__file__).parent
 
 # --- native import (fail loudly so tests don't silently pass with None) ---
 try:
-    # Native module produced by PyO3
     from ._gr_tdigest import TDigest as _NativeTDigest, __version__ as __native_version__
 
     __version__ = __native_version__
@@ -31,7 +30,6 @@ except ModuleNotFoundError as exc:  # pragma: no cover
 try:  # pragma: no cover
     __version__ = version("gr-tdigest")
 except PackageNotFoundError:  # pragma: no cover
-    # Keep the native version if package metadata isn't available
     pass
 
 
@@ -65,11 +63,6 @@ def _coerce_scale_for_plugin(scale: ScaleFamily | str) -> str:
 
 
 def _coerce_precision(precision: str | None) -> str:
-    """
-    Allow: 'auto' (default), 'f64', 'f32'
-    - 'auto' means: Float32 input → f32 digest schema; otherwise f64 schema.
-    - Explicit 'f32'/'f64' will be validated by the Rust plugin against train dtype.
-    """
     if precision is None:
         return "auto"
     s = str(precision).strip().lower()
@@ -79,11 +72,6 @@ def _coerce_precision(precision: str | None) -> str:
 
 
 def _norm_policy(mode: SingletonPolicy | str | None) -> str:
-    """
-    Strict normalization to: 'off' | 'use' | 'edges'
-    - Accepts the enum `SingletonPolicy` or the exact lowercase strings above.
-    - No fuzzy/synonym parsing.
-    """
     if mode is None:
         return "use"
     if isinstance(mode, SingletonPolicy):
@@ -91,16 +79,14 @@ def _norm_policy(mode: SingletonPolicy | str | None) -> str:
     s = str(mode).strip().lower()
     if s in {"off", "use", "edges"}:
         return s
-    raise ValueError("singleton_policy must be one of 'off'|'use'|'edges' (lowercase) or a SingletonPolicy enum.")
+    raise ValueError("singleton_policy must be 'off'|'use'|'edges' or SingletonPolicy enum.")
 
 
 def _into_expr(x: "IntoExpr | Any") -> pl.Expr:
-    """Best-effort: treat strings as column names, polars expressions passthrough, else literal."""
     if isinstance(x, pl.Expr):
         return x
     if isinstance(x, str):
         return pl.col(x)
-    # Accept numpy arrays and lists for cdf probe values
     try:
         import numpy as _np
 
@@ -112,26 +98,14 @@ def _into_expr(x: "IntoExpr | Any") -> pl.Expr:
 
 
 def _validate_max_size(max_size: int) -> int:
-    """
-    Enforce a practical, explicit range for cluster budget.
-    - Lower bound avoids degenerate accuracy,
-    - Upper bound guards accidental explosions.
-    """
     try:
         m = int(max_size)
     except Exception as exc:  # noqa: BLE001
         raise TypeError(f"max_size must be an integer; got {type(max_size).__name__}.") from exc
-
     if m < 10:
-        raise ValueError(
-            f"max_size must be >= 10; got {m}. Tip: 100–200 is a good starting point; increase for tighter tails."
-        )
+        raise ValueError("max_size must be >= 10.")
     if m > 20000:
-        raise ValueError(
-            f"max_size too large ({m}). "
-            "Choose <= 20_000 to avoid excessive memory/CPU. If you truly need more, "
-            "increase gradually while monitoring accuracy and resources."
-        )
+        raise ValueError("max_size too large (>20_000).")
     return m
 
 
@@ -144,13 +118,9 @@ def _validate_pin_per_side(pin_per_side: Optional[int], max_size: int) -> Option
         raise TypeError(f"pin_per_side must be an integer; got {type(pin_per_side).__name__}.") from exc
     if p < 1:
         raise ValueError("pin_per_side must be >= 1.")
-    # Keep a strict, predictable bound relative to the budget.
     hard_cap = max_size // 2
     if p > hard_cap:
-        raise ValueError(
-            f"pin_per_side={p} exceeds the limit for max_size={max_size} "
-            f"(must be <= {hard_cap}). Reduce it or increase max_size."
-        )
+        raise ValueError(f"pin_per_side={p} exceeds limit for max_size={max_size} (<= {hard_cap}).")
     return p
 
 
@@ -171,21 +141,15 @@ def _from_array_cls(
     pin_per_side: Optional[int] = None,
     **kwargs: Any,
 ) -> _NativeTDigest:
-    # Coerce and validate user inputs
-    s = _coerce_scale_for_class(scale)  # "QUAD"|"K1"|"K2"|"K3"
-    m = _norm_policy(singleton_policy)  # "off"|"use"|"edges"
+    s = _coerce_scale_for_class(scale)
+    m = _norm_policy(singleton_policy)
     max_size = _validate_max_size(max_size)
 
-    # Validate pin_per_side rules
     if m != "edges" and pin_per_side is not None:
         raise ValueError("pin_per_side is only allowed when singleton_policy='edges'")
     eps = _validate_pin_per_side(pin_per_side, max_size) if m == "edges" else None
 
-    # Native expects: singleton_policy ("off"|"use"|"edges") and pin_per_side (usize, per side)
     policy_str = {"off": "off", "use": "use", "edges": "edges"}[m]
-
-    # Accept precision="f64"/"f32" for API coherence, but the native constructor
-    # doesn't take it yet — strip it out here (TODO: wire through later if added).
     _ = kwargs.pop("precision", None)
 
     call_kwargs: Dict[str, Any] = {
@@ -194,22 +158,16 @@ def _from_array_cls(
         "singleton_policy": policy_str,
     }
     if eps is not None:
-        # IMPORTANT: the native binding expects 'pin_per_side', not 'edges'
         call_kwargs["pin_per_side"] = int(eps)
 
-    # Pass through any additional supported kwargs unchanged
-    call_kwargs.update(kwargs)
-
-    # native from_array is a staticmethod; call directly
     out = _native_from_array(data, **call_kwargs)
     return out
 
 
-# Replace the classmethod on the native class
 setattr(_NativeTDigest, "from_array", classmethod(_from_array_cls))
 
 
-# --- optional Python-side patches (scalar/ndarray support for cdf) ------------
+# --- Python-side patches: cdf + quantile ergonomics ---------------------------
 _native_cdf_raw: Any = getattr(_NativeTDigest, "cdf", None)
 if _native_cdf_raw is None:  # pragma: no cover
     raise AttributeError("Native TDigest is missing 'cdf'")
@@ -219,9 +177,14 @@ _native_cdf = cast(Callable[[Any, List[float]], List[float]], _native_cdf_raw)
 def _cdf_patched(self: _NativeTDigest, xs: Any) -> Any:
     """
     Accept:
-      - scalar (int/float/np.floating) -> returns float
-      - list/tuple of numbers          -> returns list/tuple respectively
-      - numpy array (0-D, 1-D, N-D)    -> returns numpy array with original shape
+      - scalar → float
+      - list/tuple → list/tuple
+      - numpy array (any shape) → numpy array with original shape
+
+    Semantics:
+      - Empty digest → NaN per output (native).
+      - Probe is NaN → NaN output.
+      - Probe is -inf → 0.0 ; +inf → 1.0  (allowed)
     """
     try:
         import numpy as np
@@ -235,7 +198,7 @@ def _cdf_patched(self: _NativeTDigest, xs: Any) -> Any:
     shape: Tuple[int, ...] = ()
     wrap_info: Any = None
 
-    if has_np and "np" in locals() and isinstance(xs, np.ndarray):
+    if has_np and isinstance(xs, np.ndarray):
         kind = "numpy"
         arr = np.asarray(xs)
         shape = arr.shape
@@ -258,14 +221,17 @@ def _cdf_patched(self: _NativeTDigest, xs: Any) -> Any:
         kind = "iterable"
         flat = [float(x) for x in it]
 
-    # Reject NaN/Inf inputs early with a precise hint
-    if any(not isfinite(v) for v in flat):
-        raise ValueError(
-            "cdf() probe values must be finite real numbers (no NaN/±inf). "
-            "Tip: clean your inputs or filter invalid entries before calling cdf()."
-        )
-
-    out_list = _native_cdf(self, flat)
+    needs_fix = any(isnan(v) or isinf(v) for v in flat)
+    if needs_fix:
+        temp = [0.0 if (isnan(v) or isinf(v)) else v for v in flat]
+        out_list = _native_cdf(self, temp)
+        for i, v in enumerate(flat):
+            if isnan(v):
+                out_list[i] = float("nan")
+            elif isinf(v):
+                out_list[i] = 0.0 if v < 0.0 else 1.0
+    else:
+        out_list = _native_cdf(self, flat)
 
     if kind == "scalar":
         return float(out_list[0])
@@ -274,21 +240,81 @@ def _cdf_patched(self: _NativeTDigest, xs: Any) -> Any:
     if kind in {"list", "iterable"}:
         return [float(x) for x in out_list]
     if kind == "numpy":
-        assert has_np and "np" in locals()
-        arr = cast("Any", locals()["np"]).asarray(out_list, dtype=wrap_info).reshape(shape)
+        assert has_np and np is not None
+        arr = cast("Any", np).asarray(out_list, dtype=wrap_info).reshape(shape)
         return arr
     return out_list
 
 
 setattr(_NativeTDigest, "cdf", _cdf_patched)
 
-# Public symbol: expose the native class directly (with patched methods)
+# Patch quantile: allow ±inf → NaN; propagate NaN; scalar/list/tuple/ndarray supported.
+_native_quantile_raw: Any = getattr(_NativeTDigest, "quantile", None)
+if _native_quantile_raw is None:  # pragma: no cover
+    raise AttributeError("Native TDigest is missing 'quantile'")
+_native_quantile = cast(Callable[[Any, float], float], _native_quantile_raw)
+
+
+def _quantile_patched(self: _NativeTDigest, q: Any) -> Any:
+    """
+    Semantics:
+      - q is NaN      → NaN
+      - q is ±inf     → NaN (allowed; no exception)
+      - q finite      → forwarded to native (native clamps to [0,1])
+      - empty digest  → native returns NaN
+    """
+    try:
+        import numpy as np
+
+        has_np = True
+    except Exception:  # pragma: no cover
+        has_np = False
+        np = None  # type: ignore[assignment]
+
+    def _flatten(arg: Any) -> Any:
+        if has_np and isinstance(arg, np.ndarray):
+            arr = np.asarray(arg)
+            return ("numpy", arr.shape, arr.dtype, arr.reshape(-1).astype("float64", copy=False).tolist())
+        if isinstance(arg, Real):
+            return ("scalar", (), None, [float(arg)])
+        if isinstance(arg, list):
+            return ("list", (), None, [float(x) for x in arg])
+        if isinstance(arg, tuple):
+            return ("tuple", (), None, [float(x) for x in arg])
+        try:
+            it = list(arg)
+        except TypeError:
+            raise TypeError(f"Unsupported type for quantile(): {type(arg)!r}")
+        return ("iterable", (), None, [float(x) for x in it])
+
+    kind, shape, wrap_info, flat = _flatten(q)
+
+    out_list: List[float] = []
+    for v in flat:
+        if isnan(v) or isinf(v):
+            out_list.append(float("nan"))
+        else:
+            out_list.append(_native_quantile(self, v))
+
+    if kind == "scalar":
+        return float(out_list[0])
+    if kind == "tuple":
+        return tuple(float(x) for x in out_list)
+    if kind in {"list", "iterable"}:
+        return [float(x) for x in out_list]
+    if kind == "numpy":
+        assert has_np and np is not None
+        arr = cast("Any", np).asarray(out_list, dtype=wrap_info).reshape(shape)
+        return arr
+    return out_list
+
+
+setattr(_NativeTDigest, "quantile", _quantile_patched)
+
 TDigest = _NativeTDigest
 
 
 # --- Polars plugin wrappers ---------------------------------------------------
-# This Polars version returns an Expr from register_plugin_function(...),
-# so we call it per-use from these helpers.
 
 
 def tdigest(
@@ -300,32 +326,12 @@ def tdigest(
     singleton_policy: SingletonPolicy | str | None = "use",
     pin_per_side: Optional[int] = None,
 ) -> pl.Expr:
-    """
-    Build a TDigest per group/column.
-
-    IMPORTANT:
-      - `precision` controls how centroids are STORED: "auto" (default), "f32", or "f64".
-      - With precision="auto", storage precision is inferred from the input column dtype:
-          Float32 input → compact (f32) digest schema
-          otherwise     → f64 digest schema
-      - If you explicitly set "f32"/"f64", the plugin will *error* if it conflicts with
-        the input training dtype.
-
-    Rust kwargs expected (see src/polars_expr.rs TDigestKwargs):
-      {
-        "max_size": int,
-        "scale": "quad"|"k1"|"k2"|"k3",
-        "singleton_mode": "off"|"use"|"edges",
-        "edges_per_side": Optional[int],   # edges mode only
-        "precision": "auto"|"f32"|"f64"
-      }
-    """
     v_expr = _into_expr(values)
 
     max_size = _validate_max_size(max_size)
-    scale_norm = _coerce_scale_for_plugin(scale)  # "quad"|"k1"|"k2"|"k3"
-    prec_norm = _coerce_precision(precision)  # "auto"|"f32"|"f64"
-    mode_norm = _norm_policy(singleton_policy)  # "off"|"use"|"edges"
+    scale_norm = _coerce_scale_for_plugin(scale)
+    prec_norm = _coerce_precision(precision)
+    mode_norm = _norm_policy(singleton_policy)
 
     if mode_norm != "edges" and pin_per_side is not None:
         raise ValueError("pin_per_side is only allowed when singleton_policy='edges'")
@@ -335,7 +341,7 @@ def tdigest(
         "max_size": int(max_size),
         "scale": scale_norm,
         "singleton_mode": mode_norm,  # expected by Rust
-        "precision": prec_norm,  # "auto"|"f32"|"f64"
+        "precision": prec_norm,
     }
     if eps is not None:
         kwargs["edges_per_side"] = int(eps)
@@ -345,7 +351,7 @@ def tdigest(
         function_name="tdigest",
         args=[v_expr],
         kwargs=kwargs,
-        returns_scalar=True,  # per-group aggregation → unit length
+        returns_scalar=True,
     )
 
 
@@ -357,12 +363,6 @@ def _output_name_or_raise(e: pl.Expr, ctx: str) -> str:
 
 
 def cdf(digest: "IntoExpr", values: "IntoExpr") -> pl.Expr:
-    """
-    cdf(digest, values) -> Expr
-      - digest: column name or Expr holding a TDigest
-      - values: named column or Expr to probe (must have output name)
-    Output name is '<values>_cdf' (internal).
-    """
     d_expr = _into_expr(digest)
     v_expr = _into_expr(values)
 
@@ -371,7 +371,7 @@ def cdf(digest: "IntoExpr", values: "IntoExpr") -> pl.Expr:
         function_name="cdf",
         args=[d_expr, v_expr],
         kwargs=None,
-        returns_scalar=False,  # explicit: element-wise over 'values'
+        returns_scalar=False,
     )
 
     vname = _output_name_or_raise(v_expr, "cdf(values)")
@@ -379,11 +379,6 @@ def cdf(digest: "IntoExpr", values: "IntoExpr") -> pl.Expr:
 
 
 def quantile(digest: "IntoExpr", q: float) -> pl.Expr:
-    """
-    quantile(digest, q) -> Expr
-      - Only scalar q is supported here (0..1). For vectorized evaluation,
-        compute multiple scalars or use the native Python class directly.
-    """
     d_expr = _into_expr(digest)
 
     try:
@@ -407,6 +402,22 @@ def quantile(digest: "IntoExpr", q: float) -> pl.Expr:
     )
 
 
+def merge_tdigests(digest: "IntoExpr") -> pl.Expr:
+    """
+    Merge TDigest structs.
+    - Use with `.over("g")` to do a per-group merge.
+    - If a group's input is null/empty, this yields a *real empty digest* (n=0) for that group.
+    """
+    d_expr = _into_expr(digest)
+    return register_plugin_function(
+        plugin_path=str(lib),
+        function_name="merge_tdigests",
+        args=[d_expr],
+        kwargs=None,
+        returns_scalar=True,
+    )
+
+
 __all__ = [
     "TDigest",
     "__version__",
@@ -415,4 +426,5 @@ __all__ = [
     "tdigest",
     "cdf",
     "quantile",
+    "merge_tdigests",
 ]

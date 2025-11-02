@@ -25,17 +25,9 @@
 //! - With sufficient capacity (no compression), results match **exact order
 //!   statistics** at mid-ranks `((i+0.5)/N)`.
 //!
-//! # Performance
-//! - `O(m)` pre-pass is avoided: we walk centroids once to find the bracketing
-//!   span. Overall **O(m)** in the worst case, typically close to **O(#spans)**.
-//!   (A binary-searchable prefix cache is possible but usually unnecessary.)
-//! - No allocations.
-//!
-//! # Numerical behavior
-//! - All comparisons are done in weight-space; ties and tiny spans avoid
-//!   division by near-zero by falling back to a mean of bracketing centroids.
-//! - Dead zones ensure unit singletons don’t contribute half-mass to the
-//!   interpolation denominator (consistent with CDF logic).
+//! # Edge cases (explicit semantics)
+//! - **Empty digest** → **`NaN`**.
+//! - **`q` is NaN** → **`NaN`**.
 //!
 //! See also: [`TDigest::cdf`] for CDF semantics, which pair with this
 //! quantile implementation via the same center/half-weight rules.
@@ -49,17 +41,24 @@ impl<F: FloatLike + FloatCore> TDigest<F> {
     /// Estimate the value at quantile `q` (inclusive) using half-weight
     /// bracketing and singleton-aware interpolation.
     ///
-    /// - `q` is clamped to `[0, 1]`.
-    /// - For empty digests, returns `0.0`.
+    /// - `q` is clamped to `[0, 1]` (when finite).
+    /// - **Empty digest** → **`NaN`**.
+    /// - **NaN `q`** → **`NaN`**.
     /// - For single-centroid digests, returns that mean.
     pub fn quantile(&self, q: f64) -> f64 {
+        // NaN probe propagates
+        if q.is_nan() {
+            return f64::NAN;
+        }
+        // Empty digest → NaN
         if self.centroids().is_empty() {
-            return 0.0;
+            return f64::NAN;
         }
         if self.centroids().len() == 1 {
             return self.centroids()[0].mean_f64();
         }
 
+        // Only clamp after guarding NaN
         let q = q.clamp(0.0, 1.0);
         let (target_index, total_weight) = self.quantile_to_weight_index(q);
 
@@ -217,10 +216,11 @@ impl<F: FloatLike + FloatCore> TDigest<F> {
     ///
     /// - If total count is **even**: average the two neighboring centroid means around q=0.5.
     /// - If **odd**: fall back to `quantile(0.5)`.
+    /// - **Empty**: returns `NaN`.
     pub fn median(&self) -> f64 {
         let total = self.count();
         if total <= 0.0 {
-            return 0.0;
+            return f64::NAN; // align with empty quantile/cdf semantics
         }
         if (total as i64) % 2 != 0 {
             return self.quantile(0.5);

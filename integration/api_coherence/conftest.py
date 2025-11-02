@@ -1,4 +1,5 @@
 from __future__ import annotations
+import pytest
 
 import os
 import platform
@@ -9,14 +10,28 @@ from typing import Iterable
 
 import pytest
 
+# -------- canonical tiny dataset & expected answers (mid-rank CDF) ----------
 DATA = [0.0, 1.0, 2.0, 3.0]
 P = 0.5
 X = 2.0
 EXPECT_Q50 = 1.5
 EXPECT_CDF_AT_2 = 0.625
 
+# -------- unified default config (no param matrix) ----------
 BASE_CFG = {
     "max_size": 10,
+    "precision_cli": "f64",
+    "precision_py": "f64",
+    "precision_pl": "f64",
+    "precision_java": "F64",
+    "scale_cli": "k2",
+    "scale_py": "k2",
+    "scale_pl": "k2",
+    "scale_java": "K2",
+    "singleton_cli": "use",
+    "singleton_py": "use",
+    "singleton_pl": "use",
+    "singleton_java": "USE",
 }
 
 @dataclass(frozen=True)
@@ -32,12 +47,15 @@ class Paths:
     classpath_sep: str
 
 
+# -------------------- paths & build once --------------------
+
 @pytest.fixture(scope="session")
 def paths() -> Paths:
     root = Path(__file__).resolve().parents[2]
     profile = os.environ.get("PROFILE", "dev")
     cargo_dir = "release" if profile == "release" else "debug"
 
+    # CLI binary (adjust if your target name differs)
     cli_bin = root / "target" / cargo_dir / "tdigest"
 
     # Java bits
@@ -46,6 +64,7 @@ def paths() -> Paths:
     if not gradlew.exists() or not os.access(gradlew, os.X_OK):
         raise AssertionError(f"Gradle wrapper not found or not executable: {gradlew}")
 
+    # Build Java classes once for the whole session
     try:
         subprocess.run(
             [str(gradlew), "--no-daemon", "--console=plain", "clean", "classes"],
@@ -86,46 +105,11 @@ def paths() -> Paths:
     )
 
 
-@pytest.fixture(scope="session", params=["f64"], ids=lambda p: f"precision={p}")
-def precision(request) -> str:
-    return request.param
-
-
-@pytest.fixture(scope="session", params=[10, 25, 100], ids=lambda m: f"max={m}")
-def max_size(request) -> int:
-    return int(request.param)
-
-
-SCALE_CASES = [
-    ("k1", "K1"),
-    ("k2", "K2"),
-    ("quad", "QUAD"),
-]
-
-@pytest.fixture(scope="session", params=SCALE_CASES, ids=lambda t: f"scale={t[0]}")
-def scale_case(request) -> tuple[str, str]:
-    return request.param
-
-
-# Canonical singleton tokens across surfaces:
-#   - 'off', 'use', 'edges'  (edges may take a pin_per_side)
-PIN_PER_SIDE_CANDIDATES = [1, 2]
-SINGLETON_CASES = [
-    ("off", "OFF", None),
-    ("use", "USE", None),
-    ("edges", "USE_WITH_PROTECTED_EDGES", PIN_PER_SIDE_CANDIDATES),
-]
-
-@pytest.fixture(scope="session", params=SINGLETON_CASES, ids=lambda t: f"singleton={t[0]}")
-def singleton_case(request) -> tuple[str, str, list[int] | None]:
-    return request.param
-
-
 # -------------------- expectations & dataset --------------------
 
 @pytest.fixture(scope="session")
-def expect(precision: str) -> dict[str, float]:
-    # f64-only baseline → tighter tolerance
+def expect() -> dict[str, float]:
+    # Tight tolerance for f64
     eps = 1e-6
     return {"P": P, "X": X, "Q50": EXPECT_Q50, "CDF2": EXPECT_CDF_AT_2, "EPS": eps}
 
@@ -135,48 +119,10 @@ def dataset() -> dict[str, object]:
     return {"DATA": DATA}
 
 
-# -------------------- unified config builder --------------------
-
 @pytest.fixture(scope="session")
-def cfg(
-    precision: str,
-    max_size: int,
-    scale_case: tuple[str, str],
-    singleton_case: tuple[str, str, list[int] | None],
-) -> dict[str, object]:
-    """
-    Unified tokens for all surfaces.
-    - precision_*: 'f64' for CLI/Python/Polars; 'F64' for Java
-    - scale_*:     lower for CLI/Python/Polars; upper enum for Java
-    - singleton_*: 'off'|'use'|'edges' or Java enum
-    """
-    scale_lc, scale_java = scale_case
-    singleton_tok, singleton_java, pins_opts = singleton_case
-
-    out = dict(BASE_CFG)
-    out.update(
-        {
-            "max_size": max_size,
-            # Precision (here: smoke f64)
-            "precision_cli": "f64",
-            "precision_py": "f64",
-            "precision_pl": "f64",
-            "precision_java": "F64",
-            # Scale
-            "scale_cli": scale_lc,
-            "scale_py": scale_lc,
-            "scale_pl": scale_lc,
-            "scale_java": scale_java,
-            # Singleton
-            "singleton_cli": singleton_tok,    # 'off'|'use'|'edges'
-            "singleton_py": singleton_tok,
-            "singleton_pl": singleton_tok,
-            "singleton_java": singleton_java,  # OFF|USE|USE_WITH_PROTECTED_EDGES
-        }
-    )
-
-    out["pin_per_side"] = pins_opts[0] if pins_opts is not None else None
-    return out
+def cfg() -> dict[str, object]:
+    # Single, default config for all tests
+    return dict(BASE_CFG)
 
 
 # -------------------- helpers (used by tests) --------------------
@@ -196,11 +142,17 @@ def run_cli(cli_bin: Path, args: list[str], data: Iterable[float]) -> str:
     )
 
 
-def add_pin_kw(kwargs: dict, pin_per_side: int | None) -> None:
-    """Canonical kw forwarder for edge pins."""
-    if pin_per_side is None:
-        return
-    kwargs["pin_per_side"] = int(pin_per_side)
+def cli_build_args(cfg: dict) -> list[str]:
+    """Common CLI args (no --stdin/--cmd/--p; add those in tests)."""
+    return [
+        "--no-header",
+        "--output", "csv",
+        "--max-size", str(cfg["max_size"]),
+        "--scale", cfg["scale_cli"],
+        "--singleton-policy", cfg["singleton_cli"],
+        "--precision", cfg["precision_cli"],
+    ]
+
 
 # --- expose helpers as fixtures returning callables ---
 @pytest.fixture(scope="session")
@@ -212,5 +164,26 @@ def assert_close_fn():
     return assert_close
 
 @pytest.fixture(scope="session")
-def add_pin_kw_fn():
-    return add_pin_kw
+def cli_build_args_fn():
+    return cli_build_args
+
+
+@pytest.fixture
+def add_pin_kw_fn(cfg):
+    """
+    Returns a function that takes a kwargs dict (for Python TDigest.from_array / class)
+    and, iff the configured singleton policy is 'edges', adds the required
+    'pin_per_side' key (defaulting to cfg['pin_per_side'] or 3).
+    """
+    # cfg is already provided by the existing conftest
+    policy_py = str(cfg.get("singleton_py", "use")).lower()
+    default_pin = int(cfg.get("pin_per_side", 3))
+
+    def _add(kwargs: dict | None = None) -> dict:
+        out = dict(kwargs or {})
+        if policy_py == "edges":
+            # only add if not already present
+            out.setdefault("pin_per_side", default_pin)
+        return out
+
+    return _add

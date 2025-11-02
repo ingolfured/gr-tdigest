@@ -18,8 +18,6 @@ use crate::tdigest::{ScaleFamily, TDigest};
 
 #[inline]
 fn guard_no_upcast_f32_to_f64<F: 'static>(values: &Series) -> PolarsResult<()> {
-    // If the input column is Float32 *and* the requested storage is f64,
-    // reject with a crisp, actionable error.
     if matches!(values.dtype(), DataType::Float32) && TypeId::of::<F>() == TypeId::of::<f64>() {
         return Err(PolarsError::ComputeError(
             "tdigest: precision=\"f64\" is not allowed for Float32 input. \
@@ -58,9 +56,6 @@ fn is_compact_digest_dtype(dt: &DataType) -> bool {
 }
 
 // NOTE: pyo3-polars (current) does not pass kwargs to output_type_func.
-// So we infer output schema from the *input value dtype*:
-//   - Float32 input → TDigest<f32> schema (compact)
-//   - otherwise     → TDigest<f64> schema
 fn tdigest_output_dtype(inputs: &[Field]) -> PolarsResult<Field> {
     let in_dt = inputs
         .get(0)
@@ -178,7 +173,6 @@ struct QuantileKwargs {
     q: f64,
 }
 
-// Defaults: max_size=1000, scale=K2, singleton_mode="use"
 #[inline]
 fn default_max_size() -> usize {
     1000
@@ -193,7 +187,6 @@ fn default_singleton_mode() -> String {
 }
 #[inline]
 fn default_precision() -> String {
-    // accept "auto" from callers (Python wrapper uses this)
     "auto".to_string()
 }
 
@@ -203,10 +196,8 @@ struct TDigestKwargs {
     max_size: usize,
     #[serde(default = "default_scale")]
     scale: ScaleFamily,
-    // accept forgiving string; we map it to SingletonPolicy ourselves
     #[serde(default = "default_singleton_mode")]
     singleton_mode: String,
-    // consolidated public name; accept legacy wire aliases for compatibility
     #[serde(
         default,
         alias = "edges_to_preserve",
@@ -225,7 +216,6 @@ enum PrecisionKw {
     F64,
 }
 
-/// parse "auto" | "f32" | "f64"
 fn parse_precision_kw(prec_raw: &str) -> PolarsResult<PrecisionKw> {
     let p = prec_raw.trim().to_lowercase();
     match p.as_str() {
@@ -248,9 +238,7 @@ fn tdigest_from_array_helper(inputs: &[Series], kwargs: &TDigestKwargs) -> Polar
 
     // If user provided `precision`, enforce it unless "auto".
     match parse_precision_kw(&kwargs.precision)? {
-        PrecisionKw::Auto => {
-            // no-op, accept planner inference
-        }
+        PrecisionKw::Auto => {}
         PrecisionKw::F32 => {
             if !input_is_f32 {
                 polars_bail!(ComputeError:
@@ -287,24 +275,59 @@ fn build_from_values<F>(
 where
     F: FloatLike + FloatCore + WireOf,
 {
-    // Forbid Float32 input when F == f64
     guard_no_upcast_f32_to_f64::<F>(values)?;
 
-    // Materialize input as Vec<F>
+    // 1) Hard fail on ANY nulls (your test requires this semantics)
+    if values.null_count() > 0 {
+        return Err(PolarsError::ComputeError(
+            "tdigest: input contains nulls; nulls are not allowed in training data".into(),
+        ));
+    }
+
+    // 2) Extract numeric values AND reject non-finite (NaN/±inf)
     let vf: Vec<F> = match values.dtype() {
         DataType::Float64 => {
+            let ca = values.f64()?;
+            // scan for non-finite
+            if ca
+                .into_iter()
+                .any(|opt| opt.map(|v| !v.is_finite()).unwrap_or(false))
+            {
+                return Err(PolarsError::ComputeError(
+                    "tdigest: input contains non-finite values (NaN or ±inf)".into(),
+                ));
+            }
+            // safe to reborrow after any() by re-getting the chunked array
             let ca = values.f64()?;
             ca.into_no_null_iter().map(F::from_f64).collect()
         }
         DataType::Float32 => {
+            let ca = values.f32()?;
+            if ca
+                .into_iter()
+                .any(|opt| opt.map(|v| !(v as f64).is_finite()).unwrap_or(false))
+            {
+                return Err(PolarsError::ComputeError(
+                    "tdigest: input contains non-finite values (NaN or ±inf)".into(),
+                ));
+            }
             let ca = values.f32()?;
             ca.into_no_null_iter()
                 .map(|x| F::from_f64(x as f64))
                 .collect()
         }
         dt if dt.is_numeric() => {
-            // cast to f64 first for integers/others
+            // Cast to f64 for uniform checks
             let casted = values.cast(&DataType::Float64)?;
+            let ca = casted.f64()?;
+            if ca
+                .into_iter()
+                .any(|opt| opt.map(|v| !v.is_finite()).unwrap_or(false))
+            {
+                return Err(PolarsError::ComputeError(
+                    "tdigest: input contains non-finite values (NaN or ±inf)".into(),
+                ));
+            }
             let ca = casted.f64()?;
             ca.into_no_null_iter().map(F::from_f64).collect()
         }
@@ -315,11 +338,16 @@ where
         }
     };
 
-    // Build with the requested max_size, then reconfigure scale/policy via builder
+    // 3) No actual training values → error (covers empty lists etc.)
+    if vf.is_empty() {
+        return Err(PolarsError::ComputeError(
+            "tdigest: input column contains no training values".into(),
+        ));
+    }
+
     let td0: TDigest<F> = TDigest::<F>::from_unsorted(&vf, max_size)
         .map_err(|e| PolarsError::ComputeError(e.to_string().into()))?;
 
-    // If defaults already match, keep it; else rebuild with desired options
     if td0.scale() == scale && td0.singleton_policy() == policy {
         Ok(td0)
     } else {
@@ -488,7 +516,6 @@ where
     F: Copy + 'static + FloatCore + FloatLike,
     Out: PolarsNumericType + OutFloat,
 {
-    // Evaluate all queries in f64; cast to Out::Native at the end.
     let vals_f64: Vec<Option<f64>> = if values_s.dtype() == &DataType::Float64 {
         values_s.f64()?.into_iter().collect()
     } else if values_s.dtype() == &DataType::Float32 {
@@ -508,14 +535,29 @@ where
     let mut out: Vec<Option<<Out as PolarsNumericType>::Native>> =
         Vec::with_capacity(values_s.len());
 
+    // helper: emit NaN for every present probe value
+    let emit_all_nan = |vs: &Vec<Option<f64>>| -> Vec<Option<<Out as PolarsNumericType>::Native>> {
+        vs.iter()
+            .map(|opt| opt.map(|_| Out::from_f64(f64::NAN)))
+            .collect()
+    };
+
     if let Some(td0) = single_non_empty {
+        // empty digest → NaN for all probes
+        if td0.count() == 0.0 || td0.centroids().is_empty() {
+            return Ok(Out::series_from_options("", emit_all_nan(&vals_f64)));
+        }
         for vx in vals_f64 {
             out.push(vx.map(|x| Out::from_f64(td0.cdf(&[x])[0])));
         }
     } else {
         for (i, vx) in vals_f64.into_iter().enumerate() {
             let td = digests.get(i).cloned().unwrap_or_default();
-            out.push(vx.map(|x| Out::from_f64(td.cdf(&[x])[0])));
+            if td.count() == 0.0 || td.centroids().is_empty() {
+                out.push(vx.map(|_| Out::from_f64(f64::NAN)));
+            } else {
+                out.push(vx.map(|x| Out::from_f64(td.cdf(&[x])[0])));
+            }
         }
     }
 
@@ -540,6 +582,13 @@ where
             .get_as_series(0)
             .unwrap_or_else(|| Series::new("".into(), Vec::<f64>::new()));
         let vals = subseries_to_f64_vec(&sub)?;
+
+        if td.count() == 0.0 || td.centroids().is_empty() {
+            let out_native: Vec<<Out as PolarsNumericType>::Native> =
+                vals.iter().map(|_| Out::from_f64(f64::NAN)).collect();
+            return Ok(Out::series_from_vec("", out_native));
+        }
+
         let out_native: Vec<<Out as PolarsNumericType>::Native> =
             td.cdf(&vals).into_iter().map(Out::from_f64).collect();
         return Ok(Out::series_from_vec("", out_native));
@@ -556,8 +605,13 @@ where
             .get_as_series(i)
             .unwrap_or_else(|| Series::new("".into(), Vec::<f64>::new()));
         let vals = subseries_to_f64_vec(&sub)?;
+
         let out_native: Vec<<Out as PolarsNumericType>::Native> =
-            td.cdf(&vals).into_iter().map(Out::from_f64).collect();
+            if td.count() == 0.0 || td.centroids().is_empty() {
+                vals.iter().map(|_| Out::from_f64(f64::NAN)).collect()
+            } else {
+                td.cdf(&vals).into_iter().map(Out::from_f64).collect()
+            };
         rows.push(Out::series_from_vec("", out_native));
     }
 
@@ -574,7 +628,8 @@ fn quantile_impl(inputs: &[Series], q: f64) -> PolarsResult<Series> {
 
     if want_f32 {
         let td = parse_and_merge::<f32>(inputs);
-        if td.is_empty() {
+        let is_empty = td.count() == 0.0 || td.centroids().is_empty();
+        if is_empty {
             return Ok(Series::new("".into(), [None::<f32>]));
         }
         let val = td.quantile(q);
@@ -585,7 +640,8 @@ fn quantile_impl(inputs: &[Series], q: f64) -> PolarsResult<Series> {
         }
     } else {
         let td = parse_and_merge::<f64>(inputs);
-        if td.is_empty() {
+        let is_empty = td.count() == 0.0 || td.centroids().is_empty();
+        if is_empty {
             return Ok(Series::new("".into(), [None::<f64>]));
         }
         let val = td.quantile(q);

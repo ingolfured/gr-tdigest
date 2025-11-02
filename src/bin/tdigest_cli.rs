@@ -58,10 +58,13 @@ struct Cli {
     #[arg(long, value_enum)]
     cmd: Cmd,
 
-    /// Quantile probability p in
-    /// \[0,1\] (required for --cmd quantile)
+    /// Quantile probability. Accepts:
+    ///   - finite p in \[0,1\]
+    ///   - special tokens: NaN, inf, +inf, -inf  (case-insensitive)
+    ///
+    /// Required for --cmd quantile.
     #[arg(long)]
-    p: Option<f64>,
+    p: Option<String>,
 
     /// Output format (tests use csv)
     #[arg(long, default_value = "csv")]
@@ -175,15 +178,35 @@ fn main() -> Result<(), String> {
 
     match cli.cmd {
         Cmd::Quantile => {
-            let p = cli
+            let p_raw = cli
                 .p
+                .as_ref()
                 .ok_or_else(|| "--p is required for --cmd quantile".to_string())?;
-            if !(0.0..=1.0).contains(&p) {
+            let p_norm = p_raw.trim().to_lowercase();
+
+            // Special tokens: echo the original token in column 1, output NaN in column 2.
+            if p_norm == "nan" || p_norm == "inf" || p_norm == "+inf" || p_norm == "-inf" {
+                if want_csv {
+                    // Preserve original token casing as provided by the user.
+                    println!("{},NaN", p_raw);
+                } else {
+                    println!("NaN");
+                }
+                return Ok(());
+            }
+
+            // Finite numeric p → must be in [0,1]
+            let p_val: f64 = p_raw.parse::<f64>().map_err(|_| {
+                format!("--p must be a float in [0,1] or one of NaN/inf/+inf/-inf (got {p_raw:?})")
+            })?;
+            if !(0.0..=1.0).contains(&p_val) {
                 return Err("--p must be in [0,1]".into());
             }
-            let q = digest.quantile(p);
+
+            let q = digest.quantile(p_val);
             if want_csv {
-                println!("{},{}", p, q);
+                // For numeric p we print the parsed numeric value in column 1
+                println!("{},{}", p_val, q);
             } else {
                 println!("{q}");
             }
