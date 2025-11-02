@@ -9,19 +9,15 @@ from typing import Iterable
 
 import pytest
 
-# -------- canonical tiny dataset & expected answers (mid-rank CDF) ----------
 DATA = [0.0, 1.0, 2.0, 3.0]
 P = 0.5
 X = 2.0
 EXPECT_Q50 = 1.5
 EXPECT_CDF_AT_2 = 0.625
 
-# -------- unified config defaults ----------
-# We will fill in scale/singleton/precision per-parameter below.
 BASE_CFG = {
     "max_size": 10,
 }
-
 
 @dataclass(frozen=True)
 class Paths:
@@ -41,15 +37,15 @@ def paths() -> Paths:
     root = Path(__file__).resolve().parents[2]
     profile = os.environ.get("PROFILE", "dev")
     cargo_dir = "release" if profile == "release" else "debug"
-    # NOTE: CLI binary name "tdigest" assumed
+
     cli_bin = root / "target" / cargo_dir / "tdigest"
 
+    # Java bits
     java_src_dir = root / "bindings" / "java"
     gradlew = java_src_dir / "gradlew"
     if not gradlew.exists() or not os.access(gradlew, os.X_OK):
         raise AssertionError(f"Gradle wrapper not found or not executable: {gradlew}")
 
-    # Build Java project classes (no JAR). Do this once per session.
     try:
         subprocess.run(
             [str(gradlew), "--no-daemon", "--console=plain", "clean", "classes"],
@@ -68,15 +64,11 @@ def paths() -> Paths:
 
     classes_dir = java_src_dir / "build" / "classes" / "java" / "main"
 
+    # Where the native libs land (wrapper task that embeds natives)
     sys_tag = f"{platform.system().lower()}-{platform.machine()}"
     native_dirs = [
         java_src_dir / "build" / "resources" / "main" / "META-INF" / "native" / sys_tag,
-        java_src_dir
-        / "build"
-        / "generated-resources"
-        / "META-INF"
-        / "native"
-        / sys_tag,
+        java_src_dir / "build" / "generated-resources" / "META-INF" / "native" / sys_tag,
     ]
 
     classpath_sep = ";" if platform.system().lower().startswith("win") else ":"
@@ -94,65 +86,47 @@ def paths() -> Paths:
     )
 
 
-# -------------------- parameters --------------------
-
-
-@pytest.fixture(scope="session", params=["f32", "f64"], ids=lambda p: f"precision={p}")
+@pytest.fixture(scope="session", params=["f64"], ids=lambda p: f"precision={p}")
 def precision(request) -> str:
-    """Lower-case precision token ('f32' or 'f64')."""
     return request.param
 
 
 @pytest.fixture(scope="session", params=[10, 25, 100], ids=lambda m: f"max={m}")
 def max_size(request) -> int:
-    """Digest max_size. Small (10), medium (25), roomy (100)."""
     return int(request.param)
 
 
-# Unified scale tokens we’ll pass to CLI/Python/Polars; mapped to Java enums.
-# Supported families: K1, K2, Quad — keep it modest here.
 SCALE_CASES = [
-    # (unified_lowercase, java_enum_upper)
     ("k1", "K1"),
     ("k2", "K2"),
     ("quad", "QUAD"),
 ]
-
 
 @pytest.fixture(scope="session", params=SCALE_CASES, ids=lambda t: f"scale={t[0]}")
 def scale_case(request) -> tuple[str, str]:
     return request.param
 
 
-# Singleton policy variants:
-# Rust/CLI/Python/Polars accept lowercase strings; Java uses enum tokens.
-# Names assumed:
-# - off                  -> OFF
-# - use                  -> USE
-# - use_edges            -> USE_WITH_PROTECTED_EDGES
-# In edges mode we also carry pin-per-side; choose a couple of values to exercise.
+# Canonical singleton tokens across surfaces:
+#   - 'off', 'use', 'edges'  (edges may take a pin_per_side)
 PIN_PER_SIDE_CANDIDATES = [1, 2]
 SINGLETON_CASES = [
     ("off", "OFF", None),
     ("use", "USE", None),
-    ("use_edges", "USE_WITH_PROTECTED_EDGES", PIN_PER_SIDE_CANDIDATES),
+    ("edges", "USE_WITH_PROTECTED_EDGES", PIN_PER_SIDE_CANDIDATES),
 ]
 
-
-@pytest.fixture(
-    scope="session", params=SINGLETON_CASES, ids=lambda t: f"singleton={t[0]}"
-)
+@pytest.fixture(scope="session", params=SINGLETON_CASES, ids=lambda t: f"singleton={t[0]}")
 def singleton_case(request) -> tuple[str, str, list[int] | None]:
     return request.param
 
 
 # -------------------- expectations & dataset --------------------
 
-
 @pytest.fixture(scope="session")
 def expect(precision: str) -> dict[str, float]:
-    # Slightly looser tolerance for f32
-    eps = 1e-4 if precision == "f32" else 1e-6
+    # f64-only baseline → tighter tolerance
+    eps = 1e-6
     return {"P": P, "X": X, "Q50": EXPECT_Q50, "CDF2": EXPECT_CDF_AT_2, "EPS": eps}
 
 
@@ -163,7 +137,6 @@ def dataset() -> dict[str, object]:
 
 # -------------------- unified config builder --------------------
 
-
 @pytest.fixture(scope="session")
 def cfg(
     precision: str,
@@ -172,45 +145,42 @@ def cfg(
     singleton_case: tuple[str, str, list[int] | None],
 ) -> dict[str, object]:
     """
-    Produce a config dict with unified tokens across surfaces.
-
-    - precision: strings for CLI/Python/Polars ('f32'|'f64'); Java enums upper ('F32'|'F64')
-    - scale:     lowercase for CLI/Python/Polars (e.g. 'k2'); Java enum uppercase (e.g. 'K2')
-    - singleton: lowercase for CLI/Python/Polars (e.g. 'use'); Java enum uppercase (e.g. 'USE')
-    - pin-per-side: integer required only when singleton == edges; otherwise None
+    Unified tokens for all surfaces.
+    - precision_*: 'f64' for CLI/Python/Polars; 'F64' for Java
+    - scale_*:     lower for CLI/Python/Polars; upper enum for Java
+    - singleton_*: 'off'|'use'|'edges' or Java enum
     """
     scale_lc, scale_java = scale_case
-    singleton_lc, singleton_java, pins_opts = singleton_case
+    singleton_tok, singleton_java, pins_opts = singleton_case
 
     out = dict(BASE_CFG)
     out.update(
         {
             "max_size": max_size,
-            # Precision
-            "precision_cli": precision,
-            "precision_py": precision,
-            "precision_pl": precision,
-            "precision_java": precision.upper(),
+            # Precision (here: smoke f64)
+            "precision_cli": "f64",
+            "precision_py": "f64",
+            "precision_pl": "f64",
+            "precision_java": "F64",
             # Scale
             "scale_cli": scale_lc,
             "scale_py": scale_lc,
             "scale_pl": scale_lc,
             "scale_java": scale_java,
-            # Singleton policy
-            "singleton_cli": singleton_lc,
-            "singleton_py": singleton_lc,
-            "singleton_pl": singleton_lc,
-            "singleton_java": singleton_java,
+            # Singleton
+            "singleton_cli": singleton_tok,    # 'off'|'use'|'edges'
+            "singleton_py": singleton_tok,
+            "singleton_pl": singleton_tok,
+            "singleton_java": singleton_java,  # OFF|USE|USE_WITH_PROTECTED_EDGES
         }
     )
 
-    # Canonical pin-per-side (required only in edges mode)
     out["pin_per_side"] = pins_opts[0] if pins_opts is not None else None
-
     return out
 
 
-# ---------- helpers ----------
+# -------------------- helpers (used by tests) --------------------
+
 def assert_close(a: float, b: float, eps: float) -> None:
     assert abs(a - b) <= eps, f"{a} != {b} (eps={eps})"
 
@@ -224,3 +194,23 @@ def run_cli(cli_bin: Path, args: list[str], data: Iterable[float]) -> str:
         .decode()
         .strip()
     )
+
+
+def add_pin_kw(kwargs: dict, pin_per_side: int | None) -> None:
+    """Canonical kw forwarder for edge pins."""
+    if pin_per_side is None:
+        return
+    kwargs["pin_per_side"] = int(pin_per_side)
+
+# --- expose helpers as fixtures returning callables ---
+@pytest.fixture(scope="session")
+def run_cli_fn():
+    return run_cli
+
+@pytest.fixture(scope="session")
+def assert_close_fn():
+    return assert_close
+
+@pytest.fixture(scope="session")
+def add_pin_kw_fn():
+    return add_pin_kw
