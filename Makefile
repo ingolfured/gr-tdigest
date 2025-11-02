@@ -31,7 +31,7 @@ endef
 # ----------------------------------------------------------------------
 CRATE_NAME      ?= gr_tdigest
 PROJECT_SLUG    ?= gr-tdigest
-JAR_ARTIFACT    ?= $(PROJECT_SLUG)-java
+JAR_ARTIFACT    ?= $(PROJECT_SLUG)
 
 # ----------------------------------------------------------------------
 # Tools & paths
@@ -41,7 +41,6 @@ PATH := $(HOME)/.local/bin:$(HOME)/.cargo/bin:$(PATH)
 CARGO  ?= cargo
 UV     ?= uv
 
-
 # Force uv to use the repo-root venv
 UV_ENV := UV_PROJECT_ENVIRONMENT=$(PWD)/.venv
 
@@ -50,12 +49,14 @@ PY_DIR          := bindings/python
 PY_PKG_DIR      := $(PY_DIR)/gr_tdigest
 PY_TESTS_DIR    := $(PY_DIR)/tests
 
-# Java layout
+# Java layout (wrapper-only — no system Gradle fallback)
 JAVA_SRC        := bindings/java
 JAVA_BUILD_REL  := build
 JAVA_LIBS_REL   := $(JAVA_BUILD_REL)/libs
-GRADLE          := $(shell [ -x "./gradlew" ] && echo "$(JAVA_SRC)/gradlew" || (command -v gradle || echo "gradle"))
+GRADLEW_PATH    := $(JAVA_SRC)/gradlew
+GRADLE          := $(GRADLEW_PATH)
 
+# Integration tests
 INTEG_DIR       := integration/api_coherence
 INTEG_TESTS_DIR := $(INTEG_DIR)
 
@@ -116,6 +117,16 @@ DIST_DEV  ?= dist-dev
 API_JAR := $(DIST)/$(JAR_ARTIFACT)-latest.jar
 
 # ==============================================================================
+# Guards
+# ==============================================================================
+.PHONY: JAVA_WRAPPER_CHECK
+JAVA_WRAPPER_CHECK:
+	@test -x "$(GRADLEW_PATH)" || { \
+	  echo "$(STYLE_ERR)✗ Missing Gradle wrapper ($(GRADLEW_PATH))$(STYLE_RESET)"; \
+	  echo "  Bootstrap once: (cd $(JAVA_SRC) && gradle wrapper --gradle-version 9.1.0 --distribution-type bin)"; \
+	  exit 1; }
+
+# ==============================================================================
 # PHONY TARGETS
 # ==============================================================================
 .PHONY: help setup clean \
@@ -134,7 +145,10 @@ setup:
 	$(call need,cargo)
 	$(call need,git)
 	$(call need,uv)
-	$(call need,gradle)
+	@test -x "$(GRADLEW_PATH)" || { \
+	  echo "$(STYLE_ERR)✗ Missing Gradle wrapper ($(GRADLEW_PATH))$(STYLE_RESET)"; \
+	  echo "  Bootstrap once: (cd $(JAVA_SRC) && gradle wrapper --gradle-version 9.1.0 --distribution-type bin)"; \
+	  exit 1; }
 	$(UV) --version
 	$(call banner,Create repo .venv and install Python deps (all groups))
 	$(UV_ENV) $(UV) python install 3.12 || true
@@ -158,15 +172,12 @@ build-python:
 	$(call banner,Build: Python extension (maturin develop, dev))
 	@(cd "$(PY_DIR)" && $(UV_ENV) $(UV) run maturin develop -F python)
 
-# Use *relative* Gradle paths after cd to avoid double-prefix issues.
-build-java:
+build-java: JAVA_WRAPPER_CHECK
 	$(call banner,Build: Java via Gradle (clean + jar))
-	@set -eu; \
-	( cd "$(JAVA_SRC)" && \
-	  $(GRADLE) --no-daemon clean jar && \
-	  LATEST="$$(find "$(JAVA_LIBS_REL)" -maxdepth 1 -type f -name '$(JAR_ARTIFACT)-*.jar' -printf '%T@ %p\n' | sort -nr | head -1 | cut -d' ' -f2-)" && \
-	  [ -n "$$LATEST" ] || { echo "$(STYLE_ERR)✗ No JAR produced under $(JAVA_SRC)/$(JAVA_LIBS_REL)$(STYLE_RESET)"; exit 1; } && \
-	  printf "$(STYLE_OK)✓ Built %s$(STYLE_RESET)\n" "$$LATEST" )
+	@"$(GRADLE)" --no-daemon --console=plain -p "$(JAVA_SRC)" clean jar
+	@LATEST="$$(ls -1t "$(JAVA_SRC)/$(JAVA_LIBS_REL)/$(JAR_ARTIFACT)-"*.jar 2>/dev/null | head -1)"; \
+	[ -n "$$LATEST" ] || { echo "$(STYLE_ERR)✗ No JAR produced$(STYLE_RESET)"; exit 1; }; \
+	printf "$(STYLE_OK)✓ Built %s$(STYLE_RESET)\n" "$$LATEST"
 
 # ==============================================================================
 # Tests
@@ -179,10 +190,9 @@ test: rust-test py-test
 rust-test:
 	$(CARGO) test -- --quiet
 
-# Explicit path to bindings/python/tests
+# Explicit path to bindings/python/tests (pytest discovers from pyproject too)
 py-test: build-python
 	$(UV_ENV) $(UV) run pytest
-
 
 # ==============================================================================
 # Lint (autofix where possible) + docs must be warning-free
@@ -214,7 +224,7 @@ clean:
 	rm -rf target/ || true
 	$(CARGO) clean || true
 	$(call banner,Clean: Gradle build outputs)
-	@(cd "$(JAVA_SRC)" && $(GRADLE) --no-daemon clean) || true
+	@{ [ -x "$(GRADLEW_PATH)" ] && "$(GRADLE)" --no-daemon -p "$(JAVA_SRC)" clean || true; }
 	rm -rf "$(JAVA_SRC)/$(JAVA_BUILD_REL)" || true
 	$(call banner,Clean: Python build artifacts)
 	@find "$(PY_DIR)" -type d -name "__pycache__" -prune -exec rm -rf {} + || true
@@ -267,22 +277,17 @@ release-wheel:
 	@printf "$(STYLE_OK)✓ wheel(s) in $(DIST)$(STYLE_RESET)\n"
 	$(MAKE) -f $(CURDIR)/Makefile smoke-wheel
 
-
-release-jar:
+release-jar: JAVA_WRAPPER_CHECK
 	$(call banner,Release: Java (Gradle) + publish to dist)
-	@set -eu; \
-	( cd "$(JAVA_SRC)" && \
-	  $(GRADLE) --no-daemon clean smoke ); \
-	mkdir -p "$(DIST)"; \
-	LATEST="$(JAVA_SRC)/$(JAVA_LIBS_REL)/$(JAR_ARTIFACT)-$(VER).jar"; \
-	[ -f "$$LATEST" ]; \
-	cp -v "$$LATEST" "$(DIST)/"; \
-	BASENAME="$$(basename "$$LATEST")"; \
-	ln -sfn "$$BASENAME" "$(API_JAR)"; \
-	echo "• Published: $(DIST)/$$BASENAME"; \
+	@"$(GRADLE)" --no-daemon -p "$(JAVA_SRC)" clean smoke
+	mkdir -p "$(DIST)"
+	LATEST="$(JAVA_SRC)/$(JAVA_LIBS_REL)/$(JAR_ARTIFACT)-$(VER).jar"
+	[ -f "$$LATEST" ]
+	cp -v "$$LATEST" "$(DIST)/"
+	BASENAME="$$(basename "$$LATEST")"
+	ln -sfn "$$BASENAME" "$(API_JAR)"
+	echo "• Published: $(DIST)/$$BASENAME"
 	echo "• Symlink : $(API_JAR) -> $$BASENAME"
-
-
 
 release: release-rust release-wheel release-jar
 	@printf "\n$(STYLE_BOLD)==> Release complete$(STYLE_RESET)\n"
