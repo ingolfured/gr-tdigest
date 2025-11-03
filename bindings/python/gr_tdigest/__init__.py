@@ -3,7 +3,7 @@ from __future__ import annotations
 from enum import Enum
 from importlib.metadata import PackageNotFoundError, version
 from pathlib import Path
-from typing import TYPE_CHECKING, Any, Callable, Dict, List, Literal, Optional, Tuple, cast
+from typing import TYPE_CHECKING, Any, Callable, Dict, Literal, Optional, Tuple, cast
 from numbers import Real
 from math import isinf, isnan
 
@@ -171,7 +171,7 @@ setattr(_NativeTDigest, "from_array", classmethod(_from_array_cls))
 _native_cdf_raw: Any = getattr(_NativeTDigest, "cdf", None)
 if _native_cdf_raw is None:  # pragma: no cover
     raise AttributeError("Native TDigest is missing 'cdf'")
-_native_cdf = cast(Callable[[Any, List[float]], List[float]], _native_cdf_raw)
+_native_cdf = cast(Callable[..., Any], _native_cdf_raw)
 
 
 def _cdf_patched(self: _NativeTDigest, xs: Any) -> Any:
@@ -184,7 +184,7 @@ def _cdf_patched(self: _NativeTDigest, xs: Any) -> Any:
     Semantics:
       - Empty digest → NaN per output (native).
       - Probe is NaN → NaN output.
-      - Probe is -inf → 0.0 ; +inf → 1.0  (allowed)
+      - Probe is -inf → 0.0 ; +inf → 1.0  — but not when digest is empty.
     """
     try:
         import numpy as np
@@ -194,9 +194,13 @@ def _cdf_patched(self: _NativeTDigest, xs: Any) -> Any:
         has_np = False
         np = None  # type: ignore[assignment]
 
+    # -------- classify input (keep scalar as scalar!) ----------
     kind: Literal["scalar", "list", "tuple", "numpy", "iterable"]
     shape: Tuple[int, ...] = ()
     wrap_info: Any = None
+
+    scalar_val: Optional[float] = None  # used only when kind == "scalar"
+    flat: list[float] | None = None  # used for non-scalar paths
 
     if has_np and isinstance(xs, np.ndarray):
         kind = "numpy"
@@ -206,7 +210,7 @@ def _cdf_patched(self: _NativeTDigest, xs: Any) -> Any:
         flat = arr.reshape(-1).astype("float64", copy=False).tolist()
     elif isinstance(xs, Real):
         kind = "scalar"
-        flat = [float(xs)]
+        scalar_val = float(xs)
     elif isinstance(xs, list):
         kind = "list"
         flat = [float(x) for x in xs]
@@ -221,28 +225,60 @@ def _cdf_patched(self: _NativeTDigest, xs: Any) -> Any:
         kind = "iterable"
         flat = [float(x) for x in it]
 
-    needs_fix = any(isnan(v) or isinf(v) for v in flat)
-    if needs_fix:
-        temp = [0.0 if (isnan(v) or isinf(v)) else v for v in flat]
-        out_list = _native_cdf(self, temp)
-        for i, v in enumerate(flat):
+    # -------- run native with correct input shape ----------------------
+    def _postfix_replace(out_list: list[float], probes: list[float]) -> list[float]:
+        # If the digest is empty, native returns all-NaN; keep that exactly.
+        if all(isnan(y) for y in out_list):
+            return out_list
+        for i, v in enumerate(probes):
             if isnan(v):
                 out_list[i] = float("nan")
             elif isinf(v):
                 out_list[i] = 0.0 if v < 0.0 else 1.0
-    else:
-        out_list = _native_cdf(self, flat)
+        return out_list
 
     if kind == "scalar":
-        return float(out_list[0])
+        assert scalar_val is not None  # narrows to float for mypy
+        v = scalar_val
+        if isnan(v) or isinf(v):
+            # Call native with a harmless scalar, then decide based on native result.
+            native_out = _native_cdf(self, 0.0)
+            y = float(native_out) if not isinstance(native_out, (list, tuple)) else float(native_out[0])
+
+            # If the digest is empty, native returns NaN — preserve that (spec: CDF(any) = NaN).
+            if isnan(y):
+                return y
+
+            # Otherwise (non-empty digest), apply probe semantics:
+            if isnan(v):
+                return float("nan")
+            # v is ±inf here
+            return 0.0 if v < 0.0 else 1.0
+
+        # normal scalar: pass a scalar, not a list
+        native_out = _native_cdf(self, v)
+        return float(native_out) if not isinstance(native_out, (list, tuple)) else float(native_out[0])
+
+    # non-scalar paths use a flat list
+    assert flat is not None
+    probes = flat
+    if any(isnan(v) or isinf(v) for v in probes):
+        temp = [0.0 if (isnan(v) or isinf(v)) else v for v in probes]
+        native_out = _native_cdf(self, temp)
+        out_list = [float(native_out)] if isinstance(native_out, (float, int)) else [float(y) for y in native_out]
+        out_list = _postfix_replace(out_list, probes)
+    else:
+        native_out = _native_cdf(self, probes)
+        out_list = [float(native_out)] if isinstance(native_out, (float, int)) else [float(y) for y in native_out]
+
+    # -------- rebuild container/shape ----------------------------------
     if kind == "tuple":
-        return tuple(float(x) for x in out_list)
+        return tuple(out_list)
     if kind in {"list", "iterable"}:
-        return [float(x) for x in out_list]
+        return out_list
     if kind == "numpy":
         assert has_np and np is not None
-        arr = cast("Any", np).asarray(out_list, dtype=wrap_info).reshape(shape)
-        return arr
+        return np.asarray(out_list, dtype=wrap_info).reshape(shape)
     return out_list
 
 
@@ -257,11 +293,11 @@ _native_quantile = cast(Callable[[Any, float], float], _native_quantile_raw)
 
 def _quantile_patched(self: _NativeTDigest, q: Any) -> Any:
     """
-    Semantics:
-      - q is NaN      → NaN
-      - q is ±inf     → NaN (allowed; no exception)
-      - q finite      → forwarded to native (native clamps to [0,1])
-      - empty digest  → native returns NaN
+    Semantics (strict):
+      - q is NaN or ±inf  → raise ValueError
+      - q ∉ [0, 1]        → raise ValueError (helpful hint)
+      - q ∈ [0, 1]        → forwarded to native (no extra clamp here)
+      - empty digest      → native returns NaN, we propagate it
     """
     try:
         import numpy as np
@@ -271,7 +307,7 @@ def _quantile_patched(self: _NativeTDigest, q: Any) -> Any:
         has_np = False
         np = None  # type: ignore[assignment]
 
-    def _flatten(arg: Any) -> Any:
+    def _flatten(arg: Any) -> tuple[str, tuple[int, ...], Any, list[float]]:
         if has_np and isinstance(arg, np.ndarray):
             arr = np.asarray(arg)
             return ("numpy", arr.shape, arr.dtype, arr.reshape(-1).astype("float64", copy=False).tolist())
@@ -289,14 +325,17 @@ def _quantile_patched(self: _NativeTDigest, q: Any) -> Any:
 
     kind, shape, wrap_info, flat = _flatten(q)
 
-    out_list: List[float] = []
+    # STRICT: validate all q before any native call
     for v in flat:
-        if isnan(v) or isinf(v):
-            out_list.append(float("nan"))
-        else:
-            out_list.append(_native_quantile(self, v))
+        if isnan(v) or isinf(v) or v < 0.0 or v > 1.0:
+            raise ValueError(
+                f"q must be within [0, 1]; got {v}. Hint: if you meant a percent, divide by 100 (e.g., 95 → 0.95)."
+            )
+
+    out_list = [_native_quantile(self, v) for v in flat]
 
     if kind == "scalar":
+        # out_list is a list of length 1 for the scalar case
         return float(out_list[0])
     if kind == "tuple":
         return tuple(float(x) for x in out_list)
@@ -304,7 +343,7 @@ def _quantile_patched(self: _NativeTDigest, q: Any) -> Any:
         return [float(x) for x in out_list]
     if kind == "numpy":
         assert has_np and np is not None
-        arr = cast("Any", np).asarray(out_list, dtype=wrap_info).reshape(shape)
+        arr = np.asarray(out_list, dtype=wrap_info).reshape(shape)
         return arr
     return out_list
 

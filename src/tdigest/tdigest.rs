@@ -65,8 +65,9 @@ impl<F: FloatLike> IntoVecF<F> for &[F] {
     }
 }
 
-#[inline]
-fn ensure_no_nan_values<F: FloatLike + FloatCore>(values: &[F]) -> TdResult<()> {
+fn ensure_no_non_finite_values<F: FloatLike + FloatCore>(values: &[F]) -> TdResult<()> {
+    // Keep this layer simple and trait-friendly: reject NaNs on F directly.
+    // (±inf handling is enforced by front-ends like CLI/Polars where desired.)
     if values.iter().any(|v| v.is_nan()) {
         return Err(TdError::NaNInput {
             context: "sample value",
@@ -282,7 +283,7 @@ impl<F: FloatLike + FloatCore> TDigest<F> {
 
     /// Build from **unsorted** values (convenience over [`TDigest::merge_unsorted`]).
     pub fn from_unsorted(values: &[F], max_size: usize) -> TdResult<TDigest<F>> {
-        ensure_no_nan_values(values)?;
+        ensure_no_non_finite_values(values)?;
         let base = Self::builder().max_size(max_size).build();
         base.merge_unsorted(values.to_vec())
     }
@@ -301,14 +302,14 @@ impl<F: FloatLike + FloatCore> TDigest<F> {
 
     /// Ingest **unsorted** values; behavior matches [`TDigest::merge_sorted`] after sorting.
     pub fn merge_unsorted(&self, mut unsorted_values: Vec<F>) -> TdResult<TDigest<F>> {
-        ensure_no_nan_values(&unsorted_values)?;
+        ensure_no_non_finite_values(&unsorted_values)?;
         unsorted_values.sort_by(|a, b| a.total_cmp(*b));
         self.merge_sorted(unsorted_values)
     }
 
     /// Ingest **sorted** values by interleaving with existing centroids and running the pipeline.
     pub fn merge_sorted(&self, sorted_values: Vec<F>) -> TdResult<TDigest<F>> {
-        ensure_no_nan_values(&sorted_values)?;
+        ensure_no_non_finite_values(&sorted_values)?;
         if sorted_values.is_empty() {
             return Ok(self.clone());
         }
@@ -490,7 +491,7 @@ impl<F: FloatLike + FloatCore> TDigest<F> {
     /// Convenience: build from an arbitrary numeric container already typed as `F`, using options.
     pub fn from_array_with<A: IntoVecF<F>>(arr: A, opts: DigestOptions<F>) -> TdResult<TDigest<F>> {
         let vals = arr.into_vec_f();
-        ensure_no_nan_values(&vals)?;
+        ensure_no_non_finite_values(&vals)?;
         let base = TDigest::<F>::builder()
             .max_size(opts.max_size)
             .scale(opts.scale)

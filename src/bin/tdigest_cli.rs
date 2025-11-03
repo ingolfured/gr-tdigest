@@ -37,6 +37,7 @@ impl From<ScaleOpt> for ScaleFamily {
 enum PrecisionOpt {
     F32,
     F64,
+    Auto,
 }
 
 /// Accept only: off | use | edges
@@ -58,12 +59,10 @@ struct Cli {
     #[arg(long, value_enum)]
     cmd: Cmd,
 
-    /// Quantile probability. Accepts:
-    ///   - finite p in \[0,1\]
-    ///   - special tokens: NaN, inf, +inf, -inf  (case-insensitive)
-    ///
+    /// Quantile probability.
     /// Required for --cmd quantile.
     #[arg(long)]
+    #[arg(long, allow_hyphen_values = true)]
     p: Option<String>,
 
     /// Output format (tests use csv)
@@ -90,7 +89,7 @@ struct Cli {
     #[arg(long = "pin-per-side")]
     pin_per_side: Option<usize>,
 
-    /// Precision hint f32|f64 (currently informational; digests built as f64)
+    /// Precision hint f32|f64|auto (currently informational; digests built as f64)
     #[arg(long, value_enum, default_value_t = PrecisionOpt::F64)]
     precision: PrecisionOpt,
 }
@@ -108,17 +107,16 @@ fn read_floats_from_stdin() -> Result<Vec<f64>, String> {
         }
         match tok.parse::<f64>() {
             Ok(v) => {
-                if v.is_nan() {
-                    // Standardized message from the core
-                    return Err("tdigest: NaN values are not allowed (got sample value). hint: clean your data or drop NaNs before building the digest".to_string());
+                if !v.is_finite() {
+                    return Err(
+                        "tdigest: non-finite values are not allowed in training data (NaN or ±inf)"
+                            .to_string(),
+                    );
                 }
-                if v.is_finite() {
-                    out.push(v);
-                }
-                // Ignore ±inf and non-finite values, preserving forgiving parsing.
+                out.push(v);
             }
             Err(_) => {
-                // Ignore junk tokens to match previous forgiving parsing.
+                // Ignore junk tokens to match forgiving parsing for non-numerics.
             }
         }
     }
@@ -152,7 +150,7 @@ fn main() -> Result<(), String> {
         return Err("no values provided (pass --stdin)".into());
     };
 
-    // Build digest (f64 storage; matches Python tests’ expectation)
+    // Build digest (f64 storage; precision flag is accepted but informational)
     let scale = ScaleFamily::from(cli.scale);
     let policy = policy_from_opts(cli.singleton_policy, cli.pin_per_side)?;
 
@@ -162,7 +160,6 @@ fn main() -> Result<(), String> {
         .singleton_policy(policy)
         .build();
 
-    // merge_unsorted returns a Result; unwrap once to a TDigest
     let digest: TDigest<f64> = base
         .merge_unsorted(values.clone())
         .map_err(|e| e.to_string())?;
@@ -184,28 +181,24 @@ fn main() -> Result<(), String> {
                 .ok_or_else(|| "--p is required for --cmd quantile".to_string())?;
             let p_norm = p_raw.trim().to_lowercase();
 
-            // Special tokens: echo the original token in column 1, output NaN in column 2.
+            // Reject non-finite tokens explicitly
             if p_norm == "nan" || p_norm == "inf" || p_norm == "+inf" || p_norm == "-inf" {
-                if want_csv {
-                    // Preserve original token casing as provided by the user.
-                    println!("{},NaN", p_raw);
-                } else {
-                    println!("NaN");
-                }
-                return Ok(());
+                return Err("p must be a finite number in [0,1]".to_string());
             }
 
             // Finite numeric p → must be in [0,1]
-            let p_val: f64 = p_raw.parse::<f64>().map_err(|_| {
-                format!("--p must be a float in [0,1] or one of NaN/inf/+inf/-inf (got {p_raw:?})")
-            })?;
+            let p_val: f64 = p_raw
+                .parse::<f64>()
+                .map_err(|_| format!("p must be a finite number in [0,1] (got {p_raw:?})"))?;
+            if !p_val.is_finite() {
+                return Err("p must be a finite number in [0,1]".into());
+            }
             if !(0.0..=1.0).contains(&p_val) {
                 return Err("--p must be in [0,1]".into());
             }
 
             let q = digest.quantile(p_val);
             if want_csv {
-                // For numeric p we print the parsed numeric value in column 1
                 println!("{},{}", p_val, q);
             } else {
                 println!("{q}");

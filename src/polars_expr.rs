@@ -288,7 +288,6 @@ where
     let vf: Vec<F> = match values.dtype() {
         DataType::Float64 => {
             let ca = values.f64()?;
-            // scan for non-finite
             if ca
                 .into_iter()
                 .any(|opt| opt.map(|v| !v.is_finite()).unwrap_or(false))
@@ -297,7 +296,6 @@ where
                     "tdigest: input contains non-finite values (NaN or ±inf)".into(),
                 ));
             }
-            // safe to reborrow after any() by re-getting the chunked array
             let ca = values.f64()?;
             ca.into_no_null_iter().map(F::from_f64).collect()
         }
@@ -317,7 +315,6 @@ where
                 .collect()
         }
         dt if dt.is_numeric() => {
-            // Cast to f64 for uniform checks
             let casted = values.cast(&DataType::Float64)?;
             let ca = casted.f64()?;
             if ca
@@ -422,10 +419,6 @@ where
 
 trait OutFloat: PolarsNumericType {
     fn from_f64(x: f64) -> <Self as PolarsNumericType>::Native;
-    fn series_from_options(
-        name: &str,
-        v: Vec<Option<<Self as PolarsNumericType>::Native>>,
-    ) -> Series;
     fn series_from_vec(name: &str, v: Vec<<Self as PolarsNumericType>::Native>) -> Series;
 }
 
@@ -433,9 +426,6 @@ impl OutFloat for Float32Type {
     #[inline]
     fn from_f64(x: f64) -> f32 {
         x as f32
-    }
-    fn series_from_options(name: &str, v: Vec<Option<f32>>) -> Series {
-        Float32Chunked::from_iter_options(name.into(), v.into_iter()).into_series()
     }
     fn series_from_vec(name: &str, v: Vec<f32>) -> Series {
         Float32Chunked::from_vec(name.into(), v).into_series()
@@ -446,9 +436,6 @@ impl OutFloat for Float64Type {
     #[inline]
     fn from_f64(x: f64) -> f64 {
         x
-    }
-    fn series_from_options(name: &str, v: Vec<Option<f64>>) -> Series {
-        Float64Chunked::from_iter_options(name.into(), v.into_iter()).into_series()
     }
     fn series_from_vec(name: &str, v: Vec<f64>) -> Series {
         Float64Chunked::from_vec(name.into(), v).into_series()
@@ -507,6 +494,7 @@ fn subseries_to_f64_vec(sub: &Series) -> PolarsResult<Vec<f64>> {
 }
 
 /// Scalar values column → output Series of the *Out* float family (f32/f64).
+/// Strict policy: any NULL in the probe column → ERROR.
 fn cdf_on_scalar_out<F, Out>(
     digests: &[TDigest<F>],
     values_s: &Series,
@@ -516,55 +504,57 @@ where
     F: Copy + 'static + FloatCore + FloatLike,
     Out: PolarsNumericType + OutFloat,
 {
-    let vals_f64: Vec<Option<f64>> = if values_s.dtype() == &DataType::Float64 {
-        values_s.f64()?.into_iter().collect()
+    // Strict null probe check
+    if values_s.null_count() > 0 {
+        polars_bail!(ComputeError: "tdigest.cdf: probe column contains nulls; nulls are not allowed");
+    }
+
+    // Convert to f64 vec (no nulls after the check above)
+    let vals_f64: Vec<f64> = if values_s.dtype() == &DataType::Float64 {
+        values_s.f64()?.into_no_null_iter().collect()
     } else if values_s.dtype() == &DataType::Float32 {
         values_s
             .f32()?
-            .into_iter()
-            .map(|o| o.map(|x| x as f64))
+            .into_no_null_iter()
+            .map(|x| x as f64)
             .collect()
     } else {
         values_s
             .cast(&DataType::Float64)?
             .f64()?
-            .into_iter()
+            .into_no_null_iter()
             .collect()
     };
 
-    let mut out: Vec<Option<<Out as PolarsNumericType>::Native>> =
-        Vec::with_capacity(values_s.len());
-
-    // helper: emit NaN for every present probe value
-    let emit_all_nan = |vs: &Vec<Option<f64>>| -> Vec<Option<<Out as PolarsNumericType>::Native>> {
-        vs.iter()
-            .map(|opt| opt.map(|_| Out::from_f64(f64::NAN)))
-            .collect()
-    };
+    // Empty digest semantics: NaN for all probes (finite & ±inf)
+    let mut out: Vec<<Out as PolarsNumericType>::Native> = Vec::with_capacity(values_s.len());
 
     if let Some(td0) = single_non_empty {
-        // empty digest → NaN for all probes
         if td0.count() == 0.0 || td0.centroids().is_empty() {
-            return Ok(Out::series_from_options("", emit_all_nan(&vals_f64)));
-        }
-        for vx in vals_f64 {
-            out.push(vx.map(|x| Out::from_f64(td0.cdf(&[x])[0])));
+            for _ in &vals_f64 {
+                out.push(Out::from_f64(f64::NAN));
+            }
+        } else {
+            for x in vals_f64 {
+                out.push(Out::from_f64(td0.cdf(&[x])[0]));
+            }
         }
     } else {
-        for (i, vx) in vals_f64.into_iter().enumerate() {
+        for (i, x) in vals_f64.into_iter().enumerate() {
             let td = digests.get(i).cloned().unwrap_or_default();
             if td.count() == 0.0 || td.centroids().is_empty() {
-                out.push(vx.map(|_| Out::from_f64(f64::NAN)));
+                out.push(Out::from_f64(f64::NAN));
             } else {
-                out.push(vx.map(|x| Out::from_f64(td.cdf(&[x])[0])));
+                out.push(Out::from_f64(td.cdf(&[x])[0]));
             }
         }
     }
 
-    Ok(Out::series_from_options("", out))
+    Ok(Out::series_from_vec("", out))
 }
 
 /// List values column → output Series of lists with *Out* item dtype (f32/f64).
+/// Strict policy: any NULL list cell or inner NULL → ERROR.
 fn cdf_on_list_out<F, Out>(
     digests: &[TDigest<F>],
     digest_len: usize,
@@ -575,14 +565,23 @@ where
     F: Copy + 'static + FloatCore + FloatLike,
     Out: PolarsNumericType + OutFloat,
 {
+    // If any list element is null → ERROR (strict probe policy)
+    if lc.null_count() > 0 {
+        polars_bail!(ComputeError: "tdigest.cdf: probe list contains null values; nulls are not allowed");
+    }
+
     // Fast-path: single digest row + single list row → flat vector output (not a list)
     if digest_len == 1 && lc.len() == 1 {
         let td = digests.get(0).cloned().unwrap_or_default();
         let sub = lc
             .get_as_series(0)
             .unwrap_or_else(|| Series::new("".into(), Vec::<f64>::new()));
-        let vals = subseries_to_f64_vec(&sub)?;
 
+        if sub.null_count() > 0 {
+            polars_bail!(ComputeError: "tdigest.cdf: probe list contains nulls; nulls are not allowed");
+        }
+
+        let vals = subseries_to_f64_vec(&sub)?;
         if td.count() == 0.0 || td.centroids().is_empty() {
             let out_native: Vec<<Out as PolarsNumericType>::Native> =
                 vals.iter().map(|_| Out::from_f64(f64::NAN)).collect();
@@ -604,8 +603,12 @@ where
         let sub = lc
             .get_as_series(i)
             .unwrap_or_else(|| Series::new("".into(), Vec::<f64>::new()));
-        let vals = subseries_to_f64_vec(&sub)?;
 
+        if sub.null_count() > 0 {
+            polars_bail!(ComputeError: "tdigest.cdf: probe list contains nulls; nulls are not allowed");
+        }
+
+        let vals = subseries_to_f64_vec(&sub)?;
         let out_native: Vec<<Out as PolarsNumericType>::Native> =
             if td.count() == 0.0 || td.centroids().is_empty() {
                 vals.iter().map(|_| Out::from_f64(f64::NAN)).collect()
@@ -620,6 +623,9 @@ where
 }
 
 fn quantile_impl(inputs: &[Series], q: f64) -> PolarsResult<Series> {
+    if !q.is_finite() {
+        polars_bail!(ComputeError: "q must be a finite number in [0, 1]");
+    }
     if !(0.0..=1.0).contains(&q) {
         polars_bail!(ComputeError: "q must be in [0, 1]. Example: quantile(q=0.95) for the 95th percentile");
     }

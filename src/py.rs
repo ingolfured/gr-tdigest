@@ -1,6 +1,6 @@
 use pyo3::exceptions::PyValueError;
 use pyo3::prelude::*;
-use pyo3::types::{PyBytes, PyModule};
+use pyo3::types::{PyBytes, PyFloat, PyModule};
 
 use bincode::config;
 use bincode::serde::{decode_from_slice, encode_to_vec};
@@ -204,6 +204,12 @@ impl PyTDigest {
         let np = py.import("numpy")?;
         let arr = np.call_method1("asarray", (values,))?;
         let values: Vec<f64> = arr.extract()?;
+        // Strict: reject any non-finite training values (matches integration tests)
+        if values.iter().any(|v| !v.is_finite()) {
+            return Err(PyValueError::new_err(
+                "tdigest: input contains non-finite values (NaN or ±inf)",
+            ));
+        }
 
         let base = TDigestBuilder::<f64>::new()
             .max_size(max_size)
@@ -212,7 +218,7 @@ impl PyTDigest {
             .build();
 
         let digest: TDigest<f64> = base
-            .merge_unsorted(values.clone())
+            .merge_unsorted(values)
             .map_err(|e| PyErr::new::<PyValueError, _>(e.to_string()))?;
 
         let inner = if f32_mode {
@@ -229,6 +235,11 @@ impl PyTDigest {
     }
 
     pub fn quantile(&self, q: f64) -> PyResult<f64> {
+        if !q.is_finite() {
+            return Err(pyo3::exceptions::PyValueError::new_err(
+                "q must be a finite number in [0, 1]",
+            ));
+        }
         if !(0.0..=1.0).contains(&q) {
             return Err(pyo3::exceptions::PyValueError::new_err(
                 "q must be in [0, 1]. Example: quantile(0.95) for the 95th percentile",
@@ -240,8 +251,29 @@ impl PyTDigest {
     pub fn cdf(&self, py: Python<'_>, x: PyObject) -> PyResult<PyObject> {
         let np = py.import("numpy")?;
         let arr = np.call_method1("asarray", (x,))?;
+
+        // --- Try scalar first (works for Python floats and 0-D numpy scalars) ---
+        if let Ok(xf) = arr.extract::<f64>() {
+            // Empty digest → CDF(any probe, including ±inf) = NaN
+            let p = if self.inner.count() == 0.0 || self.inner.centroids().is_empty() {
+                f64::NAN
+            } else {
+                self.inner.cdf(&[xf])[0]
+            };
+            // PyO3 0.25: Bound<PyFloat> -> PyObject (alias of Py<PyAny>)
+            let obj: PyObject = PyFloat::new(py, p).into_any().unbind();
+            return Ok(obj);
+        }
+
+        // --- Otherwise: treat as a 1-D array / sequence ---
         let values: Vec<f64> = arr.extract()?;
-        let ys: Vec<f64> = self.inner.cdf(&values);
+
+        let ys: Vec<f64> = if self.inner.count() == 0.0 || self.inner.centroids().is_empty() {
+            values.iter().map(|_| f64::NAN).collect()
+        } else {
+            self.inner.cdf(&values)
+        };
+
         let out = np.call_method1("asarray", (ys,))?;
         Ok(out.unbind())
     }

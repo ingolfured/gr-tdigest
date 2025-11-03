@@ -10,8 +10,8 @@ import java.util.Objects;
  *
  * Queries:
  *   - cdf(double[] x) -> double[]
- *   - quantile(double q) -> double                 // scalar JNI
- *   - quantile(double[] qs) -> double[]            // vector via scalar loop
+ *   - quantile(double q) -> double                 // strict: q ∈ [0,1]
+ *   - quantile(double[] qs) -> double[]            // strict: all q ∈ [0,1]
  *   - median() -> double
  *
  * Owns a native handle; frees it via Cleaner or explicit close().
@@ -39,7 +39,7 @@ public final class TDigest implements AutoCloseable {
   }
 
   public enum Precision {
-    F64, F32
+    F64, F32, AUTO
   }
 
   /* ======================= Backing native ======================= */
@@ -130,7 +130,7 @@ public final class TDigest implements AutoCloseable {
     private Scale scale = Scale.K2;
     private SingletonPolicy policy = SingletonPolicy.USE;
     private int edgesPerSide = 3;
-    private Precision precision = Precision.F64;
+    private Precision precision = Precision.F64; // keep default as-is to avoid surprises
 
     public Builder maxSize(int n) {
       if (n <= 0) throw new IllegalArgumentException("maxSize must be > 0");
@@ -158,7 +158,10 @@ public final class TDigest implements AutoCloseable {
 
     public TDigest build(double[] values) {
       Objects.requireNonNull(values, "values");
-      final boolean f32 = (precision == Precision.F32);
+      final boolean f32 =
+          (precision == Precision.F32) ? true :
+          (precision == Precision.AUTO) ? false /* auto: double[] → f64 */ :
+          false;
       final int edges = (policy == SingletonPolicy.USE_WITH_PROTECTED_EDGES) ? edgesPerSide : 0;
       long h = TDigestNative.fromArray(
           values, maxSize, scale.asWire(), policy.toNativeCode(), edges, f32);
@@ -167,7 +170,10 @@ public final class TDigest implements AutoCloseable {
 
     public TDigest build(float[] values) {
       Objects.requireNonNull(values, "values");
-      final boolean f32 = (precision == Precision.F32);
+      final boolean f32 =
+          (precision == Precision.F32) ? true :
+          (precision == Precision.AUTO) ? true /* auto: float[] → f32 */ :
+          false;
       final int edges = (policy == SingletonPolicy.USE_WITH_PROTECTED_EDGES) ? edgesPerSide : 0;
       long h = TDigestNative.fromArray(
           values, maxSize, scale.asWire(), policy.toNativeCode(), edges, f32);
@@ -226,14 +232,23 @@ public final class TDigest implements AutoCloseable {
   /**
    * CDF evaluated at array-like x (returns double[]).
    * Fast path: pass input array directly when all finite.
-   * For NaN/±inf probes:
+   * For NaN/±inf probes on a NON-EMPTY digest:
    *   - NaN   → NaN
    *   - -inf  → 0.0
    *   - +inf  → 1.0
+   * For an EMPTY digest: always returns NaN (including for ±inf).
    */
   public double[] cdf(double[] values) {
     ensureOpen();
     Objects.requireNonNull(values, "values");
+
+    // Detect empty digest via median(): native returns NaN when empty.
+    boolean isEmpty = Double.isNaN(this.median());
+    if (isEmpty) {
+      double[] out = new double[values.length];
+      Arrays.fill(out, Double.NaN);
+      return out;
+    }
 
     boolean allFinite = true;
     for (double v : values) {
@@ -243,7 +258,7 @@ public final class TDigest implements AutoCloseable {
       return TDigestNative.cdf(state.handle, values);
     }
 
-    // Clean non-finite to some finite placeholder for native, then post-fix outputs.
+    // Non-empty: map ±inf to 0/1, propagate NaN
     double[] temp = Arrays.copyOf(values, values.length);
     for (int i = 0; i < temp.length; i++) {
       if (!Double.isFinite(temp[i])) temp[i] = 0.0;
@@ -261,27 +276,34 @@ public final class TDigest implements AutoCloseable {
     return out;
   }
 
-  /** Vector quantile: implemented via scalar JNI. NaN/±inf → NaN. */
+  /** Vector quantile (strict): throws if any q is NaN/±inf or outside [0,1]. */
   public double[] quantile(double[] qs) {
     ensureOpen();
     Objects.requireNonNull(qs, "qs");
-    double[] out = new double[qs.length];
     for (int i = 0; i < qs.length; i++) {
       double q = qs[i];
-      if (Double.isNaN(q) || Double.isInfinite(q)) {
-        out[i] = Double.NaN;
-      } else {
-        out[i] = TDigestNative.quantile(state.handle, q);
+      if (!Double.isFinite(q) || q < 0.0 || q > 1.0) {
+        throw new IllegalArgumentException(
+            "q must be within [0,1]; got " + q + " at index " + i + ". " +
+            "Hint: if you meant a percent, divide by 100 (e.g., 95 -> 0.95)."
+        );
       }
+    }
+    double[] out = new double[qs.length];
+    for (int i = 0; i < qs.length; i++) {
+      out[i] = TDigestNative.quantile(state.handle, qs[i]);
     }
     return out;
   }
 
-  /** Quantile for q in [0,1].  NaN/±inf → NaN. */
+  /** Scalar quantile (strict): q must be finite and within [0,1]. */
   public double quantile(double q) {
     ensureOpen();
-    if (Double.isNaN(q) || Double.isInfinite(q)) {
-      return Double.NaN;
+    if (!Double.isFinite(q) || q < 0.0 || q > 1.0) {
+      throw new IllegalArgumentException(
+          "q must be within [0,1]; got " + q + ". " +
+          "Hint: if you meant a percent, divide by 100 (e.g., 95 -> 0.95)."
+      );
     }
     return TDigestNative.quantile(state.handle, q);
   }

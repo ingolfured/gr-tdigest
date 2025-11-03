@@ -53,17 +53,11 @@ use pyo3::prelude::*;
 use pyo3::types::PyModuleMethods;
 
 /// CPython module entry point: `PyInit_tdigest_rs`.
-///
-/// The Rust function name determines the init symbol name, so keeping it
-/// identical to the Python module name avoids surprises. We attach a
-/// `__version__` from Cargo metadata and delegate registrations to `py::register`.
-
 #[cfg(feature = "python")]
 #[pymodule]
 #[pyo3(name = "_gr_tdigest")]
 fn _gr_tdigest(_py: Python<'_>, m: &Bound<'_, PyModule>) -> PyResult<()> {
-    // Call your register — but ensure it *adds* stuff:
-    crate::py::register(m)?; // <-- make sure this exists and is not empty
+    crate::py::register(m)?;
     m.add("__version__", env!("CARGO_PKG_VERSION"))?;
     Ok(())
 }

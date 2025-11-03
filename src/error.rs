@@ -4,8 +4,11 @@ use core::fmt;
 /// Library-wide error for gr-tdigest.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum TdError {
-    /// User tried to insert NaN during digest construction.
+    /// User tried to insert NaN/±inf during digest construction.
     /// `context` pinpoints where it came from (e.g., "sample value", "sample weight", "wire mean").
+    NonFiniteInput { context: &'static str },
+
+    /// Back-compat alias (some code paths might still raise this).
     NaNInput { context: &'static str },
 
     /// Internal invariant violation (should never happen in release builds).
@@ -15,6 +18,12 @@ pub enum TdError {
 impl fmt::Display for TdError {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
+            TdError::NonFiniteInput { context } => write!(
+                f,
+                "tdigest: non-finite values are not allowed ({}). \
+hint: clean your data or drop NaN/±inf before building the digest",
+                context
+            ),
             TdError::NaNInput { context } => write!(
                 f,
                 "tdigest: NaN values are not allowed (got {}). \

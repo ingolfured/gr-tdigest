@@ -1,5 +1,4 @@
 from __future__ import annotations
-import pytest
 
 import os
 import platform
@@ -17,21 +16,26 @@ X = 2.0
 EXPECT_Q50 = 1.5
 EXPECT_CDF_AT_2 = 0.625
 
-# -------- unified default config (no param matrix) ----------
+# -------- unified default config (single baseline; tests add variations) -----
 BASE_CFG = {
     "max_size": 10,
+    # precision defaults (each surface can be overridden in tests)
     "precision_cli": "f64",
     "precision_py": "f64",
     "precision_pl": "f64",
     "precision_java": "F64",
+    # scale defaults
     "scale_cli": "k2",
     "scale_py": "k2",
     "scale_pl": "k2",
     "scale_java": "K2",
-    "singleton_cli": "use",
+    # singleton defaults
+    "singleton_cli": "use",    # "off"|"use"|"edges"
     "singleton_py": "use",
     "singleton_pl": "use",
-    "singleton_java": "USE",
+    "singleton_java": "USE",   # OFF|USE|USE_WITH_PROTECTED_EDGES
+    # edge pins default (used whenever policy == "edges")
+    "pin_per_side": 2,
 }
 
 @dataclass(frozen=True)
@@ -55,7 +59,7 @@ def paths() -> Paths:
     profile = os.environ.get("PROFILE", "dev")
     cargo_dir = "release" if profile == "release" else "debug"
 
-    # CLI binary (adjust if your target name differs)
+    # CLI binary (adjust name if your target differs)
     cli_bin = root / "target" / cargo_dir / "tdigest"
 
     # Java bits
@@ -64,24 +68,28 @@ def paths() -> Paths:
     if not gradlew.exists() or not os.access(gradlew, os.X_OK):
         raise AssertionError(f"Gradle wrapper not found or not executable: {gradlew}")
 
-    # Build Java classes once for the whole session
-    try:
-        subprocess.run(
-            [str(gradlew), "--no-daemon", "--console=plain", "clean", "classes"],
-            cwd=java_src_dir,
-            check=True,
-            capture_output=True,
-            text=True,
-        )
-    except subprocess.CalledProcessError as e:
-        raise AssertionError(
-            "Gradle 'classes' build failed\n"
-            f"cmd: {' '.join(e.cmd)}\n"
-            f"stdout:\n{e.stdout}\n"
-            f"stderr:\n{e.stderr}\n"
-        ) from e
-
     classes_dir = java_src_dir / "build" / "classes" / "java" / "main"
+
+    # Build Java classes once per session, but **skip full clean** to keep it fast.
+    # Only compile if we don't already have compiled classes (or user forces it).
+    force_rebuild = os.environ.get("CI_CLEAN_JAVA", "").lower() in ("1", "true", "yes")
+    if force_rebuild or not classes_dir.exists():
+        try:
+            # No "clean" here; incremental compile is usually sub-second if unchanged.
+            subprocess.run(
+                [str(gradlew), "--no-daemon", "--console=plain", "classes"],
+                cwd=java_src_dir,
+                check=True,
+                capture_output=True,
+                text=True,
+            )
+        except subprocess.CalledProcessError as e:
+            raise AssertionError(
+                "Gradle 'classes' build failed\n"
+                f"cmd: {' '.join(e.cmd)}\n"
+                f"stdout:\n{e.stdout}\n"
+                f"stderr:\n{e.stderr}\n"
+            ) from e
 
     # Where the native libs land (wrapper task that embeds natives)
     sys_tag = f"{platform.system().lower()}-{platform.machine()}"
@@ -144,14 +152,26 @@ def run_cli(cli_bin: Path, args: list[str], data: Iterable[float]) -> str:
 
 def cli_build_args(cfg: dict) -> list[str]:
     """Common CLI args (no --stdin/--cmd/--p; add those in tests)."""
-    return [
+    args = [
         "--no-header",
         "--output", "csv",
         "--max-size", str(cfg["max_size"]),
         "--scale", cfg["scale_cli"],
-        "--singleton-policy", cfg["singleton_cli"],
-        "--precision", cfg["precision_cli"],
+        "--singleton-policy", cfg["singleton_cli"],  # "off"|"use"|"edges"
+        "--precision", cfg["precision_cli"],         # "f64"|"f32"|("auto"?)
     ]
+    if str(cfg.get("singleton_cli", "")).lower() == "edges" and cfg.get("pin_per_side") is not None:
+        args += ["--pin-per-side", str(int(cfg["pin_per_side"]))]
+    return args
+
+
+def cli_supports_precision_auto(cli_bin: Path) -> bool:
+    """Heuristic: check --help for 'auto' in the precision help."""
+    try:
+        out = subprocess.check_output([str(cli_bin), "--help"], text=True).lower()
+        return "precision" in out and "auto" in out
+    except Exception:
+        return False
 
 
 # --- expose helpers as fixtures returning callables ---
@@ -167,22 +187,24 @@ def assert_close_fn():
 def cli_build_args_fn():
     return cli_build_args
 
+@pytest.fixture(scope="session")
+def cli_supports_auto_fn(paths: Paths):
+    return lambda: cli_supports_precision_auto(paths.cli_bin)
+
 
 @pytest.fixture
 def add_pin_kw_fn(cfg):
     """
-    Returns a function that takes a kwargs dict (for Python TDigest.from_array / class)
-    and, iff the configured singleton policy is 'edges', adds the required
-    'pin_per_side' key (defaulting to cfg['pin_per_side'] or 3).
+    Returns a function that takes a kwargs dict (for Python/Polars TDigest)
+    and, iff the configured singleton policy is 'edges', adds 'pin_per_side'
+    (defaulting to cfg['pin_per_side']).
     """
-    # cfg is already provided by the existing conftest
     policy_py = str(cfg.get("singleton_py", "use")).lower()
-    default_pin = int(cfg.get("pin_per_side", 3))
+    default_pin = int(cfg.get("pin_per_side", 2))
 
     def _add(kwargs: dict | None = None) -> dict:
         out = dict(kwargs or {})
         if policy_py == "edges":
-            # only add if not already present
             out.setdefault("pin_per_side", default_pin)
         return out
 

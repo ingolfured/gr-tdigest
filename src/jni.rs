@@ -1,10 +1,4 @@
 // src/jni.rs
-//
-// JNI bindings for package `gr.tdigest` (class TDigestNative).
-// Delegates to the REAL Rust TDigest so results match CLI/Python/Polars.
-//
-// Feature-gated behind "java".
-
 #![cfg(feature = "java")]
 
 use jni::objects::{JByteArray, JClass, JDoubleArray, JFloatArray, JObject, JString, JValue};
@@ -21,7 +15,7 @@ use std::sync::OnceLock;
 use crate::tdigest::{singleton_policy::SingletonPolicy, ScaleFamily, TDigest};
 use crate::{TdError, TdResult};
 
-// Retain VM if needed later
+// Retain VM
 static JVM: OnceLock<JavaVM> = OnceLock::new();
 #[no_mangle]
 pub extern "system" fn JNI_OnLoad(vm: JavaVM, _reserved: *mut c_void) -> jint {
@@ -31,7 +25,7 @@ pub extern "system" fn JNI_OnLoad(vm: JavaVM, _reserved: *mut c_void) -> jint {
 #[no_mangle]
 pub extern "system" fn JNI_OnUnload(_vm: JavaVM, _reserved: *mut c_void) {}
 
-// -------------------- Helpers: map Java args -> Rust types --------------------
+// -------------------- Helpers --------------------
 
 fn map_scale(s: &str) -> ScaleFamily {
     match s.trim().to_lowercase().as_str() {
@@ -58,9 +52,8 @@ fn map_policy(code: jint, edges: jint) -> SingletonPolicy {
     }
 }
 
-// --------------- Native handle that owns the REAL Rust TDigest ---------------
+// --------------- Native handle ---------------
 
-// Pin JNI backing to f64 to avoid generic type issues and keep results stable.
 type TD64 = TDigest<f64>;
 
 struct NativeDigest {
@@ -69,21 +62,17 @@ struct NativeDigest {
 
 impl NativeDigest {
     fn from_values(
-        mut values: Vec<f64>,
+        values: Vec<f64>,
         max_size: usize,
         scale: ScaleFamily,
         policy: SingletonPolicy,
-        _f32mode: bool, // accepted for API coherence; f64 backing for now
+        _f32mode: bool,
     ) -> TdResult<Self> {
-        // Hard error on NaN to match cross-language behavior
-        if values.iter().any(|v| v.is_nan()) {
-            return Err(TdError::NaNInput {
-                context: "sample value",
+        if values.iter().any(|v| !v.is_finite()) {
+            return Err(TdError::NonFiniteInput {
+                context: "sample value (NaN or ±inf)",
             });
         }
-
-        // Drop non-finite values (preserve previous forgiving ±inf behavior)
-        values.retain(|v| v.is_finite());
 
         let d = TD64::builder()
             .max_size(max_size)
@@ -96,11 +85,21 @@ impl NativeDigest {
     }
 
     fn cdf(&self, xs: &[f64]) -> Vec<f64> {
+        // Empty digest → NaN for any probe (including ±inf)
+        if self.inner.count() == 0.0 || self.inner.centroids().is_empty() {
+            return vec![f64::NAN; xs.len()];
+        }
         self.inner.cdf(xs)
     }
 
-    fn quantile(&self, p: f64) -> f64 {
-        self.inner.quantile(p)
+    fn quantile(&self, p: f64) -> Result<f64, &'static str> {
+        if !p.is_finite() {
+            return Err("q must be a finite number in [0,1]");
+        }
+        if !(0.0..=1.0).contains(&p) {
+            return Err("q must be in [0,1]");
+        }
+        Ok(self.inner.quantile(p))
     }
 }
 
@@ -112,12 +111,12 @@ unsafe fn from_handle<'a, T>(h: jlong) -> &'a mut T {
     &mut *(h as *mut T)
 }
 
-// Throw helper (needs &mut JNIEnv)
+// Throw helper
 fn throw_illegal_arg(env: &mut JNIEnv, msg: String) {
     let _ = env.throw_new("java/lang/IllegalArgumentException", msg);
 }
 
-// ----------------------------- Bytes helpers (no-op serialization for tests) -----------------------------
+// ----------------------------- Bytes helpers -----------------------------
 
 fn f64s_to_le_bytes(xs: &[f64]) -> Vec<u8> {
     let mut out = Vec::with_capacity(xs.len() * size_of::<f64>());
@@ -139,10 +138,8 @@ fn le_bytes_to_f64s(b: &[u8]) -> Vec<f64> {
     out
 }
 
-// ----------------------------- JNI exports (TDigestNative) -----------------------------
+// ----------------------------- JNI exports -----------------------------
 
-/// Java: `static native long fromBytes(byte[] bytes);`
-/// Not used in coherence tests; treat as "build from raw doubles".
 #[no_mangle]
 pub extern "system" fn Java_gr_tdigest_TDigestNative_fromBytes(
     mut env: JNIEnv,
@@ -172,8 +169,6 @@ pub extern "system" fn Java_gr_tdigest_TDigestNative_fromBytes(
     }
 }
 
-/// Java: `static native byte[] toBytes(long handle);`
-/// Not used in coherence tests; dump inner sample positions (non-canonical).
 #[no_mangle]
 pub extern "system" fn Java_gr_tdigest_TDigestNative_toBytes(
     env: JNIEnv,
@@ -187,7 +182,6 @@ pub extern "system" fn Java_gr_tdigest_TDigestNative_toBytes(
             .into_raw();
     }
     let _d = unsafe { from_handle::<NativeDigest>(handle) };
-    // There isn't a public iterator over centroids here; just return empty for safety.
     let bytes = f64s_to_le_bytes(&[]);
     let arr = env
         .new_byte_array(bytes.len() as jint)
@@ -201,7 +195,7 @@ pub extern "system" fn Java_gr_tdigest_TDigestNative_toBytes(
     arr.into_raw()
 }
 
-/// Java: `static native long fromArray(Object values, int maxSize, String scale, int policyCode, int edges, boolean f32mode);`
+#[allow(unused_mut)] // some builds warn, depending on inlining/branching; we *do* pass &mut env on error paths
 #[no_mangle]
 pub extern "system" fn Java_gr_tdigest_TDigestNative_fromArray(
     mut env: JNIEnv,
@@ -215,7 +209,6 @@ pub extern "system" fn Java_gr_tdigest_TDigestNative_fromArray(
 ) -> jlong {
     let mut xs: Vec<f64> = Vec::new();
 
-    // Accept double[] ("[D") or float[] ("[F") or java.util.List<Double>
     if env.is_instance_of(&values_obj, "[D").unwrap_or(false) {
         let raw: jarray = env
             .new_local_ref(&values_obj)
@@ -302,7 +295,6 @@ pub extern "system" fn Java_gr_tdigest_TDigestNative_fromArray(
     }
 }
 
-/// Java: `static native void free(long handle);`
 #[no_mangle]
 pub extern "system" fn Java_gr_tdigest_TDigestNative_free(
     _env: JNIEnv,
@@ -314,7 +306,6 @@ pub extern "system" fn Java_gr_tdigest_TDigestNative_free(
     }
 }
 
-/// Java: `static native double[] cdf(long handle, double[] values);`
 #[no_mangle]
 pub extern "system" fn Java_gr_tdigest_TDigestNative_cdf(
     env: JNIEnv,
@@ -331,7 +322,6 @@ pub extern "system" fn Java_gr_tdigest_TDigestNative_cdf(
 
     let mut in_buf = vec![0f64; n];
     if let Err(e) = env.get_double_array_region(&values, 0, &mut in_buf) {
-        // If we can't read, return empty array; Java side can decide how to handle.
         eprintln!("jni: get_double_array_region failed: {e:?}");
         return out.into_raw();
     }
@@ -342,10 +332,10 @@ pub extern "system" fn Java_gr_tdigest_TDigestNative_cdf(
     out.into_raw()
 }
 
-/// Java: `static native double quantile(long handle, double q);`
+#[allow(unused_mut)] // mutable only needed on the exceptional path
 #[no_mangle]
 pub extern "system" fn Java_gr_tdigest_TDigestNative_quantile(
-    _env: JNIEnv,
+    env: JNIEnv,
     _cls: JClass,
     handle: jlong,
     q: jdouble,
@@ -354,10 +344,17 @@ pub extern "system" fn Java_gr_tdigest_TDigestNative_quantile(
         return f64::NAN;
     }
     let d = unsafe { from_handle::<NativeDigest>(handle) };
-    d.quantile(q as f64)
+    match d.quantile(q as f64) {
+        Ok(v) => v,
+        Err(msg) => {
+            // Create a local mutable only when needed to throw
+            let mut env2 = env;
+            throw_illegal_arg(&mut env2, msg.to_string());
+            f64::NAN
+        }
+    }
 }
 
-/// Java: `static native double median(long handle);`
 #[no_mangle]
 pub extern "system" fn Java_gr_tdigest_TDigestNative_median(
     _env: JNIEnv,
@@ -368,5 +365,5 @@ pub extern "system" fn Java_gr_tdigest_TDigestNative_median(
         return f64::NAN;
     }
     let d = unsafe { from_handle::<NativeDigest>(handle) };
-    d.quantile(0.5)
+    d.quantile(0.5).unwrap_or(f64::NAN)
 }
