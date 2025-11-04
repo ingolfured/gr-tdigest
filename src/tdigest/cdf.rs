@@ -1,74 +1,37 @@
 //! CDF (cumulative distribution function) evaluation for `TDigest`.
 //!
-//! This module provides a fast, allocation-lean evaluator for
-//! `TDigest::cdf`, including an optimized scalar kernel and an
-//! auto-switch to Rayon for large query batches.
+//! Allocation-lean kernel that operates directly on the centroid slice.
+//! We keep a single `prefix` vector (running weight sums) per call and
+//! avoid snapshotting means/weights into separate arrays.
 //!
 //! # Semantics
-//! This implementation aims for robust, predictable CDF behavior under streaming and compressed data:
-//! - **Outside support**: clamp to `{0, 1}` (strictly below `min` → `0`, strictly
-//!   above `max` → `1`).
+//! - **Outside support**: clamp to `{0, 1}` (strictly below `min` → `0`,
+//!   strictly above `max` → `1`).
 //! - **Left/right tails**: guarded linear ramps between `min↔mean[0]` and
-//!   `mean[last]↔max`, where the edge centroid contributes **half weight**.
+//!   `mean[last]↔max`, where the adjacent edge centroid contributes **half weight**.
 //! - **Exact centroid hit**: return midpoint mass, i.e. `(prefix + 0.5·w) / N`.
 //! - **Between centroids**: center-to-center interpolation that **excludes
-//!   singleton half-mass** from the interpolation span. Two adjacent singletons
-//!   form a discrete step.
+//!   atomic half-mass** from the interpolation span. Two atomic neighbors
+//!   produce a **step** (no smearing).
 //!
 //! # Guarantees
-//! - Output is in **[0, 1]** (except for explicit NaN propagation / empty digest, see below).
+//! - Output is in **[0, 1]** (except for explicit NaN propagation / empty digest).
 //! - Output is **non-decreasing** in the query value.
 //! - With sufficient capacity (no compression), the result matches the
 //!   **midpoint ECDF** over ties.
 //!
-//! # Edge cases (explicit semantics)
+//! # Edge cases
 //! - **Empty digest** → CDF returns a vector of **NaN** (one per input probe).
 //! - **NaN probe**    → that output element is **NaN**.
 //!
 //! # Performance
 //! - Per query is **O(log n)** due to a binary search on centroid means.
-//! - A single temporary “light” view (`means`, `weights`, `prefix`, `count`) is
-//!   built **once per call** (O(n)) and reused for every query value.
-//! - For large batches the evaluation switches to **Rayon** parallelism
-//!   (see [`PAR_MIN`]) to amortize setup costs across threads.
-//!
-//! # Numerical notes
-//! - Tail ramps use explicit formulas that place exactly **0.5/N** at `min` and
-//!   `1−0.5/N` at `max` when the extremal centroid has weight 1.
-//! - When two adjacent centroids are **both singletons**, the interpolation span
-//!   collapses to a **step** over the left singleton (discrete mass).
-//! - When centroids are pathologically close (`gap ≤ 0`), the kernel falls back
-//!   to midpoint mass to preserve monotonicity.
-//!
-//! # Example
-//! ```rust
-//! use gr_tdigest::tdigest::{TDigest, tdigest::TDigestBuilder, ScaleFamily};
-//!
-//! // Build a small digest and evaluate its CDF on a sorted grid
-//! let values: Vec<f64> = (-10..=10).map(|x| x as f64).collect();
-//! let td = TDigestBuilder::new()
-//!     .max_size(64)
-//!     .scale(ScaleFamily::Quad)
-//!     .build()
-//!     .merge_sorted(values.clone())
-//!     .expect("no NaNs");
-//!
-//! let cdf = td.cdf(&values);
-//! assert_eq!(cdf.len(), values.len());
-//! assert!(cdf.first().unwrap() >= &0.0 && cdf.last().unwrap() <= &1.0);
-//! for w in cdf.windows(2) {
-//!     assert!(w[1] + 1e-12 >= w[0]); // monotone
-//! }
-//! ```
-//!
-//! # Concurrency
-//! The API takes `&self` and performs a read-only snapshot into temporary
-//! vectors. It is safe to call concurrently from multiple threads.
-//!
-//! [`PAR_MIN`]: constant.PAR_MIN
+//! - A single `prefix` array is built **once per call** (O(n)) and reused.
+//! - For very large batches, we switch to Rayon parallelism.
 
+use crate::tdigest::centroids::Centroid;
 use crate::tdigest::precision::FloatLike;
-use crate::tdigest::TDigest;
+use crate::tdigest::tdigest::TDigest;
 use ordered_float::FloatCore;
 use rayon::iter::IndexedParallelIterator;
 use rayon::prelude::*;
@@ -77,8 +40,6 @@ use rayon::prelude::*;
 ///
 /// Keep this conservative: Rayon setup has a fixed cost. Below this size a
 /// scalar loop is typically faster; above it, parallelism wins.
-///
-/// Heuristic, tuned to avoid overhead dominating small batches.
 const PAR_MIN: usize = 32_768;
 
 impl<F: FloatLike + FloatCore> TDigest<F> {
@@ -86,59 +47,39 @@ impl<F: FloatLike + FloatCore> TDigest<F> {
     ///
     /// ## Semantics
     /// Mirrors the reference `MergingDigest.cdf()` with explicit handling of:
-    /// - **Outside support**: clamp to `{0, 1}` using `self.min()`/`self.max()`.
+    /// - **Outside support**: clamps using `self.min()`/`self.max()`.
     /// - **Tails**: linear ramps `min↔mean[0]` and `mean[last]↔max` with
     ///   **half-weight** at the adjacent edge centroid.
-    /// - **Exact centroid mean**: midpoint mass `(prefix + 0.5·w)/N`.
-    /// - **Between centroids**: center-to-center interpolation that **excludes**
-    ///   singleton half-mass from the interpolation span (atomic piles do not
-    ///   “smear”).
+    /// - **Exact mean hit**: midpoint mass `(prefix + 0.5·w)/N`.
+    /// - **Between means**: center-to-center interpolation that **excludes**
+    ///   `w/2` from any **atomic** neighbor (units and piles).
     ///
     /// ## Edge cases
     /// - Empty digest (`m = 0`) → a vector of `NaN` with `vals.len()` entries.
     /// - Empty `vals` → returns an empty vector.
     /// - **NaN probe** → that output element is `NaN`.
-    ///
-    /// ## Monotonicity & bounds
-    /// The non-NaN results are guaranteed to be within **[0, 1]** and
-    /// non-decreasing in each query value.
     pub fn cdf(&self, vals: &[f64]) -> Vec<f64> {
+        let cents = self.centroids();
+        let n = cents.len();
+
         // Degenerate cases
-        let n = self.centroids().len();
         if n == 0 {
-            // Empty digest → NaN per probe
             return vec![f64::NAN; vals.len()];
         }
         if vals.is_empty() {
             return Vec::new();
         }
 
-        // Build "light arrays" once per call (means, weights, prefix, N).
-        let CdfLight {
-            means,
-            weights,
-            prefix,
-            count_f64,
-        } = build_arrays_light(self);
+        let mut prefix: Vec<f64> = Vec::with_capacity(n);
+        let mut run: f64 = 0.0;
+        for c in cents {
+            prefix.push(run);
+            run += c.weight_f64();
+        }
+        let count_f64 = run;
 
         let min_v = self.min();
         let max_v = self.max();
-
-        // Tiny fast path: ≤ 8 queries → scalar loop. Common for point lookups.
-        if vals.len() <= 8 {
-            let mut out = Vec::with_capacity(vals.len());
-            for &v in vals {
-                // Propagate NaN probe
-                if v.is_nan() {
-                    out.push(f64::NAN);
-                    continue;
-                }
-                out.push(cdf_at_val_fast(
-                    v, &means, &weights, &prefix, count_f64, min_v, max_v,
-                ));
-            }
-            return out;
-        }
 
         // Main path: parallel for big batches, scalar otherwise.
         if vals.len() >= PAR_MIN {
@@ -146,9 +87,10 @@ impl<F: FloatLike + FloatCore> TDigest<F> {
                 .with_min_len(4096)
                 .map(|&v| {
                     if v.is_nan() {
-                        return f64::NAN;
+                        f64::NAN
+                    } else {
+                        cdf_at_val_fast(v, cents, &prefix, count_f64, min_v, max_v)
                     }
-                    cdf_at_val_fast(v, &means, &weights, &prefix, count_f64, min_v, max_v)
                 })
                 .collect()
         } else {
@@ -156,77 +98,36 @@ impl<F: FloatLike + FloatCore> TDigest<F> {
             for &v in vals {
                 if v.is_nan() {
                     out.push(f64::NAN);
-                    continue;
+                } else {
+                    out.push(cdf_at_val_fast(v, cents, &prefix, count_f64, min_v, max_v));
                 }
-                out.push(cdf_at_val_fast(
-                    v, &means, &weights, &prefix, count_f64, min_v, max_v,
-                ));
             }
             out
         }
     }
 }
 
-/* ------------------------- PRIVATE HELPERS ------------------------- */
+/* ------------------------- PRIVATE KERNEL ------------------------- */
 
-/// Lightweight snapshot of the digest state needed by the CDF kernel.
+/// Optimized evaluation kernel (reference semantics).
 ///
-/// This avoids repeated virtual dispatch or accessor overhead inside the hot
-/// loop and ensures tight, cache-friendly arrays.
-struct CdfLight {
-    means: Vec<f64>,
-    weights: Vec<f64>,
-    prefix: Vec<f64>,
-    count_f64: f64,
-}
-
-#[inline]
-fn build_arrays_light<F: FloatLike + FloatCore>(td: &TDigest<F>) -> CdfLight {
-    let n = td.centroids().len();
-
-    // f64-facing helpers on Centroid<F>
-    let mut means: Vec<f64> = Vec::with_capacity(n);
-    let mut weights: Vec<f64> = Vec::with_capacity(n);
-    for c in td.centroids() {
-        means.push(c.mean_f64());
-        weights.push(c.weight_f64());
-    }
-
-    // prefix[i] = sum(weights[0..i]) in f64
-    let mut prefix: Vec<f64> = Vec::with_capacity(n);
-    let mut run: f64 = 0.0;
-    for &w in &weights {
-        prefix.push(run);
-        run += w;
-    }
-
-    CdfLight {
-        means,
-        weights,
-        prefix,
-        count_f64: td.count(), // equals `run`, but use the accessor for clarity
-    }
-}
-
-/* --------- Optimized evaluation kernel (reference semantics) ---------
-Exact hit → (prefix[idx] + 0.5*w)/N.
-Left/right tails → guarded ramps using min/max and edge centroid half-weights.
-Between centroids → center-to-center interpolation with singleton exclusion. */
+/// Exact hit → (prefix[idx] + 0.5*w)/N.
+/// Left/right tails → guarded ramps using min/max and edge centroid half-weights.
+/// Between centroids → center-to-center interpolation with **atomic** exclusion.
 #[inline(always)]
-fn cdf_at_val_fast(
+fn cdf_at_val_fast<F: FloatLike + FloatCore>(
     val: f64,
-    means: &[f64],
-    weights: &[f64],
+    cents: &[Centroid<F>],
     prefix: &[f64],
     count_f64: f64,
     min_v: f64,
     max_v: f64,
 ) -> f64 {
-    let n = means.len();
+    let n = cents.len();
 
-    match means.binary_search_by(|m| m.partial_cmp(&val).unwrap()) {
+    match cents.binary_search_by(|c| c.mean_f64().partial_cmp(&val).unwrap()) {
         // Exact centroid hit: midpoint semantics (half-weight).
-        Ok(idx) => (prefix[idx] + 0.5 * weights[idx]) / count_f64,
+        Ok(idx) => (prefix[idx] + 0.5 * cents[idx].weight_f64()) / count_f64,
 
         Err(idx) => {
             // Left of first centroid mean
@@ -234,8 +135,8 @@ fn cdf_at_val_fast(
                 if val < min_v {
                     return 0.0;
                 }
-                let m0 = means[0];
-                let w0 = weights[0];
+                let m0 = cents[0].mean_f64();
+                let w0 = cents[0].weight_f64();
                 let gap = m0 - min_v;
                 if gap > 0.0 {
                     if val == min_v {
@@ -254,8 +155,8 @@ fn cdf_at_val_fast(
                 if val > max_v {
                     return 1.0;
                 }
-                let mn = means[n - 1];
-                let wn = weights[n - 1];
+                let mn = cents[n - 1].mean_f64();
+                let wn = cents[n - 1].weight_f64();
                 let gap = max_v - mn;
                 if gap > 0.0 {
                     if val == max_v {
@@ -272,10 +173,10 @@ fn cdf_at_val_fast(
             // Between centroids idx-1 and idx
             let li = idx - 1;
             let ri = idx;
-            let ml = means[li];
-            let mr = means[ri];
-            let wl = weights[li];
-            let wr = weights[ri];
+            let ml = cents[li].mean_f64();
+            let mr = cents[ri].mean_f64();
+            let wl = cents[li].weight_f64();
+            let wr = cents[ri].weight_f64();
 
             let gap = mr - ml;
             if gap <= 0.0 {
@@ -284,54 +185,50 @@ fn cdf_at_val_fast(
                 return (prefix[li] + dw) / count_f64;
             }
 
-            // Two singletons bracketing → no interpolation: step over left singleton.
-            if wl == 1.0 && wr == 1.0 {
-                return (prefix[li] + 1.0) / count_f64;
-            }
+            // Atomic-aware exclusion: subtract w/2 for ANY atomic neighbor.
+            let left_excl = if cents[li].is_atomic() { wl * 0.5 } else { 0.0 };
+            let right_excl = if cents[ri].is_atomic() { wr * 0.5 } else { 0.0 };
 
-            // Singleton exclusion (atomic piles do not contribute 0.5 to the span).
-            let left_excl = if wl == 1.0 { 0.5 } else { 0.0 };
-            let right_excl = if wr == 1.0 { 0.5 } else { 0.0 };
+            // Two atomics ⇒ dw_span == 0 ⇒ pure step.
+            let dw_center = 0.5 * (wl + wr);
+            let dw_span = dw_center - left_excl - right_excl;
 
-            let dw = 0.5 * (wl + wr);
-            let dw_no_singleton = dw - left_excl - right_excl;
-
-            // Base mass at left half-weight plus any left exclusion.
-            let base = prefix[li] + wl / 2.0 + left_excl;
+            // Base mass at left center plus any left exclusion.
+            let base = prefix[li] + wl * 0.5 + left_excl;
             let frac = (val - ml) / gap;
-            (base + dw_no_singleton * frac) / count_f64
+
+            (base + dw_span * frac) / count_f64
         }
     }
 }
 
 /* --------- Reference exact ECDF for tests (midpoint semantics over ties) --------- */
 
-#[allow(dead_code)]
-fn exact_ecdf_for_sorted(sorted: &[f64]) -> Vec<f64> {
-    let n = sorted.len();
-    if n == 0 {
-        return Vec::new();
-    }
-
-    let nf = n as f64;
-    let mut out = Vec::with_capacity(n);
-    let mut i = 0usize;
-    while i < n {
-        let mut j = i + 1;
-        while j < n && sorted[j] == sorted[i] {
-            j += 1;
-        }
-        let mid = (i + j) as f64 * 0.5;
-        let val = mid / nf;
-        out.extend(std::iter::repeat_n(val, j - i));
-        i = j;
-    }
-    out
-}
-
 #[cfg(test)]
 mod tests {
     use crate::tdigest::{tdigest::TDigestBuilder, ScaleFamily};
+
+    fn exact_ecdf_for_sorted(sorted: &[f64]) -> Vec<f64> {
+        let n = sorted.len();
+        if n == 0 {
+            return Vec::new();
+        }
+
+        let nf = n as f64;
+        let mut out = Vec::with_capacity(n);
+        let mut i = 0usize;
+        while i < n {
+            let mut j = i + 1;
+            while j < n && sorted[j] == sorted[i] {
+                j += 1;
+            }
+            let mid = (i + j) as f64 * 0.5;
+            let val = mid / nf;
+            out.extend(std::iter::repeat_n(val, j - i));
+            i = j;
+        }
+        out
+    }
 
     #[test]
     fn cdf_small_max10_medn_100_simple() {
@@ -392,7 +289,7 @@ mod tests {
             .collect();
         vals.sort_by(|a, b| a.partial_cmp(b).unwrap());
 
-        let exact = super::exact_ecdf_for_sorted(&vals);
+        let exact = exact_ecdf_for_sorted(&vals);
         let approx = TDigestBuilder::new()
             .max_size(N + 1)
             .build()
@@ -403,5 +300,66 @@ mod tests {
         for (i, (&e, &a)) in exact.iter().zip(&approx).enumerate() {
             assert_exact(&format!("CDF[{i}]"), e, a);
         }
+    }
+
+    #[test]
+    fn cdf_between_two_atomic_centroids_is_flat_step() {
+        use crate::tdigest::tdigest::TDigestBuilder;
+        use crate::tdigest::ScaleFamily;
+
+        // Build two atomic centroids:
+        // - left:  five identical zeros → atomic with w=5 at mean=0.0
+        // - right: seven identical tens → atomic with w=7 at mean=10.0
+        // N = 12 total
+        let mut values: Vec<f64> = Vec::new();
+        values.extend(std::iter::repeat(0.0).take(5));
+        values.extend(std::iter::repeat(10.0).take(7));
+        values.sort_by(|a, b| a.partial_cmp(b).unwrap());
+
+        let td = TDigestBuilder::new()
+            .max_size(64)
+            .scale(ScaleFamily::K2)
+            .build()
+            .merge_sorted(values)
+            .expect("no NaNs");
+
+        // Sanity: compressor should coalesce equal means into two centroids.
+        assert_eq!(td.centroids().len(), 2, "expected two centroids (0 and 10)");
+        assert!((td.centroids()[0].mean_f64() - 0.0).abs() < 1e-12);
+        assert!((td.centroids()[1].mean_f64() - 10.0).abs() < 1e-12);
+        assert!((td.centroids()[0].weight_f64() - 5.0).abs() < 1e-12);
+        assert!((td.centroids()[1].weight_f64() - 7.0).abs() < 1e-12);
+
+        // Probes strictly between the two means.
+        let probes = [1.0, 5.0, 9.0];
+
+        // Expected: with correct atomic handling, there is **no** interpolative mass
+        // contributed by either atomic neighbor (left_excl = wl/2, right_excl = wr/2),
+        // so the between-mean CDF is a **flat step** at prefix_left + wl (all of left mass).
+        // Here: prefix_left = 0, wl = 5 ⇒ expected = 5/12.
+        let expected_between = 5.0 / 12.0;
+
+        let out = td.cdf(&probes);
+        assert_eq!(out.len(), probes.len());
+
+        for (i, &p) in out.iter().enumerate() {
+            // This assertion FAILS with current code (which only excludes 0.5 for units),
+            // and will PASS after changing CDF span exclusion to subtract w/2 for any atomic.
+            assert!(
+                (p - expected_between).abs() <= 1e-9,
+                "cdf({}) = {}, expected flat step {} between atomic centroids",
+                probes[i],
+                p,
+                expected_between
+            );
+        }
+
+        // Optional extra sanity: exact hit at the left centroid mean should be midpoint mass (2.5/12),
+        // while any value just above the left mean should jump to 5/12 (the flat step).
+        let exact = td.cdf(&[0.0])[0];
+        assert!(
+            (exact - (2.5 / 12.0)).abs() <= 1e-12,
+            "exact hit at left mean should be midpoint mass"
+        );
     }
 }

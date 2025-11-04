@@ -23,7 +23,7 @@ pub struct TDigest<F: FloatLike + FloatCore> {
     max: OrderedFloat<F>,
     min: OrderedFloat<F>,
     scale: ScaleFamily,
-    policy: SingletonPolicy,
+    policy: SingletonPolicy, // interpreted as atomic/edge policy
 }
 
 pub type TDigestF64 = TDigest<f64>;
@@ -84,6 +84,7 @@ fn ensure_no_non_finite_values<F: FloatLike + FloatCore>(values: &[F]) -> TdResu
 pub struct DigestOptions<F: FloatLike> {
     pub max_size: usize,
     pub scale: ScaleFamily,
+    /// Atomic/edge policy (kept as `SingletonPolicy` for API stability).
     pub singleton_policy: SingletonPolicy,
     _marker: std::marker::PhantomData<F>,
 }
@@ -146,7 +147,7 @@ impl<F: FloatLike + FloatCore> TDigestBuilder<F> {
         self
     }
 
-    /// Set the singleton/edge policy influencing Stages **2** and **6**.
+    /// Set the atomic/edge policy influencing Stages **2** and **6**.
     #[inline]
     pub fn singleton_policy(mut self, p: SingletonPolicy) -> Self {
         self.policy = p;
@@ -294,7 +295,7 @@ impl<F: FloatLike + FloatCore> TDigest<F> {
         self.scale
     }
 
-    /// The configured singleton/edge policy.
+    /// The configured atomic/edge policy (`SingletonPolicy`).
     #[inline]
     pub fn singleton_policy(&self) -> SingletonPolicy {
         self.policy
@@ -500,7 +501,7 @@ impl<F: FloatLike + FloatCore> TDigest<F> {
         base.merge_unsorted(vals)
     }
 
-    /// Convenience: defaults (max_size=1000, scale=K2, singleton=Use).
+    /// Convenience: defaults (max_size=1000, scale=K2, policy=Use).
     pub fn from_array<A: IntoVecF<F>>(arr: A) -> TdResult<TDigest<F>> {
         Self::from_array_with(arr, DigestOptions::<F>::default())
     }

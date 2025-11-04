@@ -140,6 +140,45 @@ fn tdigest(inputs: &[Series], kwargs: TDigestKwargs) -> PolarsResult<Series> {
     tdigest_from_array_helper(inputs, &kwargs)
 }
 
+// --- plain helper (no macro attribute), can live anywhere NOT immediately after a #[polars_expr] ---
+fn upcast_tdigest<From, To>(src: &TDigest<From>) -> TDigest<To>
+where
+    From: Copy + 'static + FloatCore + FloatLike,
+    To: Copy + 'static + FloatCore + FloatLike,
+{
+    use crate::tdigest::centroids::Centroid;
+    use crate::tdigest::tdigest::DigestStats;
+
+    let cents_to: Vec<Centroid<To>> = src
+        .centroids()
+        .iter()
+        .map(|c| {
+            if c.is_atomic_unit() {
+                Centroid::<To>::new_atomic_unit_f64(c.mean_f64())
+            } else if c.is_atomic() {
+                Centroid::<To>::new_atomic_f64(c.mean_f64(), c.weight_f64())
+            } else {
+                Centroid::<To>::new_mixed_f64(c.mean_f64(), c.weight_f64())
+            }
+        })
+        .collect();
+
+    TDigest::<To>::builder()
+        .max_size(src.max_size())
+        .scale(src.scale())
+        .singleton_policy(src.singleton_policy())
+        .with_centroids_and_stats(
+            cents_to,
+            DigestStats {
+                data_sum: src.sum(),
+                total_weight: src.count(),
+                data_min: src.min(),
+                data_max: src.max(),
+            },
+        )
+        .build()
+}
+
 #[polars_expr(output_type = String)]
 fn tdigest_summary(inputs: &[Series]) -> PolarsResult<Series> {
     // Always summarize in f64 for stable formatting (upcast if needed)
@@ -354,7 +393,15 @@ where
         let cents: Vec<Centroid<F>> = td0
             .centroids()
             .iter()
-            .map(|c| Centroid::<F>::new(c.mean_f64(), c.weight_f64()))
+            .map(|c| {
+                if c.is_atomic_unit() {
+                    Centroid::<F>::new_atomic_unit_f64(c.mean_f64())
+                } else if c.is_atomic() {
+                    Centroid::<F>::new_atomic_f64(c.mean_f64(), c.weight_f64())
+                } else {
+                    Centroid::<F>::new_mixed_f64(c.mean_f64(), c.weight_f64())
+                }
+            })
             .collect();
 
         Ok(TDigest::<F>::builder()
@@ -382,37 +429,6 @@ where
     let s = &inputs[0];
     let parsed = TDigest::<F>::from_series(s).unwrap_or_default();
     TDigest::<F>::merge_digests(parsed)
-}
-
-/// Upcast TDigest<From> → TDigest<To> via centroids/stats.
-fn upcast_tdigest<From, To>(src: &TDigest<From>) -> TDigest<To>
-where
-    From: Copy + 'static + FloatCore + FloatLike,
-    To: Copy + 'static + FloatCore + FloatLike,
-{
-    use crate::tdigest::centroids::Centroid;
-    use crate::tdigest::tdigest::DigestStats;
-
-    let cents_to: Vec<Centroid<To>> = src
-        .centroids()
-        .iter()
-        .map(|c| Centroid::<To>::new(c.mean_f64(), c.weight_f64()))
-        .collect();
-
-    TDigest::<To>::builder()
-        .max_size(src.max_size())
-        .scale(src.scale())
-        .singleton_policy(src.singleton_policy())
-        .with_centroids_and_stats(
-            cents_to,
-            DigestStats {
-                data_sum: src.sum(),
-                total_weight: src.count(),
-                data_min: src.min(),
-                data_max: src.max(),
-            },
-        )
-        .build()
 }
 
 /* --------- tiny helper to build typed Series from native float families ---- */

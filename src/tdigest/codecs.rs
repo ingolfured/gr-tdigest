@@ -442,7 +442,17 @@ where
         let (Some(mv), Some(wv)) = (mm, ww) else {
             return Err(CodecError::NullCentroid { row, index: idx });
         };
-        out.push(Centroid::<F>::new(N::to_f64(mv), N::to_f64(wv)));
+        let mean_f64 = N::to_f64(mv);
+        let w_f64 = N::to_f64(wv);
+
+        // Heuristic reconstruction of kind:
+        // - weight == 1 → atomic unit (flat CDF step behavior preserved)
+        // - weight > 1  → mixed (cannot reliably infer “atomic pile” from wire)
+        if w_f64 == 1.0 {
+            out.push(Centroid::<F>::new_atomic_unit_f64(mean_f64));
+        } else {
+            out.push(Centroid::<F>::new_mixed_f64(mean_f64, w_f64));
+        }
     }
     Ok(out)
 }

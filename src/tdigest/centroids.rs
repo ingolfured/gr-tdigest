@@ -1,115 +1,182 @@
-// src/tdigest/centroids.rs
-use core::cmp::Ordering;
-use ordered_float::{FloatCore, OrderedFloat};
-use serde::{Deserialize, Serialize};
+//! Centroid representation for TDigest.
+//!
+//! This module defines a compact centroid type that stores:
+//! - `mean`   in generic `F` (`f32` or `f64`)
+//! - `weight` in generic `F`
+//! - a `Kind` flag: `Atomic` (all identical inputs at this mean) or `Mixed`.
+//!
+//! ## Semantics
+//! - **Atomic** means the centroid represents *identical* samples at exactly the same
+//!   value (the centroid mean). It can be:
+//!   - an **atomic unit** (weight == 1), or
+//!   - an **atomic pile** (weight > 1), both represented by `Kind::Atomic`.
+//! - **Mixed** means the centroid arises from merging across different means or
+//!   from synthetic aggregation (e.g., bucketization).
+//!
+//! The codebase should rely on `is_atomic()` + `weight_f64()` to drive behavior.
+//! For convenience and clarity, helpers `is_atomic_unit()` / `is_atomic_pile()`
+//! are provided. A small **compatibility shim** keeps
+//! `new_singleton_f64(..)` and `is_singleton()` working, mapping to the new model.
+
+use ordered_float::FloatCore;
 
 use crate::tdigest::precision::FloatLike;
 
-/// A centroid describes a weighted point in the digest.
-/// `mean` and `weight` are stored in `F`. `mean_ord` mirrors `mean` for total ordering.
-#[derive(Debug, Copy, Clone, PartialEq, Serialize, Deserialize)]
+/// Centroid kind flag.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum Kind {
+    /// All composing items are identical (same value as the centroid mean).
+    /// Weight may be 1 (atomic unit) or >1 (atomic pile).
+    Atomic,
+    /// Composed from different values or synthetic aggregation.
+    Mixed,
+}
+
+/// A centroid stores the mean and total weight of a cluster (in `F`), and a kind flag.
+#[derive(Debug, Clone, Copy, PartialEq)]
 pub struct Centroid<F: FloatLike + FloatCore> {
     mean: F,
     weight: F,
-    /// Whether this centroid represents a singleton/pile originating from raw values.
-    singleton: bool,
-    /// Cached ordered view for total ordering by mean; not serialized.
-    #[serde(skip_serializing, skip_deserializing)]
-    mean_ord: OrderedFloat<F>,
+    kind: Kind,
 }
 
-// `Ord` requires `Eq`. Our equality is structural, so this is OK.
-impl<F: FloatLike + FloatCore> Eq for Centroid<F> {}
-
 impl<F: FloatLike + FloatCore> Centroid<F> {
-    /// Construct a centroid (mixed by default).
+    /* ---------------------------------------------------------------------
+     * Constructors
+     * ------------------------------------------------------------------ */
+
+    /// Create an **atomic unit** centroid (exact single sample).
     #[inline]
-    pub fn new(mean_f64: f64, weight_f64: f64) -> Self {
-        let m = F::from_f64(mean_f64);
-        let w = F::from_f64(weight_f64);
+    pub fn new_atomic_unit_f64(mean: f64) -> Self {
         Self {
-            mean: m,
-            weight: w,
-            singleton: false,
-            mean_ord: OrderedFloat::from(m),
+            mean: F::from_f64(mean),
+            weight: F::from_f64(1.0),
+            kind: Kind::Atomic,
         }
     }
 
+    /// Create an **atomic** centroid with arbitrary positive weight (>0).
+    ///
+    /// Use this for both units (w=1) and piles (w>1) that remain atomic.
     #[inline]
-    pub fn new_singleton_f64(mean: f64, weight: f64) -> Self {
-        let m = F::from_f64(mean);
-        let w = F::from_f64(weight);
+    pub fn new_atomic_f64(mean: f64, weight: f64) -> Self {
+        debug_assert!(weight > 0.0, "atomic centroid requires weight > 0");
         Self {
-            mean: m,
-            weight: w,
-            singleton: true,
-            mean_ord: OrderedFloat::from(m),
+            mean: F::from_f64(mean),
+            weight: F::from_f64(weight),
+            kind: Kind::Atomic,
         }
     }
 
+    /// Create a **mixed** centroid with positive weight (>0).
     #[inline]
     pub fn new_mixed_f64(mean: f64, weight: f64) -> Self {
-        let m = F::from_f64(mean);
-        let w = F::from_f64(weight);
+        debug_assert!(weight > 0.0, "mixed centroid requires weight > 0");
         Self {
-            mean: m,
-            weight: w,
-            singleton: false,
-            mean_ord: OrderedFloat::from(m),
+            mean: F::from_f64(mean),
+            weight: F::from_f64(weight),
+            kind: Kind::Mixed,
         }
     }
 
+    /// Compatibility shim: historically called a "singleton".
+    ///
+    /// - If `weight <= 1`, we emit an **atomic unit** (weight coerced to 1).
+    /// - If `weight > 1`, we emit an **atomic (pile)**.
+    ///
+    /// Prefer `new_atomic_unit_f64` / `new_atomic_f64` in new code.
     #[inline]
-    pub fn mark_singleton(&mut self, yes: bool) {
-        self.singleton = yes;
+    pub fn new_singleton_f64(mean: f64, weight: f64) -> Self {
+        if weight <= 1.0 {
+            Self::new_atomic_unit_f64(mean)
+        } else {
+            Self::new_atomic_f64(mean, weight)
+        }
+    }
+
+    /* ---------------------------------------------------------------------
+     * Accessors
+     * ------------------------------------------------------------------ */
+
+    #[inline]
+    pub fn mean(&self) -> F {
+        self.mean
+    }
+
+    #[inline]
+    pub fn weight(&self) -> F {
+        self.weight
     }
 
     #[inline]
     pub fn mean_f64(&self) -> f64 {
         self.mean.to_f64()
     }
+
     #[inline]
     pub fn weight_f64(&self) -> f64 {
         self.weight.to_f64()
     }
+
+    #[inline]
+    pub fn kind(&self) -> Kind {
+        self.kind
+    }
+
+    /* ---------------------------------------------------------------------
+     * Kind helpers (preferred in new code)
+     * ------------------------------------------------------------------ */
+
+    /// Returns `true` for both atomic unit (w=1) and atomic pile (w>1).
+    #[inline]
+    pub fn is_atomic(&self) -> bool {
+        matches!(self.kind, Kind::Atomic)
+    }
+
+    /// `true` iff atomic and weight == 1.
+    #[inline]
+    pub fn is_atomic_unit(&self) -> bool {
+        self.is_atomic() && self.weight_f64() == 1.0
+    }
+
+    /// `true` iff atomic and weight > 1.
+    #[inline]
+    pub fn is_atomic_pile(&self) -> bool {
+        self.is_atomic() && self.weight_f64() > 1.0
+    }
+
+    /// `true` iff centroid is mixed.
+    #[inline]
+    pub fn is_mixed(&self) -> bool {
+        matches!(self.kind, Kind::Mixed)
+    }
+
+    /* ---------------------------------------------------------------------
+     * Back-compat helpers (avoid in new code)
+     * ------------------------------------------------------------------ */
+
+    /// Historical predicate retained for minimal churn.
+    ///
+    /// This maps to **atomic** in the new model.
     #[inline]
     pub fn is_singleton(&self) -> bool {
-        self.singleton
-    }
-
-    #[inline]
-    pub fn mean(&self) -> F {
-        self.mean
-    }
-    #[inline]
-    pub fn weight(&self) -> F {
-        self.weight
-    }
-
-    /// Used by normalization to coalesce same-mean piles.
-    #[inline]
-    pub fn add_weight_f64(&mut self, w: f64) {
-        let nw = self.weight.to_f64() + w;
-        self.weight = F::from_f64(nw);
+        self.is_atomic()
     }
 }
 
-impl<F: FloatLike + FloatCore> Ord for Centroid<F> {
-    #[inline]
-    fn cmp(&self, other: &Self) -> Ordering {
-        self.mean_ord.cmp(&other.mean_ord)
-    }
-}
+/* -------------------------------------------------------------------------
+ * Utilities
+ * ---------------------------------------------------------------------- */
 
-impl<F: FloatLike + FloatCore> PartialOrd for Centroid<F> {
-    #[inline]
-    fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
-        Some(self.cmp(other))
-    }
-}
-
-/// Utility: verify strictly increasing means (no ties) after compression.
+/// Verify strict increasing order by centroid mean.
 #[inline]
 pub fn is_sorted_strict_by_mean<F: FloatLike + FloatCore>(cs: &[Centroid<F>]) -> bool {
-    cs.windows(2).all(|w| w[0].mean_f64() < w[1].mean_f64())
+    // We require strictly increasing means to avoid ambiguous interpolation.
+    for w in cs.windows(2) {
+        match w[0].mean_f64().partial_cmp(&w[1].mean_f64()) {
+            Some(std::cmp::Ordering::Less) => {}
+            _ => return false,
+        }
+    }
+    true
 }

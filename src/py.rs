@@ -157,10 +157,18 @@ fn td_to_ser(td: &TDigest<f64>) -> SerDigest {
 fn ser_to_td(sd: SerDigest) -> Result<TDigest<f64>, PyErr> {
     let scale = string_to_scale(&sd.scale)?;
     let policy = ser_to_policy(&sd.policy)?;
+
+    // Serialized form has no kind flag; preserve atomic unit iff weight == 1.0
     let cents: Vec<Centroid<f64>> = sd
         .centroids
         .into_iter()
-        .map(|c| Centroid::<f64>::new(c.mean, c.weight))
+        .map(|c| {
+            if c.weight == 1.0 {
+                Centroid::<f64>::new_atomic_unit_f64(c.mean)
+            } else {
+                Centroid::<f64>::new_mixed_f64(c.mean, c.weight)
+            }
+        })
         .collect();
 
     Ok(TDigest::<f64>::builder()
@@ -306,14 +314,22 @@ pub(crate) fn register(m: &Bound<'_, PyModule>) -> PyResult<()> {
 }
 
 // ---------- helpers ----------
+
 fn quantize_digest_to_f32(td: &TDigest<f64>) -> TDigest<f64> {
+    // Preserve kind when possible during quantization.
     let cents_q: Vec<Centroid<f64>> = td
         .centroids()
         .iter()
         .map(|c| {
             let m = c.mean() as f32 as f64;
             let w = c.weight() as f32 as f64;
-            Centroid::<f64>::new(m, w)
+            if c.is_atomic_unit() {
+                Centroid::<f64>::new_atomic_unit_f64(m)
+            } else if c.is_atomic() {
+                Centroid::<f64>::new_atomic_f64(m, w)
+            } else {
+                Centroid::<f64>::new_mixed_f64(m, w)
+            }
         })
         .collect();
 

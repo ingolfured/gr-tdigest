@@ -1,8 +1,8 @@
 //! Compressor: runs the TDigest pipeline stages **1→6** on an input stream of centroids.
 //!
 //! ### Pipeline (referenced by numbers throughout)
-//! 1. **Normalize**: validate non-decreasing means; coalesce adjacent equal-means into *piles*;
-//!    compute (∑w, ∑w·mean, min, max).
+//! 1. **Normalize**: validate non-decreasing means; coalesce adjacent equal-means into a single
+//!    **atomic** centroid at that mean (weight adds up); compute (∑w, ∑w·mean, min, max).
 //! 2. **Slice**: partition `(left edges, interior, right edges)` and compute interior capacity
 //!    from the active [`SingletonPolicy`].
 //! 3. **Merge (k-limit)**: greedily merge interior under Δk ≤ 1 for the selected [`ScaleFamily`].
@@ -13,7 +13,7 @@
 //! #### Invariants
 //! - Output centroids are strictly increasing by mean.
 //! - Total weight is preserved (up to floating rounding).
-//! - Stage ownership is explicit: piles are created only in **1**; edge rules only in **2/6**.
+//! - Stage ownership is explicit: same-mean runs are coalesced only in **1**; edge rules only in **2/6**.
 
 use ordered_float::FloatCore;
 
@@ -63,8 +63,8 @@ impl WeightedStats {
 
 /// Build a centroid from an accumulated cluster (used in **3**).
 ///
-/// - Single-item clusters retain `singleton=true` only if the head was a data-true singleton.
-/// - Multi-item clusters are emitted as mixed.
+/// - Single-item clusters remain **atomic** only if the head was data-true atomic.
+/// - Multi-item clusters are emitted as **mixed**.
 #[inline]
 fn build_centroid<F: FloatLike + FloatCore>(
     mean_f64: f64,
@@ -210,7 +210,7 @@ impl Policy {
                     caps: EdgeCaps { core_cap },
                 }
             }
-            // Protect up to `k` singleton/pile centroids per edge; interior has independent cap.
+            // Protect up to `k` **atomic** centroids per edge; interior has independent cap.
             Policy::UseProt { max, k } => {
                 let n = out.len();
                 let l_prot = edge_run_len(out, k, true);
@@ -266,8 +266,8 @@ impl Policy {
 ///
 /// Guarantees:
 /// - Order and total weight are preserved.
-/// - Single-item clusters remain singletons only when the head was a data-true singleton.
-/// - Multi-item clusters are mixed.
+/// - Single-item clusters remain **atomic** only when the head was data-true atomic.
+/// - Multi-item clusters are **mixed**.
 fn klimit_merge<F: FloatLike + FloatCore>(
     items: &[Centroid<F>],
     d: f64,
@@ -419,9 +419,9 @@ struct EdgeSlices<'a, F: FloatLike + FloatCore> {
     caps: EdgeCaps,
 }
 
-/// Count up to `k` consecutive *singleton/pile* centroids on one edge.
+/// Count up to `k` consecutive **atomic** centroids on one edge.
 ///
-/// Stops at the first mixed centroid. When `from_left=false`, scans from the right.
+/// Stops at the first **mixed** centroid. When `from_left=false`, scans from the right.
 fn edge_run_len<F: FloatLike + FloatCore>(cs: &[Centroid<F>], k: usize, from_left: bool) -> usize {
     if k == 0 || cs.is_empty() {
         return 0;
@@ -501,7 +501,7 @@ mod tests {
     // ---------- streaming/coalescing pass ----------
 
     #[test]
-    fn coalesces_equal_means_into_singleton_pile() {
+    fn coalesces_equal_means_into_atomic_centroid() {
         let mut td = TDigest::<Fp>::builder()
             .max_size(100)
             .scale(ScaleFamily::K2)
@@ -516,10 +516,7 @@ mod tests {
 
         let out = super::compress_into(&mut td, 100, input);
         assert_eq!(out.len(), 2);
-        assert!(
-            out[0].is_singleton(),
-            "equal-mean run collapses to singleton pile"
-        );
+        assert!(out[0].is_singleton(), "equal-mean run collapses to atomic");
         assert!(approx(out[0].mean_f64(), 1.0, 1e-12));
         assert!(approx(out[0].weight_f64(), 3.5, 1e-12));
         assert!(out[1].is_singleton());
@@ -597,10 +594,7 @@ mod tests {
         }
 
         if out.len() == 2 {
-            assert!(
-                out[0].is_singleton(),
-                "single-item cluster remains singleton"
-            );
+            assert!(out[0].is_singleton(), "single-item cluster remains atomic");
             assert!(!out[1].is_singleton(), "multi-item cluster must be mixed");
         }
     }
@@ -608,7 +602,7 @@ mod tests {
     // ---------- edge run length ----------
 
     #[test]
-    fn edge_run_len_counts_singletons_only_on_requested_side() {
+    fn edge_run_len_counts_atomic_only_on_requested_side() {
         let cs = vec![
             c::<Fp>(0.0, 1.0, true),
             c::<Fp>(0.1, 1.0, true),
@@ -625,7 +619,7 @@ mod tests {
         assert_eq!(
             super::edge_run_len(&cs, 2, false),
             2,
-            "right run counts trailing singletons"
+            "right run counts trailing atomic"
         );
         assert_eq!(super::edge_run_len(&cs, 10, false), 2);
     }
@@ -698,8 +692,8 @@ mod tests {
     }
 
     #[test]
-    fn policy_use_with_protected_edges_keeps_k_singletons_edges_extra() {
-        // Protect k=2 singletons at each side; core cap = max_size independently of edges.
+    fn policy_use_with_protected_edges_keeps_k_atomic_edges_extra() {
+        // Protect k=2 atomic at each side; core cap = max_size independently of edges.
         let mut td = TDigest::<Fp>::builder()
             .max_size(2) // core capacity only
             .singleton_policy(SingletonPolicy::UseWithProtectedEdges(2))
