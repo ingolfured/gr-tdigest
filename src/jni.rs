@@ -1,5 +1,4 @@
-// src/jni.rs
-#![cfg(feature = "java")]
+// src/jni.rs #![cfg(feature = "java")]
 
 use jni::objects::{JByteArray, JClass, JDoubleArray, JFloatArray, JObject, JString, JValue};
 use jni::sys::{
@@ -12,6 +11,8 @@ use std::mem::size_of;
 use std::slice;
 use std::sync::OnceLock;
 
+use crate::tdigest::frontends::parse_scale_str;
+use crate::tdigest::frontends::policy_from_code_edges;
 use crate::tdigest::{singleton_policy::SingletonPolicy, ScaleFamily, TDigest};
 use crate::{TdError, TdResult};
 
@@ -28,28 +29,11 @@ pub extern "system" fn JNI_OnUnload(_vm: JavaVM, _reserved: *mut c_void) {}
 // -------------------- Helpers --------------------
 
 fn map_scale(s: &str) -> ScaleFamily {
-    match s.trim().to_lowercase().as_str() {
-        "quad" => ScaleFamily::Quad,
-        "k1" => ScaleFamily::K1,
-        "k2" => ScaleFamily::K2,
-        "k3" => ScaleFamily::K3,
-        other => {
-            eprintln!("jni: unknown scale '{}' -> default K2", other);
-            ScaleFamily::K2
-        }
-    }
+    parse_scale_str(Some(s)).unwrap_or(ScaleFamily::K2)
 }
 
-fn map_policy(code: jint, edges: jint) -> SingletonPolicy {
-    match code {
-        0 => SingletonPolicy::Off,
-        1 => SingletonPolicy::Use,
-        2 => SingletonPolicy::UseWithProtectedEdges(edges.max(0) as usize),
-        _ => {
-            eprintln!("jni: unknown policy code '{}' -> default USE", code);
-            SingletonPolicy::Use
-        }
-    }
+fn map_policy(code: jint, edges: jint) -> Result<SingletonPolicy, String> {
+    policy_from_code_edges(code as i32, edges as i32).map_err(|e| e.to_string())
 }
 
 // --------------- Native handle ---------------
@@ -85,11 +69,7 @@ impl NativeDigest {
     }
 
     fn cdf(&self, xs: &[f64]) -> Vec<f64> {
-        // Empty digest → NaN for any probe (including ±inf)
-        if self.inner.count() == 0.0 || self.inner.centroids().is_empty() {
-            return vec![f64::NAN; xs.len()];
-        }
-        self.inner.cdf(xs)
+        self.inner.cdf_or_nan(xs)
     }
 
     fn quantile(&self, p: f64) -> Result<f64, &'static str> {
@@ -117,6 +97,11 @@ fn throw_illegal_arg(env: &mut JNIEnv, msg: String) {
 }
 
 // ----------------------------- Bytes helpers -----------------------------
+//
+// NOTE: These are placeholders — JNI bytes round-trip is NOT implemented.
+// I suggest we either remove these JNI methods or implement a portable format
+// (CBOR/bincode) that matches Python’s SerDigest. Until then, we keep them as
+// explicit no-ops to avoid silent schema drift.
 
 fn f64s_to_le_bytes(xs: &[f64]) -> Vec<u8> {
     let mut out = Vec::with_capacity(xs.len() * size_of::<f64>());
@@ -175,14 +160,13 @@ pub extern "system" fn Java_gr_tdigest_TDigestNative_toBytes(
     _cls: JClass,
     handle: jlong,
 ) -> jbyteArray {
-    if handle == 0 {
-        return env
-            .new_byte_array(0)
-            .expect("new_byte_array(empty)")
-            .into_raw();
-    }
-    let _d = unsafe { from_handle::<NativeDigest>(handle) };
-    let bytes = f64s_to_le_bytes(&[]);
+    // Placeholder: emit empty bytes (no serialization defined yet).
+    let bytes: Vec<u8> = if handle == 0 {
+        Vec::new()
+    } else {
+        // Consider serializing SerDigest parity with Python later.
+        f64s_to_le_bytes(&[])
+    };
     let arr = env
         .new_byte_array(bytes.len() as jint)
         .expect("new_byte_array");
@@ -195,7 +179,7 @@ pub extern "system" fn Java_gr_tdigest_TDigestNative_toBytes(
     arr.into_raw()
 }
 
-#[allow(unused_mut)] // some builds warn, depending on inlining/branching; we *do* pass &mut env on error paths
+#[allow(unused_mut)] // some builds warn; we *do* pass &mut env on error paths
 #[no_mangle]
 pub extern "system" fn Java_gr_tdigest_TDigestNative_fromArray(
     mut env: JNIEnv,
@@ -283,7 +267,13 @@ pub extern "system" fn Java_gr_tdigest_TDigestNative_fromArray(
         .map(|s| s.to_string_lossy().into_owned())
         .unwrap_or_else(|| "k2".to_string());
     let sf = map_scale(&scale_str);
-    let policy = map_policy(policy_code, edges);
+    let policy = match map_policy(policy_code, edges) {
+        Ok(p) => p,
+        Err(msg) => {
+            throw_illegal_arg(&mut env, msg);
+            return 0;
+        }
+    };
     let f32 = f32mode != 0;
 
     match NativeDigest::from_values(xs, max_size.max(1) as usize, sf, policy, f32) {
@@ -347,7 +337,6 @@ pub extern "system" fn Java_gr_tdigest_TDigestNative_quantile(
     match d.quantile(q as f64) {
         Ok(v) => v,
         Err(msg) => {
-            // Create a local mutable only when needed to throw
             let mut env2 = env;
             throw_illegal_arg(&mut env2, msg.to_string());
             f64::NAN

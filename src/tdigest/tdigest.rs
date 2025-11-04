@@ -67,7 +67,7 @@ impl<F: FloatLike> IntoVecF<F> for &[F] {
 
 fn ensure_no_non_finite_values<F: FloatLike + FloatCore>(values: &[F]) -> TdResult<()> {
     // Keep this layer simple and trait-friendly: reject NaNs on F directly.
-    // (±inf handling is enforced by front-ends like CLI/Polars where desired.)
+    // (±inf handling is enforced by front-ends where desired.)
     if values.iter().any(|v| v.is_nan()) {
         return Err(TdError::NaNInput {
             context: "sample value",
@@ -248,10 +248,32 @@ impl<F: FloatLike + FloatCore> TDigest<F> {
     pub fn is_empty(&self) -> bool {
         self.centroids.is_empty()
     }
+
+    /// Empty-for-queries semantics used by front-ends:
+    /// treat either zero count OR no centroids as empty.
+    #[inline]
+    pub fn is_effectively_empty(&self) -> bool {
+        self.count == 0.0 || self.centroids.is_empty()
+    }
+
+    /// CDF wrapper that yields NaN for all probes when the digest is effectively empty.
+    /// This centralizes the “empty → NaN” rule.
+    #[inline]
+    pub fn cdf_or_nan(&self, xs: &[f64]) -> Vec<f64> {
+        if self.is_effectively_empty() {
+            let mut v = Vec::with_capacity(xs.len());
+            v.resize(xs.len(), f64::NAN);
+            v
+        } else {
+            self.cdf(xs)
+        }
+    }
+
     #[inline]
     pub fn centroids(&self) -> &[Centroid<F>] {
         &self.centroids
     }
+
     /// Entry point for fluent construction.
     #[inline]
     pub fn builder() -> TDigestBuilder<F> {

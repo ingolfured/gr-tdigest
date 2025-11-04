@@ -38,7 +38,7 @@ use polars::prelude::*;
 
 use crate::tdigest::centroids::Centroid;
 use crate::tdigest::precision::{FloatLike, Precision};
-use crate::tdigest::tdigest::{DigestStats, TDigest};
+use crate::tdigest::{DigestStats, TDigest};
 
 /* --------------------- field names (public) -------------------------------- */
 

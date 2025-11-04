@@ -18,6 +18,7 @@
 //! `#[global_allocator]` block below.
 
 mod polars_expr;
+
 pub mod tdigest;
 
 mod error;
@@ -37,11 +38,11 @@ pub mod quality {
 #[cfg(test)]
 pub use crate::quality::quality_base::{print_banner, print_report, print_section};
 
-// ---- jemalloc on linux (kept intentionally) ---------------------------------
-#[cfg(target_os = "linux")]
+// ---- jemalloc on linux-gnu (kept intentionally) -----------------------------
+#[cfg(all(target_os = "linux", target_env = "gnu"))]
 use jemallocator::Jemalloc;
 
-#[cfg(target_os = "linux")]
+#[cfg(all(target_os = "linux", target_env = "gnu"))]
 #[global_allocator]
 static ALLOC: Jemalloc = Jemalloc;
 
@@ -52,10 +53,10 @@ use pyo3::prelude::*;
 #[cfg(feature = "python")]
 use pyo3::types::PyModuleMethods;
 
-/// CPython module entry point: `PyInit_tdigest_rs`.
+/// CPython module entry point.
 #[cfg(feature = "python")]
 #[pymodule]
-#[pyo3(name = "_gr_tdigest")]
+#[pyo3(name = "_gr_tdigest")] // ← confirm desired import name
 fn _gr_tdigest(_py: Python<'_>, m: &Bound<'_, PyModule>) -> PyResult<()> {
     crate::py::register(m)?;
     m.add("__version__", env!("CARGO_PKG_VERSION"))?;

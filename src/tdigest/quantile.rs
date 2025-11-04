@@ -32,10 +32,9 @@
 //! See also: [`TDigest::cdf`] for CDF semantics, which pair with this
 //! quantile implementation via the same center/half-weight rules.
 
-use ordered_float::FloatCore;
-
 use crate::tdigest::precision::FloatLike;
-use crate::tdigest::tdigest::TDigest;
+use crate::tdigest::TDigest;
+use ordered_float::FloatCore;
 
 impl<F: FloatLike + FloatCore> TDigest<F> {
     /// Estimate the value at quantile `q` (inclusive) using half-weight
@@ -236,8 +235,8 @@ impl<F: FloatLike + FloatCore> TDigest<F> {
 
 #[cfg(test)]
 mod tests {
-    use crate::tdigest::tdigest::TDigestBuilder;
     use crate::tdigest::test_helpers::*;
+    use crate::tdigest::TDigestBuilder;
 
     #[test]
     fn centroid_addition_regression_pr_1() {

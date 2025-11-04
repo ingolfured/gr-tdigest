@@ -10,6 +10,7 @@ use pyo3_polars::derive::polars_expr;
 use serde::Deserialize;
 
 use crate::tdigest::codecs::WireOf;
+use crate::tdigest::frontends::{parse_precision_hint, parse_singleton_policy_str, PrecisionHint};
 use crate::tdigest::precision::FloatLike;
 use crate::tdigest::singleton_policy::SingletonPolicy;
 use crate::tdigest::{ScaleFamily, TDigest};
@@ -256,21 +257,19 @@ enum PrecisionKw {
 }
 
 fn parse_precision_kw(prec_raw: &str) -> PolarsResult<PrecisionKw> {
-    let p = prec_raw.trim().to_lowercase();
-    match p.as_str() {
-        "auto" => Ok(PrecisionKw::Auto),
-        "f32" => Ok(PrecisionKw::F32),
-        "f64" => Ok(PrecisionKw::F64),
-        _ => Err(PolarsError::ComputeError(
-            format!("unknown precision={prec_raw:?}; expected 'auto', 'f32' or 'f64'").into(),
-        )),
+    match parse_precision_hint(prec_raw) {
+        Ok(PrecisionHint::Auto) => Ok(PrecisionKw::Auto),
+        Ok(PrecisionHint::F32) => Ok(PrecisionKw::F32),
+        Ok(PrecisionHint::F64) => Ok(PrecisionKw::F64),
+        Err(e) => Err(PolarsError::ComputeError(e.to_string().into())),
     }
 }
 
 /* ==================== core helpers (all generic) ==================== */
 
 fn tdigest_from_array_helper(inputs: &[Series], kwargs: &TDigestKwargs) -> PolarsResult<Series> {
-    let policy = parse_singleton_policy(&kwargs.singleton_mode, kwargs.pin_per_side)?;
+    let policy = parse_singleton_policy_str(Some(&kwargs.singleton_mode), kwargs.pin_per_side)
+        .map_err(|e| PolarsError::ComputeError(e.to_string().into()))?;
 
     // Inference rule (matches planner): Float32 input → compact
     let input_is_f32 = matches!(inputs[0].dtype(), DataType::Float32);
@@ -542,27 +541,17 @@ where
             .collect()
     };
 
-    // Empty digest semantics: NaN for all probes (finite & ±inf)
+    // Compute using unified empty→NaN rule
     let mut out: Vec<<Out as PolarsNumericType>::Native> = Vec::with_capacity(values_s.len());
 
     if let Some(td0) = single_non_empty {
-        if td0.count() == 0.0 || td0.centroids().is_empty() {
-            for _ in &vals_f64 {
-                out.push(Out::from_f64(f64::NAN));
-            }
-        } else {
-            for x in vals_f64 {
-                out.push(Out::from_f64(td0.cdf(&[x])[0]));
-            }
+        for x in vals_f64 {
+            out.push(Out::from_f64(td0.cdf_or_nan(&[x])[0]));
         }
     } else {
         for (i, x) in vals_f64.into_iter().enumerate() {
             let td = digests.get(i).cloned().unwrap_or_default();
-            if td.count() == 0.0 || td.centroids().is_empty() {
-                out.push(Out::from_f64(f64::NAN));
-            } else {
-                out.push(Out::from_f64(td.cdf(&[x])[0]));
-            }
+            out.push(Out::from_f64(td.cdf_or_nan(&[x])[0]));
         }
     }
 
@@ -598,14 +587,11 @@ where
         }
 
         let vals = subseries_to_f64_vec(&sub)?;
-        if td.count() == 0.0 || td.centroids().is_empty() {
-            let out_native: Vec<<Out as PolarsNumericType>::Native> =
-                vals.iter().map(|_| Out::from_f64(f64::NAN)).collect();
-            return Ok(Out::series_from_vec("", out_native));
-        }
-
-        let out_native: Vec<<Out as PolarsNumericType>::Native> =
-            td.cdf(&vals).into_iter().map(Out::from_f64).collect();
+        let out_native: Vec<<Out as PolarsNumericType>::Native> = td
+            .cdf_or_nan(&vals)
+            .into_iter()
+            .map(Out::from_f64)
+            .collect();
         return Ok(Out::series_from_vec("", out_native));
     }
 
@@ -625,12 +611,11 @@ where
         }
 
         let vals = subseries_to_f64_vec(&sub)?;
-        let out_native: Vec<<Out as PolarsNumericType>::Native> =
-            if td.count() == 0.0 || td.centroids().is_empty() {
-                vals.iter().map(|_| Out::from_f64(f64::NAN)).collect()
-            } else {
-                td.cdf(&vals).into_iter().map(Out::from_f64).collect()
-            };
+        let out_native: Vec<<Out as PolarsNumericType>::Native> = td
+            .cdf_or_nan(&vals)
+            .into_iter()
+            .map(Out::from_f64)
+            .collect();
         rows.push(Out::series_from_vec("", out_native));
     }
 
@@ -650,7 +635,7 @@ fn quantile_impl(inputs: &[Series], q: f64) -> PolarsResult<Series> {
 
     if want_f32 {
         let td = parse_and_merge::<f32>(inputs);
-        let is_empty = td.count() == 0.0 || td.centroids().is_empty();
+        let is_empty = td.is_effectively_empty();
         if is_empty {
             return Ok(Series::new("".into(), [None::<f32>]));
         }
@@ -662,7 +647,7 @@ fn quantile_impl(inputs: &[Series], q: f64) -> PolarsResult<Series> {
         }
     } else {
         let td = parse_and_merge::<f64>(inputs);
-        let is_empty = td.count() == 0.0 || td.centroids().is_empty();
+        let is_empty = td.is_effectively_empty();
         if is_empty {
             return Ok(Series::new("".into(), [None::<f64>]));
         }
@@ -672,33 +657,5 @@ fn quantile_impl(inputs: &[Series], q: f64) -> PolarsResult<Series> {
         } else {
             Ok(Series::new("".into(), [Some(val)]))
         }
-    }
-}
-
-/* ==================== policy parsing ==================== */
-
-fn parse_singleton_policy(mode_raw: &str, k_opt: Option<usize>) -> PolarsResult<SingletonPolicy> {
-    let m = mode_raw
-        .trim()
-        .to_lowercase()
-        .replace('_', "")
-        .replace(' ', "");
-    match m.as_str() {
-        "off" => Ok(SingletonPolicy::Off),
-        "use" => Ok(SingletonPolicy::Use),
-        "edges" | "usewithprotectededges" => {
-            let k = k_opt.ok_or_else(|| {
-                PolarsError::ComputeError(
-                    "singleton_mode='edges' requires 'pin_per_side' (per side, >= 1)".into(),
-                )
-            })?;
-            if k < 1 {
-                polars_bail!(ComputeError: "pin_per_side must be >= 1 when singleton_mode='edges'");
-            }
-            Ok(SingletonPolicy::UseWithProtectedEdges(k))
-        }
-        _ => Err(PolarsError::ComputeError(
-            format!("unknown singleton_mode={mode_raw:?}; expected 'off'|'use'|'edges'").into(),
-        )),
     }
 }

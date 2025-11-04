@@ -31,7 +31,7 @@
 
 use crate::tdigest::centroids::Centroid;
 use crate::tdigest::precision::FloatLike;
-use crate::tdigest::tdigest::TDigest;
+use crate::tdigest::TDigest;
 use ordered_float::FloatCore;
 use rayon::iter::IndexedParallelIterator;
 use rayon::prelude::*;
@@ -304,7 +304,6 @@ mod tests {
 
     #[test]
     fn cdf_between_two_atomic_centroids_is_flat_step() {
-        use crate::tdigest::tdigest::TDigestBuilder;
         use crate::tdigest::ScaleFamily;
 
         // Build two atomic centroids:

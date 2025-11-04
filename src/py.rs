@@ -1,54 +1,24 @@
 use pyo3::exceptions::PyValueError;
 use pyo3::prelude::*;
-use pyo3::types::{PyBytes, PyFloat, PyModule};
+use pyo3::types::PyBytes;
+use pyo3::types::PyFloat;
 
 use bincode::config;
 use bincode::serde::{decode_from_slice, encode_to_vec};
 use serde::{Deserialize, Serialize};
 
 use crate::tdigest::centroids::Centroid;
+use crate::tdigest::frontends::{parse_scale_str, parse_singleton_policy_str, scale_to_str};
 use crate::tdigest::singleton_policy::SingletonPolicy;
 use crate::tdigest::{ScaleFamily, TDigest, TDigestBuilder};
 
-// ---------- strict arg parsers ----------
+// ---------- strict arg parsers via shared helpers ----------
 fn parse_scale(s: Option<&str>) -> Result<ScaleFamily, PyErr> {
-    match s.map(|t| t.to_ascii_lowercase()) {
-        None => Ok(ScaleFamily::K2),
-        Some(ref v) if v == "quad" => Ok(ScaleFamily::Quad),
-        Some(ref v) if v == "k1" => Ok(ScaleFamily::K1),
-        Some(ref v) if v == "k2" => Ok(ScaleFamily::K2),
-        Some(ref v) if v == "k3" => Ok(ScaleFamily::K3),
-        Some(v) => Err(pyo3::exceptions::PyValueError::new_err(format!(
-            "invalid scale: {v} (expected 'quad', 'k1', 'k2', or 'k3')"
-        ))),
-    }
+    parse_scale_str(s).map_err(|e| PyValueError::new_err(e.to_string()))
 }
 
-// -- replace the whole parse_policy with this --
 fn parse_policy(kind: Option<&str>, pin_per_side: Option<usize>) -> Result<SingletonPolicy, PyErr> {
-    match kind.map(|k| k.to_ascii_lowercase().replace('_', "").replace(' ', "")) {
-        None => Ok(SingletonPolicy::Use),
-        Some(ref v) if v == "off" => Ok(SingletonPolicy::Off),
-        Some(ref v) if v == "use" => Ok(SingletonPolicy::Use),
-        // ONLY accept "edges" (singular "edge" no longer allowed). Keep the legacy
-        // internal alias "usewithprotectededges" to round-trip serialized digests.
-        Some(ref v) if v == "edges" || v == "usewithprotectededges" => {
-            let k = pin_per_side.ok_or_else(|| {
-                PyValueError::new_err(
-                    "singleton_policy='edges' requires 'pin_per_side' (per-side) >= 1",
-                )
-            })?;
-            if k < 1 {
-                return Err(PyValueError::new_err(
-                    "pin_per_side must be >= 1 when singleton_policy='edges'",
-                ));
-            }
-            Ok(SingletonPolicy::UseWithProtectedEdges(k))
-        }
-        Some(v) => Err(PyValueError::new_err(format!(
-            "invalid singleton_policy: {v} (expected 'off', 'use', or 'edges')"
-        ))),
-    }
+    parse_singleton_policy_str(kind, pin_per_side).map_err(|e| PyValueError::new_err(e.to_string()))
 }
 
 #[pyclass(name = "TDigest", subclass)]
@@ -82,13 +52,7 @@ struct SerDigest {
 }
 
 fn scale_to_string(s: ScaleFamily) -> String {
-    match s {
-        ScaleFamily::Quad => "quad",
-        ScaleFamily::K1 => "k1",
-        ScaleFamily::K2 => "k2",
-        ScaleFamily::K3 => "k3",
-    }
-    .to_string()
+    scale_to_str(s).to_string()
 }
 
 fn string_to_scale(s: &str) -> Result<ScaleFamily, PyErr> {
@@ -112,7 +76,7 @@ fn policy_to_ser(p: &SingletonPolicy) -> SerPolicy {
     }
 }
 
-// -- in ser_to_policy, update the error strings so they only say 'edges' --
+// -- in ser_to_policy, error strings only say 'edges' --
 fn ser_to_policy(p: &SerPolicy) -> Result<SingletonPolicy, PyErr> {
     Ok(match p.kind {
         0 => SingletonPolicy::Off,
@@ -262,25 +226,14 @@ impl PyTDigest {
 
         // --- Try scalar first (works for Python floats and 0-D numpy scalars) ---
         if let Ok(xf) = arr.extract::<f64>() {
-            // Empty digest → CDF(any probe, including ±inf) = NaN
-            let p = if self.inner.count() == 0.0 || self.inner.centroids().is_empty() {
-                f64::NAN
-            } else {
-                self.inner.cdf(&[xf])[0]
-            };
-            // PyO3 0.25: Bound<PyFloat> -> PyObject (alias of Py<PyAny>)
+            let p = self.inner.cdf_or_nan(&[xf])[0];
             let obj: PyObject = PyFloat::new(py, p).into_any().unbind();
             return Ok(obj);
         }
 
         // --- Otherwise: treat as a 1-D array / sequence ---
         let values: Vec<f64> = arr.extract()?;
-
-        let ys: Vec<f64> = if self.inner.count() == 0.0 || self.inner.centroids().is_empty() {
-            values.iter().map(|_| f64::NAN).collect()
-        } else {
-            self.inner.cdf(&values)
-        };
+        let ys: Vec<f64> = self.inner.cdf_or_nan(&values);
 
         let out = np.call_method1("asarray", (ys,))?;
         Ok(out.unbind())
