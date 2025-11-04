@@ -1,14 +1,17 @@
 # 🌀 tdigest-rs
-T-Digest provides a mergeable summary of a distribution, enabling **approximate quantiles and CDF** with strong tail accuracy. **tdigest-rs** delivers a production-ready Rust core with Python and Polars APIs plus Java (JNI), emphasizing compact memory, stable merge behavior, and easy adoption in data pipelines.
+T-Digest provides a mergeable summary of a distribution, enabling **approximate quantiles and CDF** with strong tail accuracy. **tdigest-rs** delivers a production-ready Rust core with Python and Polars APIs plus Java (JNI), combining high performance, stable accuracy, and minimal memory overhead.
 
 
 
 ## ✨ Features
-- 🚀 Mergeable quantiles for large / streaming data
 - 🦀 Single Rust core shared across Rust, Polars, Python, and Java
-- 🧊 Precision modes: canonical `f64` or compact `f32`
+- 🚀 Mergeable digests for large / streaming data — fast union with consistent accuracy and guaranteed unique centroids
+- 🔁 Cross-surface coherence: Consistent, verified behavior across all bindings
+- ⚡ Quantile & CDF — optimized evaluation loops with half-weight bracketing and singleton-aware interpolation
+- 🧊 TDigest Precision: Centroids as `f64` or `f32` — **auto-selected by input dtype**
 - 🎚️ Scale families: `Quad`, `K1`, `K2`, `K3`
-- 🔩 Singleton handling policy: **edge–precision (keep _N_)**, **respect singletons**, or **uniform merge**
+- 🔩 Singleton handling policy: **edge-precision (keep _N_)**, **respect singletons**, or **uniform merge**
+
 
 ## 📜 License
 Apache-2.0
@@ -23,17 +26,13 @@ make release  # release CLI + wheel + JARs
 
 ## 🧪 Usage
 
-**Rust CLI**
-```bash
-echo '0 1 2 3' | target/release/tdigest --stdin --cmd quantile --p 0.5 --no-header
-```
 
 **Python**
 ```python
 import gr_tdigest as td
 d = td.TDigest.from_array([0,1,2,3], max_size=100, scale="k2")
 print("p50 =", d.quantile(0.5))
-print("cdf  =", d.cdf([0.0, 1.5, 3.0]).tolist())
+print("cdf  =", d.cdf([0.0, 1.5, 3.0]))
 ```
 
 **Polars**
@@ -50,6 +49,11 @@ out = (
       .collect()
 )
 print(out)
+```
+
+**Rust CLI**
+```bash
+echo '0 1 2 3' | target/release/tdigest --stdin --cmd quantile --p 0.5 --no-header
 ```
 
 **Java (AutoCloseable)**
@@ -76,37 +80,27 @@ public class TestRun {
 }
 ```
 
-**Compile & run the Java example**
-```bash
-make release-jar
-
-# Assume:
-#   API JAR:      target/tdigest-rs-api.jar
-#   Native libs:  target/release (contains libtdigest_rs.*)
-# Adjust paths if your build uses different names/locations.
-
-mkdir -p target/java-hello
-javac -cp target/tdigest-rs-api.jar -d target/java-hello TestRun.java
-java --enable-native-access=ALL-UNNAMED      -Djava.library.path=target/release      -cp target/tdigest-rs-api.jar:target/java-hello      TestRun
-```
 
 ## 🗂️ Project layout
 ```
-.
-├── src/                # Rust core + CLI + bindings (Polars exprs, Python, JNI)
-│   ├── bin/tdigest_cli.rs
-│   ├── polars_expr.rs
-│   ├── py.rs
-│   ├── jni.rs
-│   └── tdigest/…       # algorithm & internals
-├── bindings/
-│   ├── python/         # wheel via maturin
-│   └── java/src/…      # Java API + JNI shims
-├── gr_tdigest/         # Python package (abi3 extension & __init__)
-├── tests/              # Python tests
-├── benches/            # Rust benches
-├── dist/               # Built wheels/JARs
-└── Makefile
+├── src/                                  # Rust core, CLI entrypoint, algorithm modules
+│   ├── bin/                              # Command-line app (tdigest CLI)
+│   ├── tdigest/                          # Core T-Digest implementation (centroids, merge, scale)
+│   └── quality/                          # Accuracy helpers & scoring utilities
+├── bindings/                             # Language bindings
+│   ├── python/                           # Python wheel (maturin)
+│   │   ├── gr_tdigest/                   # Python package (abi3 native extension)
+│   │   └── tests/                        # Python API + Polars tests
+│   └── java/                             # Java API (Gradle project) + JNI shims
+│       └── src/
+│           └── gr/
+│               └── tdigest/              # Public Java API + native bridge
+├── integration/
+│   └── api_coherence/                    # Cross-API contract tests (CLI ↔ Python ↔ Polars ↔ Java)
+├── benches/                              # Rust benchmarks (quantile/CDF/codecs)
+├── crates/
+│   └── testdata/                         # Small datasets & fixtures for tests/benches
+└── dist/                                 # Build artifacts (wheels/JARs) after release
 ```
 
 ## 🧩 Versions & compatibility
@@ -115,5 +109,5 @@ java --enable-native-access=ALL-UNNAMED      -Djava.library.path=target/release 
 - **Polars**: current 1.x (Python); Rust crate versions tracked in `Cargo.toml`
 
 ## 🔮 Future improvements
-- Guard against centroid weight overflow
-- Ensure no leaks in CDF and quantile paths
+- Allow scaling of weights and guard against centroid weight overflow
+- Auto suggest a scaling function based on distribution
