@@ -373,11 +373,17 @@ where
         }
     };
 
-    // 3) No actual training values → error (covers empty lists etc.)
+    // 3) Empty training input → return an empty digest carrying the chosen params.
+    //    Downstream:
+    //      - quantile(...) → None (via quantile_impl)
+    //      - cdf(...)      → NaN  (via cdf_or_nan)
     if vf.is_empty() {
-        return Err(PolarsError::ComputeError(
-            "tdigest: input column contains no training values".into(),
-        ));
+        let td = TDigest::<F>::builder()
+            .max_size(max_size)
+            .scale(scale)
+            .singleton_policy(policy)
+            .build(); // empty digest
+        return Ok(td);
     }
 
     let td0: TDigest<F> = TDigest::<F>::from_unsorted(&vf, max_size)

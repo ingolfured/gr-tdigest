@@ -4,6 +4,7 @@ use std::io::{self, Read};
 
 use clap::{ArgAction, Parser, ValueEnum};
 
+use gr_tdigest::tdigest::frontends::{parse_scale_str, parse_singleton_policy_str};
 use gr_tdigest::tdigest::singleton_policy::SingletonPolicy;
 use gr_tdigest::tdigest::{ScaleFamily, TDigest, TDigestBuilder};
 
@@ -22,14 +23,15 @@ enum ScaleOpt {
     K3,
 }
 
-impl From<ScaleOpt> for ScaleFamily {
-    fn from(s: ScaleOpt) -> Self {
-        match s {
-            ScaleOpt::Quad => ScaleFamily::Quad,
-            ScaleOpt::K1 => ScaleFamily::K1,
-            ScaleOpt::K2 => ScaleFamily::K2,
-            ScaleOpt::K3 => ScaleFamily::K3,
+impl ToString for ScaleOpt {
+    fn to_string(&self) -> String {
+        match self {
+            ScaleOpt::Quad => "quad",
+            ScaleOpt::K1 => "k1",
+            ScaleOpt::K2 => "k2",
+            ScaleOpt::K3 => "k3",
         }
+        .to_string()
     }
 }
 
@@ -127,17 +129,12 @@ fn policy_from_opts(
     opt: Option<PolicyOpt>,
     edges: Option<usize>,
 ) -> Result<SingletonPolicy, String> {
-    match opt.unwrap_or(PolicyOpt::Use) {
-        PolicyOpt::Off => Ok(SingletonPolicy::Off),
-        PolicyOpt::Use => Ok(SingletonPolicy::Use),
-        PolicyOpt::Edges => {
-            let k = edges.ok_or_else(|| "edges policy requires --pin-per-side".to_string())?;
-            if k < 1 {
-                return Err("--pin-per-side must be >= 1".into());
-            }
-            Ok(SingletonPolicy::UseWithProtectedEdges(k))
-        }
-    }
+    let as_str = match opt.unwrap_or(PolicyOpt::Use) {
+        PolicyOpt::Off => "off",
+        PolicyOpt::Use => "use",
+        PolicyOpt::Edges => "edges",
+    };
+    parse_singleton_policy_str(Some(as_str), edges).map_err(|e| e.to_string())
 }
 
 fn main() -> Result<(), String> {
@@ -151,7 +148,7 @@ fn main() -> Result<(), String> {
     };
 
     // Build digest (f64 storage; precision flag is accepted but informational)
-    let scale = ScaleFamily::from(cli.scale);
+    let scale = parse_scale_str(Some(&cli.scale.to_string())).unwrap_or(ScaleFamily::K2);
     let policy = policy_from_opts(cli.singleton_policy, cli.pin_per_side)?;
 
     let base: TDigest<f64> = TDigestBuilder::<f64>::new()
@@ -206,8 +203,7 @@ fn main() -> Result<(), String> {
         }
         Cmd::Cdf => {
             for x in values {
-                let ps = digest.cdf(&[x]);
-                let p = ps[0];
+                let p = digest.cdf_or_nan(&[x])[0];
                 if want_csv {
                     println!("{},{}", x, p);
                 } else {

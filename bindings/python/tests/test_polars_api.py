@@ -176,3 +176,57 @@ def test_tdigest_raises_on_nan_in_values():
         df = pl.DataFrame({"x": [0.0, 1.0, float("nan"), 2.0]}, schema={"x": dtype})
         with pytest.raises(pl.exceptions.ComputeError, match=r"(?i)nan"):
             df.select(tdigest("x"))
+
+
+def test_polars_tdigest_allows_empty_training_in_groupby():
+    import math
+    import polars as pl
+    import pytest
+    from gr_tdigest import tdigest, quantile, cdf
+
+    df = pl.DataFrame({"id": [0, 0, 1, 1, 1], "data": [-3.0, -2.0, 15.0, 25.0, 35.0]})
+
+    agg = df.group_by("id").agg(tdigest(pl.col("data").filter(pl.col("data") > 0), max_size=64).alias("td")).sort("id")
+
+    # height-matched probe (length == number of groups == 2)
+    probe = (pl.col("id") * 0 + 25.0).cast(pl.Float64)
+
+    out = agg.with_columns(
+        q=quantile("td", 0.5).over("id"),  # ⬅ per-row, no cross-row merge
+        c=cdf("td", probe).over("id"),  # ⬅ per-row
+    ).sort("id")
+
+    r0, r1 = out.row(0), out.row(1)
+
+    # id=0 → empty digest: quantile→None, cdf→NaN
+    assert r0[0] == 0 and r0[1] is not None
+    assert r0[2] is None
+    assert math.isnan(float(r0[3]))
+
+    # id=1 → digest on [15,25,35]: median=25, CDF(25)≈0.5
+    assert r1[0] == 1 and r1[1] is not None
+    assert r1[2] == pytest.approx(25.0, abs=1e-9)
+    assert r1[3] == pytest.approx(0.5, abs=1e-9)
+
+
+def test_original_groupby_conditional_digest():
+    import polars as pl
+    from gr_tdigest import tdigest
+
+    df = pl.DataFrame(
+        {
+            "id": [1, 1, 1, 2, 2, 2],
+            "data": [-1, -2, -3, 15, 25, 35],
+        }
+    )
+
+    def _digest(col: str) -> pl.Expr:
+        data_col = pl.col(col).filter(pl.col(col) > 0)
+        return pl.when(data_col.len() == 0).then(pl.lit(None)).otherwise(tdigest(data_col, max_size=256))
+
+    out = df.group_by("id").agg(_digest("data").alias("data_digest")).sort("id")
+
+    row1, row2 = out.row(0), out.row(1)
+    # id=1 had no positives → None; id=2 had positives → digest present
+    assert row1[0] == 1 and row1[1] is None
+    assert row2[0] == 2 and row2[1] is not None
