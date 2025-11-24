@@ -19,6 +19,7 @@ lib = Path(__file__).parent
 # --- native import (fail loudly so tests don't silently pass with None) ---
 try:
     from ._gr_tdigest import TDigest as _NativeTDigest, __version__ as __native_version__
+    from ._gr_tdigest import wire_precision_py as _wire_precision_native
 
     __version__ = __native_version__
 except ModuleNotFoundError as exc:  # pragma: no cover
@@ -124,6 +125,69 @@ def _validate_pin_per_side(pin_per_side: Optional[int], max_size: int) -> Option
     return p
 
 
+def wire_precision(blob: bytes) -> Literal["f32", "f64"]:
+    """
+    Inspect a TDIG wire blob and return \"f32\" or \"f64\" depending on
+    the encoded backend precision. Raises ValueError on invalid blob.
+    """
+    if not isinstance(blob, (bytes, bytearray, memoryview)):
+        raise TypeError(f"wire_precision expects a bytes-like object; got {type(blob).__name__}")
+    return _wire_precision_native(bytes(blob))
+
+
+def infer_column_precision(
+    df: pl.DataFrame,
+    col: str,
+    *,
+    sample: int = 64,
+    strict: bool = True,
+) -> Literal["f32", "f64"]:
+    """
+    Infer TDIG precision for a binary column by sampling up to `sample`
+    non-null rows and inspecting their wire headers.
+
+    - If all sampled blobs agree on \"f32\" → return \"f32\".
+    - If all sampled blobs agree on \"f64\" → return \"f64\".
+    - If mixed and strict=True → raise ValueError.
+    - If mixed and strict=False → default to \"f64\".
+    - If no non-null blobs → default to \"f64\".
+    """
+    s = df[col]
+    if s.null_count() == len(s):
+        return "f64"
+
+    bin_s = s.cast(pl.Binary)
+
+    # Indices of non-null rows
+    idxs = [i for i, v in enumerate(bin_s) if v is not None]
+    if not idxs:
+        return "f64"
+
+    if len(idxs) > sample:
+        import random
+
+        idxs = random.sample(idxs, sample)
+
+    kinds: set[str] = set()
+    for i in idxs:
+        b = bin_s[i]
+        if b is None:
+            continue
+        kinds.add(wire_precision(b))
+
+    if not kinds:
+        return "f64"
+
+    if len(kinds) > 1:
+        msg = f"Mixed TDIG wire precisions in column {col!r}: {sorted(kinds)}"
+        if strict:
+            raise ValueError(msg)
+        # non-strict fallback: choose the \"heavier\" format
+        return "f64"
+
+    return cast(Literal["f32", "f64"], kinds.pop())
+
+
 # --- Python-side shim: TDigest.from_array() argument normalization ------------
 _native_from_array_raw: Any = getattr(_NativeTDigest, "from_array", None)
 if _native_from_array_raw is None:  # pragma: no cover
@@ -150,11 +214,16 @@ def _from_array_cls(
     eps = _validate_pin_per_side(pin_per_side, max_size) if m == "edges" else None
 
     policy_str = {"off": "off", "use": "use", "edges": "edges"}[m]
-    _ = kwargs.pop("precision", None)
+
+    # Map Python precision → native f32_mode flag.
+    prec_raw = kwargs.pop("precision", None)
+    prec_norm = _coerce_precision(prec_raw)  # "auto" | "f64" | "f32"
+    f32_mode = prec_norm == "f32"
 
     call_kwargs: Dict[str, Any] = {
         "max_size": int(max_size),
         "scale": s,
+        "f32_mode": f32_mode,
         "singleton_policy": policy_str,
     }
     if eps is not None:
@@ -457,6 +526,56 @@ def merge_tdigests(digest: "IntoExpr") -> pl.Expr:
     )
 
 
+def to_bytes(digest: "IntoExpr") -> pl.Expr:
+    """
+    Serialize a TDigest struct column to a single binary blob (scalar expr).
+
+    Typical use:
+        df = df.with_columns(td_col=td.tdigest("x", ...))
+        df = df.with_columns(blob=td.to_bytes("td_col"))
+    """
+    d_expr = _into_expr(digest)
+    return register_plugin_function(
+        plugin_path=str(lib),
+        function_name="to_bytes",
+        args=[d_expr],
+        kwargs=None,
+        returns_scalar=True,
+    )
+
+
+def from_bytes(blob: "IntoExpr", *, precision: str = "auto") -> pl.Expr:
+    """
+    Deserialize a TDigest from a binary blob produced by td.to_bytes().
+
+    precision:
+      - "auto": let the Rust plugin sniff the wire; schema defaults to compact f32
+        when no hint is provided.
+      - "f64": Polars schema uses Float64-backed struct
+      - "f32": Polars schema uses the compact Float32-backed struct
+    """
+    b_expr = _into_expr(blob)
+    prec_norm = _coerce_precision(precision)  # "auto" | "f64" | "f32"
+
+    if prec_norm == "auto":
+        # No hint: Rust side infers from wire; planner defaults to compact f32.
+        args = [b_expr]
+    else:
+        if prec_norm == "f32":
+            hint = pl.lit(0.0, dtype=pl.Float32)
+        else:  # "f64"
+            hint = pl.lit(0.0, dtype=pl.Float64)
+        args = [b_expr, hint]
+
+    return register_plugin_function(
+        plugin_path=str(lib),
+        function_name="from_bytes",
+        args=args,
+        kwargs=None,
+        returns_scalar=True,
+    )
+
+
 __all__ = [
     "TDigest",
     "__version__",
@@ -466,4 +585,8 @@ __all__ = [
     "cdf",
     "quantile",
     "merge_tdigests",
+    "to_bytes",
+    "from_bytes",
+    "wire_precision",
+    "infer_column_precision",
 ]

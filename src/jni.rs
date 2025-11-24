@@ -1,4 +1,5 @@
-// src/jni.rs #![cfg(feature = "java")]
+// src/jni.rs
+#![cfg(feature = "java")]
 
 use jni::objects::{JByteArray, JClass, JDoubleArray, JFloatArray, JObject, JString, JValue};
 use jni::sys::{
@@ -7,13 +8,14 @@ use jni::sys::{
 use jni::{JNIEnv, JavaVM};
 
 use std::ffi::c_void;
-use std::mem::size_of;
 use std::slice;
 use std::sync::OnceLock;
 
 use crate::tdigest::frontends::parse_scale_str;
 use crate::tdigest::frontends::policy_from_code_edges;
-use crate::tdigest::{singleton_policy::SingletonPolicy, ScaleFamily, TDigest};
+use crate::tdigest::singleton_policy::SingletonPolicy;
+use crate::tdigest::wire::{decode_digest, encode_digest, WireDecodedDigest};
+use crate::tdigest::{ScaleFamily, TDigest};
 use crate::{TdError, TdResult};
 
 // Retain VM
@@ -38,10 +40,13 @@ fn map_policy(code: jint, edges: jint) -> Result<SingletonPolicy, String> {
 
 // --------------- Native handle ---------------
 
-type TD64 = TDigest<f64>;
+enum NativeInner {
+    F32(TDigest<f32>),
+    F64(TDigest<f64>),
+}
 
 struct NativeDigest {
-    inner: TD64,
+    inner: NativeInner,
 }
 
 impl NativeDigest {
@@ -50,7 +55,7 @@ impl NativeDigest {
         max_size: usize,
         scale: ScaleFamily,
         policy: SingletonPolicy,
-        _f32mode: bool,
+        f32mode: bool,
     ) -> TdResult<Self> {
         if values.iter().any(|v| !v.is_finite()) {
             return Err(TdError::NonFiniteInput {
@@ -58,18 +63,37 @@ impl NativeDigest {
             });
         }
 
-        let d = TD64::builder()
-            .max_size(max_size)
-            .scale(scale)
-            .singleton_policy(policy)
-            .build()
-            .merge_unsorted(values)?; // forward core Result
-
-        Ok(Self { inner: d })
+        if f32mode {
+            // Compact backend: TDigest<f32>
+            let xs32: Vec<f32> = values.iter().map(|v| *v as f32).collect();
+            let d = TDigest::<f32>::builder()
+                .max_size(max_size)
+                .scale(scale)
+                .singleton_policy(policy)
+                .build()
+                .merge_unsorted(xs32)?; // forward core Result
+            Ok(Self {
+                inner: NativeInner::F32(d),
+            })
+        } else {
+            // Full-precision backend: TDigest<f64>
+            let d = TDigest::<f64>::builder()
+                .max_size(max_size)
+                .scale(scale)
+                .singleton_policy(policy)
+                .build()
+                .merge_unsorted(values)?; // forward core Result
+            Ok(Self {
+                inner: NativeInner::F64(d),
+            })
+        }
     }
 
     fn cdf(&self, xs: &[f64]) -> Vec<f64> {
-        self.inner.cdf_or_nan(xs)
+        match &self.inner {
+            NativeInner::F32(td) => td.cdf_or_nan(xs),
+            NativeInner::F64(td) => td.cdf_or_nan(xs),
+        }
     }
 
     fn quantile(&self, p: f64) -> Result<f64, &'static str> {
@@ -79,7 +103,11 @@ impl NativeDigest {
         if !(0.0..=1.0).contains(&p) {
             return Err("q must be in [0,1]");
         }
-        Ok(self.inner.quantile(p))
+        let v = match &self.inner {
+            NativeInner::F32(td) => td.quantile(p),
+            NativeInner::F64(td) => td.quantile(p),
+        };
+        Ok(v)
     }
 }
 
@@ -94,33 +122,6 @@ unsafe fn from_handle<'a, T>(h: jlong) -> &'a mut T {
 // Throw helper
 fn throw_illegal_arg(env: &mut JNIEnv, msg: String) {
     let _ = env.throw_new("java/lang/IllegalArgumentException", msg);
-}
-
-// ----------------------------- Bytes helpers -----------------------------
-//
-// NOTE: These are placeholders — JNI bytes round-trip is NOT implemented.
-// I suggest we either remove these JNI methods or implement a portable format
-// (CBOR/bincode) that matches Python’s SerDigest. Until then, we keep them as
-// explicit no-ops to avoid silent schema drift.
-
-fn f64s_to_le_bytes(xs: &[f64]) -> Vec<u8> {
-    let mut out = Vec::with_capacity(xs.len() * size_of::<f64>());
-    for &x in xs {
-        out.extend_from_slice(&x.to_le_bytes());
-    }
-    out
-}
-fn le_bytes_to_f64s(b: &[u8]) -> Vec<f64> {
-    if b.len() % size_of::<f64>() != 0 {
-        return Vec::new();
-    }
-    let mut out = Vec::with_capacity(b.len() / size_of::<f64>());
-    for chunk in b.chunks_exact(8) {
-        let mut arr = [0u8; 8];
-        arr.copy_from_slice(chunk);
-        out.push(f64::from_le_bytes(arr));
-    }
-    out
 }
 
 // ----------------------------- JNI exports -----------------------------
@@ -142,13 +143,23 @@ pub extern "system" fn Java_gr_tdigest_TDigestNative_fromBytes(
             return 0;
         }
     }
-    let ubuf: &[u8] = unsafe { slice::from_raw_parts(buf.as_ptr() as *const u8, buf.len()) };
-    let xs = le_bytes_to_f64s(ubuf);
 
-    match NativeDigest::from_values(xs, 1000, ScaleFamily::K2, SingletonPolicy::Use, false) {
+    let ubuf: &[u8] = unsafe { slice::from_raw_parts(buf.as_ptr() as *const u8, buf.len()) };
+
+    let nd_res: Result<NativeDigest, String> = match decode_digest(ubuf) {
+        Ok(WireDecodedDigest::F32(td32)) => Ok(NativeDigest {
+            inner: NativeInner::F32(td32),
+        }),
+        Ok(WireDecodedDigest::F64(td64)) => Ok(NativeDigest {
+            inner: NativeInner::F64(td64),
+        }),
+        Err(e) => Err(format!("jni: decode TDigest failed: {e}")),
+    };
+
+    match nd_res {
         Ok(nd) => into_handle(Box::new(nd)),
-        Err(e) => {
-            throw_illegal_arg(&mut env, e.to_string());
+        Err(msg) => {
+            throw_illegal_arg(&mut env, msg);
             0
         }
     }
@@ -160,13 +171,19 @@ pub extern "system" fn Java_gr_tdigest_TDigestNative_toBytes(
     _cls: JClass,
     handle: jlong,
 ) -> jbyteArray {
-    // Placeholder: emit empty bytes (no serialization defined yet).
+    // Canonical TDIG wire format — width follows backend precision:
+    // - F32 → f32 means on the wire
+    // - F64 → f64 means on the wire
     let bytes: Vec<u8> = if handle == 0 {
         Vec::new()
     } else {
-        // Consider serializing SerDigest parity with Python later.
-        f64s_to_le_bytes(&[])
+        let d = unsafe { from_handle::<NativeDigest>(handle) };
+        match &d.inner {
+            NativeInner::F32(td) => encode_digest(td),
+            NativeInner::F64(td) => encode_digest(td),
+        }
     };
+
     let arr = env
         .new_byte_array(bytes.len() as jint)
         .expect("new_byte_array");

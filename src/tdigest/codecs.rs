@@ -37,7 +37,7 @@ use ordered_float::FloatCore;
 use polars::prelude::*;
 
 use crate::tdigest::centroids::Centroid;
-use crate::tdigest::precision::{FloatLike, Precision};
+use crate::tdigest::precision::FloatLike;
 use crate::tdigest::{DigestStats, TDigest};
 
 /* --------------------- field names (public) -------------------------------- */
@@ -455,20 +455,4 @@ where
         }
     }
     Ok(out)
-}
-
-/* --------------------- planning helper (public) ---------------------------- */
-
-/// Infer wire precision from a TDigest struct dtype.
-/// Returns Some(Precision::F32|F64) if it matches our schema, else None.
-pub fn wire_precision(dt: &DataType) -> Option<Precision> {
-    let DataType::Struct(fields) = dt else {
-        return None;
-    };
-    let min = fields.iter().find(|f| f.name() == F_MIN)?;
-    match min.dtype() {
-        DataType::Float32 => Some(Precision::F32),
-        DataType::Float64 => Some(Precision::F64),
-        _ => None,
-    }
 }

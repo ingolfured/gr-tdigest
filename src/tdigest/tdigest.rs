@@ -8,6 +8,7 @@ use crate::tdigest::merges::{KWayCentroidMerge, MergeByMean};
 use crate::tdigest::precision::{FloatLike, Precision};
 use crate::tdigest::scale::ScaleFamily;
 use crate::tdigest::singleton_policy::SingletonPolicy;
+use crate::tdigest::wire::{self, WireDecodedDigest, WireError};
 
 /// TDigest orchestration + public API, generic over centroid float storage `F` (`f32` or `f64`).
 ///
@@ -526,5 +527,61 @@ impl<F: FloatLike + FloatCore> TDigest<F> {
     /// Convenience: defaults (max_size=1000, scale=K2, policy=Use).
     pub fn from_array<A: IntoVecF<F>>(arr: A) -> TdResult<TDigest<F>> {
         Self::from_array_with(arr, DigestOptions::<F>::default())
+    }
+}
+
+impl<F> TDigest<F>
+where
+    F: FloatLike + FloatCore,
+{
+    /// Encode this digest into the canonical TDIG binary format.
+    /// Wire precision (centroid mean) follows `F` (f32 → f32, f64 → f64).
+    #[inline]
+    pub fn to_bytes(&self) -> Vec<u8> {
+        wire::encode_digest(self)
+    }
+}
+
+impl TDigest<f64> {
+    pub fn from_bytes(bytes: &[u8]) -> Result<Self, WireError> {
+        match wire::decode_digest(bytes)? {
+            WireDecodedDigest::F64(td) => Ok(td),
+
+            // Upcast f32-backed digest into f64-backed digest.
+            WireDecodedDigest::F32(td32) => {
+                // Rebuild centroids in f64.
+                let cents: Vec<Centroid<f64>> = td32
+                    .centroids()
+                    .iter()
+                    .map(|c| {
+                        let mean = c.mean_f64();
+                        let w = c.weight_f64();
+
+                        // Same heuristic as in codecs/wire: weight == 1 → atomic unit.
+                        if w == 1.0 {
+                            Centroid::<f64>::new_atomic_unit_f64(mean)
+                        } else {
+                            Centroid::<f64>::new_mixed_f64(mean, w)
+                        }
+                    })
+                    .collect();
+
+                let stats = DigestStats {
+                    data_sum: td32.sum(),
+                    total_weight: td32.count(),
+                    data_min: td32.min(),
+                    data_max: td32.max(),
+                };
+
+                let td64 = TDigest::<f64>::builder()
+                    .max_size(td32.max_size())
+                    .scale(td32.scale())
+                    .singleton_policy(td32.singleton_policy())
+                    .with_centroids_and_stats(cents, stats)
+                    .build();
+
+                Ok(td64)
+            }
+        }
     }
 }

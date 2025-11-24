@@ -18,6 +18,7 @@ pub mod quantile;
 pub mod scale;
 pub mod singleton_policy;
 pub mod tdigest;
+pub mod wire;
 
 // Re-exports for a clean public surface
 pub use self::precision::Precision;

@@ -13,6 +13,7 @@ use crate::tdigest::codecs::WireOf;
 use crate::tdigest::frontends::{parse_precision_hint, parse_singleton_policy_str, PrecisionHint};
 use crate::tdigest::precision::FloatLike;
 use crate::tdigest::singleton_policy::SingletonPolicy;
+use crate::tdigest::wire::{wire_precision, WireDecodedDigest, WirePrecision};
 use crate::tdigest::{ScaleFamily, TDigest};
 
 /* ==================== input dtypes ==================== */
@@ -178,6 +179,196 @@ where
             },
         )
         .build()
+}
+
+#[polars_expr(output_type = Binary)]
+fn to_bytes(inputs: &[Series]) -> PolarsResult<Series> {
+    polars_ensure!(
+        inputs.len() == 1,
+        ComputeError: "`to_bytes` expects a single TDigest struct column"
+    );
+    let s = &inputs[0];
+
+    // Use compact vs full precision based on digest dtype
+    let td_bytes: Vec<u8> = if is_compact_digest_dtype(s.dtype()) {
+        let td = parse_and_merge::<f32>(inputs);
+        td.to_bytes()
+    } else {
+        let td = parse_and_merge::<f64>(inputs);
+        td.to_bytes()
+    };
+
+    let mut builder = BinaryChunkedBuilder::new("".into(), 1);
+    builder.append_value(&td_bytes);
+    Ok(builder.finish().into_series())
+}
+
+// New: from_bytes output type — uses a precision *hint* column when present.
+// Default with no hint: compact f32 schema (matches python_f32→polars_f32 tests).
+fn from_bytes_output_dtype(inputs: &[Field]) -> PolarsResult<Field> {
+    // inputs[0]: blob (Binary)
+    // inputs[1]: optional precision hint (Float32 or Float64)
+    let hint_dt = inputs
+        .get(1)
+        .map(|f| f.dtype())
+        // default to Float32 (compact) when no hint is provided
+        .unwrap_or(&DataType::Float32);
+
+    let dt = if matches!(hint_dt, DataType::Float32) {
+        TDigest::<f32>::polars_dtype()
+    } else {
+        TDigest::<f64>::polars_dtype()
+    };
+
+    Ok(Field::new("tdigest".into(), dt))
+}
+
+#[polars_expr(output_type_func = from_bytes_output_dtype)]
+fn from_bytes(inputs: &[Series]) -> PolarsResult<Series> {
+    polars_ensure!(
+        inputs.len() >= 1,
+        ComputeError: "`from_bytes` expects a binary column"
+    );
+    let s = &inputs[0];
+
+    if s.len() == 0 {
+        let td = TDigest::<f64>::builder().build();
+        return td.to_series("tdigest");
+    }
+
+    // Optional precision hint: second arg (Float32 → expect f32; otherwise f64).
+    let hint_is_f32 = inputs
+        .get(1)
+        .map(|hint| matches!(hint.dtype(), DataType::Float32))
+        .unwrap_or(false);
+
+    // First, access the binary column to potentially sniff precision.
+    let bin_sniff = s.binary().map_err(|e| {
+        PolarsError::ComputeError(format!("from_bytes: expected Binary column, got {e}").into())
+    })?;
+
+    // Determine expected precision:
+    //
+    // - If a hint column is present: trust it (Float32 → F32, anything else → F64).
+    // - If no hint: sniff the first non-null blob using wire_precision(...).
+    let mut expected_prec: Option<WirePrecision> = if inputs.len() > 1 {
+        if hint_is_f32 {
+            Some(WirePrecision::F32)
+        } else {
+            Some(WirePrecision::F64)
+        }
+    } else {
+        None
+    };
+
+    if expected_prec.is_none() {
+        for opt in bin_sniff.clone().into_iter() {
+            if let Some(bytes) = opt {
+                match wire_precision(bytes) {
+                    Ok(p) => {
+                        expected_prec = Some(p);
+                        break;
+                    }
+                    Err(e) => {
+                        polars_bail!(ComputeError: "tdigest.from_bytes: {e}");
+                    }
+                }
+            }
+        }
+    }
+
+    // No non-null blobs (all nulls): fall back to an empty f64 digest column.
+    let expected_prec = match expected_prec {
+        Some(p) => p,
+        None => {
+            let td = TDigest::<f64>::builder().build();
+            return td.to_series("tdigest");
+        }
+    };
+
+    // Decode and merge, enforcing a uniform precision across the column.
+    let bin = s.binary().map_err(|e| {
+        PolarsError::ComputeError(format!("from_bytes: expected Binary column, got {e}").into())
+    })?;
+
+    match expected_prec {
+        WirePrecision::F32 => {
+            // All blobs must be f32; decode and merge
+            let mut digests: Vec<TDigest<f32>> = Vec::new();
+
+            for opt in bin.into_iter() {
+                if let Some(bytes) = opt {
+                    match wire_precision(bytes) {
+                        Ok(WirePrecision::F32) => {
+                            let decoded =
+                                crate::tdigest::wire::decode_digest(bytes).map_err(|e| {
+                                    PolarsError::ComputeError(
+                                        format!("from_bytes decode error: {e}").into(),
+                                    )
+                                })?;
+                            match decoded {
+                                WireDecodedDigest::F32(td32) => digests.push(td32),
+                                WireDecodedDigest::F64(_) => {
+                                    polars_bail!(ComputeError:
+                                        "tdigest.from_bytes: mixed f32/f64 blobs in column (expected f32)"
+                                    );
+                                }
+                            }
+                        }
+                        Ok(WirePrecision::F64) => {
+                            polars_bail!(ComputeError:
+                                "tdigest.from_bytes: mixed f32/f64 blobs in column (expected f32)"
+                            );
+                        }
+                        Err(e) => {
+                            polars_bail!(ComputeError: "tdigest.from_bytes: {e}");
+                        }
+                    }
+                }
+            }
+
+            let merged = TDigest::<f32>::merge_digests(digests);
+            merged.to_series("tdigest")
+        }
+        WirePrecision::F64 => {
+            // All blobs must be f64; decode and merge
+            let mut digests: Vec<TDigest<f64>> = Vec::new();
+
+            for opt in bin.into_iter() {
+                if let Some(bytes) = opt {
+                    match wire_precision(bytes) {
+                        Ok(WirePrecision::F64) => {
+                            let decoded =
+                                crate::tdigest::wire::decode_digest(bytes).map_err(|e| {
+                                    PolarsError::ComputeError(
+                                        format!("from_bytes decode error: {e}").into(),
+                                    )
+                                })?;
+                            match decoded {
+                                WireDecodedDigest::F64(td64) => digests.push(td64),
+                                WireDecodedDigest::F32(_) => {
+                                    polars_bail!(ComputeError:
+                                        "tdigest.from_bytes: mixed f32/f64 blobs in column (expected f64)"
+                                    );
+                                }
+                            }
+                        }
+                        Ok(WirePrecision::F32) => {
+                            polars_bail!(ComputeError:
+                                "tdigest.from_bytes: mixed f32/f64 blobs in column (expected f64)"
+                            );
+                        }
+                        Err(e) => {
+                            polars_bail!(ComputeError: "tdigest.from_bytes: {e}");
+                        }
+                    }
+                }
+            }
+
+            let merged = TDigest::<f64>::merge_digests(digests);
+            merged.to_series("tdigest")
+        }
+    }
 }
 
 #[polars_expr(output_type = String)]
@@ -426,7 +617,6 @@ where
     }
 }
 
-/// Parse a TDigest struct column and merge all rows into a single TDigest<F>.
 fn parse_and_merge<F>(inputs: &[Series]) -> TDigest<F>
 where
     F: Copy + 'static + FloatCore + FloatLike + WireOf,
