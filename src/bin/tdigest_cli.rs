@@ -1,5 +1,6 @@
 // src/bin/tdigest_cli.rs
 
+use std::fmt;
 use std::io::{self, Read};
 
 use clap::{ArgAction, Parser, ValueEnum};
@@ -23,15 +24,15 @@ enum ScaleOpt {
     K3,
 }
 
-impl ToString for ScaleOpt {
-    fn to_string(&self) -> String {
-        match self {
+impl fmt::Display for ScaleOpt {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        let s = match self {
             ScaleOpt::Quad => "quad",
             ScaleOpt::K1 => "k1",
             ScaleOpt::K2 => "k2",
             ScaleOpt::K3 => "k3",
-        }
-        .to_string()
+        };
+        f.write_str(s)
     }
 }
 
@@ -63,7 +64,6 @@ struct Cli {
 
     /// Quantile probability.
     /// Required for --cmd quantile.
-    #[arg(long)]
     #[arg(long, allow_hyphen_values = true)]
     p: Option<String>,
 

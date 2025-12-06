@@ -205,6 +205,13 @@ def _from_array_cls(
     pin_per_side: Optional[int] = None,
     **kwargs: Any,
 ) -> _NativeTDigest:
+    """
+    Python-facing TDigest.from_array shim.
+
+    Supports both:
+      - new API: precision="auto" | "f32" | "f64"
+      - legacy API: f32_mode=True/False
+    """
     s = _coerce_scale_for_class(scale)
     m = _norm_policy(singleton_policy)
     max_size = _validate_max_size(max_size)
@@ -215,15 +222,29 @@ def _from_array_cls(
 
     policy_str = {"off": "off", "use": "use", "edges": "edges"}[m]
 
-    # Map Python precision → native f32_mode flag.
+    # --- precision / f32_mode reconciliation ---------------------------------
     prec_raw = kwargs.pop("precision", None)
+    f32_mode_raw = kwargs.pop("f32_mode", None)
+
     prec_norm = _coerce_precision(prec_raw)  # "auto" | "f64" | "f32"
-    f32_mode = prec_norm == "f32"
+
+    if f32_mode_raw is not None:
+        f32_flag = bool(f32_mode_raw)
+        if prec_norm != "auto":
+            expected_flag = prec_norm == "f32"
+            if f32_flag != expected_flag:
+                raise ValueError(f"Conflicting precision arguments: precision={prec_norm!r} and f32_mode={f32_flag!r}")
+    else:
+        # No explicit f32_mode provided; derive from precision.
+        if prec_norm == "auto":
+            f32_flag = False  # default to f64 backend when auto and no legacy flag
+        else:
+            f32_flag = prec_norm == "f32"
 
     call_kwargs: Dict[str, Any] = {
         "max_size": int(max_size),
         "scale": s,
-        "f32_mode": f32_mode,
+        "f32_mode": f32_flag,
         "singleton_policy": policy_str,
     }
     if eps is not None:
@@ -420,6 +441,70 @@ def _quantile_patched(self: _NativeTDigest, q: Any) -> Any:
 setattr(_NativeTDigest, "quantile", _quantile_patched)
 
 TDigest = _NativeTDigest
+_native_merge_raw: Any = getattr(_NativeTDigest, "merge", None)
+if _native_merge_raw is None:  # pragma: no cover
+    raise AttributeError("Native TDigest is missing 'merge'")
+_native_merge = cast(Callable[..., Any], _native_merge_raw)
+
+
+def _merge_patched(self: _NativeTDigest, other: Any) -> _NativeTDigest:
+    # Call native in-place merge (which returns None / raises on error)
+    _native_merge(self, other)
+    # Then return self so Python sees a fluent API
+    return self
+
+
+setattr(TDigest, "merge", _merge_patched)
+
+
+# --- Python-side classmethod: TDigest.merge_all --------------------------------
+def _merge_all_cls(cls: type[_NativeTDigest], digests: Any) -> _NativeTDigest:
+    """
+    TDigest.merge_all(digests):
+
+    - []                  → return a *real* empty digest (n=0) with deterministic defaults.
+    - single TDigest      → return a cloned digest (no mutation).
+    - iterable of digests → clone first, then call native `.merge` in-place for the rest.
+    """
+    # Case 1: single TDigest instance
+    if isinstance(digests, TDigest):
+        # Clone via wire round-trip to avoid mutating caller's object
+        return TDigest.from_bytes(digests.to_bytes())
+
+    # Case 2: something iterable
+    try:
+        items = list(digests)
+    except TypeError as exc:
+        raise TypeError("TDigest.merge_all expects a TDigest or an iterable of TDigest instances") from exc
+
+    # Filter out Nones (if any)
+    ds = [d for d in items if d is not None]
+
+    # Empty iterable → real empty digest
+    if not ds:
+        # Deterministic "empty": f64, max_size=1, K2, singleton_policy=off
+        # Uses the native from_array([]) path so semantics match Rust.
+        return _native_from_array([], max_size=1, scale="K2", singleton_policy="off")
+
+    # Validate and ensure all are TDigest instances
+    for d in ds:
+        if not isinstance(d, TDigest):
+            raise TypeError(f"TDigest.merge_all expects only TDigest instances (or None); got {type(d).__name__}")
+
+    # Clone first digest as accumulator to avoid mutating user-owned objects
+    acc = TDigest.from_bytes(ds[0].to_bytes())
+
+    # Require native instance `.merge` (provided by Rust bindings)
+    if not hasattr(acc, "merge"):
+        raise AttributeError("TDigest.merge_all requires an instance method 'merge' on TDigest")
+
+    for d in ds[1:]:
+        acc.merge(d)
+
+    return acc
+
+
+setattr(TDigest, "merge_all", classmethod(_merge_all_cls))
 
 
 # --- Polars plugin wrappers ---------------------------------------------------
