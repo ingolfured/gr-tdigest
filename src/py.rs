@@ -1,6 +1,6 @@
 use pyo3::exceptions::PyValueError;
 use pyo3::prelude::*;
-use pyo3::types::{PyBytes, PyFloat};
+use pyo3::types::{PyAny, PyBytes, PyFloat, PyList, PySequence, PyType};
 
 use crate::tdigest::frontends::{parse_scale_str, parse_singleton_policy_str};
 use crate::tdigest::singleton_policy::SingletonPolicy;
@@ -9,21 +9,50 @@ use crate::tdigest::wire::{
 };
 use crate::tdigest::{ScaleFamily, TDigest, TDigestBuilder};
 
-// ---------- strict arg parsers via shared helpers ----------
+// -------------------- helpers --------------------
 
 fn parse_scale(s: Option<&str>) -> Result<ScaleFamily, PyErr> {
     parse_scale_str(s).map_err(|e| PyValueError::new_err(e.to_string()))
 }
 
-fn parse_policy(kind: Option<&str>, pin_per_side: Option<usize>) -> Result<SingletonPolicy, PyErr> {
-    parse_singleton_policy_str(kind, pin_per_side).map_err(|e| PyValueError::new_err(e.to_string()))
+fn parse_policy(kind: Option<&str>, pin: Option<usize>) -> Result<SingletonPolicy, PyErr> {
+    parse_singleton_policy_str(kind, pin).map_err(|e| PyValueError::new_err(e.to_string()))
 }
 
-// ---------- internal enum to track backend precision ----------
-
+#[derive(Clone)]
 enum InnerDigest {
     F32(TDigest<f32>),
     F64(TDigest<f64>),
+}
+
+// config struct used to enforce matching parameters
+#[derive(Clone, Debug, PartialEq)]
+struct DigestConfig {
+    max_size: usize,
+    scale: ScaleFamily,
+    policy: SingletonPolicy,
+}
+
+fn extract_config<F: crate::tdigest::precision::FloatLike + ordered_float::FloatCore>(
+    td: &TDigest<F>,
+) -> DigestConfig {
+    DigestConfig {
+        max_size: td.max_size(),
+        scale: td.scale(),
+        policy: td.singleton_policy(),
+    }
+}
+
+fn check_configs_match(a: &DigestConfig, b: &DigestConfig) -> PyResult<()> {
+    if a != b {
+        Err(PyValueError::new_err(format!(
+            "tdigest merge: incompatible configs: \
+             max_size {} vs {}, scale {:?} vs {:?}, policy {:?} vs {:?}",
+            a.max_size, b.max_size, a.scale, b.scale, a.policy, b.policy
+        )))
+    } else {
+        Ok(())
+    }
 }
 
 #[pyclass(name = "TDigest", subclass)]
@@ -31,10 +60,11 @@ pub struct PyTDigest {
     inner: InnerDigest,
 }
 
-// ---------- Python methods ----------
+// -------------------- core Python API --------------------
 
 #[pymethods]
 impl PyTDigest {
+    // ---------------- from_array ----------------
     #[staticmethod]
     #[pyo3(signature = (values, max_size=1000, scale=None, f32_mode=false, singleton_policy=None, pin_per_side=None))]
     pub fn from_array(
@@ -44,116 +74,102 @@ impl PyTDigest {
         scale: Option<&str>,
         f32_mode: bool,
         singleton_policy: Option<&str>,
-        pin_per_side: Option<usize>,
+        pin: Option<usize>,
     ) -> PyResult<Self> {
         if max_size == 0 {
             return Err(PyValueError::new_err("max_size must be > 0"));
         }
 
         let sc = parse_scale(scale)?;
-        let policy = parse_policy(singleton_policy, pin_per_side)?;
+        let policy = parse_policy(singleton_policy, pin)?;
 
         let np = py.import("numpy")?;
         let arr = np.call_method1("asarray", (values,))?;
-        let values_f64: Vec<f64> = arr.extract()?;
+        let vals_f64: Vec<f64> = arr.extract()?;
 
-        // Strict: reject any non-finite training values (matches integration tests)
-        if values_f64.iter().any(|v| !v.is_finite()) {
+        if vals_f64.iter().any(|v| !v.is_finite()) {
             return Err(PyValueError::new_err(
-                "tdigest: input contains non-finite values (NaN or ±inf)",
+                "tdigest: input contains non-finite values",
             ));
         }
 
         if f32_mode {
-            // Compact backend: TDigest<f32>
-            let values_f32: Vec<f32> = values_f64.iter().map(|v| *v as f32).collect();
-
+            let vals_f32: Vec<f32> = vals_f64.iter().map(|v| *v as f32).collect();
             let base = TDigestBuilder::<f32>::new()
                 .max_size(max_size)
                 .scale(sc)
                 .singleton_policy(policy)
                 .build();
 
-            let digest: TDigest<f32> = base
-                .merge_unsorted(values_f32)
-                .map_err(|e| PyErr::new::<PyValueError, _>(e.to_string()))?;
+            let d = base
+                .merge_unsorted(vals_f32)
+                .map_err(|e| PyValueError::new_err(e.to_string()))?;
 
             Ok(Self {
-                inner: InnerDigest::F32(digest),
+                inner: InnerDigest::F32(d),
             })
         } else {
-            // Full-precision backend: TDigest<f64>
             let base = TDigestBuilder::<f64>::new()
                 .max_size(max_size)
                 .scale(sc)
                 .singleton_policy(policy)
                 .build();
 
-            let digest: TDigest<f64> = base
-                .merge_unsorted(values_f64)
-                .map_err(|e| PyErr::new::<PyValueError, _>(e.to_string()))?;
+            let d = base
+                .merge_unsorted(vals_f64)
+                .map_err(|e| PyValueError::new_err(e.to_string()))?;
 
             Ok(Self {
-                inner: InnerDigest::F64(digest),
+                inner: InnerDigest::F64(d),
             })
         }
     }
 
+    // ---------------- quantile / median ----------------
     pub fn median(&self) -> PyResult<f64> {
-        let m = match &self.inner {
+        Ok(match &self.inner {
             InnerDigest::F32(td) => td.median(),
             InnerDigest::F64(td) => td.median(),
-        };
-        Ok(m)
+        })
     }
 
     pub fn quantile(&self, q: f64) -> PyResult<f64> {
-        if !q.is_finite() {
-            return Err(PyValueError::new_err("q must be a finite number in [0, 1]"));
-        }
         if !(0.0..=1.0).contains(&q) {
-            return Err(PyValueError::new_err(
-                "q must be in [0, 1]. Example: quantile(0.95) for the 95th percentile",
-            ));
+            return Err(PyValueError::new_err("q must be in [0,1]"));
         }
-
-        let val = match &self.inner {
+        Ok(match &self.inner {
             InnerDigest::F32(td) => td.quantile(q),
             InnerDigest::F64(td) => td.quantile(q),
-        };
-        Ok(val)
+        })
     }
 
+    // ---------------- cdf ----------------
     pub fn cdf(&self, py: Python<'_>, x: PyObject) -> PyResult<PyObject> {
         let np = py.import("numpy")?;
         let arr = np.call_method1("asarray", (x,))?;
 
-        // Try scalar first (works for Python floats and 0-D numpy scalars)
+        // scalar?
         if let Ok(xf) = arr.extract::<f64>() {
-            let p = match &self.inner {
+            let v = match &self.inner {
                 InnerDigest::F32(td) => td.cdf_or_nan(&[xf])[0],
                 InnerDigest::F64(td) => td.cdf_or_nan(&[xf])[0],
             };
-            let obj: PyObject = PyFloat::new(py, p).into_any().unbind();
-            return Ok(obj);
+            return Ok(PyFloat::new(py, v).into_any().unbind());
         }
 
-        // Otherwise: treat as a 1-D array / sequence
-        let values: Vec<f64> = arr.extract()?;
-        let ys: Vec<f64> = match &self.inner {
-            InnerDigest::F32(td) => td.cdf_or_nan(&values),
-            InnerDigest::F64(td) => td.cdf_or_nan(&values),
+        let xs: Vec<f64> = arr.extract()?;
+        let out = match &self.inner {
+            InnerDigest::F32(td) => td.cdf_or_nan(&xs),
+            InnerDigest::F64(td) => td.cdf_or_nan(&xs),
         };
 
-        let out = np.call_method1("asarray", (ys,))?;
-        Ok(out.unbind())
+        let arr_out = np.call_method1("asarray", (out,))?;
+        Ok(arr_out.unbind())
     }
 
+    // ---------------- bytes ↔ digest ----------------
     pub fn to_bytes<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyBytes>> {
-        // Canonical TDIG wire format — width follows backend precision:
-        // - F32 → f32 means on the wire
-        // - F64 → f64 means on the wire
-        let bytes: Vec<u8> = match &self.inner {
+        let bytes = match &self.inner {
             InnerDigest::F32(td) => encode_digest(td),
             InnerDigest::F64(td) => encode_digest(td),
         };
@@ -162,41 +178,171 @@ impl PyTDigest {
 
     #[staticmethod]
     pub fn from_bytes(b: Bound<'_, PyBytes>) -> PyResult<Self> {
-        // Decode TDIG wire format and reconstruct the matching backend.
         match decode_digest(b.as_bytes()) {
-            Ok(WireDecodedDigest::F32(td32)) => Ok(Self {
-                inner: InnerDigest::F32(td32),
+            Ok(WireDecodedDigest::F32(td)) => Ok(Self {
+                inner: InnerDigest::F32(td),
             }),
-            Ok(WireDecodedDigest::F64(td64)) => Ok(Self {
-                inner: InnerDigest::F64(td64),
+            Ok(WireDecodedDigest::F64(td)) => Ok(Self {
+                inner: InnerDigest::F64(td),
             }),
-            Err(e) => Err(PyValueError::new_err(format!("tdigest decode error: {e}"))),
+            Err(e) => Err(PyValueError::new_err(format!("decode error: {e}"))),
         }
     }
 
-    // ------ NEW: required by test_polars_f32_to_python_f32 ------
     pub fn inner_kind(&self) -> &'static str {
         match &self.inner {
             InnerDigest::F32(_) => "f32",
             InnerDigest::F64(_) => "f64",
         }
     }
-}
 
-#[pyfunction]
-fn wire_precision_py(b: &Bound<PyAny>) -> PyResult<String> {
-    // Ensure it's actually a bytes object
-    let py_bytes: &Bound<PyBytes> = b.downcast()?;
-    let bytes = py_bytes.as_bytes();
+    // -------------------------------------------------------------------------
+    //                              MERGE (in-place)
+    // -------------------------------------------------------------------------
 
-    match wire_precision(bytes) {
-        Ok(WirePrecision::F32) => Ok("f32".to_string()),
-        Ok(WirePrecision::F64) => Ok("f64".to_string()),
-        Err(e) => Err(PyValueError::new_err(format!("wire_precision: {e}"))),
+    #[pyo3(signature = (other))]
+    pub fn merge<'py>(
+        &'py mut self,
+        other: &Bound<'py, PyAny>,
+    ) -> PyResult<PyRefMut<'py, PyTDigest>> {
+        // Try single digest
+        if let Ok(one) = other.extract::<PyRef<PyTDigest>>() {
+            self.merge_one(&one)?;
+            return Ok(PyRefMut::from(self));
+        }
+
+        // Otherwise treat as sequence
+        let seq = PySequence::try_from(other)?;
+        let len = seq.len().unwrap_or(0);
+
+        for i in 0..len {
+            let item = seq.get_item(i)?;
+            let d: PyRef<PyTDigest> = item.extract()?;
+            self.merge_one(&d)?;
+        }
+
+        Ok(PyRefMut::from(self))
+    }
+
+    fn merge_one(&mut self, other: &PyRef<PyTDigest>) -> PyResult<()> {
+        match (&mut self.inner, &other.inner) {
+            (InnerDigest::F32(a), InnerDigest::F32(b)) => {
+                check_configs_match(&extract_config(a), &extract_config(b))?;
+                let merged = TDigest::merge_digests(vec![a.clone(), b.clone()]);
+                *a = merged;
+                Ok(())
+            }
+            (InnerDigest::F64(a), InnerDigest::F64(b)) => {
+                check_configs_match(&extract_config(a), &extract_config(b))?;
+                let merged = TDigest::merge_digests(vec![a.clone(), b.clone()]);
+                *a = merged;
+                Ok(())
+            }
+            _ => Err(PyValueError::new_err(
+                "tdigest merge: cannot mix f32 and f64 digests",
+            )),
+        }
+    }
+
+    // -------------------------------------------------------------------------
+    //                              MERGE_ALL
+    // -------------------------------------------------------------------------
+
+    #[classmethod]
+    #[pyo3(signature = (digests))]
+    pub fn merge_all(_cls: &Bound<PyType>, digests: &Bound<PyAny>) -> PyResult<Self> {
+        // Direct single digest → clone
+        if let Ok(single) = digests.extract::<PyRef<PyTDigest>>() {
+            return Ok(single.clone());
+        }
+
+        let seq = PySequence::try_from(digests)?;
+        let len = seq.len().unwrap_or(0);
+
+        if len == 0 {
+            let empty = TDigestBuilder::<f64>::new()
+                .max_size(1)
+                .scale(ScaleFamily::K2)
+                .singleton_policy(SingletonPolicy::Off)
+                .build();
+            return Ok(Self {
+                inner: InnerDigest::F64(empty),
+            });
+        }
+
+        // Seed
+        let first_any = seq.get_item(0)?;
+        let first: PyRef<PyTDigest> = first_any.extract()?;
+
+        match &first.inner {
+            InnerDigest::F32(seed) => {
+                let cfg = extract_config(seed);
+                let mut acc = seed.clone();
+
+                for i in 1..len {
+                    let obj = seq.get_item(i)?;
+                    let d: PyRef<PyTDigest> = obj.extract()?;
+
+                    match &d.inner {
+                        InnerDigest::F32(other) => {
+                            check_configs_match(&cfg, &extract_config(other))?;
+                            acc = TDigest::merge_digests(vec![acc, other.clone()]);
+                        }
+                        _ => {
+                            return Err(PyValueError::new_err(
+                                "tdigest merge_all: cannot mix f32 and f64 digests",
+                            ))
+                        }
+                    }
+                }
+
+                Ok(Self {
+                    inner: InnerDigest::F32(acc),
+                })
+            }
+
+            InnerDigest::F64(seed) => {
+                let cfg = extract_config(seed);
+                let mut acc = seed.clone();
+
+                for i in 1..len {
+                    let obj = seq.get_item(i)?;
+                    let d: PyRef<PyTDigest> = obj.extract()?;
+
+                    match &d.inner {
+                        InnerDigest::F64(other) => {
+                            check_configs_match(&cfg, &extract_config(other))?;
+                            acc = TDigest::merge_digests(vec![acc, other.clone()]);
+                        }
+                        _ => {
+                            return Err(PyValueError::new_err(
+                                "tdigest merge_all: cannot mix f32 and f64 digests",
+                            ))
+                        }
+                    }
+                }
+
+                Ok(Self {
+                    inner: InnerDigest::F64(acc),
+                })
+            }
+        }
     }
 }
 
-pub(crate) fn register(m: &Bound<'_, PyModule>) -> PyResult<()> {
+// ---------------- wire_precision_py ----------------
+
+#[pyfunction]
+fn wire_precision_py(b: &Bound<PyAny>) -> PyResult<String> {
+    let py_bytes: &Bound<PyBytes> = b.downcast()?;
+    match wire_precision(py_bytes.as_bytes()) {
+        Ok(WirePrecision::F32) => Ok("f32".to_string()),
+        Ok(WirePrecision::F64) => Ok("f64".to_string()),
+        Err(e) => Err(PyValueError::new_err(format!("{e}"))),
+    }
+}
+
+pub(crate) fn register(m: &Bound<PyModule>) -> PyResult<()> {
     m.add_class::<PyTDigest>()?;
     m.add_function(wrap_pyfunction!(wire_precision_py, m)?)?;
     Ok(())
