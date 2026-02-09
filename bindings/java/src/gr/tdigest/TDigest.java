@@ -11,7 +11,9 @@ import java.io.ObjectOutputStream;
 import java.io.OutputStream;
 import java.io.Serializable;
 import java.lang.ref.Cleaner;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Iterator;
 import java.util.Locale;
 import java.util.Objects;
 
@@ -346,6 +348,47 @@ public final class TDigest implements AutoCloseable, Serializable {
     return add(new float[] { value });
   }
 
+  public TDigest merge(TDigest other) {
+    ensureOpen();
+    Objects.requireNonNull(other, "other");
+    other.ensureOpen();
+    TDigestNative.mergeDigest(state.handle, other.state.handle);
+    return this;
+  }
+
+  public static TDigest mergeAll(TDigest first, TDigest second, TDigest... rest) {
+    Objects.requireNonNull(first, "first");
+    Objects.requireNonNull(second, "second");
+    ArrayList<TDigest> all = new ArrayList<>();
+    all.add(first);
+    all.add(second);
+    if (rest != null) {
+      all.addAll(Arrays.asList(rest));
+    }
+    return mergeAll(all);
+  }
+
+  public static TDigest mergeAll(Iterable<TDigest> digests) {
+    Objects.requireNonNull(digests, "digests");
+    Iterator<TDigest> it = digests.iterator();
+    if (!it.hasNext()) {
+      throw new IllegalArgumentException("mergeAll requires at least one digest");
+    }
+
+    TDigest first = Objects.requireNonNull(it.next(), "mergeAll contains null digest");
+    TDigest acc = TDigest.fromBytes(first.toBytes());
+    try {
+      while (it.hasNext()) {
+        TDigest d = Objects.requireNonNull(it.next(), "mergeAll contains null digest");
+        acc.merge(d);
+      }
+      return acc;
+    } catch (RuntimeException e) {
+      acc.close();
+      throw e;
+    }
+  }
+
   /* ======================= Serialization & lifecycle ======================= */
 
   public byte[] toBytes() {
@@ -386,24 +429,15 @@ public final class TDigest implements AutoCloseable, Serializable {
     if (isClosed()) {
       throw new NotSerializableException("TDigest is closed");
     }
-    byte[] bytes = toBytes();
-    out.writeInt(bytes.length);
-    out.write(bytes);
+    writeTo(out);
   }
 
   private void readObject(ObjectInputStream in) throws IOException, ClassNotFoundException {
-    int n = in.readInt();
-    if (n < 0) {
-      throw new IOException("tdigest: negative serialized byte length: " + n);
-    }
-    byte[] bytes = new byte[n];
-    in.readFully(bytes);
-    long h = TDigestNative.fromBytes(bytes);
-    if (h == 0) {
-      throw new IOException("tdigest: failed to restore native handle from serialized bytes");
-    }
-    this.state = new State(h);
-    this.cleanable = CLEANER.register(this, this.state);
+    TDigest restored = readFrom(in);
+    this.state = restored.state;
+    this.cleanable = restored.cleanable;
+    restored.state = null;
+    restored.cleanable = null;
   }
 
   private void readObjectNoData() throws IOException {

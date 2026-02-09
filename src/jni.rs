@@ -38,13 +38,43 @@ fn map_policy(code: jint, edges: jint) -> Result<SingletonPolicy, String> {
     policy_from_code_edges(code as i32, edges as i32).map_err(|e| e.to_string())
 }
 
+fn ensure_non_null_handle(handle: jlong) -> Result<(), &'static str> {
+    if handle == 0 {
+        Err("TDigest handle is null")
+    } else {
+        Ok(())
+    }
+}
+
+fn read_jdouble_array(env: &JNIEnv, arr: &JDoubleArray) -> Result<Vec<f64>, String> {
+    let len = env.get_array_length(arr).unwrap_or(0) as usize;
+    let mut out = vec![0f64; len];
+    if len > 0 {
+        env.get_double_array_region(arr, 0, &mut out)
+            .map_err(|e| format!("jni: get_double_array_region failed: {e:?}"))?;
+    }
+    Ok(out)
+}
+
+fn read_jfloat_array(env: &JNIEnv, arr: &JFloatArray) -> Result<Vec<f32>, String> {
+    let len = env.get_array_length(arr).unwrap_or(0) as usize;
+    let mut out = vec![0f32; len];
+    if len > 0 {
+        env.get_float_array_region(arr, 0, &mut out)
+            .map_err(|e| format!("jni: get_float_array_region failed: {e:?}"))?;
+    }
+    Ok(out)
+}
+
 // --------------- Native handle ---------------
 
+#[derive(Clone)]
 enum NativeInner {
     F32(TDigest<f32>),
     F64(TDigest<f64>),
 }
 
+#[derive(Clone)]
 struct NativeDigest {
     inner: NativeInner,
 }
@@ -125,6 +155,23 @@ impl NativeDigest {
         };
         Ok(())
     }
+
+    fn merge_digest(&mut self, other: &NativeDigest) -> Result<(), String> {
+        self.inner = match (&self.inner, &other.inner) {
+            (NativeInner::F32(a), NativeInner::F32(b)) => {
+                NativeInner::F32(TDigest::<f32>::merge_digests(vec![a.clone(), b.clone()]))
+            }
+            (NativeInner::F64(a), NativeInner::F64(b)) => {
+                NativeInner::F64(TDigest::<f64>::merge_digests(vec![a.clone(), b.clone()]))
+            }
+            _ => {
+                return Err(
+                    "tdigest: cannot merge digests of different precision (f32 vs f64)".to_string(),
+                )
+            }
+        };
+        Ok(())
+    }
 }
 
 // Handle helpers
@@ -133,6 +180,9 @@ fn into_handle<T>(b: Box<T>) -> jlong {
 }
 unsafe fn from_handle<'a, T>(h: jlong) -> &'a mut T {
     &mut *(h as *mut T)
+}
+unsafe fn from_handle_const<'a, T>(h: jlong) -> &'a T {
+    &*(h as *const T)
 }
 
 // Throw helper
@@ -232,17 +282,12 @@ pub extern "system" fn Java_gr_tdigest_TDigestNative_fromArray(
             .expect("new_local_ref")
             .as_raw();
         let darr = unsafe { JDoubleArray::from_raw(raw) };
-        let len = env.get_array_length(&darr).unwrap_or(0) as usize;
-        if len > 0 {
-            let mut buf = vec![0f64; len];
-            if let Err(e) = env.get_double_array_region(&darr, 0, &mut buf) {
-                throw_illegal_arg(
-                    &mut env,
-                    format!("jni: get_double_array_region failed: {e:?}"),
-                );
+        match read_jdouble_array(&env, &darr) {
+            Ok(v) => xs = v,
+            Err(msg) => {
+                throw_illegal_arg(&mut env, msg);
                 return 0;
             }
-            xs = buf;
         }
     } else if env.is_instance_of(&values_obj, "[F").unwrap_or(false) {
         let raw: jarray = env
@@ -250,17 +295,12 @@ pub extern "system" fn Java_gr_tdigest_TDigestNative_fromArray(
             .expect("new_local_ref")
             .as_raw();
         let farr = unsafe { JFloatArray::from_raw(raw) };
-        let len = env.get_array_length(&farr).unwrap_or(0) as usize;
-        if len > 0 {
-            let mut buf_f = vec![0f32; len];
-            if let Err(e) = env.get_float_array_region(&farr, 0, &mut buf_f) {
-                throw_illegal_arg(
-                    &mut env,
-                    format!("jni: get_float_array_region failed: {e:?}"),
-                );
+        match read_jfloat_array(&env, &farr) {
+            Ok(v) => xs = v.into_iter().map(|x| x as f64).collect(),
+            Err(msg) => {
+                throw_illegal_arg(&mut env, msg);
                 return 0;
             }
-            xs = buf_f.into_iter().map(|v| v as f64).collect();
         }
     } else if env
         .is_instance_of(&values_obj, "java/util/List")
@@ -337,21 +377,17 @@ pub extern "system" fn Java_gr_tdigest_TDigestNative_mergeArrayF64(
     handle: jlong,
     values: JDoubleArray,
 ) {
-    if handle == 0 {
-        throw_illegal_arg(&mut env, "TDigest handle is null".to_string());
+    if let Err(msg) = ensure_non_null_handle(handle) {
+        throw_illegal_arg(&mut env, msg.to_string());
         return;
     }
-    let n = env.get_array_length(&values).unwrap_or(0) as usize;
-    let mut xs = vec![0f64; n];
-    if n > 0 {
-        if let Err(e) = env.get_double_array_region(&values, 0, &mut xs) {
-            throw_illegal_arg(
-                &mut env,
-                format!("jni: get_double_array_region failed: {e:?}"),
-            );
+    let xs = match read_jdouble_array(&env, &values) {
+        Ok(v) => v,
+        Err(msg) => {
+            throw_illegal_arg(&mut env, msg);
             return;
         }
-    }
+    };
 
     let d = unsafe { from_handle::<NativeDigest>(handle) };
     if let Err(e) = d.merge_f64_values(xs) {
@@ -367,26 +403,46 @@ pub extern "system" fn Java_gr_tdigest_TDigestNative_mergeArrayF32(
     handle: jlong,
     values: JFloatArray,
 ) {
-    if handle == 0 {
-        throw_illegal_arg(&mut env, "TDigest handle is null".to_string());
+    if let Err(msg) = ensure_non_null_handle(handle) {
+        throw_illegal_arg(&mut env, msg.to_string());
         return;
     }
-    let n = env.get_array_length(&values).unwrap_or(0) as usize;
-    let mut xs32 = vec![0f32; n];
-    if n > 0 {
-        if let Err(e) = env.get_float_array_region(&values, 0, &mut xs32) {
-            throw_illegal_arg(
-                &mut env,
-                format!("jni: get_float_array_region failed: {e:?}"),
-            );
+    let xs32 = match read_jfloat_array(&env, &values) {
+        Ok(v) => v,
+        Err(msg) => {
+            throw_illegal_arg(&mut env, msg);
             return;
         }
-    }
+    };
     let xs: Vec<f64> = xs32.into_iter().map(|v| v as f64).collect();
 
     let d = unsafe { from_handle::<NativeDigest>(handle) };
     if let Err(e) = d.merge_f64_values(xs) {
         throw_illegal_arg(&mut env, e.to_string());
+    }
+}
+
+#[allow(unused_mut)]
+#[no_mangle]
+pub extern "system" fn Java_gr_tdigest_TDigestNative_mergeDigest(
+    mut env: JNIEnv,
+    _cls: JClass,
+    handle: jlong,
+    other_handle: jlong,
+) {
+    if let Err(msg) = ensure_non_null_handle(handle) {
+        throw_illegal_arg(&mut env, msg.to_string());
+        return;
+    }
+    if let Err(msg) = ensure_non_null_handle(other_handle) {
+        throw_illegal_arg(&mut env, msg.to_string());
+        return;
+    }
+
+    let other_owned = unsafe { from_handle_const::<NativeDigest>(other_handle).clone() };
+    let d = unsafe { from_handle::<NativeDigest>(handle) };
+    if let Err(e) = d.merge_digest(&other_owned) {
+        throw_illegal_arg(&mut env, e);
     }
 }
 
