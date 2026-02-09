@@ -1,5 +1,15 @@
 package gr.tdigest;
 
+import java.io.DataInputStream;
+import java.io.DataOutputStream;
+import java.io.EOFException;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.NotSerializableException;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
+import java.io.OutputStream;
+import java.io.Serializable;
 import java.lang.ref.Cleaner;
 import java.util.Arrays;
 import java.util.Locale;
@@ -16,7 +26,8 @@ import java.util.Objects;
  *
  * Owns a native handle; frees it via Cleaner or explicit close().
  */
-public final class TDigest implements AutoCloseable {
+public final class TDigest implements AutoCloseable, Serializable {
+  private static final long serialVersionUID = 1L;
 
   /* ======================= Type-safe enums for builder ======================= */
 
@@ -112,8 +123,8 @@ public final class TDigest implements AutoCloseable {
     }
   }
 
-  private State state;
-  private final Cleaner.Cleanable cleanable;
+  private transient State state;
+  private transient Cleaner.Cleanable cleanable;
 
   private TDigest(long handle) {
     if (handle == 0) {
@@ -342,11 +353,74 @@ public final class TDigest implements AutoCloseable {
     return TDigestNative.toBytes(state.handle);
   }
 
+  public void writeTo(OutputStream out) throws IOException {
+    Objects.requireNonNull(out, "out");
+    byte[] bytes = toBytes();
+    DataOutputStream dout = (out instanceof DataOutputStream)
+        ? (DataOutputStream) out
+        : new DataOutputStream(out);
+    dout.writeInt(bytes.length);
+    dout.write(bytes);
+  }
+
+  public static TDigest readFrom(InputStream in) throws IOException {
+    Objects.requireNonNull(in, "in");
+    DataInputStream din = (in instanceof DataInputStream)
+        ? (DataInputStream) in
+        : new DataInputStream(in);
+    final int n;
+    try {
+      n = din.readInt();
+    } catch (EOFException e) {
+      throw new EOFException("tdigest: missing byte length prefix");
+    }
+    if (n < 0) {
+      throw new IOException("tdigest: negative byte length: " + n);
+    }
+    byte[] bytes = new byte[n];
+    din.readFully(bytes);
+    return fromBytes(bytes);
+  }
+
+  private void writeObject(ObjectOutputStream out) throws IOException {
+    if (isClosed()) {
+      throw new NotSerializableException("TDigest is closed");
+    }
+    byte[] bytes = toBytes();
+    out.writeInt(bytes.length);
+    out.write(bytes);
+  }
+
+  private void readObject(ObjectInputStream in) throws IOException, ClassNotFoundException {
+    int n = in.readInt();
+    if (n < 0) {
+      throw new IOException("tdigest: negative serialized byte length: " + n);
+    }
+    byte[] bytes = new byte[n];
+    in.readFully(bytes);
+    long h = TDigestNative.fromBytes(bytes);
+    if (h == 0) {
+      throw new IOException("tdigest: failed to restore native handle from serialized bytes");
+    }
+    this.state = new State(h);
+    this.cleanable = CLEANER.register(this, this.state);
+  }
+
+  private void readObjectNoData() throws IOException {
+    throw new IOException("tdigest: missing serialized data");
+  }
+
   @Override
   public void close() {
     if (state != null && state.handle != 0) {
-      cleanable.clean();
+      if (cleanable != null) {
+        cleanable.clean();
+      } else {
+        TDigestNative.free(state.handle);
+        state.handle = 0;
+      }
       state = null;
+      cleanable = null;
     }
   }
 
