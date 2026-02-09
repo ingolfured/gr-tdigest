@@ -7,6 +7,11 @@ plugins {
 
 repositories { mavenCentral() }
 
+dependencies {
+  testImplementation 'org.junit.jupiter:junit-jupiter:5.11.4'
+  testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+}
+
 /* -------- Read version from ../../Cargo.toml (no external deps) -------- */
 def repoRoot  = file('../../')
 def cargoToml = new File(repoRoot, 'Cargo.toml')
@@ -86,7 +91,10 @@ tasks.register('copyNative') {
 /* -------- Source layout: Java + generated resources -------- */
 sourceSets {
   main {
-    java.srcDirs = ['src']
+    java {
+      srcDirs = ['src']
+      exclude 'test/**'
+    }
     resources.srcDirs = [genResDir]   // include META-INF/native/... in jar
   }
 }
@@ -102,6 +110,14 @@ tasks.named('jar').configure {
     def jarFile = archiveFile.get().asFile
     def mb = jarFile.length() / (1024.0 * 1024.0)
     println String.format("Built JAR: %s (%.2f MB)", jarFile.absolutePath, mb)
+  }
+}
+
+tasks.named('test').configure {
+  dependsOn tasks.named('copyNative')
+  useJUnitPlatform()
+  if ((JavaVersion.current().majorVersion as int) >= 22) {
+    jvmArgs '--enable-native-access=ALL-UNNAMED'
   }
 }
 

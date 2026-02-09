@@ -109,6 +109,22 @@ impl NativeDigest {
         };
         Ok(v)
     }
+
+    fn merge_f64_values(&mut self, values: Vec<f64>) -> TdResult<()> {
+        if values.iter().any(|v| !v.is_finite()) {
+            return Err(TdError::NonFiniteInput {
+                context: "sample value (NaN or ±inf)",
+            });
+        }
+        self.inner = match &self.inner {
+            NativeInner::F32(td) => {
+                let xs32: Vec<f32> = values.into_iter().map(|v| v as f32).collect();
+                NativeInner::F32(td.merge_unsorted(xs32)?)
+            }
+            NativeInner::F64(td) => NativeInner::F64(td.merge_unsorted(values)?),
+        };
+        Ok(())
+    }
 }
 
 // Handle helpers
@@ -310,6 +326,67 @@ pub extern "system" fn Java_gr_tdigest_TDigestNative_free(
 ) {
     if handle != 0 {
         unsafe { drop(Box::from_raw(handle as *mut NativeDigest)) };
+    }
+}
+
+#[allow(unused_mut)]
+#[no_mangle]
+pub extern "system" fn Java_gr_tdigest_TDigestNative_mergeArrayF64(
+    mut env: JNIEnv,
+    _cls: JClass,
+    handle: jlong,
+    values: JDoubleArray,
+) {
+    if handle == 0 {
+        throw_illegal_arg(&mut env, "TDigest handle is null".to_string());
+        return;
+    }
+    let n = env.get_array_length(&values).unwrap_or(0) as usize;
+    let mut xs = vec![0f64; n];
+    if n > 0 {
+        if let Err(e) = env.get_double_array_region(&values, 0, &mut xs) {
+            throw_illegal_arg(
+                &mut env,
+                format!("jni: get_double_array_region failed: {e:?}"),
+            );
+            return;
+        }
+    }
+
+    let d = unsafe { from_handle::<NativeDigest>(handle) };
+    if let Err(e) = d.merge_f64_values(xs) {
+        throw_illegal_arg(&mut env, e.to_string());
+    }
+}
+
+#[allow(unused_mut)]
+#[no_mangle]
+pub extern "system" fn Java_gr_tdigest_TDigestNative_mergeArrayF32(
+    mut env: JNIEnv,
+    _cls: JClass,
+    handle: jlong,
+    values: JFloatArray,
+) {
+    if handle == 0 {
+        throw_illegal_arg(&mut env, "TDigest handle is null".to_string());
+        return;
+    }
+    let n = env.get_array_length(&values).unwrap_or(0) as usize;
+    let mut xs32 = vec![0f32; n];
+    if n > 0 {
+        if let Err(e) = env.get_float_array_region(&values, 0, &mut xs32) {
+            throw_illegal_arg(
+                &mut env,
+                format!("jni: get_float_array_region failed: {e:?}"),
+            );
+            return;
+        }
+    }
+    let xs: Vec<f64> = xs32.into_iter().map(|v| v as f64).collect();
+
+    let d = unsafe { from_handle::<NativeDigest>(handle) };
+    if let Err(e) = d.merge_f64_values(xs) {
+        throw_illegal_arg(&mut env, e.to_string());
     }
 }
 

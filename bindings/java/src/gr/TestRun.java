@@ -17,6 +17,7 @@ public class TestRun {
         .precision(Precision.F64)
         .build(new double[]{0, 1, 2, 3});     // <-- use build(double[])
     System.out.println("Manual cleanup example:");
+    d.add(new double[]{4, 5, 6}).add(7.0);
     System.out.println(Arrays.toString(d.cdf(new double[]{0.0, 1.5, 3.0})));
     System.out.println("p50 = " + d.quantile(0.5));
     d.close();
@@ -29,6 +30,7 @@ public class TestRun {
         .singletonPolicy(SingletonPolicy.USE_WITH_PROTECTED_EDGES).keep(4)
         .precision(Precision.F32) // internal f32 sketch; API still uses double[] probes
         .build(new float[]{0, 1, 2, 3})) {    // <-- use build(float[])
+      digest.add(new float[]{4, 5, 6}).add(7.0f);
       System.out.println(Arrays.toString(digest.cdf(new double[]{0.0, 1.5, 3.0})));
       System.out.println("p50 = " + digest.quantile(0.5));
     }

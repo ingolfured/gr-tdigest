@@ -30,6 +30,8 @@ final class TDigestNative {
   static native long     fromBytes(byte[] bytes);
   static native byte[]   toBytes(long handle);
   static native long     fromArray(Object values, int maxSize, String scale, int policyCode, int edges, boolean f32mode);
+  static native void     mergeArrayF64(long handle, double[] values);
+  static native void     mergeArrayF32(long handle, float[] values);
   static native void     free(long handle);
   static native double[] cdf(long handle, double[] values);
   static native double   quantile(long handle, double q);

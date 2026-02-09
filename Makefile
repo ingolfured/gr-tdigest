@@ -131,7 +131,7 @@ JAVA_WRAPPER_CHECK:
 # ==============================================================================
 .PHONY: help setup clean \
         build build-rust build-python build-java \
-        test rust-test py-test \
+        test rust-test py-test java-test \
         lint \
         smoke-rust-cli smoke-wheel  \
         release-rust release-wheel release-jar release
@@ -182,9 +182,9 @@ build-java: JAVA_WRAPPER_CHECK
 # ==============================================================================
 # Tests
 # ==============================================================================
-.PHONY: test rust-test py-test
+.PHONY: test rust-test py-test java-test
 
-test: rust-test py-test
+test: rust-test java-test py-test
 	@echo "✅ all unit tests passed"
 
 rust-test:
@@ -193,6 +193,9 @@ rust-test:
 # Explicit path to bindings/python/tests (pytest discovers from pyproject too)
 py-test: build-python
 	$(UV_ENV) $(UV) run pytest
+
+java-test: JAVA_WRAPPER_CHECK
+	@"$(GRADLE)" --no-daemon --console=plain -p "$(JAVA_SRC)" test
 
 # ==============================================================================
 # Lint (autofix where possible) + docs must be warning-free
@@ -303,7 +306,8 @@ help:
 	@printf "  %-22s %s\n" "build-rust"     "Build Rust lib+CLI (dev)"
 	@printf "  %-22s %s\n" "build-python"   "Build Python extension (maturin develop, dev)"
 	@printf "  %-22s %s\n" "build-java"     "Build Java JAR with Gradle (clean+jar)"
-	@printf "  %-22s %s\n" "test"           "Run tests: rust + python"
+	@printf "  %-22s %s\n" "test"           "Run tests: rust + java + python"
+	@printf "  %-22s %s\n" "java-test"      "Run Java/JNI tests via Gradle"
 	@printf "  %-22s %s\n" "lint"           "Autofix (ruff/clippy/format) + mypy + rustdoc (deny warnings)"
 	@printf "  %-22s %s\n" "clean"          "Remove ALL build artifacts (Rust/Gradle/Python)"
 	@printf "\n$(STYLE_BOLD)Releases (release profile)$(STYLE_RESET)\n"

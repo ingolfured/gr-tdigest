@@ -313,6 +313,28 @@ public final class TDigest implements AutoCloseable {
     return TDigestNative.median(state.handle);
   }
 
+  public TDigest add(double[] values) {
+    ensureOpen();
+    Objects.requireNonNull(values, "values");
+    TDigestNative.mergeArrayF64(state.handle, values);
+    return this;
+  }
+
+  public TDigest add(float[] values) {
+    ensureOpen();
+    Objects.requireNonNull(values, "values");
+    TDigestNative.mergeArrayF32(state.handle, values);
+    return this;
+  }
+
+  public TDigest add(double value) {
+    return add(new double[] { value });
+  }
+
+  public TDigest add(float value) {
+    return add(new float[] { value });
+  }
+
   /* ======================= Serialization & lifecycle ======================= */
 
   public byte[] toBytes() {
