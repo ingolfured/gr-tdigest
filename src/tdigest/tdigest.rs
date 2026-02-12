@@ -67,11 +67,9 @@ impl<F: FloatLike> IntoVecF<F> for &[F] {
 }
 
 fn ensure_no_non_finite_values<F: FloatLike + FloatCore>(values: &[F]) -> TdResult<()> {
-    // Keep this layer simple and trait-friendly: reject NaNs on F directly.
-    // (±inf handling is enforced by front-ends where desired.)
-    if values.iter().any(|v| v.is_nan()) {
-        return Err(TdError::NaNInput {
-            context: "sample value",
+    if values.iter().any(|v| !v.is_finite()) {
+        return Err(TdError::NonFiniteInput {
+            context: "sample value (NaN or ±inf)",
         });
     }
     Ok(())
