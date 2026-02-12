@@ -244,49 +244,12 @@ public final class TDigest implements AutoCloseable, Serializable {
 
   /**
    * CDF evaluated at array-like x (returns double[]).
-   * Fast path: pass input array directly when all finite.
-   * For NaN/±inf probes on a NON-EMPTY digest:
-   *   - NaN   → NaN
-   *   - -inf  → 0.0
-   *   - +inf  → 1.0
-   * For an EMPTY digest: always returns NaN (including for ±inf).
+   * Semantics are implemented in Rust and shared across all frontends.
    */
   public double[] cdf(double[] values) {
     ensureOpen();
     Objects.requireNonNull(values, "values");
-
-    // Detect empty digest via median(): native returns NaN when empty.
-    boolean isEmpty = Double.isNaN(this.median());
-    if (isEmpty) {
-      double[] out = new double[values.length];
-      Arrays.fill(out, Double.NaN);
-      return out;
-    }
-
-    boolean allFinite = true;
-    for (double v : values) {
-      if (!Double.isFinite(v)) { allFinite = false; break; }
-    }
-    if (allFinite) {
-      return TDigestNative.cdf(state.handle, values);
-    }
-
-    // Non-empty: map ±inf to 0/1, propagate NaN
-    double[] temp = Arrays.copyOf(values, values.length);
-    for (int i = 0; i < temp.length; i++) {
-      if (!Double.isFinite(temp[i])) temp[i] = 0.0;
-    }
-    double[] out = TDigestNative.cdf(state.handle, temp);
-    if (out == null) return null;
-    for (int i = 0; i < values.length && i < out.length; i++) {
-      double v = values[i];
-      if (Double.isNaN(v)) {
-        out[i] = Double.NaN;
-      } else if (Double.isInfinite(v)) {
-        out[i] = v < 0.0 ? 0.0 : 1.0;
-      }
-    }
-    return out;
+    return TDigestNative.cdf(state.handle, values);
   }
 
   /** Vector quantile (strict): throws if any q is NaN/±inf or outside [0,1]. */
@@ -357,7 +320,12 @@ public final class TDigest implements AutoCloseable, Serializable {
     Objects.requireNonNull(digests, "digests");
     Iterator<TDigest> it = digests.iterator();
     if (!it.hasNext()) {
-      throw new IllegalArgumentException("mergeAll requires at least one digest");
+      return TDigest.builder()
+          .maxSize(1000)
+          .scale(Scale.K2)
+          .singletonPolicy(SingletonPolicy.USE)
+          .precision(Precision.F64)
+          .build(new double[] {});
     }
 
     TDigest first = Objects.requireNonNull(it.next(), "mergeAll contains null digest");

@@ -12,12 +12,10 @@ use std::slice;
 use std::sync::OnceLock;
 
 use crate::tdigest::frontends::{
-    ensure_finite_training_values, parse_scale_str, policy_from_code_edges, validate_quantile_probe,
+    parse_scale_str, policy_from_code_edges, DigestConfig, DigestPrecision, FrontendDigest,
 };
 use crate::tdigest::singleton_policy::SingletonPolicy;
-use crate::tdigest::wire::{decode_digest, encode_digest, WireDecodedDigest};
-use crate::tdigest::{ScaleFamily, TDigest};
-use crate::TdResult;
+use crate::tdigest::ScaleFamily;
 
 // Retain VM
 static JVM: OnceLock<JavaVM> = OnceLock::new();
@@ -70,14 +68,8 @@ fn read_jfloat_array(env: &JNIEnv, arr: &JFloatArray) -> Result<Vec<f32>, String
 // --------------- Native handle ---------------
 
 #[derive(Clone)]
-enum NativeInner {
-    F32(TDigest<f32>),
-    F64(TDigest<f64>),
-}
-
-#[derive(Clone)]
 struct NativeDigest {
-    inner: NativeInner,
+    inner: FrontendDigest,
 }
 
 impl NativeDigest {
@@ -87,78 +79,38 @@ impl NativeDigest {
         scale: ScaleFamily,
         policy: SingletonPolicy,
         f32mode: bool,
-    ) -> TdResult<Self> {
-        ensure_finite_training_values(&values)?;
-
-        if f32mode {
-            // Compact backend: TDigest<f32>
-            let xs32: Vec<f32> = values.iter().map(|v| *v as f32).collect();
-            let d = TDigest::<f32>::builder()
-                .max_size(max_size)
-                .scale(scale)
-                .singleton_policy(policy)
-                .build()
-                .merge_unsorted(xs32)?; // forward core Result
-            Ok(Self {
-                inner: NativeInner::F32(d),
-            })
+    ) -> Result<Self, String> {
+        let precision = if f32mode {
+            DigestPrecision::F32
         } else {
-            // Full-precision backend: TDigest<f64>
-            let d = TDigest::<f64>::builder()
-                .max_size(max_size)
-                .scale(scale)
-                .singleton_policy(policy)
-                .build()
-                .merge_unsorted(values)?; // forward core Result
-            Ok(Self {
-                inner: NativeInner::F64(d),
-            })
-        }
+            DigestPrecision::F64
+        };
+        let config = DigestConfig {
+            max_size,
+            scale,
+            policy,
+        };
+        FrontendDigest::from_values(values, config, precision)
+            .map(|inner| Self { inner })
+            .map_err(|e| e.to_string())
     }
 
     fn cdf(&self, xs: &[f64]) -> Vec<f64> {
-        match &self.inner {
-            NativeInner::F32(td) => td.cdf_or_nan(xs),
-            NativeInner::F64(td) => td.cdf_or_nan(xs),
-        }
+        self.inner.cdf(xs)
     }
 
-    fn quantile(&self, p: f64) -> Result<f64, &'static str> {
-        validate_quantile_probe(p)?;
-        let v = match &self.inner {
-            NativeInner::F32(td) => td.quantile(p),
-            NativeInner::F64(td) => td.quantile(p),
-        };
-        Ok(v)
+    fn quantile(&self, p: f64) -> Result<f64, String> {
+        self.inner.quantile_strict(p).map_err(|e| e.to_string())
     }
 
-    fn merge_f64_values(&mut self, values: Vec<f64>) -> TdResult<()> {
-        ensure_finite_training_values(&values)?;
-        self.inner = match &self.inner {
-            NativeInner::F32(td) => {
-                let xs32: Vec<f32> = values.into_iter().map(|v| v as f32).collect();
-                NativeInner::F32(td.merge_unsorted(xs32)?)
-            }
-            NativeInner::F64(td) => NativeInner::F64(td.merge_unsorted(values)?),
-        };
-        Ok(())
+    fn merge_f64_values(&mut self, values: Vec<f64>) -> Result<(), String> {
+        self.inner.add_values_f64(values).map_err(|e| e.to_string())
     }
 
     fn merge_digest(&mut self, other: &NativeDigest) -> Result<(), String> {
-        self.inner = match (&self.inner, &other.inner) {
-            (NativeInner::F32(a), NativeInner::F32(b)) => {
-                NativeInner::F32(TDigest::<f32>::merge_digests(vec![a.clone(), b.clone()]))
-            }
-            (NativeInner::F64(a), NativeInner::F64(b)) => {
-                NativeInner::F64(TDigest::<f64>::merge_digests(vec![a.clone(), b.clone()]))
-            }
-            _ => {
-                return Err(
-                    "tdigest: cannot merge digests of different precision (f32 vs f64)".to_string(),
-                )
-            }
-        };
-        Ok(())
+        self.inner
+            .merge_in_place(&other.inner)
+            .map_err(|e| e.to_string())
     }
 }
 
@@ -200,15 +152,9 @@ pub extern "system" fn Java_gr_tdigest_TDigestNative_fromBytes(
 
     let ubuf: &[u8] = unsafe { slice::from_raw_parts(buf.as_ptr() as *const u8, buf.len()) };
 
-    let nd_res: Result<NativeDigest, String> = match decode_digest(ubuf) {
-        Ok(WireDecodedDigest::F32(td32)) => Ok(NativeDigest {
-            inner: NativeInner::F32(td32),
-        }),
-        Ok(WireDecodedDigest::F64(td64)) => Ok(NativeDigest {
-            inner: NativeInner::F64(td64),
-        }),
-        Err(e) => Err(format!("jni: decode TDigest failed: {e}")),
-    };
+    let nd_res: Result<NativeDigest, String> = FrontendDigest::from_bytes(ubuf)
+        .map(|inner| NativeDigest { inner })
+        .map_err(|e| format!("jni: {e}"));
 
     match nd_res {
         Ok(nd) => into_handle(Box::new(nd)),
@@ -232,10 +178,7 @@ pub extern "system" fn Java_gr_tdigest_TDigestNative_toBytes(
         Vec::new()
     } else {
         let d = unsafe { from_handle::<NativeDigest>(handle) };
-        match &d.inner {
-            NativeInner::F32(td) => encode_digest(td),
-            NativeInner::F64(td) => encode_digest(td),
-        }
+        d.inner.to_bytes()
     };
 
     let arr = env
