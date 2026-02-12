@@ -5,9 +5,15 @@ import platform
 import subprocess
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Iterable
 
 import pytest
+from helpers_cli import (
+    assert_close,
+    cli_build_args,
+    cli_supports_precision_auto,
+    run_cli,
+)
+from helpers_java import compile_run_java, java_builder_chain
 
 # -------- canonical tiny dataset & expected answers (mid-rank CDF) ----------
 DATA = [0.0, 1.0, 2.0, 3.0]
@@ -133,47 +139,6 @@ def cfg() -> dict[str, object]:
     return dict(BASE_CFG)
 
 
-# -------------------- helpers (used by tests) --------------------
-
-def assert_close(a: float, b: float, eps: float) -> None:
-    assert abs(a - b) <= eps, f"{a} != {b} (eps={eps})"
-
-
-def run_cli(cli_bin: Path, args: list[str], data: Iterable[float]) -> str:
-    return (
-        subprocess.check_output(
-            [str(cli_bin), *args],
-            input=(" ".join(str(v) for v in data)).encode(),
-        )
-        .decode()
-        .strip()
-    )
-
-
-def cli_build_args(cfg: dict) -> list[str]:
-    """Common CLI args (no --stdin/--cmd/--p; add those in tests)."""
-    args = [
-        "--no-header",
-        "--output", "csv",
-        "--max-size", str(cfg["max_size"]),
-        "--scale", cfg["scale_cli"],
-        "--singleton-policy", cfg["singleton_cli"],  # "off"|"use"|"edges"
-        "--precision", cfg["precision_cli"],         # "f64"|"f32"|("auto"?)
-    ]
-    if str(cfg.get("singleton_cli", "")).lower() == "edges" and cfg.get("pin_per_side") is not None:
-        args += ["--pin-per-side", str(int(cfg["pin_per_side"]))]
-    return args
-
-
-def cli_supports_precision_auto(cli_bin: Path) -> bool:
-    """Heuristic: check --help for 'auto' in the precision help."""
-    try:
-        out = subprocess.check_output([str(cli_bin), "--help"], text=True).lower()
-        return "precision" in out and "auto" in out
-    except Exception:
-        return False
-
-
 # --- expose helpers as fixtures returning callables ---
 @pytest.fixture(scope="session")
 def run_cli_fn():
@@ -190,6 +155,16 @@ def cli_build_args_fn():
 @pytest.fixture(scope="session")
 def cli_supports_auto_fn(paths: Paths):
     return lambda: cli_supports_precision_auto(paths.cli_bin)
+
+
+@pytest.fixture(scope="session")
+def compile_run_java_fn(paths: Paths):
+    return lambda tmp_path, class_name, java_src: compile_run_java(paths, tmp_path, class_name, java_src)
+
+
+@pytest.fixture(scope="session")
+def java_builder_chain_fn():
+    return java_builder_chain
 
 
 @pytest.fixture
