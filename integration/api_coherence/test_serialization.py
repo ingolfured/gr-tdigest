@@ -594,6 +594,47 @@ class TestPythonPolarsSerdeInterop:
         with pytest.raises(pl.exceptions.ComputeError, match="mixed f32/f64 blobs in column"):
             df.with_columns(td_col=td.from_bytes("blob", precision="f64")).collect()
 
+    def test_from_bytes_with_any_null_blob_row_raises(self, dataset, cfg, add_pin_kw_fn):
+        """
+        Null blob rows are invalid input for td.from_bytes(...): strict error.
+        """
+        import gr_tdigest as td
+        import polars as pl
+        import pytest
+
+        d64 = self._build_python_digest(dataset, cfg, add_pin_kw_fn, precision="f64")
+        blob64 = d64.to_bytes()
+        df = pl.DataFrame({"blob": [blob64, None]}).with_columns(pl.col("blob").cast(pl.Binary))
+
+        with pytest.raises(pl.exceptions.ComputeError, match="(?i)null"):
+            df.with_columns(td_col=td.from_bytes("blob", precision="auto"))
+
+    def test_from_bytes_all_null_blob_column_raises(self):
+        """
+        All-null blob columns are invalid for td.from_bytes(...): strict error.
+        """
+        import gr_tdigest as td
+        import polars as pl
+        import pytest
+
+        df = pl.DataFrame({"blob": [None, None]}).with_columns(pl.col("blob").cast(pl.Binary))
+
+        with pytest.raises(pl.exceptions.ComputeError, match="(?i)null"):
+            df.with_columns(td_col=td.from_bytes("blob", precision="auto"))
+
+    def test_from_bytes_empty_blob_bytes_raises_decode_error(self):
+        """
+        Empty bytes (b"") are not a valid TDIG payload and must fail decode.
+        """
+        import gr_tdigest as td
+        import polars as pl
+        import pytest
+
+        df = pl.DataFrame({"blob": [b""]})
+
+        with pytest.raises(pl.exceptions.ComputeError, match="(?i)(tdig|decode|header|buffer)"):
+            df.with_columns(td_col=td.from_bytes("blob", precision="auto"))
+
     def test_from_bytes_with_precision_f32_homogeneous_column(self, dataset, cfg, add_pin_kw_fn, assert_close_fn):
         """
         td.from_bytes(..., precision="f32") on homogeneous f32 blobs:

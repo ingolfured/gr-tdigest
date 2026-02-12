@@ -164,6 +164,27 @@ def test_class_merge_all_empty_returns_empty_digest():
     assert not math.isfinite(q50)  # empty digest has no info
 
 
+def test_class_merge_all_empty_uses_canonical_defaults():
+    """
+    Canonical empty defaults must be merge-compatible with an explicitly-built
+    default digest: f64, max_size=1000, scale=k2, singleton_policy=use.
+    """
+    empty = TDigest.merge_all([])
+    canonical = TDigest.from_array(
+        [],
+        max_size=1000,
+        scale="k2",
+        singleton_policy="use",
+        f32_mode=False,
+    )
+
+    # Must not raise config mismatch.
+    out = empty.merge(canonical)
+    assert out is empty
+    assert empty.inner_kind() == "f64"
+    assert not math.isfinite(empty.quantile(0.5))
+
+
 def test_class_merge_all_does_not_mutate_inputs():
     data1 = _arange_float(32)
     data2 = _arange_float(32) + 50.0

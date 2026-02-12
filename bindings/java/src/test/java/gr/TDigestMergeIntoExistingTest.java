@@ -98,4 +98,19 @@ class TDigestMergeIntoExistingTest {
       assertEquals(byVarargs.quantile(0.5), byIterable.quantile(0.5), 1e-12);
     }
   }
+
+  @Test
+  void mergeAllEmptyIterableReturnsCanonicalEmptyDigest() {
+    try (TDigest empty = TDigest.mergeAll(Arrays.<TDigest>asList());
+         TDigest canonical = TDigest.builder()
+             .maxSize(1000)
+             .scale(Scale.K2)
+             .singletonPolicy(SingletonPolicy.USE)
+             .precision(Precision.F64)
+             .build(new double[] {})) {
+      assertTrue(Double.isNaN(empty.quantile(0.5)));
+      empty.merge(canonical); // must not throw config mismatch
+      assertTrue(Double.isNaN(empty.quantile(0.5)));
+    }
+  }
 }

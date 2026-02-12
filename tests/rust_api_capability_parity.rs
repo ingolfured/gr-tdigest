@@ -83,3 +83,19 @@ fn rust_f32_supports_add_merge_and_f32_wire_precision() {
         WireDecodedDigest::F64(_) => panic!("expected f32 wire decode"),
     }
 }
+
+#[test]
+fn rust_core_rejects_infinities_in_training_and_add_paths() {
+    let from_array_err = TDigest::<f64>::from_array(vec![0.0_f64, f64::INFINITY]);
+    assert!(from_array_err.is_err(), "from_array must reject +inf");
+
+    let mut d = TDigest::<f64>::builder()
+        .max_size(64)
+        .scale(ScaleFamily::K2)
+        .build();
+    assert!(d.add(f64::NEG_INFINITY).is_err(), "add must reject -inf");
+    assert!(
+        d.add_many(vec![1.0_f64, f64::INFINITY]).is_err(),
+        "add_many must reject +inf in batch"
+    );
+}
