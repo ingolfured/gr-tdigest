@@ -119,9 +119,11 @@ class TestPolarsPluginValidation:
 
     def test_groupby_empty_digest_behavior(self):
         df = pl.DataFrame({"id": [0, 0, 1, 1, 1], "data": [-3.0, -2.0, 15.0, 25.0, 35.0]})
-        agg = df.group_by("id").agg(
-            tdigest(pl.col("data").filter(pl.col("data") > 0), max_size=64).alias("td")
-        ).sort("id")
+        agg = (
+            df.group_by("id")
+            .agg(tdigest(pl.col("data").filter(pl.col("data") > 0), max_size=64).alias("td"))
+            .sort("id")
+        )
 
         probe = (pl.col("id") * 0 + 25.0).cast(pl.Float64)
         out = agg.with_columns(
