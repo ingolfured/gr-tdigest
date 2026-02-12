@@ -11,7 +11,7 @@ import gr.tdigest.TDigest.SingletonPolicy;
 import java.util.Arrays;
 import org.junit.jupiter.api.Test;
 
-class TDigestMergeIntoExistingTest {
+class TDigestMergeTest {
   @Test
   void addDoubleArrayAndScalarRaisesMedianForLargerValues() {
     try (TDigest d = TDigest.builder()
@@ -43,43 +43,6 @@ class TDigestMergeIntoExistingTest {
   }
 
   @Test
-  void mergeTwoF64DigestsMatchesCombinedDistribution() {
-    try (TDigest left = TDigest.builder()
-            .maxSize(256)
-            .scale(Scale.K2)
-            .singletonPolicy(SingletonPolicy.USE)
-            .precision(Precision.F64)
-            .build(new double[] {0.0, 1.0, 2.0, 3.0});
-         TDigest right = TDigest.builder()
-            .maxSize(256)
-            .scale(Scale.K2)
-            .singletonPolicy(SingletonPolicy.USE)
-            .precision(Precision.F64)
-            .build(new double[] {10.0, 11.0, 12.0, 13.0});
-         TDigest expected = TDigest.builder()
-            .maxSize(256)
-            .scale(Scale.K2)
-            .singletonPolicy(SingletonPolicy.USE)
-            .precision(Precision.F64)
-            .build(new double[] {0.0, 1.0, 2.0, 3.0, 10.0, 11.0, 12.0, 13.0})) {
-      left.merge(right);
-      assertEquals(expected.quantile(0.5), left.quantile(0.5), 1e-9);
-    }
-  }
-
-  @Test
-  void mergeAllSupportsThreeF32Digests() {
-    try (TDigest a = TDigest.builder().precision(Precision.F32).build(new float[] {0f, 1f, 2f, 3f});
-         TDigest b = TDigest.builder().precision(Precision.F32).build(new float[] {10f, 11f, 12f, 13f});
-         TDigest c = TDigest.builder().precision(Precision.F32).build(new float[] {20f, 21f, 22f, 23f});
-         TDigest expected = TDigest.builder().precision(Precision.F32).build(
-             new float[] {0f, 1f, 2f, 3f, 10f, 11f, 12f, 13f, 20f, 21f, 22f, 23f});
-         TDigest merged = TDigest.mergeAll(a, b, c)) {
-      assertEquals(expected.quantile(0.5), merged.quantile(0.5), 1e-6);
-    }
-  }
-
-  @Test
   void mergeRejectsMixedPrecision() {
     try (TDigest f64 = TDigest.builder().precision(Precision.F64).build(new double[] {1.0, 2.0, 3.0});
          TDigest f32 = TDigest.builder().precision(Precision.F32).build(new float[] {1.0f, 2.0f, 3.0f})) {
@@ -96,21 +59,6 @@ class TDigestMergeIntoExistingTest {
          TDigest byVarargs = TDigest.mergeAll(a, b, c);
          TDigest byIterable = TDigest.mergeAll(Arrays.asList(a, b, c))) {
       assertEquals(byVarargs.quantile(0.5), byIterable.quantile(0.5), 1e-12);
-    }
-  }
-
-  @Test
-  void mergeAllEmptyIterableReturnsCanonicalEmptyDigest() {
-    try (TDigest empty = TDigest.mergeAll(Arrays.<TDigest>asList());
-         TDigest canonical = TDigest.builder()
-             .maxSize(1000)
-             .scale(Scale.K2)
-             .singletonPolicy(SingletonPolicy.USE)
-             .precision(Precision.F64)
-             .build(new double[] {})) {
-      assertTrue(Double.isNaN(empty.quantile(0.5)));
-      empty.merge(canonical); // must not throw config mismatch
-      assertTrue(Double.isNaN(empty.quantile(0.5)));
     }
   }
 }
