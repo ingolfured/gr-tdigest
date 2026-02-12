@@ -10,10 +10,12 @@ use pyo3_polars::derive::polars_expr;
 use serde::Deserialize;
 
 use crate::tdigest::codecs::WireOf;
-use crate::tdigest::frontends::{parse_precision_hint, parse_singleton_policy_str, PrecisionHint};
+use crate::tdigest::frontends::{
+    parse_precision_hint, parse_singleton_policy_str, FrontendDigest, PrecisionHint,
+};
 use crate::tdigest::precision::FloatLike;
 use crate::tdigest::singleton_policy::SingletonPolicy;
-use crate::tdigest::wire::{wire_precision, WireDecodedDigest, WirePrecision};
+use crate::tdigest::wire::{wire_precision, WirePrecision};
 use crate::tdigest::{ScaleFamily, TDigest};
 
 /* ==================== input dtypes ==================== */
@@ -118,7 +120,7 @@ fn quantile(inputs: &[Series], kwargs: QuantileKwargs) -> PolarsResult<Series> {
 
 #[polars_expr(output_type = Float64)]
 fn median(inputs: &[Series]) -> PolarsResult<Series> {
-    let td = parse_and_merge::<f64>(inputs);
+    let td = parse_and_merge::<f64>(inputs)?;
     if td.is_empty() {
         Ok(Series::new("".into(), [None::<f64>]))
     } else {
@@ -129,10 +131,10 @@ fn median(inputs: &[Series]) -> PolarsResult<Series> {
 #[polars_expr(output_type_func = merge_output_dtype)]
 fn merge_tdigests(inputs: &[Series]) -> PolarsResult<Series> {
     if is_compact_digest_dtype(inputs[0].dtype()) {
-        let td = parse_and_merge::<f32>(inputs);
+        let td = parse_and_merge::<f32>(inputs)?;
         td.to_series(inputs[0].name())
     } else {
-        let td = parse_and_merge::<f64>(inputs);
+        let td = parse_and_merge::<f64>(inputs)?;
         td.to_series(inputs[0].name())
     }
 }
@@ -207,10 +209,10 @@ fn to_bytes(inputs: &[Series]) -> PolarsResult<Series> {
 
     // Use compact vs full precision based on digest dtype
     let td_bytes: Vec<u8> = if is_compact_digest_dtype(s.dtype()) {
-        let td = parse_and_merge::<f32>(inputs);
+        let td = parse_and_merge::<f32>(inputs)?;
         td.to_bytes()
     } else {
-        let td = parse_and_merge::<f64>(inputs);
+        let td = parse_and_merge::<f64>(inputs)?;
         td.to_bytes()
     };
 
@@ -252,138 +254,48 @@ fn from_bytes(inputs: &[Series]) -> PolarsResult<Series> {
         return td.to_series("tdigest");
     }
 
-    // Optional precision hint: second arg (Float32 → expect f32; otherwise f64).
-    let hint_is_f32 = inputs
-        .get(1)
-        .map(|hint| matches!(hint.dtype(), DataType::Float32))
-        .unwrap_or(false);
-
-    // First, access the binary column to potentially sniff precision.
-    let bin_sniff = s.binary().map_err(|e| {
-        PolarsError::ComputeError(format!("from_bytes: expected Binary column, got {e}").into())
-    })?;
-
-    // Determine expected precision:
-    //
-    // - If a hint column is present: trust it (Float32 → F32, anything else → F64).
-    // - If no hint: sniff the first non-null blob using wire_precision(...).
-    let mut expected_prec: Option<WirePrecision> = if inputs.len() > 1 {
-        if hint_is_f32 {
-            Some(WirePrecision::F32)
-        } else {
-            Some(WirePrecision::F64)
-        }
-    } else {
-        None
-    };
-
-    if expected_prec.is_none() {
-        for opt in bin_sniff.clone().into_iter() {
-            if let Some(bytes) = opt {
-                match wire_precision(bytes) {
-                    Ok(p) => {
-                        expected_prec = Some(p);
-                        break;
-                    }
-                    Err(e) => {
-                        polars_bail!(ComputeError: "tdigest.from_bytes: {e}");
-                    }
-                }
-            }
-        }
-    }
-
-    // No non-null blobs (all nulls): fall back to an empty f64 digest column.
-    let expected_prec = match expected_prec {
-        Some(p) => p,
-        None => {
-            let td = TDigest::<f64>::builder().build();
-            return td.to_series("tdigest");
-        }
-    };
-
-    // Decode and merge, enforcing a uniform precision across the column.
+    // Null blobs are strict errors by design.
     let bin = s.binary().map_err(|e| {
         PolarsError::ComputeError(format!("from_bytes: expected Binary column, got {e}").into())
     })?;
+    if bin.null_count() > 0 {
+        polars_bail!(
+            ComputeError: "tdigest.from_bytes: blob column contains nulls; null blobs are not allowed"
+        );
+    }
 
-    match expected_prec {
-        WirePrecision::F32 => {
-            // All blobs must be f32; decode and merge
-            let mut digests: Vec<TDigest<f32>> = Vec::new();
-
-            for opt in bin.into_iter() {
-                if let Some(bytes) = opt {
-                    match wire_precision(bytes) {
-                        Ok(WirePrecision::F32) => {
-                            let decoded =
-                                crate::tdigest::wire::decode_digest(bytes).map_err(|e| {
-                                    PolarsError::ComputeError(
-                                        format!("from_bytes decode error: {e}").into(),
-                                    )
-                                })?;
-                            match decoded {
-                                WireDecodedDigest::F32(td32) => digests.push(td32),
-                                WireDecodedDigest::F64(_) => {
-                                    polars_bail!(ComputeError:
-                                        "tdigest.from_bytes: mixed f32/f64 blobs in column (expected f32)"
-                                    );
-                                }
-                            }
-                        }
-                        Ok(WirePrecision::F64) => {
-                            polars_bail!(ComputeError:
-                                "tdigest.from_bytes: mixed f32/f64 blobs in column (expected f32)"
-                            );
-                        }
-                        Err(e) => {
-                            polars_bail!(ComputeError: "tdigest.from_bytes: {e}");
-                        }
-                    }
-                }
-            }
-
-            let merged = TDigest::<f32>::merge_digests(digests);
-            merged.to_series("tdigest")
+    // Optional precision hint: second arg (Float32 → expect f32; otherwise f64).
+    let expected_prec: WirePrecision = if inputs.len() > 1 {
+        if inputs
+            .get(1)
+            .map(|hint| matches!(hint.dtype(), DataType::Float32))
+            .unwrap_or(false)
+        {
+            WirePrecision::F32
+        } else {
+            WirePrecision::F64
         }
-        WirePrecision::F64 => {
-            // All blobs must be f64; decode and merge
-            let mut digests: Vec<TDigest<f64>> = Vec::new();
+    } else {
+        // No hint: sniff first blob from wire header.
+        let first = bin.into_no_null_iter().next().ok_or_else(|| {
+            PolarsError::ComputeError("tdigest.from_bytes: empty input column".into())
+        })?;
+        wire_precision(first)
+            .map_err(|e| PolarsError::ComputeError(format!("tdigest.from_bytes: {e}").into()))?
+    };
 
-            for opt in bin.into_iter() {
-                if let Some(bytes) = opt {
-                    match wire_precision(bytes) {
-                        Ok(WirePrecision::F64) => {
-                            let decoded =
-                                crate::tdigest::wire::decode_digest(bytes).map_err(|e| {
-                                    PolarsError::ComputeError(
-                                        format!("from_bytes decode error: {e}").into(),
-                                    )
-                                })?;
-                            match decoded {
-                                WireDecodedDigest::F64(td64) => digests.push(td64),
-                                WireDecodedDigest::F32(_) => {
-                                    polars_bail!(ComputeError:
-                                        "tdigest.from_bytes: mixed f32/f64 blobs in column (expected f64)"
-                                    );
-                                }
-                            }
-                        }
-                        Ok(WirePrecision::F32) => {
-                            polars_bail!(ComputeError:
-                                "tdigest.from_bytes: mixed f32/f64 blobs in column (expected f64)"
-                            );
-                        }
-                        Err(e) => {
-                            polars_bail!(ComputeError: "tdigest.from_bytes: {e}");
-                        }
-                    }
-                }
-            }
+    let mut digests: Vec<FrontendDigest> = Vec::with_capacity(s.len());
+    for bytes in bin.into_no_null_iter() {
+        let d = FrontendDigest::from_bytes_with_expected(bytes, expected_prec)
+            .map_err(|e| PolarsError::ComputeError(e.to_string().into()))?;
+        digests.push(d);
+    }
 
-            let merged = TDigest::<f64>::merge_digests(digests);
-            merged.to_series("tdigest")
-        }
+    let merged = FrontendDigest::merge_all(digests)
+        .map_err(|e| PolarsError::ComputeError(e.to_string().into()))?;
+    match merged {
+        FrontendDigest::F32(td) => td.to_series("tdigest"),
+        FrontendDigest::F64(td) => td.to_series("tdigest"),
     }
 }
 
@@ -391,9 +303,9 @@ fn from_bytes(inputs: &[Series]) -> PolarsResult<Series> {
 fn tdigest_summary(inputs: &[Series]) -> PolarsResult<Series> {
     // Always summarize in f64 for stable formatting (upcast if needed)
     let td = if is_compact_digest_dtype(inputs[0].dtype()) {
-        upcast_tdigest::<f32, f64>(&parse_and_merge::<f32>(inputs))
+        upcast_tdigest::<f32, f64>(&parse_and_merge::<f32>(inputs)?)
     } else {
-        parse_and_merge::<f64>(inputs)
+        parse_and_merge::<f64>(inputs)?
     };
 
     let s = if td.is_empty() {
@@ -633,20 +545,20 @@ where
     }
 }
 
-fn parse_and_merge<F>(inputs: &[Series]) -> TDigest<F>
+fn parse_and_merge<F>(inputs: &[Series]) -> PolarsResult<TDigest<F>>
 where
     F: Copy + 'static + FloatCore + FloatLike + WireOf,
 {
     let s = &inputs[0];
-    let parsed = TDigest::<F>::from_series(s).unwrap_or_default();
-    TDigest::<F>::merge_digests(parsed)
+    let parsed = parse_digest_column_lenient::<F>(s)?;
+    Ok(TDigest::<F>::merge_digests(parsed))
 }
 
 fn add_values_generic<F>(digest_s: &Series, values_s: &Series) -> PolarsResult<Series>
 where
     F: Copy + 'static + FloatCore + FloatLike + WireOf,
 {
-    let parsed = TDigest::<F>::from_series(digest_s).unwrap_or_default();
+    let parsed = parse_digest_column_lenient::<F>(digest_s)?;
     let mut td = TDigest::<F>::merge_digests(parsed);
     let vals = extract_add_values::<F>(values_s)?;
     if !vals.is_empty() {
@@ -750,7 +662,7 @@ fn cdf_generic<F>(digest_s: &Series, values_s: &Series) -> PolarsResult<Series>
 where
     F: Copy + 'static + FloatCore + FloatLike + WireOf,
 {
-    let digests: Vec<TDigest<F>> = TDigest::<F>::from_series(digest_s).unwrap_or_default();
+    let digests: Vec<TDigest<F>> = parse_digest_column_lenient::<F>(digest_s)?;
     let digest_len = digest_s.len();
 
     // Detect broadcast: exactly one non-empty digest across all rows
@@ -783,6 +695,33 @@ where
         }
         _ => cdf_on_scalar_out::<F, Float64Type>(&digests, values_s, single_non_empty),
     }
+}
+
+fn parse_digest_column_lenient<F>(s: &Series) -> PolarsResult<Vec<TDigest<F>>>
+where
+    F: Copy + 'static + FloatCore + FloatLike + WireOf,
+{
+    if s.len() == 0 {
+        return Ok(Vec::new());
+    }
+
+    if s.null_count() == 0 {
+        return TDigest::<F>::from_series(s)
+            .map_err(|e| PolarsError::ComputeError(format!("tdigest parse error: {e}").into()));
+    }
+
+    let mut out: Vec<TDigest<F>> = Vec::with_capacity(s.len());
+    for i in 0..s.len() {
+        let one = s.slice(i as i64, 1);
+        if one.null_count() > 0 {
+            out.push(TDigest::<F>::default());
+            continue;
+        }
+        let mut parsed = TDigest::<F>::from_series(&one)
+            .map_err(|e| PolarsError::ComputeError(format!("tdigest parse error: {e}").into()))?;
+        out.push(parsed.pop().unwrap_or_default());
+    }
+    Ok(out)
 }
 
 #[inline]
@@ -921,7 +860,7 @@ fn quantile_impl(inputs: &[Series], q: f64) -> PolarsResult<Series> {
     let want_f32 = is_compact_digest_dtype(inputs[0].dtype());
 
     if want_f32 {
-        let td = parse_and_merge::<f32>(inputs);
+        let td = parse_and_merge::<f32>(inputs)?;
         let is_empty = td.is_effectively_empty();
         if is_empty {
             return Ok(Series::new("".into(), [None::<f32>]));
@@ -933,7 +872,7 @@ fn quantile_impl(inputs: &[Series], q: f64) -> PolarsResult<Series> {
             Ok(Series::new("".into(), [Some(val as f32)]))
         }
     } else {
-        let td = parse_and_merge::<f64>(inputs);
+        let td = parse_and_merge::<f64>(inputs)?;
         let is_empty = td.is_effectively_empty();
         if is_empty {
             return Ok(Series::new("".into(), [None::<f64>]));
