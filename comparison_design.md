@@ -138,10 +138,12 @@ The following are meaningful potential gaps or expansion points compared with th
 - No direct equivalents of Elastic `SortingDigest`/`HybridDigest` modes for workload-adaptive behavior.
 
 4. Fractional-weight wire fidelity.
-- Wire currently integerizes weights (`u64`), limiting exact fractional-weight round-trip semantics.
+- Core wire now supports TDIG v2 (`f64` centroid weights + explicit centroid kind).
+- Remaining gap is rollout ergonomics/documentation for mixed legacy v1/v2 ecosystems.
 
 5. Explicit cast API completion across all surfaces.
-- Design target expects explicit cast helpers as first-class API; completion and parity should be tracked.
+- Core and frontend service support precision-cast paths.
+- Remaining gap is full first-class cast API exposure/parity on every public binding surface.
 
 6. Resource-accounting and off-heap integrations.
 - No engine-specific memory-accounting model comparable to Elastic BigArrays integration.

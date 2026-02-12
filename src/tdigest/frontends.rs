@@ -294,6 +294,20 @@ impl FrontendDigest {
     }
 
     #[inline]
+    pub fn cast_precision(&self, target: DigestPrecision) -> Self {
+        match (self, target) {
+            (FrontendDigest::F32(td), DigestPrecision::F32) => FrontendDigest::F32(td.clone()),
+            (FrontendDigest::F64(td), DigestPrecision::F64) => FrontendDigest::F64(td.clone()),
+            (FrontendDigest::F32(td), DigestPrecision::F64) => {
+                FrontendDigest::F64(td.cast_precision::<f64>())
+            }
+            (FrontendDigest::F64(td), DigestPrecision::F32) => {
+                FrontendDigest::F32(td.cast_precision::<f32>())
+            }
+        }
+    }
+
+    #[inline]
     pub fn is_effectively_empty(&self) -> bool {
         match self {
             FrontendDigest::F32(td) => td.is_effectively_empty(),
@@ -584,6 +598,32 @@ mod tests {
         let msg = merge_err.to_string().to_lowercase();
         assert!(msg.contains("precision"));
         assert!(msg.contains("cast explicitly"));
+    }
+
+    #[test]
+    fn frontend_cast_precision_roundtrip_preserves_behavior() {
+        let d = FrontendDigest::from_values(
+            vec![-2.0, -1.0, 0.0, 1.0, 10.0, 20.0],
+            DigestConfig {
+                max_size: 96,
+                scale: ScaleFamily::K3,
+                policy: SingletonPolicy::UseWithProtectedEdges(2),
+            },
+            DigestPrecision::F64,
+        )
+        .expect("build");
+
+        let d32 = d.cast_precision(DigestPrecision::F32);
+        let d64 = d32.cast_precision(DigestPrecision::F64);
+
+        assert_eq!(d32.inner_kind(), "f32");
+        assert_eq!(d64.inner_kind(), "f64");
+        assert_eq!(d.config(), d64.config());
+        assert!(
+            (d.quantile_strict(0.5).expect("q0") - d64.quantile_strict(0.5).expect("q1")).abs()
+                <= 1e-4
+        );
+        assert!((d.cdf(&[1.5])[0] - d64.cdf(&[1.5])[0]).abs() <= 1e-4);
     }
 
     #[test]

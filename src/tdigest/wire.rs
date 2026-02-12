@@ -6,12 +6,12 @@
 //
 //   header (56 bytes):
 //     0..4   : magic = b"TDIG"
-//     4      : version = 1
+//     4      : version
 //     5      : scale_code   (u8)
 //     6      : policy_code  (u8)
 //     7      : pin_per_side (u8)
 //     8..16  : max_size      (u64)
-//    16..24  : total_weight  (u64)
+//    16..24  : total_weight
 //    24..32  : min           (f64)
 //    32..40  : max           (f64)
 //    40..48  : centroid_count (u64)
@@ -19,10 +19,12 @@
 //
 //   centroids (payload):
 //     - let N = centroid_count
-//     - if payload_len == N * (4 + 8):
-//           F32 wire: each centroid = mean(f32) + weight(u64)
-//       else if payload_len == N * (8 + 8):
-//           F64 wire: each centroid = mean(f64) + weight(u64)
+//     - version 1:
+//         - F32 wire: each centroid = mean(f32) + weight(u64)
+//         - F64 wire: each centroid = mean(f64) + weight(u64)
+//     - version 2:
+//         - F32 wire: each centroid = mean(f32) + weight(f64) + kind(u8)
+//         - F64 wire: each centroid = mean(f64) + weight(f64) + kind(u8)
 //       else:
 //           error
 //
@@ -39,7 +41,9 @@ use crate::tdigest::singleton_policy::SingletonPolicy;
 use crate::tdigest::{DigestStats, TDigest};
 
 const MAGIC: &[u8; 4] = b"TDIG";
-const VERSION: u8 = 1;
+const VERSION_V1: u8 = 1;
+const VERSION_V2: u8 = 2;
+const ENCODE_VERSION: u8 = VERSION_V2;
 const HEADER_LEN: usize = 56;
 
 #[derive(Debug)]
@@ -92,6 +96,13 @@ pub fn wire_precision(bytes: &[u8]) -> WireResult<WirePrecision> {
     if bytes.len() < HEADER_LEN {
         return Err(WireError::InvalidHeader("buffer too small"));
     }
+    if &bytes[0..4] != MAGIC {
+        return Err(WireError::InvalidMagic);
+    }
+    let version = bytes[4];
+    if version != VERSION_V1 && version != VERSION_V2 {
+        return Err(WireError::UnsupportedVersion(version));
+    }
 
     // Layout reminder:
     // 0..4   : magic
@@ -119,13 +130,18 @@ pub fn wire_precision(bytes: &[u8]) -> WireResult<WirePrecision> {
     }
 
     // Same logic as `decode_digest` to decide width from payload size.
+    let (f32_stride, f64_stride) = if version == VERSION_V1 {
+        (4 + 8, 8 + 8)
+    } else {
+        (4 + 8 + 1, 8 + 8 + 1)
+    };
     let f32_len = centroid_count
-        .checked_mul(4 + 8)
+        .checked_mul(f32_stride)
         .ok_or(WireError::InvalidPayload(
             "overflow computing f32 payload size",
         ))?;
     let f64_len = centroid_count
-        .checked_mul(8 + 8)
+        .checked_mul(f64_stride)
         .ok_or(WireError::InvalidPayload(
             "overflow computing f64 payload size",
         ))?;
@@ -161,6 +177,11 @@ fn write_f32(buf: &mut Vec<u8>, v: f32) {
 }
 
 #[inline]
+fn write_u8(buf: &mut Vec<u8>, v: u8) {
+    buf.push(v);
+}
+
+#[inline]
 fn read_u64(bytes: &[u8], offset: &mut usize) -> WireResult<u64> {
     if *offset + 8 > bytes.len() {
         return Err(WireError::InvalidHeader("truncated u64"));
@@ -180,6 +201,16 @@ fn read_f64(bytes: &[u8], offset: &mut usize) -> WireResult<f64> {
     arr.copy_from_slice(&bytes[*offset..*offset + 8]);
     *offset += 8;
     Ok(f64::from_le_bytes(arr))
+}
+
+#[inline]
+fn read_u8(bytes: &[u8], offset: &mut usize) -> WireResult<u8> {
+    if *offset + 1 > bytes.len() {
+        return Err(WireError::InvalidPayload("truncated u8"));
+    }
+    let v = bytes[*offset];
+    *offset += 1;
+    Ok(v)
 }
 
 fn scale_to_code(s: ScaleFamily) -> u8 {
@@ -230,6 +261,24 @@ fn code_to_policy(code: u8, pin_per_side: u8) -> WireResult<SingletonPolicy> {
     }
 }
 
+#[inline]
+fn kind_to_code<F: FloatLike + FloatCore>(c: &Centroid<F>) -> u8 {
+    if c.is_atomic() {
+        0
+    } else {
+        1
+    }
+}
+
+#[inline]
+fn code_is_atomic(code: u8) -> WireResult<bool> {
+    match code {
+        0 => Ok(true),
+        1 => Ok(false),
+        _ => Err(WireError::InvalidPayload("invalid centroid kind code")),
+    }
+}
+
 /* ============================
  * Encode
  * ============================ */
@@ -244,17 +293,30 @@ where
         Precision::F32 => WireFloatWidth::F32,
         _ => WireFloatWidth::F64,
     };
+    let version = ENCODE_VERSION;
 
     let per_centroid_len: usize = match width {
-        WireFloatWidth::F32 => 4 + 8, // mean(f32) + weight(u64)
-        WireFloatWidth::F64 => 8 + 8, // mean(f64) + weight(u64)
+        WireFloatWidth::F32 => {
+            if version == VERSION_V1 {
+                4 + 8 // mean(f32) + weight(u64)
+            } else {
+                4 + 8 + 1 // mean(f32) + weight(f64) + kind(u8)
+            }
+        }
+        WireFloatWidth::F64 => {
+            if version == VERSION_V1 {
+                8 + 8 // mean(f64) + weight(u64)
+            } else {
+                8 + 8 + 1 // mean(f64) + weight(f64) + kind(u8)
+            }
+        }
     };
 
     let mut buf = Vec::with_capacity(HEADER_LEN + per_centroid_len * (n as usize));
 
     // magic + version
     buf.extend_from_slice(MAGIC);
-    buf.push(VERSION);
+    buf.push(version);
 
     // scale / policy / pin_per_side
     let scale_code = scale_to_code(td.scale());
@@ -266,32 +328,35 @@ where
     // max_size
     write_u64(&mut buf, td.max_size() as u64);
 
-    // total_weight (integerised)
-    let mut total_weight_u64: u64 = 0;
     let cents = td.centroids();
-
-    // For now we compute total_weight_u64 from centroid weights to keep it consistent
-    for c in cents {
-        let w = c.weight_f64();
-        debug_assert!(
-            w >= 0.0,
-            "centroid weight must be non-negative for wire encoding"
-        );
-        let w_rounded = w.round();
-        debug_assert!(
-            (w - w_rounded).abs() <= 1e-6,
-            "centroid weight must be close to integer for wire encoding"
-        );
-        let w_u64 = if w_rounded <= 0.0 {
-            0
-        } else if w_rounded > u64::MAX as f64 {
-            u64::MAX
-        } else {
-            w_rounded as u64
-        };
-        total_weight_u64 = total_weight_u64.saturating_add(w_u64);
+    if version == VERSION_V1 {
+        // Backward-compatible integerized weight header.
+        let mut total_weight_u64: u64 = 0;
+        for c in cents {
+            let w = c.weight_f64();
+            debug_assert!(
+                w >= 0.0,
+                "centroid weight must be non-negative for wire encoding"
+            );
+            let w_rounded = w.round();
+            debug_assert!(
+                (w - w_rounded).abs() <= 1e-6,
+                "centroid weight must be close to integer for wire encoding"
+            );
+            let w_u64 = if w_rounded <= 0.0 {
+                0
+            } else if w_rounded > u64::MAX as f64 {
+                u64::MAX
+            } else {
+                w_rounded as u64
+            };
+            total_weight_u64 = total_weight_u64.saturating_add(w_u64);
+        }
+        write_u64(&mut buf, total_weight_u64);
+    } else {
+        // Version 2 stores exact f64 total_weight.
+        write_f64(&mut buf, td.count());
     }
-    write_u64(&mut buf, total_weight_u64);
 
     // min / max / centroid_count / data_sum
     write_f64(&mut buf, td.min());
@@ -305,23 +370,41 @@ where
     for c in cents {
         let mean_f64 = c.mean_f64();
         let w = c.weight_f64();
-        let w_rounded = w.round();
-        let w_u64 = if w_rounded <= 0.0 {
-            0
-        } else if w_rounded > u64::MAX as f64 {
-            u64::MAX
-        } else {
-            w_rounded as u64
-        };
 
         match width {
             WireFloatWidth::F32 => {
                 write_f32(&mut buf, mean_f64 as f32);
-                write_u64(&mut buf, w_u64);
+                if version == VERSION_V1 {
+                    let w_rounded = w.round();
+                    let w_u64 = if w_rounded <= 0.0 {
+                        0
+                    } else if w_rounded > u64::MAX as f64 {
+                        u64::MAX
+                    } else {
+                        w_rounded as u64
+                    };
+                    write_u64(&mut buf, w_u64);
+                } else {
+                    write_f64(&mut buf, w);
+                    write_u8(&mut buf, kind_to_code(c));
+                }
             }
             WireFloatWidth::F64 => {
                 write_f64(&mut buf, mean_f64);
-                write_u64(&mut buf, w_u64);
+                if version == VERSION_V1 {
+                    let w_rounded = w.round();
+                    let w_u64 = if w_rounded <= 0.0 {
+                        0
+                    } else if w_rounded > u64::MAX as f64 {
+                        u64::MAX
+                    } else {
+                        w_rounded as u64
+                    };
+                    write_u64(&mut buf, w_u64);
+                } else {
+                    write_f64(&mut buf, w);
+                    write_u8(&mut buf, kind_to_code(c));
+                }
             }
         }
     }
@@ -343,7 +426,7 @@ pub fn decode_digest(bytes: &[u8]) -> WireResult<WireDecodedDigest> {
     }
 
     let version = bytes[4];
-    if version != VERSION {
+    if version != VERSION_V1 && version != VERSION_V2 {
         return Err(WireError::UnsupportedVersion(version));
     }
 
@@ -354,7 +437,15 @@ pub fn decode_digest(bytes: &[u8]) -> WireResult<WireDecodedDigest> {
     let mut offset = 8;
 
     let max_size_u64 = read_u64(bytes, &mut offset)?;
-    let total_weight_u64 = read_u64(bytes, &mut offset)?;
+    let total_weight = if version == VERSION_V1 {
+        read_u64(bytes, &mut offset)? as f64
+    } else {
+        let tw = read_f64(bytes, &mut offset)?;
+        if !tw.is_finite() || tw < 0.0 {
+            return Err(WireError::InvalidHeader("invalid total_weight"));
+        }
+        tw
+    };
     let min = read_f64(bytes, &mut offset)?;
     let max = read_f64(bytes, &mut offset)?;
     let centroid_count_u64 = read_u64(bytes, &mut offset)?;
@@ -375,13 +466,18 @@ pub fn decode_digest(bytes: &[u8]) -> WireResult<WireDecodedDigest> {
         // No centroids → width irrelevant, treat as f64 for simplicity
         WireFloatWidth::F64
     } else {
+        let (f32_stride, f64_stride) = if version == VERSION_V1 {
+            (4 + 8, 8 + 8)
+        } else {
+            (4 + 8 + 1, 8 + 8 + 1)
+        };
         let f32_len = centroid_count
-            .checked_mul(4 + 8)
+            .checked_mul(f32_stride)
             .ok_or(WireError::InvalidPayload(
                 "overflow computing f32 payload size",
             ))?;
         let f64_len = centroid_count
-            .checked_mul(8 + 8)
+            .checked_mul(f64_stride)
             .ok_or(WireError::InvalidPayload(
                 "overflow computing f64 payload size",
             ))?;
@@ -399,19 +495,17 @@ pub fn decode_digest(bytes: &[u8]) -> WireResult<WireDecodedDigest> {
 
     let stats = DigestStats {
         data_sum,
-        total_weight: total_weight_u64 as f64,
+        total_weight,
         data_min: min,
         data_max: max,
     };
 
     match width {
         WireFloatWidth::F32 => {
-            // Decode into TDigest<f32>
             let mut cents: Vec<Centroid<f32>> = Vec::with_capacity(centroid_count);
             let mut p = HEADER_LEN;
 
             for _ in 0..centroid_count {
-                // mean as f32
                 if p + 4 > bytes.len() {
                     return Err(WireError::InvalidPayload("truncated f32 mean"));
                 }
@@ -421,21 +515,35 @@ pub fn decode_digest(bytes: &[u8]) -> WireResult<WireDecodedDigest> {
                 let mean_f32 = f32::from_le_bytes(arr_m);
                 let mean_f64 = mean_f32 as f64;
 
-                // weight as u64
-                if p + 8 > bytes.len() {
-                    return Err(WireError::InvalidPayload("truncated weight u64"));
-                }
-                let mut arr_w = [0u8; 8];
-                arr_w.copy_from_slice(&bytes[p..p + 8]);
-                p += 8;
-                let w_u64 = u64::from_le_bytes(arr_w);
-                let w_f64 = w_u64 as f64;
-
-                // Same heuristic as codecs.rs: w==1 → atomic unit, else mixed
-                let c = if w_u64 == 1 {
-                    Centroid::<f32>::new_atomic_unit_f64(mean_f64)
+                let c = if version == VERSION_V1 {
+                    if p + 8 > bytes.len() {
+                        return Err(WireError::InvalidPayload("truncated weight u64"));
+                    }
+                    let mut arr_w = [0u8; 8];
+                    arr_w.copy_from_slice(&bytes[p..p + 8]);
+                    p += 8;
+                    let w_u64 = u64::from_le_bytes(arr_w);
+                    let w_f64 = w_u64 as f64;
+                    if w_u64 == 1 {
+                        Centroid::<f32>::new_atomic_unit_f64(mean_f64)
+                    } else {
+                        Centroid::<f32>::new_mixed_f64(mean_f64, w_f64)
+                    }
                 } else {
-                    Centroid::<f32>::new_mixed_f64(mean_f64, w_f64)
+                    let w_f64 = read_f64(bytes, &mut p)?;
+                    if !w_f64.is_finite() || w_f64 <= 0.0 {
+                        return Err(WireError::InvalidPayload("invalid centroid weight"));
+                    }
+                    let kind = read_u8(bytes, &mut p)?;
+                    if code_is_atomic(kind)? {
+                        if (w_f64 - 1.0).abs() <= f64::EPSILON {
+                            Centroid::<f32>::new_atomic_unit_f64(mean_f64)
+                        } else {
+                            Centroid::<f32>::new_atomic_f64(mean_f64, w_f64)
+                        }
+                    } else {
+                        Centroid::<f32>::new_mixed_f64(mean_f64, w_f64)
+                    }
                 };
                 cents.push(c);
             }
@@ -450,12 +558,10 @@ pub fn decode_digest(bytes: &[u8]) -> WireResult<WireDecodedDigest> {
             Ok(WireDecodedDigest::F32(td))
         }
         WireFloatWidth::F64 => {
-            // Decode into TDigest<f64> (previous behavior)
             let mut cents: Vec<Centroid<f64>> = Vec::with_capacity(centroid_count);
             let mut p = HEADER_LEN;
 
             for _ in 0..centroid_count {
-                // mean as f64
                 if p + 8 > bytes.len() {
                     return Err(WireError::InvalidPayload("truncated f64 mean"));
                 }
@@ -464,20 +570,35 @@ pub fn decode_digest(bytes: &[u8]) -> WireResult<WireDecodedDigest> {
                 p += 8;
                 let mean_f64 = f64::from_le_bytes(arr_m);
 
-                // weight as u64
-                if p + 8 > bytes.len() {
-                    return Err(WireError::InvalidPayload("truncated weight u64"));
-                }
-                let mut arr_w = [0u8; 8];
-                arr_w.copy_from_slice(&bytes[p..p + 8]);
-                p += 8;
-                let w_u64 = u64::from_le_bytes(arr_w);
-                let w_f64 = w_u64 as f64;
-
-                let c = if w_u64 == 1 {
-                    Centroid::<f64>::new_atomic_unit_f64(mean_f64)
+                let c = if version == VERSION_V1 {
+                    if p + 8 > bytes.len() {
+                        return Err(WireError::InvalidPayload("truncated weight u64"));
+                    }
+                    let mut arr_w = [0u8; 8];
+                    arr_w.copy_from_slice(&bytes[p..p + 8]);
+                    p += 8;
+                    let w_u64 = u64::from_le_bytes(arr_w);
+                    let w_f64 = w_u64 as f64;
+                    if w_u64 == 1 {
+                        Centroid::<f64>::new_atomic_unit_f64(mean_f64)
+                    } else {
+                        Centroid::<f64>::new_mixed_f64(mean_f64, w_f64)
+                    }
                 } else {
-                    Centroid::<f64>::new_mixed_f64(mean_f64, w_f64)
+                    let w_f64 = read_f64(bytes, &mut p)?;
+                    if !w_f64.is_finite() || w_f64 <= 0.0 {
+                        return Err(WireError::InvalidPayload("invalid centroid weight"));
+                    }
+                    let kind = read_u8(bytes, &mut p)?;
+                    if code_is_atomic(kind)? {
+                        if (w_f64 - 1.0).abs() <= f64::EPSILON {
+                            Centroid::<f64>::new_atomic_unit_f64(mean_f64)
+                        } else {
+                            Centroid::<f64>::new_atomic_f64(mean_f64, w_f64)
+                        }
+                    } else {
+                        Centroid::<f64>::new_mixed_f64(mean_f64, w_f64)
+                    }
                 };
                 cents.push(c);
             }

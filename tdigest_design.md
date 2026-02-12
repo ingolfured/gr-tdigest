@@ -284,15 +284,23 @@ Header fields:
 - centroid_count
 - data_sum
 
+Versioning:
+- Encoder currently writes TDIG **v2**.
+- Decoder supports both **v1** and **v2**.
+
 Payload layouts:
-- `f32 mean + u64 weight` per centroid, or
-- `f64 mean + u64 weight` per centroid.
+- v1:
+  - `f32 mean + u64 weight` per centroid, or
+  - `f64 mean + u64 weight` per centroid.
+- v2:
+  - `f32 mean + f64 weight + kind(u8)` per centroid, or
+  - `f64 mean + f64 weight + kind(u8)` per centroid.
 
 Decode behavior:
 - Payload length determines wire precision.
-- `w==1` decodes as atomic unit.
-- `w!=1` decodes as mixed.
-- Non-unit atomic pile identity is not fully recoverable from current wire payload.
+- v1 keeps legacy heuristic (`w==1` => atomic unit, otherwise mixed).
+- v2 decodes centroid kind explicitly from payload and preserves atomic-vs-mixed identity.
+- v2 preserves fractional centroid weights on wire.
 
 ## 7. Frontend service role
 
@@ -301,15 +309,16 @@ Decode behavior:
 - Validate training values.
 - Enforce strict quantile probes (`finite` + `[0,1]`).
 - Enforce strict merge compatibility (precision + config).
+- Provide explicit precision casting (`cast_precision`).
 - Provide precision-aware decode checks (`from_bytes_with_expected`).
 
 Adapters (`src/py.rs`, `src/jni.rs`, `src/polars_expr.rs`) should remain thin around this layer.
 
 ## 8. Known current-state gaps
 
-1. Fractional wire weights.
-- Wire uses integerized `u64` weights.
-- Full fractional-weight fidelity would need wire extension.
+1. Legacy wire compatibility mode.
+- Decoder supports v1 and v2.
+- Re-encoding a v1 blob produces v2 output (format changes intentionally).
 
 2. Strict merge location.
 - Strict compatibility checks are frontend-layer behavior, not core merge behavior.

@@ -132,6 +132,23 @@ fn rescaled_centroid<F: FloatLike + FloatCore>(
     }
 }
 
+#[inline]
+fn cast_centroid<From, To>(c: &Centroid<From>) -> Centroid<To>
+where
+    From: FloatLike + FloatCore,
+    To: FloatLike + FloatCore,
+{
+    let mean = c.mean_f64();
+    let weight = c.weight_f64();
+    if c.is_atomic_unit() {
+        Centroid::<To>::new_atomic_unit_f64(mean)
+    } else if c.is_atomic() {
+        Centroid::<To>::new_atomic_f64(mean, weight)
+    } else {
+        Centroid::<To>::new_mixed_f64(mean, weight)
+    }
+}
+
 /* =============================================================================
  * Options / Builder
  * ============================================================================= */
@@ -340,6 +357,33 @@ impl<F: FloatLike + FloatCore> TDigest<F> {
     #[inline]
     pub fn precision(&self) -> Precision {
         Precision::of_type::<F>()
+    }
+
+    /// Cast this digest to a different centroid-storage precision.
+    ///
+    /// This preserves configuration and digest-level stats while converting
+    /// centroid means/weights to the target float type.
+    pub fn cast_precision<T>(&self) -> TDigest<T>
+    where
+        T: FloatLike + FloatCore,
+    {
+        let cents: Vec<Centroid<T>> = self
+            .centroids()
+            .iter()
+            .map(|c| cast_centroid::<F, T>(c))
+            .collect();
+        let stats = DigestStats {
+            data_sum: self.sum(),
+            total_weight: self.count(),
+            data_min: self.min(),
+            data_max: self.max(),
+        };
+        TDigest::<T>::builder()
+            .max_size(self.max_size())
+            .scale(self.scale())
+            .singleton_policy(self.singleton_policy())
+            .with_centroids_and_stats(cents, stats)
+            .build()
     }
 
     // --- internal metadata setters (small & inlined) ---
@@ -770,40 +814,7 @@ impl TDigest<f64> {
             WireDecodedDigest::F64(td) => Ok(td),
 
             // Upcast f32-backed digest into f64-backed digest.
-            WireDecodedDigest::F32(td32) => {
-                // Rebuild centroids in f64.
-                let cents: Vec<Centroid<f64>> = td32
-                    .centroids()
-                    .iter()
-                    .map(|c| {
-                        let mean = c.mean_f64();
-                        let w = c.weight_f64();
-
-                        // Same heuristic as in codecs/wire: weight == 1 → atomic unit.
-                        if w == 1.0 {
-                            Centroid::<f64>::new_atomic_unit_f64(mean)
-                        } else {
-                            Centroid::<f64>::new_mixed_f64(mean, w)
-                        }
-                    })
-                    .collect();
-
-                let stats = DigestStats {
-                    data_sum: td32.sum(),
-                    total_weight: td32.count(),
-                    data_min: td32.min(),
-                    data_max: td32.max(),
-                };
-
-                let td64 = TDigest::<f64>::builder()
-                    .max_size(td32.max_size())
-                    .scale(td32.scale())
-                    .singleton_policy(td32.singleton_policy())
-                    .with_centroids_and_stats(cents, stats)
-                    .build();
-
-                Ok(td64)
-            }
+            WireDecodedDigest::F32(td32) => Ok(td32.cast_precision::<f64>()),
         }
     }
 }
@@ -900,5 +911,38 @@ mod tests {
         assert!(approx(td.sum(), 10.0, 1e-12));
         assert!(approx(td.min(), 2.5, 1e-12));
         assert!(approx(td.max(), 2.5, 1e-12));
+    }
+
+    #[test]
+    fn cast_precision_roundtrip_preserves_shape() {
+        let mut td = TDigest::<f64>::builder()
+            .max_size(256)
+            .scale(ScaleFamily::K3)
+            .singleton_policy(SingletonPolicy::UseWithProtectedEdges(2))
+            .build();
+        td.add_many(vec![-3.0, -1.0, 0.0, 0.5, 10.0, 12.0])
+            .expect("seed");
+        td.add_weighted_many(&[5.0, 6.0], &[3.0, 2.0])
+            .expect("weighted");
+
+        let td32 = td.cast_precision::<f32>();
+        let td64 = td32.cast_precision::<f64>();
+
+        assert_eq!(td32.precision(), Precision::F32);
+        assert_eq!(td64.precision(), Precision::F64);
+        assert_eq!(td.scale(), td64.scale());
+        assert_eq!(td.singleton_policy(), td64.singleton_policy());
+        assert_eq!(td.max_size(), td64.max_size());
+        assert!(approx(td.count(), td64.count(), 1e-6));
+        assert!(approx(td.sum(), td64.sum(), 1e-4));
+
+        for q in [0.0, 0.1, 0.5, 0.9, 1.0] {
+            assert!(
+                approx(td.quantile(q), td64.quantile(q), 1e-4),
+                "quantile mismatch at q={q}: {} vs {}",
+                td.quantile(q),
+                td64.quantile(q)
+            );
+        }
     }
 }
