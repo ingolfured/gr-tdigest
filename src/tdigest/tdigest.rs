@@ -76,6 +76,33 @@ fn ensure_no_non_finite_values<F: FloatLike + FloatCore>(values: &[F]) -> TdResu
 }
 
 #[inline]
+fn ensure_no_invalid_weights(weights: &[f64]) -> TdResult<()> {
+    if weights.iter().any(|w| !w.is_finite()) {
+        return Err(TdError::NonFiniteInput {
+            context: "sample weight (NaN or ±inf)",
+        });
+    }
+    if weights.iter().any(|w| *w <= 0.0) {
+        return Err(TdError::InvalidWeight {
+            context: "sample weight must be > 0",
+        });
+    }
+    Ok(())
+}
+
+#[inline]
+fn ensure_weighted_input_lengths(values_len: usize, weights_len: usize) -> TdResult<()> {
+    if values_len != weights_len {
+        return Err(TdError::MismatchedInputLength {
+            context: "weighted values/weights",
+            values_len,
+            weights_len,
+        });
+    }
+    Ok(())
+}
+
+#[inline]
 fn ensure_positive_finite_scale_factor(factor: f64, context: &'static str) -> TdResult<()> {
     if !factor.is_finite() || factor <= 0.0 {
         return Err(TdError::InvalidScaleFactor { context });
@@ -340,6 +367,19 @@ impl<F: FloatLike + FloatCore> TDigest<F> {
         base.merge_unsorted(values.to_vec())
     }
 
+    /// Build from weighted values in any order.
+    ///
+    /// Equivalent to constructing an empty digest with `max_size` and calling
+    /// [`TDigest::merge_weighted_unsorted`].
+    pub fn from_weighted_unsorted(
+        values: &[F],
+        weights: &[f64],
+        max_size: usize,
+    ) -> TdResult<TDigest<F>> {
+        let base = Self::builder().max_size(max_size).build();
+        base.merge_weighted_unsorted(values, weights)
+    }
+
     /// The configured scale family used by the compressor’s k-limit.
     #[inline]
     pub fn scale(&self) -> ScaleFamily {
@@ -378,6 +418,60 @@ impl<F: FloatLike + FloatCore> TDigest<F> {
             "duplicate centroid means after merge"
         );
         Ok(result)
+    }
+
+    /// Ingest weighted values (`values[i]` with `weights[i]`) in any order.
+    ///
+    /// Rules:
+    /// - `values.len()` must equal `weights.len()`.
+    /// - values must be finite.
+    /// - weights must be finite and strictly positive.
+    ///
+    /// Each pair is treated as exact atomic mass at the given value, then merged
+    /// through the same digest merge/compression path.
+    pub fn merge_weighted_unsorted(&self, values: &[F], weights: &[f64]) -> TdResult<TDigest<F>> {
+        ensure_weighted_input_lengths(values.len(), weights.len())?;
+        ensure_no_non_finite_values(values)?;
+        ensure_no_invalid_weights(weights)?;
+        if values.is_empty() {
+            return Ok(self.clone());
+        }
+
+        let mut pairs: Vec<(F, f64)> = values
+            .iter()
+            .copied()
+            .zip(weights.iter().copied())
+            .collect();
+        pairs.sort_by(|a, b| a.0.total_cmp(b.0));
+
+        let mut cents: Vec<Centroid<F>> = Vec::with_capacity(pairs.len());
+        let mut data_sum = 0.0_f64;
+        let mut total_weight = 0.0_f64;
+        for (v, w) in &pairs {
+            let mean = <F as FloatLike>::to_f64(*v);
+            if (*w - 1.0).abs() <= f64::EPSILON {
+                cents.push(Centroid::<F>::new_atomic_unit_f64(mean));
+            } else {
+                cents.push(Centroid::<F>::new_atomic_f64(mean, *w));
+            }
+            data_sum += mean * *w;
+            total_weight += *w;
+        }
+
+        let stats = DigestStats {
+            data_sum,
+            total_weight,
+            data_min: <F as FloatLike>::to_f64(pairs[0].0),
+            data_max: <F as FloatLike>::to_f64(pairs[pairs.len() - 1].0),
+        };
+        let weighted = TDigest::<F>::builder()
+            .max_size(self.max_size)
+            .scale(self.scale)
+            .singleton_policy(self.policy)
+            .with_centroids_and_stats(cents, stats)
+            .build();
+
+        Ok(TDigest::merge_digests(vec![self.clone(), weighted]))
     }
 
     /// Merge multiple digests by k-way merging their centroid runs and sending the result through
@@ -467,6 +561,18 @@ impl<F: FloatLike + FloatCore> TDigest<F> {
             return Ok(self);
         }
         let merged = self.merge_unsorted(vals)?;
+        *self = merged;
+        Ok(self)
+    }
+
+    /// Add a single weighted value in-place.
+    pub fn add_weighted(&mut self, value: F, weight: f64) -> TdResult<&mut Self> {
+        self.add_weighted_many(&[value], &[weight])
+    }
+
+    /// Add weighted values in-place (`values[i]` with `weights[i]`).
+    pub fn add_weighted_many(&mut self, values: &[F], weights: &[f64]) -> TdResult<&mut Self> {
+        let merged = self.merge_weighted_unsorted(values, weights)?;
         *self = merged;
         Ok(self)
     }
@@ -699,5 +805,100 @@ impl TDigest<f64> {
                 Ok(td64)
             }
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn approx(a: f64, b: f64, eps: f64) -> bool {
+        (a - b).abs() <= eps * (1.0 + a.abs() + b.abs())
+    }
+
+    #[test]
+    fn weighted_add_matches_expanded_input_for_integer_weights() {
+        let values = vec![3.0, -1.0, 5.0, 3.0];
+        let weights = vec![4.0, 2.0, 3.0, 1.0];
+
+        let mut weighted = TDigest::<f64>::builder().max_size(128).build();
+        weighted
+            .add_weighted_many(&values, &weights)
+            .expect("weighted add");
+
+        let mut expanded_values = Vec::new();
+        for (&v, &w) in values.iter().zip(weights.iter()) {
+            expanded_values.extend(std::iter::repeat_n(v, w as usize));
+        }
+
+        let mut expanded = TDigest::<f64>::builder().max_size(128).build();
+        expanded.add_many(expanded_values).expect("expanded add");
+
+        assert!(approx(weighted.count(), expanded.count(), 1e-12));
+        assert!(approx(weighted.sum(), expanded.sum(), 1e-12));
+        assert!(approx(weighted.min(), expanded.min(), 1e-12));
+        assert!(approx(weighted.max(), expanded.max(), 1e-12));
+
+        for q in [0.0, 0.1, 0.5, 0.9, 1.0] {
+            assert!(
+                approx(weighted.quantile(q), expanded.quantile(q), 1e-9),
+                "quantile mismatch at q={q}: weighted={} expanded={}",
+                weighted.quantile(q),
+                expanded.quantile(q)
+            );
+        }
+        for x in [-1.0, 0.0, 3.0, 4.0, 5.0] {
+            let cw = weighted.cdf(&[x])[0];
+            let ce = expanded.cdf(&[x])[0];
+            assert!(
+                approx(cw, ce, 1e-9),
+                "cdf mismatch at x={x}: weighted={cw} expanded={ce}"
+            );
+        }
+    }
+
+    #[test]
+    fn weighted_add_rejects_bad_inputs() {
+        let mut td = TDigest::<f64>::builder().build();
+
+        let err = td
+            .add_weighted_many(&[1.0, 2.0], &[1.0])
+            .expect_err("length mismatch should fail");
+        assert!(matches!(err, TdError::MismatchedInputLength { .. }));
+
+        let err = td
+            .add_weighted_many(&[1.0], &[f64::NAN])
+            .expect_err("non-finite weight should fail");
+        assert!(matches!(err, TdError::NonFiniteInput { .. }));
+
+        let err = td
+            .add_weighted_many(&[1.0], &[0.0])
+            .expect_err("zero weight should fail");
+        assert!(matches!(err, TdError::InvalidWeight { .. }));
+
+        let err = td
+            .add_weighted_many(&[f64::INFINITY], &[1.0])
+            .expect_err("non-finite value should fail");
+        assert!(matches!(err, TdError::NonFiniteInput { .. }));
+    }
+
+    #[test]
+    fn from_weighted_unsorted_builds_digest() {
+        let td = TDigest::<f64>::from_weighted_unsorted(&[10.0, 0.0], &[2.0, 3.0], 64)
+            .expect("weighted build");
+        assert!(approx(td.count(), 5.0, 1e-12));
+        assert!(approx(td.sum(), 20.0, 1e-12));
+        assert!(approx(td.min(), 0.0, 1e-12));
+        assert!(approx(td.max(), 10.0, 1e-12));
+    }
+
+    #[test]
+    fn add_weighted_single_updates_digest_stats() {
+        let mut td = TDigest::<f64>::builder().build();
+        td.add_weighted(2.5, 4.0).expect("add weighted");
+        assert!(approx(td.count(), 4.0, 1e-12));
+        assert!(approx(td.sum(), 10.0, 1e-12));
+        assert!(approx(td.min(), 2.5, 1e-12));
+        assert!(approx(td.max(), 2.5, 1e-12));
     }
 }

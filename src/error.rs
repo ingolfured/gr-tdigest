@@ -16,6 +16,16 @@ pub enum TdError {
 
     /// Invalid scaling factor for digest-level scaling operations.
     InvalidScaleFactor { context: &'static str },
+
+    /// Weight was non-positive in a weighted-ingest path.
+    InvalidWeight { context: &'static str },
+
+    /// Values/weights length mismatch in weighted-ingest path.
+    MismatchedInputLength {
+        context: &'static str,
+        values_len: usize,
+        weights_len: usize,
+    },
 }
 
 impl fmt::Display for TdError {
@@ -40,6 +50,20 @@ hint: clean your data or drop NaNs before building the digest",
                 f,
                 "tdigest: invalid scale factor ({}). hint: factor must be finite and > 0",
                 context
+            ),
+            TdError::InvalidWeight { context } => write!(
+                f,
+                "tdigest: invalid weight ({}). hint: weights must be finite and > 0",
+                context
+            ),
+            TdError::MismatchedInputLength {
+                context,
+                values_len,
+                weights_len,
+            } => write!(
+                f,
+                "tdigest: mismatched input lengths ({}): values_len={} weights_len={}",
+                context, values_len, weights_len
             ),
         }
     }

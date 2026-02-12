@@ -56,6 +56,14 @@ Centroid kind is explicit:
 
 `add(value)` delegates to `add_many([value])`.
 
+Weighted add path:
+- `add_weighted(value, weight)` and `add_weighted_many(values, weights)` are supported in Rust core.
+- Inputs must satisfy:
+  - same length for values/weights
+  - finite values
+  - finite, strictly positive weights
+- Weighted values are converted to atomic centroids, then merged through the same digest merge/compression path.
+
 ### 3.2 Raw-value ingest (`merge_unsorted` / `merge_sorted`)
 
 `merge_unsorted`:
@@ -73,6 +81,10 @@ Centroid kind is explicit:
 5. Run the full compressor pipeline with `compress_into`.
 
 Important: compressor stage 1 recomputes digest metadata (`count`, `sum`, `min`, `max`) from the normalized stream and writes those back to the result.
+
+Weighted constructor/merge helpers:
+- `from_weighted_unsorted(values, weights, max_size)` builds from weighted input directly.
+- `merge_weighted_unsorted(values, weights)` merges weighted input into an existing digest.
 
 ### 3.3 Digest-to-digest merge (`merge_digests`)
 
