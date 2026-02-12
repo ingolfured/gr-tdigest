@@ -442,3 +442,173 @@ Rebuild or cast to a shared configuration before merge.",
         }
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn cfg_k2_use(max_size: usize) -> DigestConfig {
+        DigestConfig {
+            max_size,
+            scale: ScaleFamily::K2,
+            policy: SingletonPolicy::Use,
+        }
+    }
+
+    #[test]
+    fn parse_helpers_accept_expected_forms_and_reject_invalid() {
+        assert_eq!(
+            parse_scale_str(Some("K2")).expect("parse scale"),
+            ScaleFamily::K2
+        );
+        assert!(parse_scale_str(Some("wat")).is_err());
+
+        assert_eq!(
+            parse_singleton_policy_str(Some("use"), None).expect("parse policy"),
+            SingletonPolicy::Use
+        );
+        assert_eq!(
+            parse_singleton_policy_str(Some("edges"), Some(2)).expect("parse edges"),
+            SingletonPolicy::UseWithProtectedEdges(2)
+        );
+        assert!(parse_singleton_policy_str(Some("edges"), None).is_err());
+
+        assert_eq!(
+            parse_precision_hint("auto").expect("parse precision"),
+            PrecisionHint::Auto
+        );
+        assert!(parse_precision_hint("weird").is_err());
+    }
+
+    #[test]
+    fn finite_and_quantile_probe_validation_is_strict() {
+        assert!(ensure_finite_training_values(&[0.0, 1.0, 2.0]).is_ok());
+        assert!(ensure_finite_training_values(&[0.0, f64::NAN, 1.0]).is_err());
+        assert!(ensure_finite_training_values(&[0.0, f64::INFINITY, 1.0]).is_err());
+        assert!(ensure_finite_training_values(&[0.0, f64::NEG_INFINITY, 1.0]).is_err());
+
+        assert!(validate_quantile_probe(0.0).is_ok());
+        assert!(validate_quantile_probe(1.0).is_ok());
+        assert!(validate_quantile_probe(-0.1).is_err());
+        assert!(validate_quantile_probe(1.1).is_err());
+        assert!(validate_quantile_probe(f64::NAN).is_err());
+        assert!(validate_quantile_probe(f64::INFINITY).is_err());
+    }
+
+    #[test]
+    fn frontend_digest_supports_add_merge_quantile_cdf_median_and_roundtrip() {
+        let mut a = FrontendDigest::from_values(
+            vec![0.0, 1.0, 2.0, 3.0],
+            cfg_k2_use(128),
+            DigestPrecision::F64,
+        )
+        .expect("build a");
+        let b = FrontendDigest::from_values(
+            vec![10.0, 11.0, 12.0, 13.0],
+            cfg_k2_use(128),
+            DigestPrecision::F64,
+        )
+        .expect("build b");
+
+        a.add_values_f64(vec![4.0]).expect("add scalar");
+        a.add_values_f64(vec![5.0, 6.0]).expect("add batch");
+        a.merge_in_place(&b).expect("merge");
+
+        let q = a.quantile_strict(0.5).expect("q");
+        let c = a.cdf(&[3.0])[0];
+        let m = a.median();
+        assert!(q.is_finite());
+        assert!(c.is_finite());
+        assert!(m.is_finite());
+
+        let bytes = a.to_bytes();
+        let rt = FrontendDigest::from_bytes(&bytes).expect("decode");
+        let q_rt = rt.quantile_strict(0.5).expect("q rt");
+        assert!((q_rt - q).abs() <= 1e-9);
+    }
+
+    #[test]
+    fn frontend_merge_all_empty_is_canonical_f64_empty() {
+        let empty = FrontendDigest::merge_all(vec![]).expect("merge empty");
+        assert_eq!(empty.inner_kind(), "f64");
+        assert!(empty.quantile_strict(0.5).expect("q empty").is_nan());
+    }
+
+    #[test]
+    fn frontend_add_and_merge_reject_invalid_inputs() {
+        let mut f64d = FrontendDigest::from_values(
+            vec![0.0, 1.0, 2.0],
+            cfg_k2_use(64),
+            DigestPrecision::F64,
+        )
+        .expect("build f64");
+        let f32d = FrontendDigest::from_values(
+            vec![0.0, 1.0, 2.0],
+            cfg_k2_use(64),
+            DigestPrecision::F32,
+        )
+        .expect("build f32");
+
+        let add_err = f64d
+            .add_values_f64(vec![0.0, f64::NAN])
+            .expect_err("add must reject nan");
+        assert!(add_err.to_string().to_lowercase().contains("nan"));
+
+        let merge_err = f64d
+            .merge_in_place(&f32d)
+            .expect_err("merge precision mismatch");
+        let msg = merge_err.to_string().to_lowercase();
+        assert!(msg.contains("precision"));
+        assert!(msg.contains("cast explicitly"));
+    }
+
+    #[test]
+    fn frontend_merge_rejects_config_mismatch_with_details() {
+        let mut a = FrontendDigest::from_values(
+            vec![0.0, 1.0, 2.0],
+            DigestConfig {
+                max_size: 64,
+                scale: ScaleFamily::K2,
+                policy: SingletonPolicy::Use,
+            },
+            DigestPrecision::F64,
+        )
+        .expect("build a");
+        let b = FrontendDigest::from_values(
+            vec![10.0, 11.0, 12.0],
+            DigestConfig {
+                max_size: 128,
+                scale: ScaleFamily::K3,
+                policy: SingletonPolicy::Use,
+            },
+            DigestPrecision::F64,
+        )
+        .expect("build b");
+
+        let err = a.merge_in_place(&b).expect_err("config mismatch");
+        let msg = err.to_string().to_lowercase();
+        assert!(msg.contains("max_size"));
+        assert!(msg.contains("scale"));
+        assert!(msg.contains("k2"));
+        assert!(msg.contains("k3"));
+    }
+
+    #[test]
+    fn frontend_quantile_is_strict_on_probe_and_cdf_propagates_nan_probe() {
+        let d = FrontendDigest::from_values(
+            vec![0.0, 1.0, 2.0, 3.0],
+            cfg_k2_use(64),
+            DigestPrecision::F64,
+        )
+        .expect("build");
+
+        assert!(d.quantile_strict(f64::NAN).is_err());
+        assert!(d.quantile_strict(-0.1).is_err());
+        assert!(d.quantile_strict(1.1).is_err());
+
+        let out = d.cdf(&[f64::NAN, f64::NEG_INFINITY, f64::INFINITY]);
+        assert!(out[0].is_nan());
+        assert_eq!(out[1], 0.0);
+        assert_eq!(out[2], 1.0);
+    }
+}
