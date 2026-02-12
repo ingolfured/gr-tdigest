@@ -3,11 +3,11 @@ use pyo3::prelude::*;
 use pyo3::types::{PyAny, PyBytes, PyFloat, PyIterator, PyList, PyTuple, PyType};
 
 use crate::tdigest::frontends::{
-    parse_scale_str, parse_singleton_policy_str, DigestConfig, DigestPrecision, FrontendDigest,
-    FrontendError,
+    parse_precision_hint, parse_scale_str, parse_singleton_policy_str, DigestConfig,
+    DigestPrecision, FrontendDigest, FrontendError, PrecisionHint,
 };
 use crate::tdigest::singleton_policy::SingletonPolicy;
-use crate::tdigest::wire::{wire_precision, WirePrecision};
+use crate::tdigest::wire::{wire_precision, WirePrecision, WireVersion};
 use crate::tdigest::ScaleFamily;
 
 fn parse_scale(s: Option<&str>) -> Result<ScaleFamily, PyErr> {
@@ -26,6 +26,20 @@ fn map_frontend_err(err: FrontendError) -> PyErr {
         | FrontendError::IncompatibleMerge(msg)
         | FrontendError::DecodeError(msg) => PyValueError::new_err(msg),
     }
+}
+
+fn parse_cast_precision(raw: &str) -> PyResult<DigestPrecision> {
+    match parse_precision_hint(raw).map_err(|e| PyValueError::new_err(e.to_string()))? {
+        PrecisionHint::F32 => Ok(DigestPrecision::F32),
+        PrecisionHint::F64 => Ok(DigestPrecision::F64),
+        PrecisionHint::Auto => Err(PyValueError::new_err(
+            "cast_precision expects 'f32' or 'f64' (not 'auto')",
+        )),
+    }
+}
+
+fn parse_wire_version(raw: u8) -> PyResult<WireVersion> {
+    WireVersion::from_u8(raw).map_err(|e| PyValueError::new_err(e.to_string()))
 }
 
 #[derive(Clone, Copy)]
@@ -158,6 +172,19 @@ impl PyTDigest {
             .map_err(map_frontend_err)
     }
 
+    pub fn add_weighted(
+        &mut self,
+        py: Python<'_>,
+        values: PyObject,
+        weights: PyObject,
+    ) -> PyResult<()> {
+        let (_ndim_v, values_f64) = array_values(py, values)?;
+        let (_ndim_w, weights_f64) = array_values(py, weights)?;
+        self.inner
+            .add_weighted_f64(values_f64, weights_f64)
+            .map_err(map_frontend_err)
+    }
+
     pub fn scale_weights(&mut self, factor: f64) -> PyResult<()> {
         self.inner.scale_weights(factor).map_err(map_frontend_err)
     }
@@ -179,8 +206,18 @@ impl PyTDigest {
         output_for_values(py, kind, out)
     }
 
-    pub fn to_bytes<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyBytes>> {
-        let bytes = self.inner.to_bytes();
+    #[pyo3(signature = (version=None))]
+    pub fn to_bytes<'py>(
+        &self,
+        py: Python<'py>,
+        version: Option<u8>,
+    ) -> PyResult<Bound<'py, PyBytes>> {
+        let bytes = if let Some(v) = version {
+            let parsed = parse_wire_version(v)?;
+            self.inner.to_bytes_with_version(parsed)
+        } else {
+            self.inner.to_bytes()
+        };
         Ok(PyBytes::new(py, &bytes))
     }
 
@@ -192,6 +229,14 @@ impl PyTDigest {
 
     pub fn inner_kind(&self) -> &'static str {
         self.inner.inner_kind()
+    }
+
+    #[pyo3(signature = (precision))]
+    pub fn cast_precision(&self, precision: &str) -> PyResult<Self> {
+        let target = parse_cast_precision(precision)?;
+        Ok(Self {
+            inner: self.inner.cast_precision(target),
+        })
     }
 
     pub fn merge(&mut self, other: Bound<'_, PyAny>) -> PyResult<()> {

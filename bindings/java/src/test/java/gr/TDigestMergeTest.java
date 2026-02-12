@@ -103,4 +103,37 @@ class TDigestMergeTest {
       assertThrows(IllegalArgumentException.class, () -> d.scaleValues(Double.POSITIVE_INFINITY));
     }
   }
+
+  @Test
+  void addWeightedAndCastPrecisionSmoke() {
+    try (TDigest d = TDigest.builder()
+        .maxSize(128)
+        .scale(Scale.K2)
+        .singletonPolicy(SingletonPolicy.USE)
+        .precision(Precision.F64)
+        .build(new double[] {0.0, 1.0, 2.0})) {
+      d.addWeighted(new double[] {10.0, 20.0}, new double[] {2.0, 3.0});
+      assertTrue(Double.isFinite(d.quantile(0.5)));
+
+      try (TDigest d32 = d.castPrecision(Precision.F32);
+           TDigest d64 = d32.castPrecision(Precision.F64)) {
+        assertTrue(Double.isFinite(d32.quantile(0.5)));
+        assertEquals(d.quantile(0.5), d64.quantile(0.5), 1e-4);
+      }
+    }
+  }
+
+  @Test
+  void addWeightedRejectsInvalidInputsAndCastRejectsAuto() {
+    try (TDigest d = TDigest.builder()
+        .maxSize(128)
+        .scale(Scale.K2)
+        .singletonPolicy(SingletonPolicy.USE)
+        .precision(Precision.F64)
+        .build(new double[] {0.0, 1.0, 2.0})) {
+      assertThrows(IllegalArgumentException.class, () -> d.addWeighted(new double[] {1.0, 2.0}, new double[] {1.0}));
+      assertThrows(IllegalArgumentException.class, () -> d.addWeighted(new double[] {1.0}, new double[] {0.0}));
+      assertThrows(IllegalArgumentException.class, () -> d.castPrecision(Precision.AUTO));
+    }
+  }
 }

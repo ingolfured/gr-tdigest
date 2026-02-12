@@ -8,7 +8,7 @@ use crate::tdigest::merges::{KWayCentroidMerge, MergeByMean};
 use crate::tdigest::precision::{FloatLike, Precision};
 use crate::tdigest::scale::ScaleFamily;
 use crate::tdigest::singleton_policy::SingletonPolicy;
-use crate::tdigest::wire::{self, WireDecodedDigest, WireError};
+use crate::tdigest::wire::{self, WireDecodedDigest, WireError, WireVersion};
 
 /// TDigest orchestration + public API, generic over centroid float storage `F` (`f32` or `f64`).
 ///
@@ -805,6 +805,12 @@ where
     #[inline]
     pub fn to_bytes(&self) -> Vec<u8> {
         wire::encode_digest(self)
+    }
+
+    /// Encode this digest into TDIG with an explicit wire version.
+    #[inline]
+    pub fn to_bytes_with_version(&self, version: WireVersion) -> Vec<u8> {
+        wire::encode_digest_with_version(self, version)
     }
 }
 

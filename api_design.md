@@ -39,11 +39,13 @@ All surfaces must support:
 - Build/train from numeric values.
 - Add one value.
 - Add multiple values.
+- Add weighted value(s) (`values[i]` + `weights[i]`).
 - Merge one digest.
 - Merge multiple digests.
 - `quantile`
 - `cdf`
 - `median`
+- Explicit precision cast (`f32`/`f64`).
 - `to_bytes` / `from_bytes`
 
 Notes:
@@ -105,6 +107,7 @@ Canonical empty for `merge_all([])`:
 ### 4.4 Serialization / `from_bytes`
 
 - TDIG written by one surface must decode on all surfaces.
+- `to_bytes` supports explicit version selection (`1|2|3`) where surfaced.
 - Wire precision (`f32`/`f64`) must round-trip.
 - Empty digest to/from bytes is valid.
 - Empty blob bytes (`b""`) are invalid TDIG and must error.

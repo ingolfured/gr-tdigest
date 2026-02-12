@@ -6,14 +6,18 @@ import pytest
 
 from gr_tdigest import (
     ScaleFamily,
+    add_weighted_values,
     add_values,
+    cast_precision,
     cdf,
+    from_bytes,
     median,
     merge_tdigests,
     quantile,
     scale_values,
     scale_weights,
     tdigest,
+    to_bytes,
 )
 
 
@@ -104,6 +108,32 @@ class TestPolarsPluginSmoke:
         assert float(scaled_v.select(median("td2")).item()) == pytest.approx(q0 * 3.0, abs=1e-9)
         assert float(scaled_v.select(cdf("td2", 1.5 * 3.0)).item()) == pytest.approx(c0, abs=1e-9)
 
+    def test_add_weighted_values_and_cast_precision_smoke(self):
+        d = pl.DataFrame({"x": [0.0, 1.0, 2.0, 3.0]}).select(
+            tdigest("x", max_size=128, scale=ScaleFamily.K2).alias("td")
+        )
+
+        d_w = d.select(td2=add_weighted_values("td", [10.0, 20.0], [2.0, 3.0]))
+        q = float(d_w.select(quantile("td2", 0.5)).item())
+        assert math.isfinite(q)
+
+        d32 = d_w.select(td3=cast_precision("td2", precision="f32"))
+        fields32 = d32.schema["td3"].fields
+        assert next(f for f in fields32 if f.name == "min").dtype == pl.Float32
+
+        d64 = d32.select(td4=cast_precision("td3", precision="f64"))
+        fields64 = d64.schema["td4"].fields
+        assert next(f for f in fields64 if f.name == "min").dtype == pl.Float64
+
+    def test_to_bytes_supports_explicit_versions(self):
+        d = pl.DataFrame({"x": [0.0, 1.0, 2.0, 3.0]}).select(tdigest("x").alias("td"))
+
+        for version in (1, 2, 3):
+            blob = d.select(b=to_bytes("td", version=version)).item()
+            assert isinstance(blob, (bytes, bytearray))
+            rt = pl.DataFrame({"blob": [blob]}).with_columns(td2=from_bytes("blob", precision="f64"))
+            assert math.isfinite(float(rt.select(quantile("td2", 0.5)).item()))
+
 
 class TestPolarsPluginValidation:
     def test_tdigest_rejects_nan_inf_null_training(self):
@@ -144,3 +174,10 @@ class TestPolarsPluginValidation:
             d.select(scale_weights("td", bad))
         with pytest.raises(pl.exceptions.ComputeError):
             d.select(scale_values("td", bad))
+
+    def test_add_weighted_values_rejects_invalid_inputs(self):
+        d = pl.DataFrame({"x": [0.0, 1.0]}).select(tdigest("x").alias("td"))
+        with pytest.raises(pl.exceptions.ComputeError):
+            d.select(add_weighted_values("td", [1.0, 2.0], [1.0]))
+        with pytest.raises(pl.exceptions.ComputeError):
+            d.select(add_weighted_values("td", [1.0], [0.0]))

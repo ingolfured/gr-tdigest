@@ -15,7 +15,9 @@ use crate::tdigest::frontends::{
 };
 use crate::tdigest::precision::FloatLike;
 use crate::tdigest::singleton_policy::SingletonPolicy;
-use crate::tdigest::wire::{wire_precision, WirePrecision};
+use crate::tdigest::wire::{
+    encode_digest_with_version, wire_precision, WirePrecision, WireVersion,
+};
 use crate::tdigest::{ScaleFamily, TDigest};
 
 /* ==================== input dtypes ==================== */
@@ -81,6 +83,20 @@ fn merge_output_dtype(inputs: &[Field]) -> PolarsResult<Field> {
         .map(|f| f.dtype())
         .cloned()
         .unwrap_or(DataType::Null);
+    Ok(Field::new("tdigest".into(), dt))
+}
+
+// cast_precision output uses explicit hint: Float32 -> compact, otherwise Float64
+fn cast_precision_output_dtype(inputs: &[Field]) -> PolarsResult<Field> {
+    let hint_dt = inputs
+        .get(1)
+        .map(|f| f.dtype())
+        .unwrap_or(&DataType::Float64);
+    let dt = if matches!(hint_dt, DataType::Float32) {
+        TDigest::<f32>::polars_dtype()
+    } else {
+        TDigest::<f64>::polars_dtype()
+    };
     Ok(Field::new("tdigest".into(), dt))
 }
 
@@ -156,6 +172,23 @@ fn add_values(inputs: &[Series]) -> PolarsResult<Series> {
 }
 
 #[polars_expr(output_type_func = merge_output_dtype)]
+fn add_weighted_values(inputs: &[Series]) -> PolarsResult<Series> {
+    polars_ensure!(
+        inputs.len() == 3,
+        ComputeError: "`add_weighted_values` expects (digest, values, weights)"
+    );
+    let digest_s = &inputs[0];
+    let values_s = &inputs[1];
+    let weights_s = &inputs[2];
+
+    if is_compact_digest_dtype(digest_s.dtype()) {
+        add_weighted_values_generic::<f32>(digest_s, values_s, weights_s)
+    } else {
+        add_weighted_values_generic::<f64>(digest_s, values_s, weights_s)
+    }
+}
+
+#[polars_expr(output_type_func = merge_output_dtype)]
 fn scale_weights(inputs: &[Series], kwargs: ScaleKwargs) -> PolarsResult<Series> {
     polars_ensure!(
         inputs.len() == 1,
@@ -182,6 +215,32 @@ fn scale_values(inputs: &[Series], kwargs: ScaleKwargs) -> PolarsResult<Series> 
         scale_values_generic::<f32>(digest_s, kwargs.factor)
     } else {
         scale_values_generic::<f64>(digest_s, kwargs.factor)
+    }
+}
+
+#[polars_expr(output_type_func = cast_precision_output_dtype)]
+fn cast_precision(inputs: &[Series]) -> PolarsResult<Series> {
+    polars_ensure!(
+        inputs.len() == 2,
+        ComputeError: "`cast_precision` expects (digest, precision_hint)"
+    );
+    let digest_s = &inputs[0];
+    let want_f32 = matches!(inputs[1].dtype(), DataType::Float32);
+
+    if want_f32 {
+        if is_compact_digest_dtype(digest_s.dtype()) {
+            let td = parse_and_merge::<f32>(std::slice::from_ref(digest_s))?;
+            td.to_series(digest_s.name())
+        } else {
+            let td = parse_and_merge::<f64>(std::slice::from_ref(digest_s))?;
+            td.cast_precision::<f32>().to_series(digest_s.name())
+        }
+    } else if is_compact_digest_dtype(digest_s.dtype()) {
+        let td = parse_and_merge::<f32>(std::slice::from_ref(digest_s))?;
+        td.cast_precision::<f64>().to_series(digest_s.name())
+    } else {
+        let td = parse_and_merge::<f64>(std::slice::from_ref(digest_s))?;
+        td.to_series(digest_s.name())
     }
 }
 
@@ -240,10 +299,39 @@ fn to_bytes(inputs: &[Series]) -> PolarsResult<Series> {
     // Use compact vs full precision based on digest dtype
     let td_bytes: Vec<u8> = if is_compact_digest_dtype(s.dtype()) {
         let td = parse_and_merge::<f32>(inputs)?;
-        td.to_bytes()
+        encode_digest_with_version(&td, WireVersion::LATEST)
     } else {
         let td = parse_and_merge::<f64>(inputs)?;
-        td.to_bytes()
+        encode_digest_with_version(&td, WireVersion::LATEST)
+    };
+
+    let mut builder = BinaryChunkedBuilder::new("".into(), 1);
+    builder.append_value(&td_bytes);
+    Ok(builder.finish().into_series())
+}
+
+#[polars_expr(output_type = Binary)]
+fn to_bytes_versioned(inputs: &[Series], kwargs: ToBytesKwargs) -> PolarsResult<Series> {
+    polars_ensure!(
+        inputs.len() == 1,
+        ComputeError: "`to_bytes_versioned` expects a single TDigest struct column"
+    );
+    let s = &inputs[0];
+    let version = kwargs.version.ok_or_else(|| {
+        PolarsError::ComputeError(
+            "tdigest.to_bytes_versioned: missing `version` (expected 1, 2, or 3)".into(),
+        )
+    })?;
+    let version = WireVersion::from_u8(version).map_err(|e| {
+        PolarsError::ComputeError(format!("tdigest.to_bytes_versioned: {e}").into())
+    })?;
+
+    let td_bytes: Vec<u8> = if is_compact_digest_dtype(s.dtype()) {
+        let td = parse_and_merge::<f32>(inputs)?;
+        encode_digest_with_version(&td, version)
+    } else {
+        let td = parse_and_merge::<f64>(inputs)?;
+        encode_digest_with_version(&td, version)
     };
 
     let mut builder = BinaryChunkedBuilder::new("".into(), 1);
@@ -365,6 +453,12 @@ struct QuantileKwargs {
 #[derive(Debug, Deserialize, Clone)]
 struct ScaleKwargs {
     factor: f64,
+}
+
+#[derive(Debug, Deserialize, Clone, Default)]
+struct ToBytesKwargs {
+    #[serde(default)]
+    version: Option<u8>,
 }
 
 #[inline]
@@ -603,6 +697,24 @@ where
     td.to_series(digest_s.name())
 }
 
+fn add_weighted_values_generic<F>(
+    digest_s: &Series,
+    values_s: &Series,
+    weights_s: &Series,
+) -> PolarsResult<Series>
+where
+    F: Copy + 'static + FloatCore + FloatLike + WireOf,
+{
+    let parsed = parse_digest_column_lenient::<F>(digest_s)?;
+    let mut td = TDigest::<F>::merge_digests(parsed);
+    let (vals, weights) = extract_weighted_add_values::<F>(values_s, weights_s)?;
+    if !vals.is_empty() {
+        td.add_weighted_many(&vals, &weights)
+            .map_err(|e| PolarsError::ComputeError(e.to_string().into()))?;
+    }
+    td.to_series(digest_s.name())
+}
+
 fn scale_weights_generic<F>(digest_s: &Series, factor: f64) -> PolarsResult<Series>
 where
     F: Copy + 'static + FloatCore + FloatLike + WireOf,
@@ -683,6 +795,122 @@ where
         }
         other => polars_bail!(ComputeError:
             "tdigest.add_values: unsupported values dtype {other:?}; expected numeric or list"),
+    }
+}
+
+fn extract_weighted_add_values<F>(
+    values: &Series,
+    weights: &Series,
+) -> PolarsResult<(Vec<F>, Vec<f64>)>
+where
+    F: Copy + 'static + FloatCore + FloatLike,
+{
+    match (values.dtype(), weights.dtype()) {
+        (DataType::List(_), DataType::List(_)) => {
+            let lv = values.list()?;
+            let lw = weights.list()?;
+
+            if lv.null_count() > 0 || lw.null_count() > 0 {
+                polars_bail!(ComputeError:
+                    "tdigest.add_weighted_values: values/weights lists contain nulls; nulls are not allowed");
+            }
+            if lv.len() != lw.len() {
+                polars_bail!(ComputeError:
+                    "tdigest.add_weighted_values: list columns must have the same number of rows");
+            }
+
+            let mut out_v: Vec<F> = Vec::new();
+            let mut out_w: Vec<f64> = Vec::new();
+
+            for i in 0..lv.len() {
+                let sub_v = lv
+                    .get_as_series(i)
+                    .unwrap_or_else(|| Series::new("".into(), Vec::<f64>::new()));
+                let sub_w = lw
+                    .get_as_series(i)
+                    .unwrap_or_else(|| Series::new("".into(), Vec::<f64>::new()));
+
+                if sub_v.null_count() > 0 || sub_w.null_count() > 0 {
+                    polars_bail!(ComputeError:
+                        "tdigest.add_weighted_values: values/weights lists contain nulls; nulls are not allowed");
+                }
+
+                let vals_f64 = subseries_to_f64_vec(&sub_v)?;
+                let weights_f64 = subseries_to_f64_vec(&sub_w)?;
+                if vals_f64.len() != weights_f64.len() {
+                    polars_bail!(ComputeError:
+                        "tdigest.add_weighted_values: each values list must match its weights list length");
+                }
+                if vals_f64.iter().any(|v| !v.is_finite()) {
+                    polars_bail!(ComputeError:
+                        "tdigest.add_weighted_values: values contain non-finite values (NaN or ±inf)");
+                }
+                if weights_f64.iter().any(|w| !w.is_finite() || *w <= 0.0) {
+                    polars_bail!(ComputeError:
+                        "tdigest.add_weighted_values: weights must be finite and > 0");
+                }
+
+                out_v.extend(vals_f64.into_iter().map(F::from_f64));
+                out_w.extend(weights_f64);
+            }
+
+            Ok((out_v, out_w))
+        }
+        (vdt, wdt) if vdt.is_numeric() && wdt.is_numeric() => {
+            if values.null_count() > 0 || weights.null_count() > 0 {
+                polars_bail!(ComputeError:
+                    "tdigest.add_weighted_values: values/weights contain nulls; nulls are not allowed");
+            }
+
+            let vals_f64: Vec<f64> = if values.dtype() == &DataType::Float64 {
+                values.f64()?.into_no_null_iter().collect()
+            } else if values.dtype() == &DataType::Float32 {
+                values
+                    .f32()?
+                    .into_no_null_iter()
+                    .map(|x| x as f64)
+                    .collect()
+            } else {
+                values
+                    .cast(&DataType::Float64)?
+                    .f64()?
+                    .into_no_null_iter()
+                    .collect()
+            };
+
+            let weights_f64: Vec<f64> = if weights.dtype() == &DataType::Float64 {
+                weights.f64()?.into_no_null_iter().collect()
+            } else if weights.dtype() == &DataType::Float32 {
+                weights
+                    .f32()?
+                    .into_no_null_iter()
+                    .map(|x| x as f64)
+                    .collect()
+            } else {
+                weights
+                    .cast(&DataType::Float64)?
+                    .f64()?
+                    .into_no_null_iter()
+                    .collect()
+            };
+
+            if vals_f64.len() != weights_f64.len() {
+                polars_bail!(ComputeError:
+                    "tdigest.add_weighted_values: values and weights must have equal lengths");
+            }
+            if vals_f64.iter().any(|v| !v.is_finite()) {
+                polars_bail!(ComputeError:
+                    "tdigest.add_weighted_values: values contain non-finite values (NaN or ±inf)");
+            }
+            if weights_f64.iter().any(|w| !w.is_finite() || *w <= 0.0) {
+                polars_bail!(ComputeError:
+                    "tdigest.add_weighted_values: weights must be finite and > 0");
+            }
+
+            Ok((vals_f64.into_iter().map(F::from_f64).collect(), weights_f64))
+        }
+        _ => polars_bail!(ComputeError:
+            "tdigest.add_weighted_values: values and weights must both be numeric or both be list"),
     }
 }
 

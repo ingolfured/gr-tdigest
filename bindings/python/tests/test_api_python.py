@@ -79,6 +79,23 @@ class TestPythonApiSmoke:
         assert d.median() == pytest.approx(q0 * 3.0, abs=1e-9)
         assert d.cdf(1.5 * 3.0) == pytest.approx(c0, abs=1e-9)
 
+    def test_weighted_add_cast_precision_and_versioned_bytes(self):
+        d = TDigest.from_array([0.0, 1.0, 2.0], max_size=128, scale="k2", precision="f64")
+        out = d.add_weighted([10.0, 20.0], [2.0, 3.0])
+        assert out is d
+        assert math.isfinite(d.quantile(0.5))
+
+        d32 = d.cast_precision("f32")
+        d64 = d32.cast_precision("f64")
+        assert d32.inner_kind() == "f32"
+        assert d64.inner_kind() == "f64"
+        assert d64.quantile(0.5) == pytest.approx(d.quantile(0.5), abs=1e-4)
+
+        for version in (1, 2, 3):
+            blob = d.to_bytes(version=version)
+            rt = TDigest.from_bytes(blob)
+            assert math.isfinite(rt.quantile(0.5))
+
 
 class TestPythonApiValidation:
     @pytest.mark.parametrize("bad", [float("nan"), float("+inf"), float("-inf")])
@@ -131,3 +148,10 @@ class TestPythonApiValidation:
                 singleton_policy=SingletonPolicy.USE,
                 pin_per_side=2,
             )
+
+    def test_weighted_add_rejects_invalid_inputs(self):
+        d = TDigest.from_array([0.0, 1.0], max_size=64, scale="k2")
+        with pytest.raises(ValueError):
+            d.add_weighted([1.0, 2.0], [1.0])
+        with pytest.raises(ValueError):
+            d.add_weighted([1.0], [0.0])

@@ -70,6 +70,13 @@ def _coerce_precision(precision: str | None) -> str:
     raise ValueError(f"Unknown precision: {precision!r}. Use 'auto' (default), 'f64', or 'f32'.")
 
 
+def _coerce_cast_precision(precision: str) -> str:
+    s = _coerce_precision(precision)
+    if s == "auto":
+        raise ValueError("cast_precision requires explicit precision: 'f32' or 'f64'.")
+    return s
+
+
 def _norm_policy(mode: SingletonPolicy | str | None) -> str:
     if mode is None:
         return "use"
@@ -264,6 +271,10 @@ _native_add_raw: Any = getattr(_NativeTDigest, "add", None)
 if _native_add_raw is None:  # pragma: no cover
     raise AttributeError("Native TDigest is missing 'add'")
 _native_add = cast(Callable[..., Any], _native_add_raw)
+_native_add_weighted_raw: Any = getattr(_NativeTDigest, "add_weighted", None)
+if _native_add_weighted_raw is None:  # pragma: no cover
+    raise AttributeError("Native TDigest is missing 'add_weighted'")
+_native_add_weighted = cast(Callable[..., Any], _native_add_weighted_raw)
 _native_scale_weights_raw: Any = getattr(_NativeTDigest, "scale_weights", None)
 if _native_scale_weights_raw is None:  # pragma: no cover
     raise AttributeError("Native TDigest is missing 'scale_weights'")
@@ -291,6 +302,14 @@ def _add_patched(self: _NativeTDigest, values: Any) -> _NativeTDigest:
 
 
 setattr(TDigest, "add", _add_patched)
+
+
+def _add_weighted_patched(self: _NativeTDigest, values: Any, weights: Any) -> _NativeTDigest:
+    _native_add_weighted(self, values, weights)
+    return self
+
+
+setattr(TDigest, "add_weighted", _add_weighted_patched)
 
 
 def _scale_weights_patched(self: _NativeTDigest, factor: float) -> _NativeTDigest:
@@ -440,6 +459,39 @@ def add_values(digest: "IntoExpr", values: "IntoExpr") -> pl.Expr:
     )
 
 
+def add_weighted_values(digest: "IntoExpr", values: "IntoExpr", weights: "IntoExpr") -> pl.Expr:
+    """
+    Add weighted values into an existing digest expression.
+    `values` and `weights` must have compatible shapes and equal lengths.
+    """
+    d_expr = _into_expr(digest)
+    v_expr = _into_expr(values)
+    w_expr = _into_expr(weights)
+    return register_plugin_function(
+        plugin_path=str(lib),
+        function_name="add_weighted_values",
+        args=[d_expr, v_expr, w_expr],
+        kwargs=None,
+        returns_scalar=True,
+    )
+
+
+def cast_precision(digest: "IntoExpr", *, precision: str) -> pl.Expr:
+    """
+    Cast digest centroid precision to explicit backend mode ("f32" or "f64").
+    """
+    d_expr = _into_expr(digest)
+    prec = _coerce_cast_precision(precision)
+    hint = pl.lit(0.0, dtype=pl.Float32) if prec == "f32" else pl.lit(0.0, dtype=pl.Float64)
+    return register_plugin_function(
+        plugin_path=str(lib),
+        function_name="cast_precision",
+        args=[d_expr, hint],
+        kwargs=None,
+        returns_scalar=True,
+    )
+
+
 def scale_weights(digest: "IntoExpr", factor: float) -> pl.Expr:
     d_expr = _into_expr(digest)
     try:
@@ -472,7 +524,7 @@ def scale_values(digest: "IntoExpr", factor: float) -> pl.Expr:
     )
 
 
-def to_bytes(digest: "IntoExpr") -> pl.Expr:
+def to_bytes(digest: "IntoExpr", *, version: int | None = None) -> pl.Expr:
     """
     Serialize a TDigest struct column to a single binary blob (scalar expr).
 
@@ -481,6 +533,21 @@ def to_bytes(digest: "IntoExpr") -> pl.Expr:
         df = df.with_columns(blob=td.to_bytes("td_col"))
     """
     d_expr = _into_expr(digest)
+    if version is not None:
+        try:
+            v = int(version)
+        except Exception as exc:  # noqa: BLE001
+            raise TypeError(f"version must be an int in {{1,2,3}}; got {type(version).__name__}.") from exc
+        if v not in {1, 2, 3}:
+            raise ValueError(f"version must be one of 1, 2, or 3; got {v}.")
+        return register_plugin_function(
+            plugin_path=str(lib),
+            function_name="to_bytes_versioned",
+            args=[d_expr],
+            kwargs={"version": v},
+            returns_scalar=True,
+        )
+
     return register_plugin_function(
         plugin_path=str(lib),
         function_name="to_bytes",
@@ -533,6 +600,8 @@ __all__ = [
     "median",
     "merge_tdigests",
     "add_values",
+    "add_weighted_values",
+    "cast_precision",
     "scale_weights",
     "scale_values",
     "to_bytes",

@@ -15,6 +15,7 @@ use crate::tdigest::frontends::{
     parse_scale_str, policy_from_code_edges, DigestConfig, DigestPrecision, FrontendDigest,
 };
 use crate::tdigest::singleton_policy::SingletonPolicy;
+use crate::tdigest::wire::WireVersion;
 use crate::tdigest::ScaleFamily;
 
 // Retain VM
@@ -35,6 +36,11 @@ fn map_scale(s: &str) -> ScaleFamily {
 
 fn map_policy(code: jint, edges: jint) -> Result<SingletonPolicy, String> {
     policy_from_code_edges(code as i32, edges as i32).map_err(|e| e.to_string())
+}
+
+fn map_wire_version(version: jint) -> Result<WireVersion, String> {
+    let v = u8::try_from(version).map_err(|_| format!("unsupported TDIG version: {version}"))?;
+    WireVersion::from_u8(v).map_err(|e| e.to_string())
 }
 
 fn ensure_non_null_handle(handle: jlong) -> Result<(), &'static str> {
@@ -107,6 +113,12 @@ impl NativeDigest {
         self.inner.add_values_f64(values).map_err(|e| e.to_string())
     }
 
+    fn merge_weighted_f64(&mut self, values: Vec<f64>, weights: Vec<f64>) -> Result<(), String> {
+        self.inner
+            .add_weighted_f64(values, weights)
+            .map_err(|e| e.to_string())
+    }
+
     fn merge_digest(&mut self, other: &NativeDigest) -> Result<(), String> {
         self.inner
             .merge_in_place(&other.inner)
@@ -119,6 +131,12 @@ impl NativeDigest {
 
     fn scale_values(&mut self, factor: f64) -> Result<(), String> {
         self.inner.scale_values(factor).map_err(|e| e.to_string())
+    }
+
+    fn cast_precision(&self, target: DigestPrecision) -> Self {
+        Self {
+            inner: self.inner.cast_precision(target),
+        }
     }
 }
 
@@ -199,6 +217,41 @@ pub extern "system" fn Java_gr_tdigest_TDigestNative_toBytes(
             .expect("set_byte_array_region");
     }
     arr.into_raw()
+}
+
+#[no_mangle]
+pub extern "system" fn Java_gr_tdigest_TDigestNative_toBytesVersion(
+    mut env: JNIEnv,
+    _cls: JClass,
+    handle: jlong,
+    version: jint,
+) -> jbyteArray {
+    let arr = env.new_byte_array(0).expect("new_byte_array");
+    if handle == 0 {
+        return arr.into_raw();
+    }
+
+    let version = match map_wire_version(version) {
+        Ok(v) => v,
+        Err(msg) => {
+            throw_illegal_arg(&mut env, msg);
+            return arr.into_raw();
+        }
+    };
+
+    let d = unsafe { from_handle::<NativeDigest>(handle) };
+    let bytes = d.inner.to_bytes_with_version(version);
+
+    let out = env
+        .new_byte_array(bytes.len() as jint)
+        .expect("new_byte_array");
+    if !bytes.is_empty() {
+        let ptr = bytes.as_ptr() as *const jbyte;
+        let slice_i8 = unsafe { slice::from_raw_parts(ptr, bytes.len()) };
+        env.set_byte_array_region(&out, 0, slice_i8)
+            .expect("set_byte_array_region");
+    }
+    out.into_raw()
 }
 
 #[allow(unused_mut)] // some builds warn; we *do* pass &mut env on error paths
@@ -363,6 +416,75 @@ pub extern "system" fn Java_gr_tdigest_TDigestNative_mergeArrayF32(
 
 #[allow(unused_mut)]
 #[no_mangle]
+pub extern "system" fn Java_gr_tdigest_TDigestNative_mergeWeightedF64(
+    mut env: JNIEnv,
+    _cls: JClass,
+    handle: jlong,
+    values: JDoubleArray,
+    weights: JDoubleArray,
+) {
+    if let Err(msg) = ensure_non_null_handle(handle) {
+        throw_illegal_arg(&mut env, msg.to_string());
+        return;
+    }
+    let xs = match read_jdouble_array(&env, &values) {
+        Ok(v) => v,
+        Err(msg) => {
+            throw_illegal_arg(&mut env, msg);
+            return;
+        }
+    };
+    let ws = match read_jdouble_array(&env, &weights) {
+        Ok(v) => v,
+        Err(msg) => {
+            throw_illegal_arg(&mut env, msg);
+            return;
+        }
+    };
+
+    let d = unsafe { from_handle::<NativeDigest>(handle) };
+    if let Err(e) = d.merge_weighted_f64(xs, ws) {
+        throw_illegal_arg(&mut env, e.to_string());
+    }
+}
+
+#[allow(unused_mut)]
+#[no_mangle]
+pub extern "system" fn Java_gr_tdigest_TDigestNative_mergeWeightedF32(
+    mut env: JNIEnv,
+    _cls: JClass,
+    handle: jlong,
+    values: JFloatArray,
+    weights: JDoubleArray,
+) {
+    if let Err(msg) = ensure_non_null_handle(handle) {
+        throw_illegal_arg(&mut env, msg.to_string());
+        return;
+    }
+    let xs32 = match read_jfloat_array(&env, &values) {
+        Ok(v) => v,
+        Err(msg) => {
+            throw_illegal_arg(&mut env, msg);
+            return;
+        }
+    };
+    let ws = match read_jdouble_array(&env, &weights) {
+        Ok(v) => v,
+        Err(msg) => {
+            throw_illegal_arg(&mut env, msg);
+            return;
+        }
+    };
+    let xs: Vec<f64> = xs32.into_iter().map(|v| v as f64).collect();
+
+    let d = unsafe { from_handle::<NativeDigest>(handle) };
+    if let Err(e) = d.merge_weighted_f64(xs, ws) {
+        throw_illegal_arg(&mut env, e.to_string());
+    }
+}
+
+#[allow(unused_mut)]
+#[no_mangle]
 pub extern "system" fn Java_gr_tdigest_TDigestNative_mergeDigest(
     mut env: JNIEnv,
     _cls: JClass,
@@ -419,6 +541,28 @@ pub extern "system" fn Java_gr_tdigest_TDigestNative_scaleValues(
     if let Err(e) = d.scale_values(factor) {
         throw_illegal_arg(&mut env, e);
     }
+}
+
+#[allow(unused_mut)]
+#[no_mangle]
+pub extern "system" fn Java_gr_tdigest_TDigestNative_castPrecision(
+    mut env: JNIEnv,
+    _cls: JClass,
+    handle: jlong,
+    f32mode: jboolean,
+) -> jlong {
+    if let Err(msg) = ensure_non_null_handle(handle) {
+        throw_illegal_arg(&mut env, msg.to_string());
+        return 0;
+    }
+    let target = if f32mode != 0 {
+        DigestPrecision::F32
+    } else {
+        DigestPrecision::F64
+    };
+    let d = unsafe { from_handle_const::<NativeDigest>(handle) };
+    let casted = d.cast_precision(target);
+    into_handle(Box::new(casted))
 }
 
 #[no_mangle]

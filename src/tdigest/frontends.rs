@@ -5,7 +5,8 @@
 use std::fmt::{Display, Formatter};
 
 use crate::tdigest::wire::{
-    decode_digest, encode_digest, wire_precision, WireDecodedDigest, WirePrecision,
+    decode_digest, encode_digest, encode_digest_with_version, wire_precision, WireDecodedDigest,
+    WirePrecision, WireVersion,
 };
 use crate::tdigest::TDigest;
 use crate::tdigest::{scale::ScaleFamily, singleton_policy::SingletonPolicy};
@@ -330,6 +331,25 @@ impl FrontendDigest {
         Ok(())
     }
 
+    pub fn add_weighted_f64(
+        &mut self,
+        values: Vec<f64>,
+        weights: Vec<f64>,
+    ) -> Result<(), FrontendError> {
+        match self {
+            FrontendDigest::F32(td) => {
+                let xs: Vec<f32> = values.into_iter().map(|v| v as f32).collect();
+                td.add_weighted_many(&xs, &weights)
+                    .map_err(FrontendError::from)?;
+            }
+            FrontendDigest::F64(td) => {
+                td.add_weighted_many(&values, &weights)
+                    .map_err(FrontendError::from)?;
+            }
+        }
+        Ok(())
+    }
+
     pub fn scale_weights(&mut self, factor: f64) -> Result<(), FrontendError> {
         match self {
             FrontendDigest::F32(td) => {
@@ -446,6 +466,14 @@ Rebuild or cast to a shared configuration before merge.",
         match self {
             FrontendDigest::F32(td) => encode_digest(td),
             FrontendDigest::F64(td) => encode_digest(td),
+        }
+    }
+
+    #[inline]
+    pub fn to_bytes_with_version(&self, version: WireVersion) -> Vec<u8> {
+        match self {
+            FrontendDigest::F32(td) => encode_digest_with_version(td, version),
+            FrontendDigest::F64(td) => encode_digest_with_version(td, version),
         }
     }
 
@@ -701,5 +729,37 @@ mod tests {
         assert!(out[0].is_nan());
         assert_eq!(out[1], 0.0);
         assert_eq!(out[2], 1.0);
+    }
+
+    #[test]
+    fn frontend_weighted_add_supports_f32_and_f64() {
+        let mut d32 = FrontendDigest::from_values(vec![0.0], cfg_k2_use(64), DigestPrecision::F32)
+            .expect("build f32");
+        let mut d64 = FrontendDigest::from_values(vec![0.0], cfg_k2_use(64), DigestPrecision::F64)
+            .expect("build f64");
+
+        d32.add_weighted_f64(vec![10.0, 20.0], vec![2.0, 3.0])
+            .expect("weighted f32");
+        d64.add_weighted_f64(vec![10.0, 20.0], vec![2.0, 3.0])
+            .expect("weighted f64");
+
+        assert!(d32.quantile_strict(0.5).expect("q32").is_finite());
+        assert!(d64.quantile_strict(0.5).expect("q64").is_finite());
+    }
+
+    #[test]
+    fn frontend_to_bytes_with_version_supports_v1_v2_v3() {
+        let d = FrontendDigest::from_values(
+            vec![-1.0, 0.0, 1.0, 2.0, 3.0],
+            cfg_k2_use(96),
+            DigestPrecision::F64,
+        )
+        .expect("build");
+
+        for v in [WireVersion::V1, WireVersion::V2, WireVersion::V3] {
+            let blob = d.to_bytes_with_version(v);
+            let rt = FrontendDigest::from_bytes(&blob).expect("decode");
+            assert!(rt.quantile_strict(0.5).expect("q").is_finite());
+        }
     }
 }

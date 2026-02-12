@@ -296,6 +296,30 @@ public final class TDigest implements AutoCloseable, Serializable {
     return add(new float[] { value });
   }
 
+  public TDigest addWeighted(double[] values, double[] weights) {
+    ensureOpen();
+    Objects.requireNonNull(values, "values");
+    Objects.requireNonNull(weights, "weights");
+    TDigestNative.mergeWeightedF64(state.handle, values, weights);
+    return this;
+  }
+
+  public TDigest addWeighted(float[] values, double[] weights) {
+    ensureOpen();
+    Objects.requireNonNull(values, "values");
+    Objects.requireNonNull(weights, "weights");
+    TDigestNative.mergeWeightedF32(state.handle, values, weights);
+    return this;
+  }
+
+  public TDigest addWeighted(double value, double weight) {
+    return addWeighted(new double[] { value }, new double[] { weight });
+  }
+
+  public TDigest addWeighted(float value, double weight) {
+    return addWeighted(new float[] { value }, new double[] { weight });
+  }
+
   public TDigest merge(TDigest other) {
     ensureOpen();
     Objects.requireNonNull(other, "other");
@@ -316,6 +340,16 @@ public final class TDigest implements AutoCloseable, Serializable {
     ensureOpen();
     TDigestNative.scaleValues(state.handle, factor);
     return this;
+  }
+
+  public TDigest castPrecision(Precision target) {
+    ensureOpen();
+    Objects.requireNonNull(target, "target");
+    if (target == Precision.AUTO) {
+      throw new IllegalArgumentException("castPrecision target must be F32 or F64");
+    }
+    long h = TDigestNative.castPrecision(state.handle, target == Precision.F32);
+    return new TDigest(h);
   }
 
   public static TDigest mergeAll(TDigest first, TDigest second, TDigest... rest) {
@@ -361,6 +395,14 @@ public final class TDigest implements AutoCloseable, Serializable {
   public byte[] toBytes() {
     ensureOpen();
     return TDigestNative.toBytes(state.handle);
+  }
+
+  public byte[] toBytes(int version) {
+    ensureOpen();
+    if (version < 1 || version > 3) {
+      throw new IllegalArgumentException("version must be in {1,2,3}");
+    }
+    return TDigestNative.toBytesVersion(state.handle, version);
   }
 
   public void writeTo(OutputStream out) throws IOException {

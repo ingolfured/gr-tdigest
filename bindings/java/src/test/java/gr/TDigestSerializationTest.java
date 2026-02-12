@@ -108,4 +108,28 @@ class TDigestSerializationTest {
     }
     assertTrue(bytes.length > 0);
   }
+
+  @Test
+  void explicitWireVersionsRoundTrip() throws Exception {
+    try (TDigest d = TDigest.builder()
+        .maxSize(256)
+        .scale(Scale.K2)
+        .singletonPolicy(SingletonPolicy.USE)
+        .precision(Precision.F64)
+        .build(new double[] {0.0, 1.0, 2.0, 3.0})) {
+      d.addWeighted(new double[] {10.0, 20.0}, new double[] {2.0, 3.0});
+      double q0 = d.quantile(0.5);
+
+      for (int version : new int[] {1, 2, 3}) {
+        byte[] blob = d.toBytes(version);
+        try (TDigest rt = TDigest.fromBytes(blob)) {
+          double qRt = rt.quantile(0.5);
+          assertTrue(Double.isFinite(qRt));
+          if (version >= 2) {
+            assertEquals(q0, qRt, 1e-4);
+          }
+        }
+      }
+    }
+  }
 }

@@ -12,23 +12,38 @@ This changelog was reconstructed from git history (commits + version transitions
   - `TDigest::add_weighted_many(values, weights)`
   - `TDigest::merge_weighted_unsorted(values, weights)`
   - `TDigest::from_weighted_unsorted(values, weights, max_size)`
+- Frontend weighted-ingest APIs:
+  - Python: `TDigest.add_weighted(values, weights)`
+  - Java/JNI: `TDigest.addWeighted(...)`
+  - Polars plugin: `add_weighted_values(...)`
 - Explicit precision casting in core/frontend paths:
   - `TDigest::cast_precision::<f32|f64>()`
   - `FrontendDigest::cast_precision(...)`
-- TDIG v2 wire format support in codec:
-  - encoder now writes v2
-  - decoder supports v1 and v2
-  - v2 preserves fractional centroid weights and centroid kind
+- Public cast-precision APIs on all user surfaces:
+  - Python `TDigest.cast_precision(...)`
+  - Java `TDigest.castPrecision(...)`
+  - Polars plugin `cast_precision(...)`
+- Explicit wire-version encode controls:
+  - Python `to_bytes(version=...)`
+  - Java `toBytes(version)`
+  - Polars plugin `to_bytes(..., version=...)`
+- TDIG v3 wire format support in codec:
+  - default encoder now writes v3
+  - decoder supports v1/v2/v3
+  - v3 adds flags + header length + explicit payload precision code + optional 4-byte checksum
+  - v2/v3 preserve fractional centroid weights and centroid kind
 
 ### Changed
 - Design docs split and deepened (`api_design.md`, `tdigest_design.md`, `comparison_design.md`) with stricter contract/current/comparison separation.
-- `comparison_design.md` gap analysis updated to reflect cast + TDIG v2 progress.
+- `comparison_design.md` gap analysis updated to reflect cast API completion and TDIG v3/version-controls progress.
 - Repository process/tooling now enforces changelog updates via pre-commit (`scripts/check_changelog_update.sh` + `.pre-commit-config.yaml`).
 - `make setup` now installs pre-commit hooks with repo-local caches (`.pre-commit-cache`, `.uv-cache`) to avoid host cache permission issues.
 - Agent workflow guidance tightened (`AGENTS.md`) to require changelog updates, design-doc review/updates, and README maintenance.
+- `Makefile` now defaults `UV_CACHE_DIR` to repo-local `.uv-cache` for more reliable sandboxed/dev runs.
 
 ### Testing / Contracts
 - Cross-surface contract/coherence test suite expanded and consolidated.
+- Added wire migration tests for mixed v1/v2 blobs and explicit versioned encoding on Python/Java paths.
 - Full project gates continue to pass (`make build`, `make test`).
 
 ## [0.1.13] - 2026-02-09

@@ -63,6 +63,7 @@ Weighted add path:
   - finite values
   - finite, strictly positive weights
 - Weighted values are converted to atomic centroids, then merged through the same digest merge/compression path.
+- Frontend surfaces route weighted add through `FrontendDigest::add_weighted_f64(...)`, so Python/JNI/Polars share the same validation and merge semantics.
 
 ### 3.2 Raw-value ingest (`merge_unsorted` / `merge_sorted`)
 
@@ -275,18 +276,13 @@ Current split is intentional:
 
 Implemented in `src/tdigest/wire.rs`.
 
-Header fields:
-- magic/version
-- scale/policy/pin-per-side
-- max_size
-- total_weight (`u64`)
-- min/max
-- centroid_count
-- data_sum
-
 Versioning:
-- Encoder currently writes TDIG **v2**.
-- Decoder supports both **v1** and **v2**.
+- Encoder default writes TDIG **v3**.
+- Decoder supports **v1**, **v2**, and **v3**.
+- Explicit versioned encoding is available via:
+  - Rust core: `to_bytes_with_version(WireVersion::V1|V2|V3)`
+  - Frontend service: `to_bytes_with_version(...)`
+  - Python/Java/Polars surfaces: `to_bytes(version=...)` / `toBytes(version)`
 
 Payload layouts:
 - v1:
@@ -295,12 +291,18 @@ Payload layouts:
 - v2:
   - `f32 mean + f64 weight + kind(u8)` per centroid, or
   - `f64 mean + f64 weight + kind(u8)` per centroid.
+- v3:
+  - Header adds `flags`, `header_len`, and explicit `payload_precision` code.
+  - Header includes optional 4-byte checksum (CRC32) controlled by flags.
+  - Payload layout is the same as v2 (`mean + f64 weight + kind`), but width is explicit in header.
 
 Decode behavior:
-- Payload length determines wire precision.
+- v1/v2: payload length determines wire precision.
+- v3: payload precision is explicit in header and payload length is validated against it.
 - v1 keeps legacy heuristic (`w==1` => atomic unit, otherwise mixed).
 - v2 decodes centroid kind explicitly from payload and preserves atomic-vs-mixed identity.
-- v2 preserves fractional centroid weights on wire.
+- v2/v3 preserve fractional centroid weights on wire.
+- v3 checksum is verified when present.
 
 ## 7. Frontend service role
 

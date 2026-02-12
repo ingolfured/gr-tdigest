@@ -9,9 +9,10 @@ T-Digest provides a mergeable summary of a distribution, enabling **approximate 
 - 🔁 Cross-surface coherence: Consistent, verified behavior across all bindings
 - ⚡ Quantile & CDF — optimized evaluation loops with half-weight bracketing and singleton-aware interpolation
 - 🧊 TDigest Precision: Centroids as `f64` or `f32` — **auto-selected by input dtype**
-- ⚖️ Weighted ingest in Rust core (`add_weighted`, `add_weighted_many`, weighted constructors)
-- 🔄 Explicit precision casting in Rust core/frontend service (`cast_precision`)
-- 📦 TDIG v2 wire support (fractional weights + centroid-kind preservation; v1 decode compatibility)
+- ⚖️ Weighted ingest across Rust/Python/Polars/Java (`add_weighted`, `add_weighted_values`, Java weighted adds)
+- 🔄 Explicit precision casting across surfaces (`cast_precision` / `castPrecision`)
+- 📦 TDIG v3 wire default (flags + header length + precision code + checksum), with v1/v2 decode compatibility
+- 🧭 Explicit wire-version encode controls (`to_bytes(version=1|2|3)`, `toBytes(version)`)
 - 🎚️ Scale families: `Quad`, `K1`, `K2`, `K3`
 - 🔩 Singleton handling policy: **edge-precision (keep _N_)**, **respect singletons**, or **uniform merge**
 
@@ -36,6 +37,9 @@ import gr_tdigest as td
 d = td.TDigest.from_array([0,1,2,3], max_size=100, scale="k2")
 print("p50 =", d.quantile(0.5))
 print("cdf  =", d.cdf([0.0, 1.5, 3.0]))
+d.add_weighted([10.0, 20.0], [2.0, 3.0])
+blob_v1 = d.to_bytes(version=1)
+d32 = d.cast_precision("f32")
 ```
 
 **Polars**

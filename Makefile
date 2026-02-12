@@ -42,7 +42,8 @@ CARGO  ?= cargo
 UV     ?= uv
 
 # Force uv to use the repo-root venv
-UV_ENV := UV_PROJECT_ENVIRONMENT=$(PWD)/.venv
+UV_CACHE_DIR ?= $(PWD)/.uv-cache
+UV_ENV := UV_PROJECT_ENVIRONMENT=$(PWD)/.venv UV_CACHE_DIR=$(UV_CACHE_DIR)
 
 # Python layout
 PY_DIR          := bindings/python

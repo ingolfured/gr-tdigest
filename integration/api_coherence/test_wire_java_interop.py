@@ -26,6 +26,7 @@ def _run_java_emit_blob(
     dataset,
     expect,
     precision_override: str | None = None,
+    version_override: int | None = None,
 ) -> tuple[float, float, bytes]:
     """
     Build a Java TDigest, emit p50,cdf(x),base64(blob), and return parsed values.
@@ -34,6 +35,11 @@ def _run_java_emit_blob(
     p_lit = str(expect["P"])
     x_lit = str(expect["X"])
     builder = java_builder_chain_fn(cfg, precision=precision_override)
+    to_bytes_expr = (
+        f"d.toBytes({int(version_override)})"
+        if version_override is not None
+        else "d.toBytes()"
+    )
 
     java_src = textwrap.dedent(
         f"""
@@ -53,7 +59,7 @@ def _run_java_emit_blob(
               double[] ps = d.cdf(new double[] {{{x_lit}}});
               double cdf2 = ps[0];
 
-              byte[] buf = d.toBytes();
+              byte[] buf = {to_bytes_expr};
               String b64 = Base64.getEncoder().encodeToString(buf);
 
               System.out.println(p50 + "," + cdf2 + "," + b64);
@@ -136,6 +142,41 @@ class TestJavaToPythonSerde:
         assert_close_fn(q_py2, q_py, expect["EPS"])
         assert_close_fn(c_py2, c_py, expect["EPS"])
 
+    def test_java_to_python_explicit_wire_versions(
+        self,
+        dataset,
+        expect,
+        cfg,
+        tmp_path: Path,
+        assert_close_fn,
+        compile_run_java_fn,
+        java_builder_chain_fn,
+    ):
+        """
+        Java TDigest.toBytes(version=1|2|3) must emit decodable blobs in Python.
+        """
+        import gr_tdigest as td
+
+        for version in (1, 2, 3):
+            p50_java, cdf_java, blob = _run_java_emit_blob(
+                class_name=f"TDJavaToPythonSerdeV{version}",
+                compile_run_java_fn=compile_run_java_fn,
+                java_builder_chain_fn=java_builder_chain_fn,
+                tmp_path=tmp_path,
+                cfg=cfg,
+                dataset=dataset,
+                expect=expect,
+                precision_override="F64",
+                version_override=version,
+            )
+
+            d_py = td.TDigest.from_bytes(blob)
+            q_py = d_py.quantile(expect["P"])
+            c_py = d_py.cdf(expect["X"])
+            assert_close_fn(q_py, p50_java, expect["EPS"])
+            assert_close_fn(c_py, cdf_java, expect["EPS"])
+
+
 # =====================================================================
 # Category 2: JAVA → POLARS — TDigest.toBytes() → td.from_bytes(...)
 #   Spec:
@@ -148,6 +189,7 @@ class TestJavaToPythonSerde:
 #         * Explicit F32 path with compact schema.
 #         * "Strict" mismatch (treat F32 wire as F64) must error; F32 hint works.
 # =====================================================================
+
 
 class TestJavaToPolarsSerde:
     def test_java_to_polars_f64_roundtrip(
@@ -178,7 +220,9 @@ class TestJavaToPolarsSerde:
 
         # Only test the F64 case here to keep semantics tight.
         if cfg["precision_java"] != "F64":
-            pytest.skip("test_java_to_polars_f64_roundtrip only runs for Java Precision.F64")
+            pytest.skip(
+                "test_java_to_polars_f64_roundtrip only runs for Java Precision.F64"
+            )
         p50_java, cdf_java, blob = _run_java_emit_blob(
             class_name="TDJavaToPolarsSerdeF64",
             compile_run_java_fn=compile_run_java_fn,
@@ -211,7 +255,18 @@ class TestJavaToPolarsSerde:
         df_rt = df_td.with_columns(blob_rt=td.to_bytes("td_col"))
         blob_rt = df_rt.select("blob_rt").row(0)[0]
         assert isinstance(blob_rt, (bytes, bytearray))
-        assert bytes(blob_rt) == blob  # exact wire equality
+        # Wire version may evolve (e.g. v2 -> v3 re-encode), so assert
+        # semantic roundtrip, not exact byte identity.
+        d_src = td.TDigest.from_bytes(blob)
+        d_rt = td.TDigest.from_bytes(bytes(blob_rt))
+        assert_close_fn(
+            d_rt.quantile(float(expect["P"])),
+            d_src.quantile(float(expect["P"])),
+            expect["EPS"],
+        )
+        assert_close_fn(
+            d_rt.cdf(float(expect["X"])), d_src.cdf(float(expect["X"])), expect["EPS"]
+        )
 
         df_td_rt = pl.DataFrame({"blob": [blob_rt]}).with_columns(
             td_col=td.from_bytes("blob", precision="f64")
@@ -248,6 +303,7 @@ class TestJavaToPolarsSerde:
         """
         import polars as pl
         import gr_tdigest as td
+
         p50_java, cdf_java, blob = _run_java_emit_blob(
             class_name="TDJavaToPolarsSerdeF32",
             compile_run_java_fn=compile_run_java_fn,
@@ -310,6 +366,7 @@ class TestJavaToPolarsSerde:
         import pytest
         import polars as pl
         import gr_tdigest as td
+
         p50_java, cdf_java, blob = _run_java_emit_blob(
             class_name="TDJavaF32ForPolarsStrict",
             compile_run_java_fn=compile_run_java_fn,
@@ -326,7 +383,9 @@ class TestJavaToPolarsSerde:
 
         # "Strict" mismatch: treating F32 wire as F64 (precision="f64"/auto)
         # must error with a plugin ComputeError.
-        with pytest.raises(pl.exceptions.ComputeError, match="mixed f32/f64 blobs in column"):
+        with pytest.raises(
+            pl.exceptions.ComputeError, match="mixed f32/f64 blobs in column"
+        ):
             df.with_columns(td_col=td.from_bytes("blob", precision="f64")).collect()
 
         # Correct precision hint: precision="f32" → must succeed and be compact.

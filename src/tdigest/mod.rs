@@ -24,6 +24,7 @@ pub mod wire;
 pub use self::precision::Precision;
 pub use self::scale::ScaleFamily;
 pub use self::tdigest::{DigestStats, TDigest, TDigestBuilder};
+pub use self::wire::{WirePrecision, WireVersion};
 
 #[cfg(test)]
 mod test_helpers;

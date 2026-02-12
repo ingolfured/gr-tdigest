@@ -1082,6 +1082,7 @@ dependencies = [
  "bincode",
  "bytesize",
  "clap",
+ "crc32fast",
  "criterion",
  "ctor",
  "jemalloc-ctl",
