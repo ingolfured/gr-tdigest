@@ -133,7 +133,7 @@ JAVA_WRAPPER_CHECK:
 .PHONY: help setup clean \
         build build-rust build-python build-java \
         test rust-test py-test java-test \
-        lint \
+        lint setup-hooks \
         smoke-rust-cli smoke-wheel  \
         release-rust release-wheel release-jar release
 
@@ -156,6 +156,25 @@ setup:
 	@(cd "$(PY_DIR)" && $(UV_ENV) $(UV) sync --all-groups)
 	$(call banner,Quick Python import smoke)
 	$(UV_ENV) $(UV) run python -c "import polars as pl, sys; print('python', sys.version.split()[0], '| polars', pl.__version__, '| env ok')"
+	$(MAKE) setup-hooks
+
+setup-hooks:
+	$(call banner,Install pre-commit hooks with repo-local cache)
+	mkdir -p .pre-commit-cache
+	mkdir -p .uv-cache
+	PRE_COMMIT_HOME="$(PWD)/.pre-commit-cache" UV_CACHE_DIR="$(PWD)/.uv-cache" $(UV_ENV) $(UV) run --no-sync pre-commit install
+	@HOOK=".git/hooks/pre-commit"; \
+	if [ ! -f "$$HOOK" ]; then \
+	  echo "$(STYLE_ERR)✗ pre-commit hook not found at $$HOOK$(STYLE_RESET)"; \
+	  exit 1; \
+	fi; \
+	if ! grep -q 'PRE_COMMIT_HOME' "$$HOOK" || ! grep -q 'UV_CACHE_DIR' "$$HOOK"; then \
+	  TMP_HOOK="$$(mktemp)"; \
+	  awk '/^export PRE_COMMIT_HOME=/ {next} /^export UV_CACHE_DIR=/ {next} 1; /# end templated/ {print "export PRE_COMMIT_HOME=\"$${PRE_COMMIT_HOME:-$(PWD)/.pre-commit-cache}\""; print "export UV_CACHE_DIR=\"$${UV_CACHE_DIR:-$(PWD)/.uv-cache}\""}' "$$HOOK" > "$$TMP_HOOK"; \
+	  mv "$$TMP_HOOK" "$$HOOK"; \
+	  chmod +x "$$HOOK"; \
+	fi
+	@printf "$(STYLE_OK)✓ pre-commit installed (PRE_COMMIT_HOME=.pre-commit-cache, UV_CACHE_DIR=.uv-cache)$(STYLE_RESET)\n"
 
 # ==============================================================================
 # Build (dev by default)
@@ -303,6 +322,7 @@ release: release-rust release-wheel release-jar
 help:
 	@printf "\n$(STYLE_BOLD)Core (dev by default)$(STYLE_RESET)\n"
 	@printf "  %-22s %s\n" "setup"          "Install toolchains; sync Python deps (bindings/python) into .venv"
+	@printf "  %-22s %s\n" "setup-hooks"    "Install pre-commit hooks with repo-local cache paths"
 	@printf "  %-22s %s\n" "build"          "Build Rust lib+CLI (dev), Python ext (dev), Java via Gradle"
 	@printf "  %-22s %s\n" "build-rust"     "Build Rust lib+CLI (dev)"
 	@printf "  %-22s %s\n" "build-python"   "Build Python extension (maturin develop, dev)"

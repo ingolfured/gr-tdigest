@@ -1,0 +1,106 @@
+# Changelog
+
+All notable changes to this project are documented in this file.
+
+This changelog was reconstructed from git history (commits + version transitions in `Cargo.toml`) and starts at `0.1.1` as requested.
+
+## [Unreleased]
+
+### Added
+- Rust weighted ingestion APIs:
+  - `TDigest::add_weighted(value, weight)`
+  - `TDigest::add_weighted_many(values, weights)`
+  - `TDigest::merge_weighted_unsorted(values, weights)`
+  - `TDigest::from_weighted_unsorted(values, weights, max_size)`
+- Explicit precision casting in core/frontend paths:
+  - `TDigest::cast_precision::<f32|f64>()`
+  - `FrontendDigest::cast_precision(...)`
+- TDIG v2 wire format support in codec:
+  - encoder now writes v2
+  - decoder supports v1 and v2
+  - v2 preserves fractional centroid weights and centroid kind
+
+### Changed
+- Design docs split and deepened (`api_design.md`, `tdigest_design.md`, `comparison_design.md`) with stricter contract/current/comparison separation.
+- `comparison_design.md` gap analysis updated to reflect cast + TDIG v2 progress.
+- Repository process/tooling now enforces changelog updates via pre-commit (`scripts/check_changelog_update.sh` + `.pre-commit-config.yaml`).
+- `make setup` now installs pre-commit hooks with repo-local caches (`.pre-commit-cache`, `.uv-cache`) to avoid host cache permission issues.
+- Agent workflow guidance tightened (`AGENTS.md`) to require changelog updates, design-doc review/updates, and README maintenance.
+
+### Testing / Contracts
+- Cross-surface contract/coherence test suite expanded and consolidated.
+- Full project gates continue to pass (`make build`, `make test`).
+
+## [0.1.13] - 2026-02-09
+
+### Changed
+- Version bump from `0.1.12` to `0.1.13` (no functional delta in bump commit).
+
+## [0.1.12] - 2026-02-09
+
+### Added
+- Java API support for digest merge and serialization interop.
+- Java value-merge APIs and Gradle/Make wiring for Java-side tests.
+
+### Changed
+- Release/version transition from `0.1.11` to `0.1.12`.
+
+## [0.1.11] - 2025-12-06
+
+### Added
+- Python support for `merge` and `merge_all` digest operations.
+
+## [0.1.10] - 2025-11-24
+
+### Added
+- Digest encoding/decoding support (cross-surface byte serialization path introduced).
+
+## [0.1.9] - 2025-11-07
+
+### Added
+- Polars behavior support for empty group-by scenarios.
+
+## [0.1.8] - 2025-11-04
+
+### Changed
+- Introduced shared `frontends.rs` layer and dried up duplicated binding logic.
+- Improved CDF handling around atomic-centroid semantics.
+
+### Docs
+- README improvements.
+
+## [0.1.7] - 2025-11-03
+
+### Testing / Contracts
+- Introduced unified API coherence test direction across surfaces.
+
+## [0.1.6] - 2025-10-31
+
+### Changed
+- Tightened non-finite handling and edge-policy behavior.
+
+## [0.1.5] - 2025-10-30
+
+### Added
+- End-to-end float precision behavior (`f32`/`f64`) across surfaces.
+
+## [0.1.4] - 2025-10-30
+
+### Added
+- List-oriented CDF/quantile expression support in Polars workflows.
+
+## [0.1.3] - 2025-10-30
+
+### Changed
+- Large refactor pass across Gradle/bindings/docs/build setup.
+
+## [0.1.2] - 2024-06-14
+
+### Changed
+- Library naming and packaging adjustments (`polars_tdigest` era alignment).
+
+## [0.1.1] - 2024-06-13
+
+### Added
+- First `0.1.x` release line established.
+- Initial packaging/release plumbing for early distribution.

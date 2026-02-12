@@ -23,10 +23,13 @@ __pycache__/
 *.pyd
 .pytest_cache/
 .mypy_cache/
+.ruff_cache/
 .dmypy.json
 .pyre/
 .pyright/
 .maturin/
+.uv-cache/
+.pre-commit-cache/
 build/
 dist/
 *.egg-info/

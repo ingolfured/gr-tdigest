@@ -9,6 +9,9 @@ T-Digest provides a mergeable summary of a distribution, enabling **approximate 
 - 🔁 Cross-surface coherence: Consistent, verified behavior across all bindings
 - ⚡ Quantile & CDF — optimized evaluation loops with half-weight bracketing and singleton-aware interpolation
 - 🧊 TDigest Precision: Centroids as `f64` or `f32` — **auto-selected by input dtype**
+- ⚖️ Weighted ingest in Rust core (`add_weighted`, `add_weighted_many`, weighted constructors)
+- 🔄 Explicit precision casting in Rust core/frontend service (`cast_precision`)
+- 📦 TDIG v2 wire support (fractional weights + centroid-kind preservation; v1 decode compatibility)
 - 🎚️ Scale families: `Quad`, `K1`, `K2`, `K3`
 - 🔩 Singleton handling policy: **edge-precision (keep _N_)**, **respect singletons**, or **uniform merge**
 
@@ -107,6 +110,9 @@ public class Example {
 - **Rust**: stable (2021 edition)
 - **Python**: CPython 3.12; packaged with **maturin**
 - **Polars**: current 1.x (Python); Rust crate versions tracked in `Cargo.toml`
+
+## 🧾 Changelog
+- See `CHANGELOG.md` for release notes and unreleased changes.
 
 ## 🔮 Future improvements
 - Allow scaling of weights and guard against centroid weight overflow

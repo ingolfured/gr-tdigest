@@ -240,3 +240,12 @@ If only one surface changed, still run the relevant coherence subset.
 - Prefer small, behaviorally explicit patches.
 - If a change can alter cross-surface semantics, document it in test names/messages.
 - When in doubt, preserve existing user-facing error wording that tests assert on.
+- Use real multi-line commit messages when needed (actual newlines in the commit body; do not embed literal `\n` escape text).
+- Every commit must include an update to `CHANGELOG.md` (at minimum under `## [Unreleased]`).
+
+## 10. Documentation discipline
+
+- Before starting a new work item, read both `api_design.md` and `tdigest_design.md`.
+- When behavior or internals change, update `api_design.md` and/or `tdigest_design.md` in the same change.
+- Keep `README.md` aligned with the current user-facing APIs and behavior for every change.
+- If external-comparison/tradeoff context changes, also update `comparison_design.md`.
