@@ -104,8 +104,7 @@ tasks.named('processResources').configure { dependsOn tasks.named('copyNative') 
 
 tasks.named('jar').configure {
   dependsOn tasks.named('copyNative')
-  // TestRun is in package 'gr'
-  manifest { attributes('Main-Class': 'gr.TestRun') }
+  manifest { attributes('Main-Class': 'gr.SmokeMain') }
   doLast {
     def jarFile = archiveFile.get().asFile
     def mb = jarFile.length() / (1024.0 * 1024.0)
@@ -121,12 +120,12 @@ tasks.named('test').configure {
   }
 }
 
-/* -------- Smoke test: run TestRun from the built JAR -------- */
+/* -------- Smoke test: run SmokeMain from the built JAR -------- */
 tasks.register('smoke', JavaExec) {
   dependsOn tasks.named('jar')
   def jarTask = tasks.named('jar').get()
   classpath files(jarTask.archiveFile)
-  mainClass = 'gr.TestRun'
+  mainClass = 'gr.SmokeMain'
   if ((JavaVersion.current().majorVersion as int) >= 22) {
     jvmArgs '--enable-native-access=ALL-UNNAMED'
   }
@@ -136,7 +135,7 @@ tasks.register('smoke', JavaExec) {
 tasks.register('runSmoke', JavaExec) {
   dependsOn tasks.named('copyNative'), tasks.named('classes'), tasks.named('processResources')
   classpath sourceSets.main.runtimeClasspath
-  mainClass = 'gr.TestRun'
+  mainClass = 'gr.SmokeMain'
   if ((JavaVersion.current().majorVersion as int) >= 22) {
     jvmArgs '--enable-native-access=ALL-UNNAMED'
   }
