@@ -293,15 +293,6 @@ public final class TDigest implements AutoCloseable, Serializable {
   public double[] quantile(double[] qs) {
     ensureOpen();
     Objects.requireNonNull(qs, "qs");
-    for (int i = 0; i < qs.length; i++) {
-      double q = qs[i];
-      if (!Double.isFinite(q) || q < 0.0 || q > 1.0) {
-        throw new IllegalArgumentException(
-            "q must be within [0,1]; got " + q + " at index " + i + ". " +
-            "Hint: if you meant a percent, divide by 100 (e.g., 95 -> 0.95)."
-        );
-      }
-    }
     double[] out = new double[qs.length];
     for (int i = 0; i < qs.length; i++) {
       out[i] = TDigestNative.quantile(state.handle, qs[i]);
@@ -312,12 +303,6 @@ public final class TDigest implements AutoCloseable, Serializable {
   /** Scalar quantile (strict): q must be finite and within [0,1]. */
   public double quantile(double q) {
     ensureOpen();
-    if (!Double.isFinite(q) || q < 0.0 || q > 1.0) {
-      throw new IllegalArgumentException(
-          "q must be within [0,1]; got " + q + ". " +
-          "Hint: if you meant a percent, divide by 100 (e.g., 95 -> 0.95)."
-      );
-    }
     return TDigestNative.quantile(state.handle, q);
   }
 

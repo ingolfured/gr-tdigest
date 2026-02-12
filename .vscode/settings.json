@@ -12,6 +12,7 @@
   "python.testing.pytestEnabled": true,
   "python.testing.pytestPath": "${workspaceFolder}/.venv/bin/pytest",
   "python.testing.unittestEnabled": false,
+  "rust-analyzer.testExplorer": true,
   "terminal.integrated.env.linux": {
     "UV_PROJECT_ENVIRONMENT": "${workspaceFolder}/.venv"
   }

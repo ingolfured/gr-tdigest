@@ -1,0 +1,85 @@
+use gr_tdigest::tdigest::wire::{decode_digest, wire_precision, WireDecodedDigest, WirePrecision};
+use gr_tdigest::tdigest::{ScaleFamily, TDigest};
+
+#[test]
+fn rust_f64_supports_add_merge_quantile_cdf_median_and_wire_roundtrip() {
+    let mut a = TDigest::<f64>::builder()
+        .max_size(128)
+        .scale(ScaleFamily::K2)
+        .build();
+    a.add_many(vec![0.0, 1.0, 2.0, 3.0]).expect("add base");
+    a.add(4.0).expect("add scalar");
+    a.add_many(vec![5.0, 6.0]).expect("add batch");
+
+    let mut b = TDigest::<f64>::builder()
+        .max_size(128)
+        .scale(ScaleFamily::K2)
+        .build();
+    b.add_many(vec![10.0, 11.0, 12.0, 13.0]).expect("add rhs");
+
+    let mut merged_in_place = a.clone();
+    merged_in_place.merge(&b);
+    let merged_static = TDigest::<f64>::merge_digests(vec![a.clone(), b.clone()]);
+
+    let q = merged_in_place.quantile(0.5);
+    let c = merged_in_place.cdf_or_nan(&[3.0])[0];
+    let m = merged_in_place.median();
+    assert!(q.is_finite());
+    assert!(c.is_finite());
+    assert!(m.is_finite());
+
+    assert!((merged_in_place.quantile(0.5) - merged_static.quantile(0.5)).abs() <= 1e-9);
+    assert!((merged_in_place.median() - merged_static.median()).abs() <= 1e-9);
+
+    let bytes = merged_in_place.to_bytes();
+    assert_eq!(
+        wire_precision(&bytes).expect("wire precision"),
+        WirePrecision::F64
+    );
+
+    let decoded = TDigest::<f64>::from_bytes(&bytes).expect("decode f64");
+    assert!((decoded.quantile(0.5) - merged_in_place.quantile(0.5)).abs() <= 1e-9);
+    assert!((decoded.median() - merged_in_place.median()).abs() <= 1e-9);
+}
+
+#[test]
+fn rust_f32_supports_add_merge_and_f32_wire_precision() {
+    let mut a = TDigest::<f32>::builder()
+        .max_size(128)
+        .scale(ScaleFamily::K2)
+        .build();
+    a.add_many(vec![0.0_f32, 1.0, 2.0, 3.0]).expect("add base");
+    a.add(4.0_f32).expect("add scalar");
+    a.add_many(vec![5.0_f32, 6.0]).expect("add batch");
+
+    let mut b = TDigest::<f32>::builder()
+        .max_size(128)
+        .scale(ScaleFamily::K2)
+        .build();
+    b.add_many(vec![10.0_f32, 11.0, 12.0, 13.0])
+        .expect("add rhs");
+
+    let mut merged = a.clone();
+    merged.merge_many(&[b.clone()]);
+
+    let q = merged.quantile(0.5);
+    let c = merged.cdf_or_nan(&[3.0])[0];
+    let m = merged.median();
+    assert!(q.is_finite());
+    assert!(c.is_finite());
+    assert!(m.is_finite());
+
+    let bytes = merged.to_bytes();
+    assert_eq!(
+        wire_precision(&bytes).expect("wire precision"),
+        WirePrecision::F32
+    );
+
+    match decode_digest(&bytes).expect("decode digest") {
+        WireDecodedDigest::F32(td32) => {
+            assert!((td32.quantile(0.5) - merged.quantile(0.5)).abs() <= 1e-6);
+            assert!((td32.median() - merged.median()).abs() <= 1e-6);
+        }
+        WireDecodedDigest::F64(_) => panic!("expected f32 wire decode"),
+    }
+}

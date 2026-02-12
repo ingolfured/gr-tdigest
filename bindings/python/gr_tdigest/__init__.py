@@ -445,6 +445,10 @@ _native_merge_raw: Any = getattr(_NativeTDigest, "merge", None)
 if _native_merge_raw is None:  # pragma: no cover
     raise AttributeError("Native TDigest is missing 'merge'")
 _native_merge = cast(Callable[..., Any], _native_merge_raw)
+_native_add_raw: Any = getattr(_NativeTDigest, "add", None)
+if _native_add_raw is None:  # pragma: no cover
+    raise AttributeError("Native TDigest is missing 'add'")
+_native_add = cast(Callable[..., Any], _native_add_raw)
 
 
 def _merge_patched(self: _NativeTDigest, other: Any) -> _NativeTDigest:
@@ -455,6 +459,15 @@ def _merge_patched(self: _NativeTDigest, other: Any) -> _NativeTDigest:
 
 
 setattr(TDigest, "merge", _merge_patched)
+
+
+def _add_patched(self: _NativeTDigest, values: Any) -> _NativeTDigest:
+    # Native mutates in-place; return self for fluent parity with Java.
+    _native_add(self, values)
+    return self
+
+
+setattr(TDigest, "add", _add_patched)
 
 
 # --- Python-side classmethod: TDigest.merge_all --------------------------------
@@ -595,6 +608,17 @@ def quantile(digest: "IntoExpr", q: float) -> pl.Expr:
     )
 
 
+def median(digest: "IntoExpr") -> pl.Expr:
+    d_expr = _into_expr(digest)
+    return register_plugin_function(
+        plugin_path=str(lib),
+        function_name="median",
+        args=[d_expr],
+        kwargs=None,
+        returns_scalar=True,
+    )
+
+
 def merge_tdigests(digest: "IntoExpr") -> pl.Expr:
     """
     Merge TDigest structs.
@@ -606,6 +630,22 @@ def merge_tdigests(digest: "IntoExpr") -> pl.Expr:
         plugin_path=str(lib),
         function_name="merge_tdigests",
         args=[d_expr],
+        kwargs=None,
+        returns_scalar=True,
+    )
+
+
+def add_values(digest: "IntoExpr", values: "IntoExpr") -> pl.Expr:
+    """
+    Add one or more values into an existing digest expression.
+    `values` may be a scalar, numeric column, or list expression.
+    """
+    d_expr = _into_expr(digest)
+    v_expr = _into_expr(values)
+    return register_plugin_function(
+        plugin_path=str(lib),
+        function_name="add_values",
+        args=[d_expr, v_expr],
         kwargs=None,
         returns_scalar=True,
     )
@@ -669,7 +709,9 @@ __all__ = [
     "tdigest",
     "cdf",
     "quantile",
+    "median",
     "merge_tdigests",
+    "add_values",
     "to_bytes",
     "from_bytes",
     "wire_precision",

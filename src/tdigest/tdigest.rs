@@ -405,6 +405,44 @@ impl<F: FloatLike + FloatCore> TDigest<F> {
         result
     }
 
+    /// In-place merge with another digest of the same precision.
+    ///
+    /// This is a convenience wrapper over [`TDigest::merge_digests`].
+    pub fn merge(&mut self, other: &TDigest<F>) -> &mut Self {
+        *self = TDigest::merge_digests(vec![self.clone(), other.clone()]);
+        self
+    }
+
+    /// In-place merge with multiple digests of the same precision.
+    ///
+    /// This is a convenience wrapper over [`TDigest::merge_digests`].
+    pub fn merge_many(&mut self, others: &[TDigest<F>]) -> &mut Self {
+        if others.is_empty() {
+            return self;
+        }
+        let mut all = Vec::with_capacity(others.len() + 1);
+        all.push(self.clone());
+        all.extend_from_slice(others);
+        *self = TDigest::merge_digests(all);
+        self
+    }
+
+    /// Add a single value in-place.
+    pub fn add(&mut self, value: F) -> TdResult<&mut Self> {
+        self.add_many([value].as_slice())
+    }
+
+    /// Add one or more values in-place.
+    pub fn add_many<A: IntoVecF<F>>(&mut self, values: A) -> TdResult<&mut Self> {
+        let vals = values.into_vec_f();
+        if vals.is_empty() {
+            return Ok(self);
+        }
+        let merged = self.merge_unsorted(vals)?;
+        *self = merged;
+        Ok(self)
+    }
+
     /* ===========================
      * Small utilities
      * =========================== */

@@ -5,7 +5,9 @@ use std::io::{self, Read};
 
 use clap::{ArgAction, Parser, ValueEnum};
 
-use gr_tdigest::tdigest::frontends::{parse_scale_str, parse_singleton_policy_str};
+use gr_tdigest::tdigest::frontends::{
+    ensure_finite_training_values, parse_scale_str, parse_singleton_policy_str,
+};
 use gr_tdigest::tdigest::singleton_policy::SingletonPolicy;
 use gr_tdigest::tdigest::{ScaleFamily, TDigest, TDigestBuilder};
 
@@ -108,20 +110,13 @@ fn read_floats_from_stdin() -> Result<Vec<f64>, String> {
             continue;
         }
         match tok.parse::<f64>() {
-            Ok(v) => {
-                if !v.is_finite() {
-                    return Err(
-                        "tdigest: non-finite values are not allowed in training data (NaN or ±inf)"
-                            .to_string(),
-                    );
-                }
-                out.push(v);
-            }
+            Ok(v) => out.push(v),
             Err(_) => {
                 // Ignore junk tokens to match forgiving parsing for non-numerics.
             }
         }
     }
+    ensure_finite_training_values(&out).map_err(|e| e.to_string())?;
     Ok(out)
 }
 

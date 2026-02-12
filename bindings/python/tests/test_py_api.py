@@ -22,6 +22,28 @@ def test_class_basic_quantiles_and_median():
     assert t2.quantile(0.25) == pytest.approx(1.5, abs=1e-9)
 
 
+@pytest.mark.parametrize("f32_mode", [False, True])
+def test_class_add_scalar_and_vector(f32_mode):
+    t = TDigest.from_array(
+        [0.0, 1.0, 2.0, 3.0],
+        max_size=64,
+        scale="k2",
+        f32_mode=f32_mode,
+    )
+    out = t.add(4.0).add([5.0, 6.0])
+    assert out is t
+    assert t.median() == pytest.approx(3.0, abs=1e-9)
+    assert t.quantile(0.5) == pytest.approx(3.0, abs=1e-9)
+    assert t.cdf(3.0) == pytest.approx(0.5, abs=1e-9)
+
+
+@pytest.mark.parametrize("bad", [float("nan"), float("+inf"), float("-inf")])
+def test_class_add_rejects_non_finite(bad):
+    t = TDigest.from_array([0.0, 1.0], max_size=64, scale="k2")
+    with pytest.raises(ValueError):
+        t.add([bad])
+
+
 def test_class_cdf_scalar_and_vector_list():
     # Match the Polars test dataset exactly: [0.0, 1.0, 2.0, 3.0]
     t = TDigest.from_array(_arange_float(4), max_size=64, scale="k2")

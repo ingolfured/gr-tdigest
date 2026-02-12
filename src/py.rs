@@ -2,7 +2,10 @@ use pyo3::exceptions::PyValueError;
 use pyo3::prelude::*;
 use pyo3::types::{PyAny, PyBytes, PyFloat, PyIterator};
 
-use crate::tdigest::frontends::{parse_scale_str, parse_singleton_policy_str};
+use crate::tdigest::frontends::{
+    ensure_finite_training_values, parse_scale_str, parse_singleton_policy_str,
+    validate_quantile_probe,
+};
 use crate::tdigest::singleton_policy::SingletonPolicy;
 use crate::tdigest::wire::{
     decode_digest, encode_digest, wire_precision, WireDecodedDigest, WirePrecision,
@@ -121,12 +124,8 @@ impl PyTDigest {
         let arr = np.call_method1("asarray", (values,))?;
         let values_f64: Vec<f64> = arr.extract()?;
 
-        // Strict: reject any non-finite training values (matches integration tests)
-        if values_f64.iter().any(|v| !v.is_finite()) {
-            return Err(PyValueError::new_err(
-                "tdigest: input contains non-finite values (NaN or ±inf)",
-            ));
-        }
+        ensure_finite_training_values(&values_f64)
+            .map_err(|e| PyValueError::new_err(e.to_string()))?;
 
         if f32_mode {
             // Compact backend: TDigest<f32>
@@ -172,20 +171,59 @@ impl PyTDigest {
     }
 
     pub fn quantile(&self, q: f64) -> PyResult<f64> {
-        if !q.is_finite() {
-            return Err(PyValueError::new_err("q must be a finite number in [0, 1]"));
-        }
-        if !(0.0..=1.0).contains(&q) {
-            return Err(PyValueError::new_err(
-                "q must be in [0, 1]. Example: quantile(0.95) for the 95th percentile",
-            ));
-        }
+        validate_quantile_probe(q).map_err(|msg| PyValueError::new_err(msg.to_string()))?;
 
         let val = match &self.inner {
             InnerDigest::F32(td) => td.quantile(q),
             InnerDigest::F64(td) => td.quantile(q),
         };
         Ok(val)
+    }
+
+    pub fn add(&mut self, py: Python<'_>, values: PyObject) -> PyResult<()> {
+        let np = py.import("numpy")?;
+        let arr = np.call_method1("asarray", (values,))?;
+        let ndim = arr
+            .getattr("ndim")
+            .ok()
+            .and_then(|x| x.extract::<usize>().ok())
+            .unwrap_or(1);
+
+        // Scalar fast-path only for 0-D numpy arrays / scalar inputs.
+        if ndim == 0 {
+            let v: f64 = arr.extract()?;
+            ensure_finite_training_values(&[v])
+                .map_err(|e| PyValueError::new_err(e.to_string()))?;
+            match &mut self.inner {
+                InnerDigest::F32(td) => {
+                    td.add(v as f32)
+                        .map_err(|e| PyValueError::new_err(e.to_string()))?;
+                }
+                InnerDigest::F64(td) => {
+                    td.add(v)
+                        .map_err(|e| PyValueError::new_err(e.to_string()))?;
+                }
+            }
+            return Ok(());
+        }
+
+        // Sequence/ndarray path.
+        let values_f64: Vec<f64> = arr.extract()?;
+        ensure_finite_training_values(&values_f64)
+            .map_err(|e| PyValueError::new_err(e.to_string()))?;
+
+        match &mut self.inner {
+            InnerDigest::F32(td) => {
+                let values_f32: Vec<f32> = values_f64.iter().map(|v| *v as f32).collect();
+                td.add_many(values_f32)
+                    .map_err(|e| PyValueError::new_err(e.to_string()))?;
+            }
+            InnerDigest::F64(td) => {
+                td.add_many(values_f64)
+                    .map_err(|e| PyValueError::new_err(e.to_string()))?;
+            }
+        }
+        Ok(())
     }
 
     pub fn cdf(&self, py: Python<'_>, x: PyObject) -> PyResult<PyObject> {

@@ -11,12 +11,13 @@ use std::ffi::c_void;
 use std::slice;
 use std::sync::OnceLock;
 
-use crate::tdigest::frontends::parse_scale_str;
-use crate::tdigest::frontends::policy_from_code_edges;
+use crate::tdigest::frontends::{
+    ensure_finite_training_values, parse_scale_str, policy_from_code_edges, validate_quantile_probe,
+};
 use crate::tdigest::singleton_policy::SingletonPolicy;
 use crate::tdigest::wire::{decode_digest, encode_digest, WireDecodedDigest};
 use crate::tdigest::{ScaleFamily, TDigest};
-use crate::{TdError, TdResult};
+use crate::TdResult;
 
 // Retain VM
 static JVM: OnceLock<JavaVM> = OnceLock::new();
@@ -87,11 +88,7 @@ impl NativeDigest {
         policy: SingletonPolicy,
         f32mode: bool,
     ) -> TdResult<Self> {
-        if values.iter().any(|v| !v.is_finite()) {
-            return Err(TdError::NonFiniteInput {
-                context: "sample value (NaN or ±inf)",
-            });
-        }
+        ensure_finite_training_values(&values)?;
 
         if f32mode {
             // Compact backend: TDigest<f32>
@@ -127,12 +124,7 @@ impl NativeDigest {
     }
 
     fn quantile(&self, p: f64) -> Result<f64, &'static str> {
-        if !p.is_finite() {
-            return Err("q must be a finite number in [0,1]");
-        }
-        if !(0.0..=1.0).contains(&p) {
-            return Err("q must be in [0,1]");
-        }
+        validate_quantile_probe(p)?;
         let v = match &self.inner {
             NativeInner::F32(td) => td.quantile(p),
             NativeInner::F64(td) => td.quantile(p),
@@ -141,11 +133,7 @@ impl NativeDigest {
     }
 
     fn merge_f64_values(&mut self, values: Vec<f64>) -> TdResult<()> {
-        if values.iter().any(|v| !v.is_finite()) {
-            return Err(TdError::NonFiniteInput {
-                context: "sample value (NaN or ±inf)",
-            });
-        }
+        ensure_finite_training_values(&values)?;
         self.inner = match &self.inner {
             NativeInner::F32(td) => {
                 let xs32: Vec<f32> = values.into_iter().map(|v| v as f32).collect();

@@ -137,6 +137,22 @@ fn merge_tdigests(inputs: &[Series]) -> PolarsResult<Series> {
     }
 }
 
+#[polars_expr(output_type_func = merge_output_dtype)]
+fn add_values(inputs: &[Series]) -> PolarsResult<Series> {
+    polars_ensure!(
+        inputs.len() == 2,
+        ComputeError: "`add_values` expects (digest, values)"
+    );
+    let digest_s = &inputs[0];
+    let values_s = &inputs[1];
+
+    if is_compact_digest_dtype(digest_s.dtype()) {
+        add_values_generic::<f32>(digest_s, values_s)
+    } else {
+        add_values_generic::<f64>(digest_s, values_s)
+    }
+}
+
 #[polars_expr(output_type_func = tdigest_output_dtype)]
 fn tdigest(inputs: &[Series], kwargs: TDigestKwargs) -> PolarsResult<Series> {
     tdigest_from_array_helper(inputs, &kwargs)
@@ -624,6 +640,81 @@ where
     let s = &inputs[0];
     let parsed = TDigest::<F>::from_series(s).unwrap_or_default();
     TDigest::<F>::merge_digests(parsed)
+}
+
+fn add_values_generic<F>(digest_s: &Series, values_s: &Series) -> PolarsResult<Series>
+where
+    F: Copy + 'static + FloatCore + FloatLike + WireOf,
+{
+    let parsed = TDigest::<F>::from_series(digest_s).unwrap_or_default();
+    let mut td = TDigest::<F>::merge_digests(parsed);
+    let vals = extract_add_values::<F>(values_s)?;
+    if !vals.is_empty() {
+        td.add_many(vals)
+            .map_err(|e| PolarsError::ComputeError(e.to_string().into()))?;
+    }
+    td.to_series(digest_s.name())
+}
+
+fn extract_add_values<F>(values: &Series) -> PolarsResult<Vec<F>>
+where
+    F: Copy + 'static + FloatCore + FloatLike,
+{
+    match values.dtype() {
+        DataType::List(_) => {
+            let lc = values.list()?;
+            if lc.null_count() > 0 {
+                polars_bail!(ComputeError:
+                    "tdigest.add_values: values list contains nulls; nulls are not allowed");
+            }
+
+            let mut out: Vec<F> = Vec::new();
+            for i in 0..lc.len() {
+                let sub = lc
+                    .get_as_series(i)
+                    .unwrap_or_else(|| Series::new("".into(), Vec::<f64>::new()));
+                if sub.null_count() > 0 {
+                    polars_bail!(ComputeError:
+                        "tdigest.add_values: values list contains nulls; nulls are not allowed");
+                }
+                let vals_f64 = subseries_to_f64_vec(&sub)?;
+                if vals_f64.iter().any(|v| !v.is_finite()) {
+                    polars_bail!(ComputeError:
+                        "tdigest.add_values: values contain non-finite values (NaN or ±inf)");
+                }
+                out.extend(vals_f64.into_iter().map(F::from_f64));
+            }
+            Ok(out)
+        }
+        dt if dt.is_numeric() => {
+            if values.null_count() > 0 {
+                polars_bail!(ComputeError:
+                    "tdigest.add_values: values contain nulls; nulls are not allowed");
+            }
+            let vals_f64: Vec<f64> = if values.dtype() == &DataType::Float64 {
+                values.f64()?.into_no_null_iter().collect()
+            } else if values.dtype() == &DataType::Float32 {
+                values
+                    .f32()?
+                    .into_no_null_iter()
+                    .map(|x| x as f64)
+                    .collect()
+            } else {
+                values
+                    .cast(&DataType::Float64)?
+                    .f64()?
+                    .into_no_null_iter()
+                    .collect()
+            };
+            if vals_f64.iter().any(|v| !v.is_finite()) {
+                polars_bail!(ComputeError:
+                    "tdigest.add_values: values contain non-finite values (NaN or ±inf)");
+            }
+            Ok(vals_f64.into_iter().map(F::from_f64).collect())
+        }
+        other => polars_bail!(ComputeError:
+            "tdigest.add_values: unsupported values dtype {other:?}; expected numeric or list"),
+    }
 }
 
 /* --------- tiny helper to build typed Series from native float families ---- */

@@ -5,6 +5,7 @@
 use std::fmt::{Display, Formatter};
 
 use crate::tdigest::{scale::ScaleFamily, singleton_policy::SingletonPolicy};
+use crate::{TdError, TdResult};
 
 #[derive(Debug, Clone)]
 pub enum ParseError {
@@ -124,4 +125,29 @@ pub fn policy_from_code_edges(code: i32, edges: i32) -> Result<SingletonPolicy, 
         }
         other => Err(ParseError::InvalidPolicy(other.to_string())),
     }
+}
+
+/* ---------------------- validation helpers ---------------------- */
+
+/// Shared finite-data guard for training/addition paths across front-ends.
+#[inline]
+pub fn ensure_finite_training_values(values: &[f64]) -> TdResult<()> {
+    if values.iter().any(|v| !v.is_finite()) {
+        return Err(TdError::NonFiniteInput {
+            context: "sample value (NaN or ±inf)",
+        });
+    }
+    Ok(())
+}
+
+/// Strict quantile probe validation shared by JNI/Python wrappers.
+#[inline]
+pub fn validate_quantile_probe(q: f64) -> Result<(), &'static str> {
+    if !q.is_finite() {
+        return Err("q must be a finite number in [0,1]");
+    }
+    if !(0.0..=1.0).contains(&q) {
+        return Err("q must be in [0,1]");
+    }
+    Ok(())
 }

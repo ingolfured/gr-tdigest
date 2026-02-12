@@ -6,7 +6,9 @@ import pytest
 from gr_tdigest import (
     tdigest,
     quantile,
+    median,
     cdf,
+    add_values,
     ScaleFamily,
     SingletonPolicy,
 )
@@ -52,6 +54,29 @@ def test_plugin_quantile_and_cdf_simple_exactish():
     # Scalar CDF
     y = df_d.select(cdf("td", 1.5)).item()
     assert y == pytest.approx(0.5, abs=1e-9)
+
+
+def test_plugin_median_simple():
+    df = pl.DataFrame({"x": [0.0, 1.0, 2.0, 3.0]})
+    d = df.select(tdigest("x", 100, scale="k2").alias("td"))
+    m = d.select(median("td")).item()
+    assert m == pytest.approx(1.5, abs=1e-9)
+
+
+def test_plugin_add_values_scalar_and_list():
+    df = pl.DataFrame({"x": [0.0, 1.0, 2.0, 3.0]})
+    d = df.select(tdigest("x", 100, scale="k2").alias("td"))
+
+    d2 = d.select(td2=add_values("td", 4.0)).select(td3=add_values("td2", [5.0, 6.0]))
+
+    out = d2.select(
+        q=quantile("td3", 0.5),
+        m=median("td3"),
+        c=cdf("td3", 3.0),
+    )
+    assert out["q"].item() == pytest.approx(3.0, abs=1e-9)
+    assert out["m"].item() == pytest.approx(3.0, abs=1e-9)
+    assert out["c"].item() == pytest.approx(0.5, abs=1e-9)
 
 
 def test_plugin_cdf_with_list_column_and_explode():
