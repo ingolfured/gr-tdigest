@@ -25,7 +25,7 @@ Cross-surface behavior is enforced by integration tests in `integration/api_cohe
 - `bindings/python/gr_tdigest/__init__.py`: Python public API + Polars plugin wiring (keep runtime patching minimal).
 - `bindings/java/src/gr/tdigest/`: Java API, native loader, JNI method declarations.
 - `integration/api_coherence/`: behavior contracts across CLI/Python/Polars/Java.
-- `integration/api_coherence/test_serialization.py`: cross-language byte-wire compatibility.
+- `integration/api_coherence/test_wire_python_polars.py` and `integration/api_coherence/test_wire_java_interop.py`: cross-language byte-wire compatibility.
 - `Makefile`: canonical dev/build/test/lint/release commands.
 
 ## 3. Core architecture and invariants
@@ -100,8 +100,10 @@ Use `Makefile` targets by default.
 - `make test`
 - `cargo test -- --quiet`
 - `./.venv/bin/pytest -q`
-- `./.venv/bin/pytest -q integration/api_coherence/test_api_coherence.py`
-- `./.venv/bin/pytest -q integration/api_coherence/test_serialization.py`
+- `./.venv/bin/pytest -q integration/api_coherence/test_contract_behavior.py`
+- `./.venv/bin/pytest -q integration/api_coherence/test_contract_probe_validation.py`
+- `./.venv/bin/pytest -q integration/api_coherence/test_wire_python_polars.py`
+- `./.venv/bin/pytest -q integration/api_coherence/test_wire_java_interop.py`
 - `bindings/java/gradlew --no-daemon --console=plain -p bindings/java test`
 
 ## 4.3 Lint and docs
@@ -174,12 +176,13 @@ For behavior-affecting changes (validation, quantile/cdf semantics, precision, s
 1. `make build`
 2. `make test`
 3. `cargo test -- --quiet`
-4. `./.venv/bin/pytest -q bindings/python/tests/test_py_api.py`
-5. `./.venv/bin/pytest -q bindings/python/tests/test_polars_api.py`
-6. `./.venv/bin/pytest -q integration/api_coherence/test_api_coherence.py`
-7. `./.venv/bin/pytest -q integration/api_coherence/test_serialization.py`
-8. `./.venv/bin/pytest -q integration/api_coherence/test_capability_parity.py`
-9. `bindings/java/gradlew --no-daemon --console=plain -p bindings/java test`
+4. `./.venv/bin/pytest -q bindings/python/tests/test_api_python.py`
+5. `./.venv/bin/pytest -q bindings/python/tests/test_api_polars.py`
+6. `./.venv/bin/pytest -q integration/api_coherence/test_contract_behavior.py`
+7. `./.venv/bin/pytest -q integration/api_coherence/test_contract_probe_validation.py`
+8. `./.venv/bin/pytest -q integration/api_coherence/test_wire_python_polars.py`
+9. `./.venv/bin/pytest -q integration/api_coherence/test_wire_java_interop.py`
+10. `bindings/java/gradlew --no-daemon --console=plain -p bindings/java test`
 
 If only one surface changed, still run the relevant coherence subset.
 

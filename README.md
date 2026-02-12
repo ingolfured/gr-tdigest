@@ -65,7 +65,7 @@ import gr.tdigest.TDigest.SingletonPolicy;
 
 import java.util.Arrays;
 
-public class TestRun {
+public class Example {
   public static void main(String[] args) {
     try (TDigest digest = TDigest.builder()
         .maxSize(100)
