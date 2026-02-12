@@ -155,6 +155,36 @@ fn add_values(inputs: &[Series]) -> PolarsResult<Series> {
     }
 }
 
+#[polars_expr(output_type_func = merge_output_dtype)]
+fn scale_weights(inputs: &[Series], kwargs: ScaleKwargs) -> PolarsResult<Series> {
+    polars_ensure!(
+        inputs.len() == 1,
+        ComputeError: "`scale_weights` expects (digest)"
+    );
+    let digest_s = &inputs[0];
+
+    if is_compact_digest_dtype(digest_s.dtype()) {
+        scale_weights_generic::<f32>(digest_s, kwargs.factor)
+    } else {
+        scale_weights_generic::<f64>(digest_s, kwargs.factor)
+    }
+}
+
+#[polars_expr(output_type_func = merge_output_dtype)]
+fn scale_values(inputs: &[Series], kwargs: ScaleKwargs) -> PolarsResult<Series> {
+    polars_ensure!(
+        inputs.len() == 1,
+        ComputeError: "`scale_values` expects (digest)"
+    );
+    let digest_s = &inputs[0];
+
+    if is_compact_digest_dtype(digest_s.dtype()) {
+        scale_values_generic::<f32>(digest_s, kwargs.factor)
+    } else {
+        scale_values_generic::<f64>(digest_s, kwargs.factor)
+    }
+}
+
 #[polars_expr(output_type_func = tdigest_output_dtype)]
 fn tdigest(inputs: &[Series], kwargs: TDigestKwargs) -> PolarsResult<Series> {
     tdigest_from_array_helper(inputs, &kwargs)
@@ -330,6 +360,11 @@ fn tdigest_summary(inputs: &[Series]) -> PolarsResult<Series> {
 struct QuantileKwargs {
     /// Scalar probability in [0,1]
     q: f64,
+}
+
+#[derive(Debug, Deserialize, Clone)]
+struct ScaleKwargs {
+    factor: f64,
 }
 
 #[inline]
@@ -565,6 +600,28 @@ where
         td.add_many(vals)
             .map_err(|e| PolarsError::ComputeError(e.to_string().into()))?;
     }
+    td.to_series(digest_s.name())
+}
+
+fn scale_weights_generic<F>(digest_s: &Series, factor: f64) -> PolarsResult<Series>
+where
+    F: Copy + 'static + FloatCore + FloatLike + WireOf,
+{
+    let parsed = parse_digest_column_lenient::<F>(digest_s)?;
+    let mut td = TDigest::<F>::merge_digests(parsed);
+    td.scale_weights(factor)
+        .map_err(|e| PolarsError::ComputeError(e.to_string().into()))?;
+    td.to_series(digest_s.name())
+}
+
+fn scale_values_generic<F>(digest_s: &Series, factor: f64) -> PolarsResult<Series>
+where
+    F: Copy + 'static + FloatCore + FloatLike + WireOf,
+{
+    let parsed = parse_digest_column_lenient::<F>(digest_s)?;
+    let mut td = TDigest::<F>::merge_digests(parsed);
+    td.scale_values(factor)
+        .map_err(|e| PolarsError::ComputeError(e.to_string().into()))?;
     td.to_series(digest_s.name())
 }
 

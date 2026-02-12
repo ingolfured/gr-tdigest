@@ -99,3 +99,56 @@ fn rust_core_rejects_infinities_in_training_and_add_paths() {
         "add_many must reject +inf in batch"
     );
 }
+
+#[test]
+fn rust_scaling_weights_and_values_behaves_as_expected() {
+    let mut d = TDigest::<f64>::builder()
+        .max_size(128)
+        .scale(ScaleFamily::K2)
+        .build();
+    d.add_many(vec![0.0, 1.0, 2.0, 3.0]).expect("add");
+
+    let q0 = d.quantile(0.5);
+    let c0 = d.cdf_or_nan(&[1.5])[0];
+    let count0 = d.count();
+    let sum0 = d.sum();
+    let min0 = d.min();
+    let max0 = d.max();
+
+    d.scale_weights(3.0).expect("scale weights");
+    assert!((d.quantile(0.5) - q0).abs() <= 1e-9);
+    assert!((d.cdf_or_nan(&[1.5])[0] - c0).abs() <= 1e-9);
+    assert!((d.count() - count0 * 3.0).abs() <= 1e-9);
+    assert!((d.sum() - sum0 * 3.0).abs() <= 1e-9);
+    assert!((d.min() - min0).abs() <= 1e-9);
+    assert!((d.max() - max0).abs() <= 1e-9);
+
+    d.scale_values(2.0).expect("scale values");
+    assert!((d.quantile(0.5) - q0 * 2.0).abs() <= 1e-9);
+    assert!((d.median() - q0 * 2.0).abs() <= 1e-9);
+    assert!((d.cdf_or_nan(&[1.5 * 2.0])[0] - c0).abs() <= 1e-9);
+    assert!((d.sum() - sum0 * 3.0 * 2.0).abs() <= 1e-9);
+    assert!((d.count() - count0 * 3.0).abs() <= 1e-9);
+    assert!((d.min() - min0 * 2.0).abs() <= 1e-9);
+    assert!((d.max() - max0 * 2.0).abs() <= 1e-9);
+}
+
+#[test]
+fn rust_scaling_rejects_invalid_factors() {
+    let mut d = TDigest::<f64>::builder()
+        .max_size(64)
+        .scale(ScaleFamily::K2)
+        .build();
+    d.add_many(vec![0.0, 1.0, 2.0]).expect("add");
+
+    for bad in [0.0, -1.0, f64::NAN, f64::INFINITY] {
+        assert!(
+            d.scale_weights(bad).is_err(),
+            "scale_weights({bad}) must fail"
+        );
+        assert!(
+            d.scale_values(bad).is_err(),
+            "scale_values({bad}) must fail"
+        );
+    }
+}

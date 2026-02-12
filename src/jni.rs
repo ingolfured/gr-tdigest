@@ -112,6 +112,14 @@ impl NativeDigest {
             .merge_in_place(&other.inner)
             .map_err(|e| e.to_string())
     }
+
+    fn scale_weights(&mut self, factor: f64) -> Result<(), String> {
+        self.inner.scale_weights(factor).map_err(|e| e.to_string())
+    }
+
+    fn scale_values(&mut self, factor: f64) -> Result<(), String> {
+        self.inner.scale_values(factor).map_err(|e| e.to_string())
+    }
 }
 
 // Handle helpers
@@ -373,6 +381,42 @@ pub extern "system" fn Java_gr_tdigest_TDigestNative_mergeDigest(
     let other_owned = unsafe { from_handle_const::<NativeDigest>(other_handle).clone() };
     let d = unsafe { from_handle::<NativeDigest>(handle) };
     if let Err(e) = d.merge_digest(&other_owned) {
+        throw_illegal_arg(&mut env, e);
+    }
+}
+
+#[allow(unused_mut)]
+#[no_mangle]
+pub extern "system" fn Java_gr_tdigest_TDigestNative_scaleWeights(
+    mut env: JNIEnv,
+    _cls: JClass,
+    handle: jlong,
+    factor: jdouble,
+) {
+    if let Err(msg) = ensure_non_null_handle(handle) {
+        throw_illegal_arg(&mut env, msg.to_string());
+        return;
+    }
+    let d = unsafe { from_handle::<NativeDigest>(handle) };
+    if let Err(e) = d.scale_weights(factor) {
+        throw_illegal_arg(&mut env, e);
+    }
+}
+
+#[allow(unused_mut)]
+#[no_mangle]
+pub extern "system" fn Java_gr_tdigest_TDigestNative_scaleValues(
+    mut env: JNIEnv,
+    _cls: JClass,
+    handle: jlong,
+    factor: jdouble,
+) {
+    if let Err(msg) = ensure_non_null_handle(handle) {
+        throw_illegal_arg(&mut env, msg.to_string());
+        return;
+    }
+    let d = unsafe { from_handle::<NativeDigest>(handle) };
+    if let Err(e) = d.scale_values(factor) {
         throw_illegal_arg(&mut env, e);
     }
 }

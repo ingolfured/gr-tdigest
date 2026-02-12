@@ -75,6 +75,36 @@ fn ensure_no_non_finite_values<F: FloatLike + FloatCore>(values: &[F]) -> TdResu
     Ok(())
 }
 
+#[inline]
+fn ensure_positive_finite_scale_factor(factor: f64, context: &'static str) -> TdResult<()> {
+    if !factor.is_finite() || factor <= 0.0 {
+        return Err(TdError::InvalidScaleFactor { context });
+    }
+    Ok(())
+}
+
+#[inline]
+fn rescaled_centroid<F: FloatLike + FloatCore>(
+    c: &Centroid<F>,
+    mean_scale: f64,
+    weight_scale: f64,
+) -> Centroid<F> {
+    let mean = c.mean_f64() * mean_scale;
+    let weight = c.weight_f64() * weight_scale;
+
+    if c.is_atomic_unit() {
+        if (weight - 1.0).abs() <= f64::EPSILON {
+            Centroid::<F>::new_atomic_unit_f64(mean)
+        } else {
+            Centroid::<F>::new_atomic_f64(mean, weight)
+        }
+    } else if c.is_atomic() {
+        Centroid::<F>::new_atomic_f64(mean, weight)
+    } else {
+        Centroid::<F>::new_mixed_f64(mean, weight)
+    }
+}
+
 /* =============================================================================
  * Options / Builder
  * ============================================================================= */
@@ -438,6 +468,56 @@ impl<F: FloatLike + FloatCore> TDigest<F> {
         }
         let merged = self.merge_unsorted(vals)?;
         *self = merged;
+        Ok(self)
+    }
+
+    /// Scale all centroid weights by `factor`.
+    ///
+    /// Effects:
+    /// - centroid weights are multiplied by `factor`
+    /// - digest `count` and `sum` are multiplied by `factor`
+    /// - `min`/`max` are unchanged
+    ///
+    /// This preserves quantile/cdf/median shape while re-weighting the digest.
+    pub fn scale_weights(&mut self, factor: f64) -> TdResult<&mut Self> {
+        ensure_positive_finite_scale_factor(factor, "weight scale factor must be finite and > 0")?;
+        if self.centroids.is_empty() || self.count == 0.0 {
+            return Ok(self);
+        }
+
+        self.centroids = self
+            .centroids
+            .iter()
+            .map(|c| rescaled_centroid(c, 1.0, factor))
+            .collect();
+        self.count *= factor;
+        self.sum *= factor;
+        Ok(self)
+    }
+
+    /// Scale centroid means by `factor` (value-axis scaling).
+    ///
+    /// Effects:
+    /// - centroid means are multiplied by `factor`
+    /// - digest `min`/`max` and `sum` are multiplied by `factor`
+    /// - centroid weights and digest `count` are unchanged
+    ///
+    /// Note: this requires a strictly positive factor to preserve monotone ordering.
+    pub fn scale_values(&mut self, factor: f64) -> TdResult<&mut Self> {
+        ensure_positive_finite_scale_factor(factor, "value scale factor must be finite and > 0")?;
+        if self.centroids.is_empty() || self.count == 0.0 {
+            return Ok(self);
+        }
+
+        self.centroids = self
+            .centroids
+            .iter()
+            .map(|c| rescaled_centroid(c, factor, 1.0))
+            .collect();
+
+        self.set_min(self.min() * factor);
+        self.set_max(self.max() * factor);
+        self.sum *= factor;
         Ok(self)
     }
 

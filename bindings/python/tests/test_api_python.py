@@ -63,6 +63,22 @@ class TestPythonApiSmoke:
         assert d2.inner_kind() == "f32"
         assert d2.median() == pytest.approx(d.median(), abs=1e-9)
 
+    def test_scale_weights_and_values_smoke(self):
+        d = TDigest.from_array([0.0, 1.0, 2.0, 3.0], max_size=64, scale="k2")
+        q0 = d.quantile(0.5)
+        c0 = d.cdf(1.5)
+
+        out_w = d.scale_weights(2.0)
+        assert out_w is d
+        assert d.quantile(0.5) == pytest.approx(q0, abs=1e-9)
+        assert d.cdf(1.5) == pytest.approx(c0, abs=1e-9)
+
+        out_v = d.scale_values(3.0)
+        assert out_v is d
+        assert d.quantile(0.5) == pytest.approx(q0 * 3.0, abs=1e-9)
+        assert d.median() == pytest.approx(q0 * 3.0, abs=1e-9)
+        assert d.cdf(1.5 * 3.0) == pytest.approx(c0, abs=1e-9)
+
 
 class TestPythonApiValidation:
     @pytest.mark.parametrize("bad", [float("nan"), float("+inf"), float("-inf")])
@@ -89,6 +105,14 @@ class TestPythonApiValidation:
         msg = str(exc.value).lower()
         assert "precision" in msg
         assert "cast" in msg
+
+    @pytest.mark.parametrize("bad", [0.0, -1.0, float("nan"), float("inf")])
+    def test_scale_rejects_invalid_factor(self, bad):
+        d = TDigest.from_array([0.0, 1.0, 2.0], max_size=64, scale="k2")
+        with pytest.raises(ValueError):
+            d.scale_weights(bad)
+        with pytest.raises(ValueError):
+            d.scale_values(bad)
 
     def test_edges_policy_rules(self):
         with pytest.raises(ValueError):

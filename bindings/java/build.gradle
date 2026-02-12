@@ -68,6 +68,8 @@ def libFile = os.isWindows() ? "${libBase}.dll"
 tasks.register('copyNative') {
   dependsOn tasks.named('cargoBuild')
   outputs.dir(genResDir)
+  // Rust/JNI symbol changes are not tracked by Gradle inputs here; always refresh.
+  outputs.upToDateWhen { false }
   doLast {
     def src = new File(targetRel, libFile)
     if (!src.exists()) {

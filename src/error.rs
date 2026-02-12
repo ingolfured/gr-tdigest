@@ -13,6 +13,9 @@ pub enum TdError {
 
     /// Internal invariant violation (should never happen in release builds).
     Invariant { what: &'static str },
+
+    /// Invalid scaling factor for digest-level scaling operations.
+    InvalidScaleFactor { context: &'static str },
 }
 
 impl fmt::Display for TdError {
@@ -33,6 +36,11 @@ hint: clean your data or drop NaNs before building the digest",
             TdError::Invariant { what } => {
                 write!(f, "tdigest: internal invariant violation: {}", what)
             }
+            TdError::InvalidScaleFactor { context } => write!(
+                f,
+                "tdigest: invalid scale factor ({}). hint: factor must be finite and > 0",
+                context
+            ),
         }
     }
 }

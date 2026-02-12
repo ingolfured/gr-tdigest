@@ -304,6 +304,20 @@ public final class TDigest implements AutoCloseable, Serializable {
     return this;
   }
 
+  /** Scale centroid weights by a positive finite factor. */
+  public TDigest scaleWeights(double factor) {
+    ensureOpen();
+    TDigestNative.scaleWeights(state.handle, factor);
+    return this;
+  }
+
+  /** Scale centroid means/value-axis by a positive finite factor. */
+  public TDigest scaleValues(double factor) {
+    ensureOpen();
+    TDigestNative.scaleValues(state.handle, factor);
+    return this;
+  }
+
   public static TDigest mergeAll(TDigest first, TDigest second, TDigest... rest) {
     Objects.requireNonNull(first, "first");
     Objects.requireNonNull(second, "second");

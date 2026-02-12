@@ -22,6 +22,7 @@ fn map_frontend_err(err: FrontendError) -> PyErr {
     match err {
         FrontendError::InvalidTrainingData(msg)
         | FrontendError::InvalidProbe(msg)
+        | FrontendError::InvalidScale(msg)
         | FrontendError::IncompatibleMerge(msg)
         | FrontendError::DecodeError(msg) => PyValueError::new_err(msg),
     }
@@ -155,6 +156,14 @@ impl PyTDigest {
         self.inner
             .add_values_f64(values_f64)
             .map_err(map_frontend_err)
+    }
+
+    pub fn scale_weights(&mut self, factor: f64) -> PyResult<()> {
+        self.inner.scale_weights(factor).map_err(map_frontend_err)
+    }
+
+    pub fn scale_values(&mut self, factor: f64) -> PyResult<()> {
+        self.inner.scale_values(factor).map_err(map_frontend_err)
     }
 
     pub fn cdf(&self, py: Python<'_>, x: PyObject) -> PyResult<PyObject> {

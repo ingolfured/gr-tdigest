@@ -33,6 +33,8 @@ final class TDigestNative {
   static native void     mergeArrayF64(long handle, double[] values);
   static native void     mergeArrayF32(long handle, float[] values);
   static native void     mergeDigest(long handle, long otherHandle);
+  static native void     scaleWeights(long handle, double factor);
+  static native void     scaleValues(long handle, double factor);
   static native void     free(long handle);
   static native double[] cdf(long handle, double[] values);
   static native double   quantile(long handle, double q);

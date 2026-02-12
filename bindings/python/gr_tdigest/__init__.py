@@ -264,6 +264,14 @@ _native_add_raw: Any = getattr(_NativeTDigest, "add", None)
 if _native_add_raw is None:  # pragma: no cover
     raise AttributeError("Native TDigest is missing 'add'")
 _native_add = cast(Callable[..., Any], _native_add_raw)
+_native_scale_weights_raw: Any = getattr(_NativeTDigest, "scale_weights", None)
+if _native_scale_weights_raw is None:  # pragma: no cover
+    raise AttributeError("Native TDigest is missing 'scale_weights'")
+_native_scale_weights = cast(Callable[..., Any], _native_scale_weights_raw)
+_native_scale_values_raw: Any = getattr(_NativeTDigest, "scale_values", None)
+if _native_scale_values_raw is None:  # pragma: no cover
+    raise AttributeError("Native TDigest is missing 'scale_values'")
+_native_scale_values = cast(Callable[..., Any], _native_scale_values_raw)
 
 
 def _merge_patched(self: _NativeTDigest, other: Any) -> _NativeTDigest:
@@ -283,6 +291,22 @@ def _add_patched(self: _NativeTDigest, values: Any) -> _NativeTDigest:
 
 
 setattr(TDigest, "add", _add_patched)
+
+
+def _scale_weights_patched(self: _NativeTDigest, factor: float) -> _NativeTDigest:
+    _native_scale_weights(self, float(factor))
+    return self
+
+
+setattr(TDigest, "scale_weights", _scale_weights_patched)
+
+
+def _scale_values_patched(self: _NativeTDigest, factor: float) -> _NativeTDigest:
+    _native_scale_values(self, float(factor))
+    return self
+
+
+setattr(TDigest, "scale_values", _scale_values_patched)
 
 
 # --- Polars plugin wrappers ---------------------------------------------------
@@ -416,6 +440,38 @@ def add_values(digest: "IntoExpr", values: "IntoExpr") -> pl.Expr:
     )
 
 
+def scale_weights(digest: "IntoExpr", factor: float) -> pl.Expr:
+    d_expr = _into_expr(digest)
+    try:
+        f = float(factor)
+    except Exception as exc:  # noqa: BLE001
+        raise TypeError(f"factor must be a float; got {type(factor).__name__}.") from exc
+
+    return register_plugin_function(
+        plugin_path=str(lib),
+        function_name="scale_weights",
+        args=[d_expr],
+        kwargs={"factor": f},
+        returns_scalar=True,
+    )
+
+
+def scale_values(digest: "IntoExpr", factor: float) -> pl.Expr:
+    d_expr = _into_expr(digest)
+    try:
+        f = float(factor)
+    except Exception as exc:  # noqa: BLE001
+        raise TypeError(f"factor must be a float; got {type(factor).__name__}.") from exc
+
+    return register_plugin_function(
+        plugin_path=str(lib),
+        function_name="scale_values",
+        args=[d_expr],
+        kwargs={"factor": f},
+        returns_scalar=True,
+    )
+
+
 def to_bytes(digest: "IntoExpr") -> pl.Expr:
     """
     Serialize a TDigest struct column to a single binary blob (scalar expr).
@@ -477,6 +533,8 @@ __all__ = [
     "median",
     "merge_tdigests",
     "add_values",
+    "scale_weights",
+    "scale_values",
     "to_bytes",
     "from_bytes",
     "wire_precision",

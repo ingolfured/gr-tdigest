@@ -61,4 +61,46 @@ class TDigestMergeTest {
       assertEquals(byVarargs.quantile(0.5), byIterable.quantile(0.5), 1e-12);
     }
   }
+
+  @Test
+  void scaleWeightsAndValuesSmoke() {
+    try (TDigest d = TDigest.builder()
+        .maxSize(256)
+        .scale(Scale.K2)
+        .singletonPolicy(SingletonPolicy.USE)
+        .precision(Precision.F64)
+        .build(new double[] {0.0, 1.0, 2.0, 3.0})) {
+      double q0 = d.quantile(0.5);
+      double c0 = d.cdf(new double[] {1.5})[0];
+
+      d.scaleWeights(2.0);
+      assertEquals(q0, d.quantile(0.5), 1e-12);
+      assertEquals(c0, d.cdf(new double[] {1.5})[0], 1e-12);
+
+      d.scaleValues(3.0);
+      assertEquals(q0 * 3.0, d.quantile(0.5), 1e-12);
+      assertEquals(q0 * 3.0, d.median(), 1e-12);
+      assertEquals(c0, d.cdf(new double[] {1.5 * 3.0})[0], 1e-12);
+    }
+  }
+
+  @Test
+  void scaleRejectsInvalidFactor() {
+    try (TDigest d = TDigest.builder()
+        .maxSize(64)
+        .scale(Scale.K2)
+        .singletonPolicy(SingletonPolicy.USE)
+        .precision(Precision.F64)
+        .build(new double[] {0.0, 1.0, 2.0})) {
+      assertThrows(IllegalArgumentException.class, () -> d.scaleWeights(0.0));
+      assertThrows(IllegalArgumentException.class, () -> d.scaleWeights(-1.0));
+      assertThrows(IllegalArgumentException.class, () -> d.scaleWeights(Double.NaN));
+      assertThrows(IllegalArgumentException.class, () -> d.scaleWeights(Double.POSITIVE_INFINITY));
+
+      assertThrows(IllegalArgumentException.class, () -> d.scaleValues(0.0));
+      assertThrows(IllegalArgumentException.class, () -> d.scaleValues(-1.0));
+      assertThrows(IllegalArgumentException.class, () -> d.scaleValues(Double.NaN));
+      assertThrows(IllegalArgumentException.class, () -> d.scaleValues(Double.POSITIVE_INFINITY));
+    }
+  }
 }

@@ -4,7 +4,17 @@ import numpy as np
 import polars as pl
 import pytest
 
-from gr_tdigest import ScaleFamily, add_values, cdf, median, merge_tdigests, quantile, tdigest
+from gr_tdigest import (
+    ScaleFamily,
+    add_values,
+    cdf,
+    median,
+    merge_tdigests,
+    quantile,
+    scale_values,
+    scale_weights,
+    tdigest,
+)
 
 
 def _extract_vector(df: pl.DataFrame, col: str) -> list[float]:
@@ -77,6 +87,23 @@ class TestPolarsPluginSmoke:
         assert out["cx"].is_sorted()
         assert float(out["qy"][0]) == pytest.approx(1.6666666666666667, abs=1e-9)
 
+    def test_scale_weights_and_values_smoke(self):
+        d = pl.DataFrame({"x": [0.0, 1.0, 2.0, 3.0]}).select(
+            tdigest("x", max_size=64, scale=ScaleFamily.K2).alias("td")
+        )
+
+        q0 = float(d.select(quantile("td", 0.5)).item())
+        c0 = float(d.select(cdf("td", 1.5)).item())
+
+        scaled_w = d.select(td2=scale_weights("td", 2.0))
+        assert float(scaled_w.select(quantile("td2", 0.5)).item()) == pytest.approx(q0, abs=1e-9)
+        assert float(scaled_w.select(cdf("td2", 1.5)).item()) == pytest.approx(c0, abs=1e-9)
+
+        scaled_v = d.select(td2=scale_values("td", 3.0))
+        assert float(scaled_v.select(quantile("td2", 0.5)).item()) == pytest.approx(q0 * 3.0, abs=1e-9)
+        assert float(scaled_v.select(median("td2")).item()) == pytest.approx(q0 * 3.0, abs=1e-9)
+        assert float(scaled_v.select(cdf("td2", 1.5 * 3.0)).item()) == pytest.approx(c0, abs=1e-9)
+
 
 class TestPolarsPluginValidation:
     def test_tdigest_rejects_nan_inf_null_training(self):
@@ -107,3 +134,11 @@ class TestPolarsPluginValidation:
         assert math.isnan(float(r0[3]))
         assert r1[2] == pytest.approx(25.0, abs=1e-9)
         assert r1[3] == pytest.approx(0.5, abs=1e-9)
+
+    @pytest.mark.parametrize("bad", [0.0, -1.0, float("nan"), float("inf")])
+    def test_scaling_rejects_invalid_factor(self, bad):
+        d = pl.DataFrame({"x": [0.0, 1.0, 2.0]}).select(tdigest("x").alias("td"))
+        with pytest.raises(pl.exceptions.ComputeError):
+            d.select(scale_weights("td", bad))
+        with pytest.raises(pl.exceptions.ComputeError):
+            d.select(scale_values("td", bad))

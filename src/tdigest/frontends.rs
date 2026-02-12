@@ -194,6 +194,7 @@ impl From<WirePrecision> for DigestPrecision {
 pub enum FrontendError {
     InvalidTrainingData(String),
     InvalidProbe(String),
+    InvalidScale(String),
     IncompatibleMerge(String),
     DecodeError(String),
 }
@@ -203,6 +204,7 @@ impl Display for FrontendError {
         match self {
             FrontendError::InvalidTrainingData(msg)
             | FrontendError::InvalidProbe(msg)
+            | FrontendError::InvalidScale(msg)
             | FrontendError::IncompatibleMerge(msg)
             | FrontendError::DecodeError(msg) => write!(f, "{msg}"),
         }
@@ -309,6 +311,34 @@ impl FrontendDigest {
             }
             FrontendDigest::F64(td) => {
                 td.add_many(values).map_err(FrontendError::from)?;
+            }
+        }
+        Ok(())
+    }
+
+    pub fn scale_weights(&mut self, factor: f64) -> Result<(), FrontendError> {
+        match self {
+            FrontendDigest::F32(td) => {
+                td.scale_weights(factor)
+                    .map_err(|e| FrontendError::InvalidScale(e.to_string()))?;
+            }
+            FrontendDigest::F64(td) => {
+                td.scale_weights(factor)
+                    .map_err(|e| FrontendError::InvalidScale(e.to_string()))?;
+            }
+        }
+        Ok(())
+    }
+
+    pub fn scale_values(&mut self, factor: f64) -> Result<(), FrontendError> {
+        match self {
+            FrontendDigest::F32(td) => {
+                td.scale_values(factor)
+                    .map_err(|e| FrontendError::InvalidScale(e.to_string()))?;
+            }
+            FrontendDigest::F64(td) => {
+                td.scale_values(factor)
+                    .map_err(|e| FrontendError::InvalidScale(e.to_string()))?;
             }
         }
         Ok(())
@@ -536,18 +566,12 @@ mod tests {
 
     #[test]
     fn frontend_add_and_merge_reject_invalid_inputs() {
-        let mut f64d = FrontendDigest::from_values(
-            vec![0.0, 1.0, 2.0],
-            cfg_k2_use(64),
-            DigestPrecision::F64,
-        )
-        .expect("build f64");
-        let f32d = FrontendDigest::from_values(
-            vec![0.0, 1.0, 2.0],
-            cfg_k2_use(64),
-            DigestPrecision::F32,
-        )
-        .expect("build f32");
+        let mut f64d =
+            FrontendDigest::from_values(vec![0.0, 1.0, 2.0], cfg_k2_use(64), DigestPrecision::F64)
+                .expect("build f64");
+        let f32d =
+            FrontendDigest::from_values(vec![0.0, 1.0, 2.0], cfg_k2_use(64), DigestPrecision::F32)
+                .expect("build f32");
 
         let add_err = f64d
             .add_values_f64(vec![0.0, f64::NAN])
@@ -560,6 +584,33 @@ mod tests {
         let msg = merge_err.to_string().to_lowercase();
         assert!(msg.contains("precision"));
         assert!(msg.contains("cast explicitly"));
+    }
+
+    #[test]
+    fn frontend_scaling_supports_weights_and_values() {
+        let mut d = FrontendDigest::from_values(
+            vec![0.0, 1.0, 2.0, 3.0],
+            cfg_k2_use(128),
+            DigestPrecision::F64,
+        )
+        .expect("build");
+
+        let q0 = d.quantile_strict(0.5).expect("q0");
+        let c0 = d.cdf(&[1.5])[0];
+
+        d.scale_weights(2.0).expect("scale weights");
+        assert!((d.quantile_strict(0.5).expect("q1") - q0).abs() <= 1e-9);
+        assert!((d.cdf(&[1.5])[0] - c0).abs() <= 1e-9);
+
+        d.scale_values(3.0).expect("scale values");
+        assert!((d.quantile_strict(0.5).expect("q2") - q0 * 3.0).abs() <= 1e-9);
+        assert!((d.median() - q0 * 3.0).abs() <= 1e-9);
+        assert!((d.cdf(&[1.5 * 3.0])[0] - c0).abs() <= 1e-9);
+
+        for bad in [0.0, -1.0, f64::NAN, f64::INFINITY] {
+            assert!(d.scale_weights(bad).is_err());
+            assert!(d.scale_values(bad).is_err());
+        }
     }
 
     #[test]
