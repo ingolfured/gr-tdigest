@@ -55,6 +55,7 @@ JAVA_BUILD_REL  := build
 JAVA_LIBS_REL   := $(JAVA_BUILD_REL)/libs
 GRADLEW_PATH    := $(JAVA_SRC)/gradlew
 GRADLE          := $(GRADLEW_PATH)
+GRADLE_USER_HOME ?= $(PWD)/.gradle-user-home
 
 # Integration tests
 INTEG_DIR       := integration/api_coherence
@@ -170,11 +171,11 @@ build-rust:
 # Always run maturin from bindings/python where its pyproject.toml lives
 build-python:
 	$(call banner,Build: Python extension (maturin develop, dev))
-	@(cd "$(PY_DIR)" && $(UV_ENV) $(UV) run maturin develop -F python)
+	@(cd "$(PY_DIR)" && $(UV_ENV) $(UV) run --no-sync maturin develop -F python)
 
 build-java: JAVA_WRAPPER_CHECK
 	$(call banner,Build: Java via Gradle (clean + jar))
-	@"$(GRADLE)" --no-daemon --console=plain -p "$(JAVA_SRC)" clean jar
+	@GRADLE_USER_HOME="$(GRADLE_USER_HOME)" "$(GRADLE)" --no-daemon --console=plain -p "$(JAVA_SRC)" clean jar
 	@LATEST="$$(ls -1t "$(JAVA_SRC)/$(JAVA_LIBS_REL)/$(JAR_ARTIFACT)-"*.jar 2>/dev/null | head -1)"; \
 	[ -n "$$LATEST" ] || { echo "$(STYLE_ERR)✗ No JAR produced$(STYLE_RESET)"; exit 1; }; \
 	printf "$(STYLE_OK)✓ Built %s$(STYLE_RESET)\n" "$$LATEST"
@@ -192,10 +193,10 @@ rust-test:
 
 # Explicit path to bindings/python/tests (pytest discovers from pyproject too)
 py-test: build-python
-	$(UV_ENV) $(UV) run pytest
+	$(UV_ENV) $(UV) run --no-sync pytest
 
 java-test: JAVA_WRAPPER_CHECK
-	@"$(GRADLE)" --no-daemon --console=plain -p "$(JAVA_SRC)" test
+	@GRADLE_USER_HOME="$(GRADLE_USER_HOME)" "$(GRADLE)" --no-daemon --console=plain -p "$(JAVA_SRC)" test
 
 # ==============================================================================
 # Lint (autofix where possible) + docs must be warning-free
@@ -227,7 +228,7 @@ clean:
 	rm -rf target/ || true
 	$(CARGO) clean || true
 	$(call banner,Clean: Gradle build outputs)
-	@{ [ -x "$(GRADLEW_PATH)" ] && "$(GRADLE)" --no-daemon -p "$(JAVA_SRC)" clean || true; }
+	@{ [ -x "$(GRADLEW_PATH)" ] && GRADLE_USER_HOME="$(GRADLE_USER_HOME)" "$(GRADLE)" --no-daemon -p "$(JAVA_SRC)" clean || true; }
 	rm -rf "$(JAVA_SRC)/$(JAVA_BUILD_REL)" || true
 	$(call banner,Clean: Python build artifacts)
 	@find "$(PY_DIR)" -type d -name "__pycache__" -prune -exec rm -rf {} + || true
@@ -282,7 +283,7 @@ release-wheel:
 
 release-jar: JAVA_WRAPPER_CHECK
 	$(call banner,Release: Java (Gradle) + publish to dist)
-	@"$(GRADLE)" --no-daemon -p "$(JAVA_SRC)" clean smoke
+	@GRADLE_USER_HOME="$(GRADLE_USER_HOME)" "$(GRADLE)" --no-daemon -p "$(JAVA_SRC)" clean smoke
 	mkdir -p "$(DIST)"
 	LATEST="$(JAVA_SRC)/$(JAVA_LIBS_REL)/$(JAR_ARTIFACT)-$(VER).jar"
 	[ -f "$$LATEST" ]

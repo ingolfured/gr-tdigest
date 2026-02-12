@@ -18,11 +18,11 @@ Cross-surface behavior is enforced by integration tests in `integration/api_cohe
 - `src/lib.rs`: crate entry, feature gates, module exports, Python module registration.
 - `src/tdigest/`: core algorithm and codecs.
 - `src/error.rs`: common error types and user-facing error messages.
-- `src/py.rs`: PyO3-native class/method bindings.
+- `src/py.rs`: PyO3-native class/method bindings (thin adapter over shared Rust frontend service).
 - `src/polars_expr.rs`: Polars plugin UDFs (`tdigest`, `add_values`, `cdf`, `quantile`, `median`, merge, byte conversions).
 - `src/jni.rs`: JNI exports used by Java bridge.
 - `src/bin/tdigest_cli.rs`: CLI used heavily by coherence tests.
-- `bindings/python/gr_tdigest/__init__.py`: Python public API + wrapper/patch logic around native methods.
+- `bindings/python/gr_tdigest/__init__.py`: Python public API + Polars plugin wiring (keep runtime patching minimal).
 - `bindings/java/src/gr/tdigest/`: Java API, native loader, JNI method declarations.
 - `integration/api_coherence/`: behavior contracts across CLI/Python/Polars/Java.
 - `integration/api_coherence/test_serialization.py`: cross-language byte-wire compatibility.
@@ -60,6 +60,7 @@ The integration suite treats these as contract-level behavior:
 - Precision coherence:
   - F32/F64 behaviors must remain predictable and explicit.
   - Mixed precision blobs in a single Polars `from_bytes` column are rejected.
+  - Null blobs in Polars `from_bytes` are strict errors.
 - Capability parity baseline:
   - All surfaces must expose build/train, add (single + multiple), merge multiple digests, `quantile`, `cdf`, `median`.
   - Naming may differ by surface (`add_values`/`merge_tdigests` on Polars), but capability coverage must match.
@@ -134,16 +135,15 @@ Use `Makefile` targets by default.
 
 ### 5.3 Python native binding (`src/py.rs`)
 
-- Enforce strict training validation (`non-finite` rejection).
-- Preserve quantile strictness (`finite`, `[0,1]`).
-- Preserve precision safety in merge paths (no mixing f32/f64 digests).
-- Keep method bodies thin and route validation via shared Rust frontend helpers where possible.
+- Route behavior through `src/tdigest/frontends.rs` (`FrontendDigest`) whenever possible.
+- Keep this layer focused on Python argument/container conversion and exception translation.
+- Do not re-implement merge/config/probe/training rules here if they already exist in Rust frontend helpers.
 
 ### 5.4 Python package wrapper (`bindings/python/gr_tdigest/__init__.py`)
 
-- This file patches native methods for ergonomic behavior and strict validation.
+- Keep this file mostly declarative: argument normalization, Polars expression wrappers, and ergonomic aliases.
 - Polars plugin entry points are here (`tdigest`, `add_values`, `cdf`, `quantile`, `median`, `merge_tdigests`, `to_bytes`, `from_bytes`).
-- If you change native signatures or semantics, update wrapper patch logic and tests together.
+- Prefer pushing semantics into Rust (`src/py.rs` + shared frontend service) over Python-side monkey-patching.
 
 ### 5.5 Polars plugin (`src/polars_expr.rs`)
 
@@ -157,7 +157,8 @@ Use `Makefile` targets by default.
 
 ### 5.6 Java/JNI (`bindings/java/*`, `src/jni.rs`)
 
-- Java API should validate inputs before JNI when possible.
+- Prefer Rust/JNI as the single source for semantic validation and merge/serde/query behavior.
+- Java API should stay thin and ergonomic; avoid duplicating CDF/quantile special-case logic in Java when Rust already enforces it.
 - JNI methods throw `IllegalArgumentException` for invalid user input.
 - `Natives.java` load order:
   1. `-Dgr.tdigest.native=...`
@@ -190,11 +191,10 @@ If only one surface changed, still run the relevant coherence subset.
 - Keep bindings thin adapters (argument conversion + error translation only).
 - Eliminate duplicated validation/business logic across `py.rs`, `jni.rs`, CLI, and Python wrapper patches.
 
-### 7.2 High-value refactor phases
+### 7.2 Current direction
 
-- Phase 1: Introduce a shared Rust frontend service layer.
-- Target: new internal module that exposes precision-aware operations (`build`, `add`, `merge`, `quantile`, `cdf`, `median`, `to_bytes`, `from_bytes`) behind one API.
-- Bindings call this layer instead of re-implementing flow logic.
+- Shared Rust frontend service layer lives in `src/tdigest/frontends.rs` (`FrontendDigest`, config/probe/training/merge helpers).
+- Continue migrating binding logic to this layer before adding new per-binding behavior.
 
 - Phase 2: Centralize validation and error mapping.
 - Move all probe/training/config validation into shared Rust helpers.

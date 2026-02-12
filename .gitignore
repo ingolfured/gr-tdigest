@@ -48,6 +48,7 @@ venv/
 *.iml
 *.idea/
 .gradle/
+.gradle-user-home/
 build/
 
 # =========================
