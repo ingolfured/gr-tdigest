@@ -6,6 +6,17 @@ This changelog was reconstructed from git history (commits + version transitions
 
 ## [Unreleased]
 
+### Added
+- Open-source governance and community docs:
+  - `CONTRIBUTING.md`
+  - `CODE_OF_CONDUCT.md`
+  - `SECURITY.md`
+
+### Changed
+- `CODE_OF_CONDUCT.md` simplified to a minimal, practical policy.
+- Security reporting flow moved to GitHub private vulnerability reporting (`security/advisories/new`).
+- `README.md` now includes links to community and support docs.
+
 ## [0.2.0] - 2026-02-14
 
 ### Added

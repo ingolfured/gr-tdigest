@@ -22,6 +22,12 @@ T-Digest provides a mergeable summary of a distribution, enabling **approximate 
 ## 📜 License
 Apache-2.0
 
+## 🤝 Community
+- Contributing guide: `CONTRIBUTING.md`
+- Code of conduct: `CODE_OF_CONDUCT.md`
+- Security policy: `SECURITY.md`
+- Issue tracker: https://github.com/ingolfured/gr-tdigest/issues
+
 ## ⚡ Quick start
 ```bash
 make setup    # toolchains + Python deps
