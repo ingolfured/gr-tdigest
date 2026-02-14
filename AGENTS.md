@@ -242,6 +242,7 @@ If only one surface changed, still run the relevant coherence subset.
 - When in doubt, preserve existing user-facing error wording that tests assert on.
 - Use real multi-line commit messages when needed (actual newlines in the commit body; do not embed literal `\n` escape text).
 - Every commit must include an update to `CHANGELOG.md` (at minimum under `## [Unreleased]`).
+- Do not push a release tag while release notes still live under `## [Unreleased]`; move them into a versioned section first.
 
 ## 10. Documentation discipline
 

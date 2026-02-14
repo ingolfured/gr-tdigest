@@ -2,9 +2,9 @@
 
 All notable changes to this project are documented in this file.
 
-This changelog was reconstructed from git history (commits + version transitions in `Cargo.toml`) and starts at `0.1.1` as requested.
-
 ## [Unreleased]
+
+## [0.2.1] - 2026-02-14
 
 ### Added
 - Open-source governance and community docs:
@@ -23,6 +23,7 @@ This changelog was reconstructed from git history (commits + version transitions
   - `.github/workflows/release_maven.yml`
 
 ### Changed
+- Release/version transition from `0.2.0` to `0.2.1`.
 - `CODE_OF_CONDUCT.md` simplified to a minimal, practical policy.
 - Security reporting flow moved to GitHub private vulnerability reporting (`security/advisories/new`).
 - `README.md` now includes links to community and support docs.
@@ -33,6 +34,7 @@ This changelog was reconstructed from git history (commits + version transitions
 - `Cargo.toml` now includes crate publish metadata (description/license/repository/homepage/documentation/readme/keywords/categories) for crates.io readiness.
 - `bindings/java/build.gradle` now supports repository-configured Maven publishing via environment variables, optional in-memory PGP signing, and publishes sources/javadoc jars with SCM/license metadata.
 - `README.md` now documents GitHub release workflow setup for PyPI, Cargo, and Maven publishing.
+- `AGENTS.md` now requires moving `## [Unreleased]` notes into a versioned section before pushing release tags.
 
 ## [0.2.0] - 2026-02-14
 
