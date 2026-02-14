@@ -46,6 +46,7 @@ venv/
 # =========================
 *.class
 *.jar
+!bindings/java/gradle/wrapper/gradle-wrapper.jar
 *.war
 *.ear
 *.iml

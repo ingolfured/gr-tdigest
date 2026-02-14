@@ -4,6 +4,9 @@ All notable changes to this project are documented in this file.
 
 ## [Unreleased]
 
+### Fixed
+- Track `bindings/java/gradle/wrapper/gradle-wrapper.jar` so GitHub Actions can run Gradle wrapper (`org.gradle.wrapper.GradleWrapperMain` available in CI).
+
 ## [0.2.1] - 2026-02-14
 
 ### Added
