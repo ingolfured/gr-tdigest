@@ -30,9 +30,8 @@ Apply to a specific repo:
 - `master`:
   - no force-push
   - no deletion
-  - PR rule active for everyone else
-  - admin role can bypass PR requirement and push directly
-  - PR merge method restricted to squash
+  - direct push allowed
+  - PR merges are squash-only (repo merge settings)
 - `v*` tags:
   - creation/update/deletion restricted to admin role
 

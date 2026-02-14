@@ -20,6 +20,7 @@ All notable changes to this project are documented in this file.
 - `README.md` and `CONTRIBUTING.md` now reference repository protection setup guidance.
 - `Makefile` `setup-hooks` now installs pre-commit via `.venv/bin/python -m pre_commit` and auto-recovers missing `pre_commit` in `.venv` by syncing `bindings/python` dependencies.
 - `.github/REPO_SETTINGS.md` now documents a configuration-as-code workflow for GitHub rulesets.
+- `master` protection policy is now no-force-push/no-deletion with direct pushes allowed; PR merges remain squash-only via repository merge settings.
 
 ### Fixed
 - Track `bindings/java/gradle/wrapper/gradle-wrapper.jar` so GitHub Actions can run Gradle wrapper (`org.gradle.wrapper.GradleWrapperMain` available in CI).
