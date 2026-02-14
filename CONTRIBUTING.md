@@ -22,6 +22,11 @@ make test
 - Explain what changed and why.
 - Include validation notes (for example `make build` / `make test`).
 
+## Repository Protection
+
+- Apply the one-time GitHub rules in `.github/REPO_SETTINGS.md`.
+- Keep `master` protected and keep release tags restricted to maintainers.
+
 ## Licensing
 
 By submitting a contribution, you agree that your contribution is licensed under Apache-2.0.

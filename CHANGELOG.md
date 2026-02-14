@@ -4,6 +4,18 @@ All notable changes to this project are documented in this file.
 
 ## [Unreleased]
 
+### Added
+- Added `.github/REPO_SETTINGS.md` with one-time GitHub ruleset guidance for protecting `master`, protecting `v*` tags, and scoping release environments.
+
+### Changed
+- CI (`.github/workflows/ci.yml`) now runs `Lint` and `Build and test` as parallel jobs for faster feedback.
+- CI now caches uv and Gradle artifacts in addition to Rust caches to reduce rebuild time.
+- Release workflows now verify that release tags point to commits reachable from `origin/master`.
+- Cargo release now runs `cargo publish --dry-run --locked --package gr-tdigest` before publish.
+- Maven release now runs a preflight `publishToMavenLocal` before repository publish.
+- PyPI release now runs `twine check` on built distributions before publish.
+- `README.md` and `CONTRIBUTING.md` now reference repository protection setup guidance.
+
 ### Fixed
 - Track `bindings/java/gradle/wrapper/gradle-wrapper.jar` so GitHub Actions can run Gradle wrapper (`org.gradle.wrapper.GradleWrapperMain` available in CI).
 

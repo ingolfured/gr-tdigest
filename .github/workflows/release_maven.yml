@@ -30,6 +30,8 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - name: Setup Java
         uses: actions/setup-java@v4
@@ -39,6 +41,26 @@ jobs:
 
       - name: Setup Rust
         uses: dtolnay/rust-toolchain@stable
+
+      - name: Cache Rust artifacts
+        uses: Swatinem/rust-cache@v2
+
+      - name: Cache Gradle artifacts
+        uses: actions/cache@v4
+        with:
+          path: ${{ env.GRADLE_USER_HOME }}
+          key: ${{ runner.os }}-gradle-${{ hashFiles('bindings/java/**/*.gradle*', 'bindings/java/gradle.properties', 'bindings/java/gradle/wrapper/gradle-wrapper.properties') }}
+          restore-keys: |
+            ${{ runner.os }}-gradle-
+
+      - name: Verify tag commit is reachable from master
+        run: |
+          set -euo pipefail
+          git fetch --no-tags origin master
+          if ! git merge-base --is-ancestor "${GITHUB_SHA}" "origin/master"; then
+            echo "Release tag commit (${GITHUB_SHA}) is not reachable from origin/master"
+            exit 1
+          fi
 
       - name: Verify tag matches Cargo.toml version
         run: |
@@ -53,6 +75,9 @@ jobs:
             echo "Tag version (${TAG_VERSION}) does not match Cargo.toml version (${CARGO_VERSION})"
             exit 1
           fi
+
+      - name: Preflight publish to Maven local
+        run: bindings/java/gradlew --no-daemon --console=plain -p bindings/java publishToMavenLocal
 
       - name: Validate Maven credentials
         run: |
