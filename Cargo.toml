@@ -2,6 +2,14 @@
 name    = "gr-tdigest"
 version = "0.2.0"
 edition = "2021"
+description = "Mergeable TDigest in Rust with Python, Polars, and Java bindings"
+license = "Apache-2.0"
+repository = "https://github.com/ingolfured/gr-tdigest"
+homepage = "https://github.com/ingolfured/gr-tdigest"
+documentation = "https://docs.rs/gr-tdigest"
+readme = "README.md"
+keywords = ["tdigest", "quantile", "cdf", "statistics", "polars"]
+categories = ["algorithms", "data-structures", "science"]
 
 [lib]
 name       = "gr_tdigest"
