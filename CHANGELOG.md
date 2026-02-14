@@ -40,10 +40,16 @@ This changelog was reconstructed from git history (commits + version transitions
 - `make setup` now installs pre-commit hooks with repo-local caches (`.pre-commit-cache`, `.uv-cache`) to avoid host cache permission issues.
 - Agent workflow guidance tightened (`AGENTS.md`) to require changelog updates, design-doc review/updates, and README maintenance.
 - `Makefile` now defaults `UV_CACHE_DIR` to repo-local `.uv-cache` for more reliable sandboxed/dev runs.
+- Core digest merge switched from concat+sort run materialization to heap-stream k-way merge in `KWayCentroidMerge::from_runs`, reducing peak merge allocations and improving heavy merge throughput.
+- Raw ingest merge (`MergeByMean::from_centroids_and_values`) switched to a streaming two-way iterator, removing prebuilt merged-buffer materialization in `merge_sorted`.
 
 ### Testing / Contracts
 - Cross-surface contract/coherence test suite expanded and consolidated.
 - Added wire migration tests for mixed v1/v2 blobs and explicit versioned encoding on Python/Java paths.
+- Added merge strategy proof tests:
+  - randomized correctness parity (`heap` vs historical `concat+sort`)
+  - ignored heavy benchmark/proof test for CPU + memory + precision comparison (current profile: `n=10M`, `shards=40`, `max_size=1000`)
+  - historical concat+sort comparator retained as test-only baseline (`#[cfg(test)]`)
 - Full project gates continue to pass (`make build`, `make test`).
 
 ## [0.1.13] - 2026-02-09

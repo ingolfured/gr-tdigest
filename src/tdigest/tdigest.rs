@@ -828,9 +828,286 @@ impl TDigest<f64> {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use std::hint::black_box;
+    use std::time::Instant;
+    use testdata::{gen_dataset, DistKind};
 
     fn approx(a: f64, b: f64, eps: f64) -> bool {
         (a - b).abs() <= eps * (1.0 + a.abs() + b.abs())
+    }
+
+    #[derive(Clone, Copy, Debug)]
+    enum MergeStrategy {
+        ConcatSort,
+        HeapStream,
+    }
+
+    #[derive(Clone)]
+    struct MergeScan<'a> {
+        chosen_max_size: usize,
+        chosen_scale: ScaleFamily,
+        chosen_policy: SingletonPolicy,
+        total_count: f64,
+        min: OrderedFloat<f64>,
+        max: OrderedFloat<f64>,
+        runs: Vec<&'a [Centroid<f64>]>,
+    }
+
+    #[derive(Debug, Clone, Copy)]
+    struct AccuracyMetrics {
+        q_mae: f64,
+        q_max: f64,
+        cdf_mae: f64,
+        cdf_max: f64,
+    }
+
+    #[derive(Clone, Copy)]
+    struct PerfCase {
+        label: &'static str,
+        dist: DistKind,
+        n: usize,
+        shards: usize,
+        max_size: usize,
+    }
+
+    #[cfg(all(target_os = "linux", target_env = "gnu"))]
+    fn allocated_now_bytes() -> usize {
+        use jemalloc_ctl::{epoch, stats};
+        epoch::advance().expect("jemalloc epoch advance");
+        stats::allocated::read().expect("jemalloc allocated")
+    }
+
+    #[cfg(not(all(target_os = "linux", target_env = "gnu")))]
+    fn allocated_now_bytes() -> usize {
+        0
+    }
+
+    fn scan_non_empty_runs<'a>(digests: &'a [TDigest<f64>]) -> Option<MergeScan<'a>> {
+        let mut chosen: Option<(usize, ScaleFamily, SingletonPolicy)> = None;
+        let mut runs: Vec<&[Centroid<f64>]> = Vec::with_capacity(digests.len());
+        let mut total_count = 0.0_f64;
+        let mut min = OrderedFloat::from(f64::INFINITY);
+        let mut max = OrderedFloat::from(f64::NEG_INFINITY);
+
+        for d in digests {
+            let n = d.count();
+            if n > 0.0 && !d.centroids.is_empty() {
+                if chosen.is_none() {
+                    chosen = Some((d.max_size, d.scale, d.policy));
+                }
+                total_count += n;
+                min = std::cmp::min(min, d.min);
+                max = std::cmp::max(max, d.max);
+                runs.push(&d.centroids);
+            }
+        }
+
+        let (chosen_max_size, chosen_scale, chosen_policy) = chosen?;
+
+        Some(MergeScan {
+            chosen_max_size,
+            chosen_scale,
+            chosen_policy,
+            total_count,
+            min,
+            max,
+            runs,
+        })
+    }
+
+    fn merge_result_shell(scan: &MergeScan<'_>) -> TDigest<f64> {
+        TDigest::<f64> {
+            centroids: Vec::new(),
+            max_size: scan.chosen_max_size,
+            sum: 0.0,
+            count: scan.total_count,
+            max: scan.max,
+            min: scan.min,
+            scale: scan.chosen_scale,
+            policy: scan.chosen_policy,
+        }
+    }
+
+    fn merge_with_strategy(digests: &[TDigest<f64>], strategy: MergeStrategy) -> TDigest<f64> {
+        let Some(scan) = scan_non_empty_runs(digests) else {
+            return TDigest::<f64>::default();
+        };
+        let mut result = merge_result_shell(&scan);
+        let compressed: Vec<Centroid<f64>> = match strategy {
+            MergeStrategy::ConcatSort => {
+                let merged = crate::tdigest::merges::merge_runs_concat_sort(&scan.runs);
+                compress_into(&mut result, scan.chosen_max_size, merged)
+            }
+            MergeStrategy::HeapStream => {
+                let merged = KWayCentroidMerge::from_runs(&scan.runs);
+                compress_into(&mut result, scan.chosen_max_size, merged)
+            }
+        };
+        result.centroids = compressed;
+        result
+    }
+
+    fn merge_with_peak_alloc(
+        digests: &[TDigest<f64>],
+        strategy: MergeStrategy,
+    ) -> (TDigest<f64>, usize) {
+        let before = allocated_now_bytes();
+        let Some(scan) = scan_non_empty_runs(digests) else {
+            return (TDigest::<f64>::default(), 0);
+        };
+        let mut result = merge_result_shell(&scan);
+
+        let (compressed, peak_snapshot): (Vec<Centroid<f64>>, usize) = match strategy {
+            MergeStrategy::ConcatSort => {
+                let merged = crate::tdigest::merges::merge_runs_concat_sort(&scan.runs);
+                let after_stream = allocated_now_bytes();
+                let compressed = compress_into(&mut result, scan.chosen_max_size, merged);
+                let after_compress = allocated_now_bytes();
+                (compressed, after_stream.max(after_compress))
+            }
+            MergeStrategy::HeapStream => {
+                let merged = KWayCentroidMerge::from_runs(&scan.runs);
+                let after_stream = allocated_now_bytes();
+                let compressed = compress_into(&mut result, scan.chosen_max_size, merged);
+                let after_compress = allocated_now_bytes();
+                (compressed, after_stream.max(after_compress))
+            }
+        };
+
+        result.centroids = compressed;
+        let peak_extra_bytes = peak_snapshot.saturating_sub(before);
+        (result, peak_extra_bytes)
+    }
+
+    fn median_full_merge_time_ns(
+        digests: &[TDigest<f64>],
+        strategy: MergeStrategy,
+        reps: usize,
+    ) -> u128 {
+        let mut samples = Vec::with_capacity(reps);
+        for _ in 0..reps {
+            let t0 = Instant::now();
+            let td = merge_with_strategy(digests, strategy);
+            black_box(td.centroids.len());
+            samples.push(t0.elapsed().as_nanos());
+        }
+        samples.sort_unstable();
+        samples[samples.len() / 2]
+    }
+
+    fn expected_quantile(sorted: &[f64], q: f64) -> f64 {
+        let n = sorted.len();
+        if n == 0 {
+            return f64::NAN;
+        }
+        if q <= 0.0 {
+            return sorted[0];
+        }
+        if q >= 1.0 {
+            return sorted[n - 1];
+        }
+        let t = q * (n as f64 - 1.0);
+        let lo = t.floor() as usize;
+        let hi = t.ceil() as usize;
+        if lo == hi {
+            sorted[lo]
+        } else {
+            let alpha = t - lo as f64;
+            (1.0 - alpha) * sorted[lo] + alpha * sorted[hi]
+        }
+    }
+
+    fn exact_cdf_leq(sorted: &[f64], x: f64) -> f64 {
+        if sorted.is_empty() {
+            return f64::NAN;
+        }
+        let idx = sorted.partition_point(|v| *v <= x);
+        (idx as f64) / (sorted.len() as f64)
+    }
+
+    fn accuracy_metrics(td: &TDigest<f64>, sorted: &[f64]) -> AccuracyMetrics {
+        if sorted.is_empty() {
+            return AccuracyMetrics {
+                q_mae: f64::NAN,
+                q_max: f64::NAN,
+                cdf_mae: f64::NAN,
+                cdf_max: f64::NAN,
+            };
+        }
+
+        let quant_steps = 199usize;
+        let mut q_mae = 0.0;
+        let mut q_max = 0.0;
+        for i in 1..=quant_steps {
+            let q = (i as f64) / ((quant_steps + 1) as f64);
+            let got = td.quantile(q);
+            let exp = expected_quantile(sorted, q);
+            let e = (got - exp).abs();
+            q_mae += e;
+            if e > q_max {
+                q_max = e;
+            }
+        }
+        q_mae /= quant_steps as f64;
+
+        let cdf_steps = 256usize;
+        let lo = sorted[0];
+        let hi = sorted[sorted.len() - 1];
+        let probes: Vec<f64> = if lo == hi {
+            vec![lo; cdf_steps + 1]
+        } else {
+            (0..=cdf_steps)
+                .map(|i| lo + (i as f64) * (hi - lo) / (cdf_steps as f64))
+                .collect()
+        };
+        let est = td.cdf(&probes);
+        let mut cdf_mae = 0.0;
+        let mut cdf_max = 0.0;
+        for (x, got) in probes.iter().zip(est.iter()) {
+            let exp = exact_cdf_leq(sorted, *x);
+            let e = (*got - exp).abs();
+            cdf_mae += e;
+            if e > cdf_max {
+                cdf_max = e;
+            }
+        }
+        cdf_mae /= probes.len() as f64;
+
+        AccuracyMetrics {
+            q_mae,
+            q_max,
+            cdf_mae,
+            cdf_max,
+        }
+    }
+
+    fn build_shard_digests(
+        data: &[f64],
+        shards: usize,
+        max_size: usize,
+        scale: ScaleFamily,
+        policy: SingletonPolicy,
+    ) -> Vec<TDigest<f64>> {
+        if data.is_empty() {
+            return Vec::new();
+        }
+        let shard_count = shards.max(1);
+        let chunk_size = data.len().div_ceil(shard_count);
+        let mut out: Vec<TDigest<f64>> = Vec::with_capacity(shard_count);
+        for chunk in data.chunks(chunk_size.max(1)) {
+            if chunk.is_empty() {
+                continue;
+            }
+            let td = TDigest::<f64>::builder()
+                .max_size(max_size)
+                .scale(scale)
+                .singleton_policy(policy)
+                .build()
+                .merge_unsorted(chunk.to_vec())
+                .expect("chunk digest");
+            out.push(td);
+        }
+        out
     }
 
     #[test]
@@ -950,5 +1227,153 @@ mod tests {
                 td64.quantile(q)
             );
         }
+    }
+
+    #[test]
+    #[ignore = "slow proof run; prints CPU/memory/precision summary for heap merge"]
+    fn heap_kway_merge_proof_cpu_memory_precision() {
+        let cases = [
+            PerfCase {
+                label: "mix-10m-k40-max1000",
+                dist: DistKind::Mixture,
+                n: 10_000_000,
+                shards: 40,
+                max_size: 1_000,
+            },
+        ];
+
+        // Keep these conservative because n is intentionally very large.
+        let trials_per_case = 1usize;
+        let reps = 3usize;
+        let memory_supported = cfg!(all(target_os = "linux", target_env = "gnu"));
+
+        let mut total_trials = 0usize;
+        let mut cpu_wins = 0usize;
+        let mut mem_wins = 0usize;
+        let mut precision_non_worse = 0usize;
+        let mut sort_cpu_total_ns = 0u128;
+        let mut heap_cpu_total_ns = 0u128;
+
+        println!();
+        println!(
+            "=== heap k-way merge proof: concat+sort baseline vs heap stream (trials={}, reps={}) ===",
+            cases.len() * trials_per_case,
+            reps
+        );
+        println!(
+            "memory metric = jemalloc allocated-byte peak delta (linux-gnu only): {}",
+            if memory_supported {
+                "enabled"
+            } else {
+                "disabled"
+            }
+        );
+
+        for (case_idx, case) in cases.iter().enumerate() {
+            for trial in 0..trials_per_case {
+                total_trials += 1;
+                let seed = 42_000 + (case_idx as u64) * 100 + trial as u64;
+                let data = gen_dataset(case.dist, case.n, seed);
+                let mut sorted = data.clone();
+                sorted.sort_by(|a, b| a.total_cmp(b));
+
+                let digests = build_shard_digests(
+                    &data,
+                    case.shards,
+                    case.max_size,
+                    ScaleFamily::K2,
+                    SingletonPolicy::Use,
+                );
+
+                // Warm-up both strategies before timed reps.
+                let _ = merge_with_strategy(&digests, MergeStrategy::ConcatSort);
+                let _ = merge_with_strategy(&digests, MergeStrategy::HeapStream);
+
+                let sort_ns = median_full_merge_time_ns(&digests, MergeStrategy::ConcatSort, reps);
+                let heap_ns = median_full_merge_time_ns(&digests, MergeStrategy::HeapStream, reps);
+                let cpu_ratio = (heap_ns as f64) / (sort_ns.max(1) as f64);
+                let cpu_win = heap_ns < sort_ns;
+                sort_cpu_total_ns += sort_ns;
+                heap_cpu_total_ns += heap_ns;
+                if cpu_win {
+                    cpu_wins += 1;
+                }
+
+                let (sort_td, sort_mem_bytes) =
+                    merge_with_peak_alloc(&digests, MergeStrategy::ConcatSort);
+                let (heap_td, heap_mem_bytes) =
+                    merge_with_peak_alloc(&digests, MergeStrategy::HeapStream);
+                let mem_ratio = (heap_mem_bytes as f64) / (sort_mem_bytes.max(1) as f64);
+                let mem_win = heap_mem_bytes < sort_mem_bytes;
+                if memory_supported && mem_win {
+                    mem_wins += 1;
+                }
+
+                let sort_acc = accuracy_metrics(&sort_td, &sorted);
+                let heap_acc = accuracy_metrics(&heap_td, &sorted);
+                let precision_ok = heap_acc.q_mae <= sort_acc.q_mae + 1e-12
+                    && heap_acc.q_max <= sort_acc.q_max + 1e-12
+                    && heap_acc.cdf_mae <= sort_acc.cdf_mae + 1e-12
+                    && heap_acc.cdf_max <= sort_acc.cdf_max + 1e-12;
+                if precision_ok {
+                    precision_non_worse += 1;
+                }
+
+                println!(
+                    "[{} trial {}/{} seed={}] cpu(ns): sort={} heap={} ratio={:.3} | mem(bytes): sort={} heap={} ratio={:.3} | q_mae: sort={:.3e} heap={:.3e} | cdf_mae: sort={:.3e} heap={:.3e}",
+                    case.label,
+                    trial + 1,
+                    trials_per_case,
+                    seed,
+                    sort_ns,
+                    heap_ns,
+                    cpu_ratio,
+                    sort_mem_bytes,
+                    heap_mem_bytes,
+                    mem_ratio,
+                    sort_acc.q_mae,
+                    heap_acc.q_mae,
+                    sort_acc.cdf_mae,
+                    heap_acc.cdf_mae,
+                );
+            }
+        }
+
+        println!(
+            "summary: cpu_wins={}/{} ({:.1}%), cpu_total_ratio={:.3}, mem_wins={}/{} ({:.1}%{}), precision_non_worse={}/{}",
+            cpu_wins,
+            total_trials,
+            100.0 * (cpu_wins as f64) / (total_trials as f64),
+            (heap_cpu_total_ns as f64) / (sort_cpu_total_ns.max(1) as f64),
+            mem_wins,
+            total_trials,
+            100.0 * (mem_wins as f64) / (total_trials as f64),
+            if memory_supported { "" } else { ", metric unavailable" },
+            precision_non_worse,
+            total_trials
+        );
+
+        // With max_size=1000 and moderate shard counts, CPU can be mixed:
+        // heap usually wins memory strongly and preserves precision, but may
+        // not always beat concat+sort on wall time. Keep a guard against
+        // pathological regressions while letting this profile stay realistic.
+        assert!(
+            heap_cpu_total_ns * 100 <= sort_cpu_total_ns * 130,
+            "heap total CPU regressed by >30% on this profile (sort_total={} heap_total={})",
+            sort_cpu_total_ns,
+            heap_cpu_total_ns
+        );
+
+        if memory_supported {
+            assert!(
+                mem_wins * 100 >= total_trials * 90,
+                "heap should use less extra allocated memory in at least 90% of trials (got {mem_wins}/{total_trials})"
+            );
+        }
+
+        assert_eq!(
+            precision_non_worse, total_trials,
+            "heap merge changed precision metrics in at least one trial"
+        );
     }
 }

@@ -8,6 +8,8 @@ T-Digest provides a mergeable summary of a distribution, enabling **approximate 
 - 🚀 Mergeable digests for large / streaming data — fast union with consistent accuracy and guaranteed unique centroids
 - 🔁 Cross-surface coherence: Consistent, verified behavior across all bindings
 - ⚡ Quantile & CDF — optimized evaluation loops with half-weight bracketing and singleton-aware interpolation
+- 🧠 Heap-stream k-way digest merge in Rust core for lower peak memory on large digest unions
+- 🧵 Streaming two-way raw-ingest merge path in Rust core (centroids + values) to avoid extra merge buffers
 - 🧊 TDigest Precision: Centroids as `f64` or `f32` — **auto-selected by input dtype**
 - ⚖️ Weighted ingest across Rust/Python/Polars/Java (`add_weighted`, `add_weighted_values`, Java weighted adds)
 - 🔄 Explicit precision casting across surfaces (`cast_precision` / `castPrecision`)

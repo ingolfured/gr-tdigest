@@ -25,6 +25,7 @@ Out of scope for this file:
 
 - `src/tdigest/tdigest.rs`: digest type, builders, add/merge entry points, bytes entry points.
 - `src/tdigest/merges.rs`: stream-merging helpers + stage-1 normalization.
+  - Includes a heap-based streaming k-way centroid merge used by digest-to-digest merge.
 - `src/tdigest/compressor.rs`: staged compressor (`compress_into`) and policy logic.
 - `src/tdigest/centroids.rs`: centroid representation and `Atomic` vs `Mixed` behavior.
 - `src/tdigest/quantile.rs`: quantile and median internals.
@@ -79,6 +80,7 @@ Weighted add path:
 4. Build a sorted stream with `MergeByMean::from_centroids_and_values`:
 - Existing centroids are reused as-is.
 - Each new scalar value becomes an atomic unit centroid (`weight=1`).
+- This is a streaming two-way merge iterator (no prebuilt merged buffer).
 5. Run the full compressor pipeline with `compress_into`.
 
 Important: compressor stage 1 recomputes digest metadata (`count`, `sum`, `min`, `max`) from the normalized stream and writes those back to the result.
@@ -92,7 +94,10 @@ Weighted constructor/merge helpers:
 `TDigest::merge_digests(digests)`:
 1. Scan digests and keep only non-empty runs (`count>0` and non-empty centroid vector).
 2. Pick the first non-empty digest as the config source (`max_size`, `scale`, `policy`).
-3. Concatenate/sort centroid runs via `KWayCentroidMerge::from_runs`.
+3. Perform a streaming k-way merge of sorted centroid runs via `KWayCentroidMerge::from_runs`.
+  - Implementation uses a min-heap over run heads (`O(total_len * log(k))`).
+  - It avoids materializing one full concat+sort buffer before compression.
+  - Historical concat+sort run merge is retained only as a `#[cfg(test)]` baseline helper.
 4. Recompress with `compress_into` using the chosen config.
 5. If all digests are empty, return `TDigest::default()`.
 
