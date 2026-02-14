@@ -6,6 +6,8 @@ This changelog was reconstructed from git history (commits + version transitions
 
 ## [Unreleased]
 
+## [0.2.0] - 2026-02-14
+
 ### Added
 - Rust weighted ingestion APIs:
   - `TDigest::add_weighted(value, weight)`
@@ -34,6 +36,7 @@ This changelog was reconstructed from git history (commits + version transitions
   - v2/v3 preserve fractional centroid weights and centroid kind
 
 ### Changed
+- Release/version transition from `0.1.13` to `0.2.0`.
 - Design docs split and deepened (`api_design.md`, `tdigest_design.md`, `comparison_design.md`) with stricter contract/current/comparison separation.
 - `comparison_design.md` gap analysis updated to reflect cast API completion and TDIG v3/version-controls progress.
 - Repository process/tooling now enforces changelog updates via pre-commit (`scripts/check_changelog_update.sh` + `.pre-commit-config.yaml`).
