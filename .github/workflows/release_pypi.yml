@@ -1,0 +1,81 @@
+name: Release PyPI
+
+on:
+  push:
+    tags:
+      - "v*"
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  build_distributions:
+    name: Build wheel + sdist
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Setup Rust
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Verify tag matches Cargo.toml version
+        run: |
+          set -euo pipefail
+          TAG_VERSION="${GITHUB_REF_NAME#v}"
+          CARGO_VERSION="$(sed -n '/^\[package\]/,/^\[/{s/^version[[:space:]]*=[[:space:]]*"\([^"]*\)".*/\1/p}' Cargo.toml | head -1)"
+          if [ -z "${CARGO_VERSION}" ]; then
+            echo "Could not read package version from Cargo.toml"
+            exit 1
+          fi
+          if [ "${TAG_VERSION}" != "${CARGO_VERSION}" ]; then
+            echo "Tag version (${TAG_VERSION}) does not match Cargo.toml version (${CARGO_VERSION})"
+            exit 1
+          fi
+
+      - name: Build Python distributions
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install "maturin[patchelf,zig]>=1.9.5,<2.0"
+          mkdir -p dist
+          cd bindings/python
+          maturin build -r -F python --compatibility manylinux_2_28 --zig -o ../../dist
+          maturin sdist -o ../../dist
+
+      - name: Upload distributions
+        uses: actions/upload-artifact@v4
+        with:
+          name: pypi-dist
+          path: dist/*
+
+  publish:
+    name: Publish to PyPI
+    needs: build_distributions
+    runs-on: ubuntu-latest
+    environment: pypi
+    permissions:
+      id-token: write
+      contents: read
+
+    steps:
+      - name: Download distributions
+        uses: actions/download-artifact@v4
+        with:
+          name: pypi-dist
+          path: dist
+
+      - name: Publish
+        uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          packages-dir: dist

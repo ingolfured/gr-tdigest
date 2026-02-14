@@ -213,7 +213,7 @@ rust-test:
 
 # Explicit path to bindings/python/tests (pytest discovers from pyproject too)
 py-test: build-python
-	$(UV_ENV) $(UV) run --no-sync pytest
+	$(UV_ENV) $(UV) run --project "$(PY_DIR)" --no-sync python -m pytest -q "$(PY_TESTS_DIR)" "$(INTEG_TESTS_DIR)"
 
 java-test: JAVA_WRAPPER_CHECK
 	@GRADLE_USER_HOME="$(GRADLE_USER_HOME)" "$(GRADLE)" --no-daemon --console=plain -p "$(JAVA_SRC)" test

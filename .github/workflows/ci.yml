@@ -44,8 +44,11 @@ jobs:
       - name: Cache Rust artifacts
         uses: Swatinem/rust-cache@v2
 
-      - name: Setup project
-        run: make setup
+      - name: Sync Python dependencies
+        run: |
+          UV_PROJECT_ENVIRONMENT="${{ github.workspace }}/.venv" \
+          UV_CACHE_DIR="${{ github.workspace }}/.uv-cache" \
+          uv sync --all-groups --project bindings/python
 
       - name: Build
         run: make build

@@ -3,6 +3,7 @@
 plugins {
   id 'java'
   id 'maven-publish'
+  id 'signing'
 }
 
 repositories { mavenCentral() }
@@ -42,6 +43,8 @@ version = cargoVersion
 java {
   sourceCompatibility = JavaVersion.VERSION_11
   targetCompatibility = JavaVersion.VERSION_11
+  withSourcesJar()
+  withJavadocJar()
 }
 tasks.withType(JavaCompile).configureEach { options.release = 11 }
 
@@ -147,11 +150,58 @@ tasks.register('runSmoke', JavaExec) {
 tasks.named('clean').configure { doLast { delete genResDir } }
 
 /* -------- Publishing (optional) -------- */
+def mavenRepoUrl = providers.environmentVariable("MAVEN_REPOSITORY_URL").orNull
+def mavenUsername = providers.environmentVariable("MAVEN_USERNAME").orNull
+def mavenPassword = providers.environmentVariable("MAVEN_PASSWORD").orNull
+def mavenSigningKey = providers.environmentVariable("MAVEN_SIGNING_KEY").orNull
+def mavenSigningPassword = providers.environmentVariable("MAVEN_SIGNING_PASSWORD").orNull
+
 publishing {
   publications {
     mavenJava(MavenPublication) {
       from components.java
       artifactId = "gr-tdigest"
+      pom {
+        name = "gr-tdigest"
+        description = "Rust TDigest with Python, Polars and JNI"
+        url = "https://github.com/ingolfured/gr-tdigest"
+        licenses {
+          license {
+            name = "Apache License 2.0"
+            url = "https://www.apache.org/licenses/LICENSE-2.0.txt"
+          }
+        }
+        developers {
+          developer {
+            id = "ingolfured"
+            name = "Ingolfur Edvardsson"
+          }
+        }
+        scm {
+          connection = "scm:git:git://github.com/ingolfured/gr-tdigest.git"
+          developerConnection = "scm:git:ssh://github.com:ingolfured/gr-tdigest.git"
+          url = "https://github.com/ingolfured/gr-tdigest"
+        }
+      }
     }
+  }
+  repositories {
+    if (mavenRepoUrl != null && !mavenRepoUrl.isBlank()) {
+      maven {
+        name = "release"
+        url = uri(mavenRepoUrl)
+        credentials {
+          username = mavenUsername
+          password = mavenPassword
+        }
+      }
+    }
+  }
+}
+
+signing {
+  if (mavenSigningKey != null && !mavenSigningKey.isBlank()) {
+    useInMemoryPgpKeys(mavenSigningKey, mavenSigningPassword)
+    sign publishing.publications.mavenJava
   }
 }

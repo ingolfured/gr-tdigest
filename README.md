@@ -36,6 +36,32 @@ make test     # Rust + Python tests
 make release  # release CLI + wheel + JARs
 ```
 
+## 🚀 Release automation
+Release workflows are in `.github/workflows/` and trigger on tags matching `v*`:
+
+- `release_pypi.yml`
+- `release_cargo.yml`
+- `release_maven.yml`
+
+Minimum GitHub setup:
+
+1. PyPI (`release_pypi.yml`):
+- Create GitHub environment `pypi`.
+- Configure PyPI Trusted Publisher for this repo/workflow in PyPI.
+
+2. Cargo (`release_cargo.yml`):
+- Create GitHub environment `crates-io`.
+- Add secret `CARGO_REGISTRY_TOKEN`.
+
+3. Maven (`release_maven.yml`):
+- Create GitHub environment `maven`.
+- Add secrets `MAVEN_REPOSITORY_URL`, `MAVEN_USERNAME`, `MAVEN_PASSWORD`.
+- Add `MAVEN_SIGNING_KEY` and `MAVEN_SIGNING_PASSWORD` if your Maven repository requires signed artifacts.
+
+4. Release tag:
+- Ensure `Cargo.toml` version equals the release tag without `v` (for example `v0.2.0`).
+- Push tag: `git tag v0.2.0 && git push origin v0.2.0`
+
 ## 🧪 Usage
 
 

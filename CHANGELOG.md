@@ -17,12 +17,20 @@ This changelog was reconstructed from git history (commits + version transitions
 - Minimal GitHub Actions CI workflow:
   - `.github/workflows/ci.yml`
   - push trigger covers `master`
+- Tag-triggered release workflows:
+  - `.github/workflows/release_pypi.yml`
+  - `.github/workflows/release_cargo.yml`
+  - `.github/workflows/release_maven.yml`
 
 ### Changed
 - `CODE_OF_CONDUCT.md` simplified to a minimal, practical policy.
 - Security reporting flow moved to GitHub private vulnerability reporting (`security/advisories/new`).
 - `README.md` now includes links to community and support docs.
 - Removed old mixed CI/release workflow (`.github/workflows/publish_to_pypi.yml`) in favor of a clean CI-only start.
+- `.github/workflows/ci.yml` now syncs Python dependencies directly instead of running hook-installing setup steps.
+- `Makefile` `py-test` now invokes `uv run --project bindings/python python -m pytest ...` for robust local/CI execution.
+- `bindings/java/build.gradle` now supports repository-configured Maven publishing via environment variables, optional in-memory PGP signing, and publishes sources/javadoc jars with SCM/license metadata.
+- `README.md` now documents GitHub release workflow setup for PyPI, Cargo, and Maven publishing.
 
 ## [0.2.0] - 2026-02-14
 

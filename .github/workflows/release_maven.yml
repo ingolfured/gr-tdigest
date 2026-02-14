@@ -1,0 +1,65 @@
+name: Release Maven
+
+on:
+  push:
+    tags:
+      - "v*"
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  publish:
+    name: Publish Java artifact
+    runs-on: ubuntu-latest
+    environment: maven
+    timeout-minutes: 90
+
+    env:
+      MAVEN_REPOSITORY_URL: ${{ secrets.MAVEN_REPOSITORY_URL }}
+      MAVEN_USERNAME: ${{ secrets.MAVEN_USERNAME }}
+      MAVEN_PASSWORD: ${{ secrets.MAVEN_PASSWORD }}
+      MAVEN_SIGNING_KEY: ${{ secrets.MAVEN_SIGNING_KEY }}
+      MAVEN_SIGNING_PASSWORD: ${{ secrets.MAVEN_SIGNING_PASSWORD }}
+      GRADLE_USER_HOME: ${{ github.workspace }}/.gradle-user-home
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "21"
+
+      - name: Setup Rust
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Verify tag matches Cargo.toml version
+        run: |
+          set -euo pipefail
+          TAG_VERSION="${GITHUB_REF_NAME#v}"
+          CARGO_VERSION="$(sed -n '/^\[package\]/,/^\[/{s/^version[[:space:]]*=[[:space:]]*"\([^"]*\)".*/\1/p}' Cargo.toml | head -1)"
+          if [ -z "${CARGO_VERSION}" ]; then
+            echo "Could not read package version from Cargo.toml"
+            exit 1
+          fi
+          if [ "${TAG_VERSION}" != "${CARGO_VERSION}" ]; then
+            echo "Tag version (${TAG_VERSION}) does not match Cargo.toml version (${CARGO_VERSION})"
+            exit 1
+          fi
+
+      - name: Validate Maven credentials
+        run: |
+          set -euo pipefail
+          [ -n "${MAVEN_REPOSITORY_URL}" ] || { echo "Missing MAVEN_REPOSITORY_URL"; exit 1; }
+          [ -n "${MAVEN_USERNAME}" ] || { echo "Missing MAVEN_USERNAME"; exit 1; }
+          [ -n "${MAVEN_PASSWORD}" ] || { echo "Missing MAVEN_PASSWORD"; exit 1; }
+
+      - name: Publish with Gradle
+        run: bindings/java/gradlew --no-daemon --console=plain -p bindings/java publish
