@@ -11,6 +11,9 @@ This changelog was reconstructed from git history (commits + version transitions
   - `CONTRIBUTING.md`
   - `CODE_OF_CONDUCT.md`
   - `SECURITY.md`
+- Minimal GitHub bug-reporting templates:
+  - `.github/ISSUE_TEMPLATE/bug_report.yml`
+  - `.github/ISSUE_TEMPLATE/config.yml`
 
 ### Changed
 - `CODE_OF_CONDUCT.md` simplified to a minimal, practical policy.
