@@ -14,11 +14,14 @@ This changelog was reconstructed from git history (commits + version transitions
 - Minimal GitHub bug-reporting templates:
   - `.github/ISSUE_TEMPLATE/bug_report.yml`
   - `.github/ISSUE_TEMPLATE/config.yml`
+- Minimal GitHub Actions CI workflow:
+  - `.github/workflows/ci.yml`
 
 ### Changed
 - `CODE_OF_CONDUCT.md` simplified to a minimal, practical policy.
 - Security reporting flow moved to GitHub private vulnerability reporting (`security/advisories/new`).
 - `README.md` now includes links to community and support docs.
+- Removed old mixed CI/release workflow (`.github/workflows/publish_to_pypi.yml`) in favor of a clean CI-only start.
 
 ## [0.2.0] - 2026-02-14
 
