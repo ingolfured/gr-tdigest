@@ -76,15 +76,15 @@ jobs:
             exit 1
           fi
 
-      - name: Preflight publish to Maven local
-        run: bindings/java/gradlew --no-daemon --console=plain -p bindings/java publishToMavenLocal
-
       - name: Validate Maven credentials
         run: |
           set -euo pipefail
           [ -n "${MAVEN_REPOSITORY_URL}" ] || { echo "Missing MAVEN_REPOSITORY_URL"; exit 1; }
           [ -n "${MAVEN_USERNAME}" ] || { echo "Missing MAVEN_USERNAME"; exit 1; }
           [ -n "${MAVEN_PASSWORD}" ] || { echo "Missing MAVEN_PASSWORD"; exit 1; }
+
+      - name: Preflight publish to Maven local
+        run: bindings/java/gradlew --no-daemon --console=plain -p bindings/java publishToMavenLocal
 
       - name: Publish with Gradle
         run: bindings/java/gradlew --no-daemon --console=plain -p bindings/java publish

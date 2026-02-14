@@ -6,7 +6,7 @@ build-backend = "maturin"
 name = "gr-tdigest"
 dynamic = ["version"]
 description = "Rust TDigest with Python, Polars and JNI"
-readme = "../../README.md"
+readme = "README.md"
 license = { text = "Apache-2.0" }
 requires-python = ">=3.12,<3.13"
 authors = [{ name = "Ingolfur Edvardsson", email = "ingo.edvardsson@gresearch.co.uk" }]
