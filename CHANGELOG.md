@@ -4,6 +4,8 @@ All notable changes to this project are documented in this file.
 
 ## [Unreleased]
 
+## [0.2.2] - 2026-02-14
+
 ### Added
 - Version-controlled GitHub ruleset specs:
   - `.github/rulesets/master.json`
@@ -11,6 +13,7 @@ All notable changes to this project are documented in this file.
 - `scripts/apply_github_rulesets.sh` to apply/update repository merge settings and rulesets via `gh api`.
 
 ### Changed
+- Release/version transition from `0.2.1` to `0.2.2`.
 - CI (`.github/workflows/ci.yml`) now runs `Lint` and `Build and test` as parallel jobs for faster feedback.
 - CI now caches uv and Gradle artifacts in addition to Rust caches to reduce rebuild time.
 - Release workflows now verify that release tags point to commits reachable from `origin/master`.
