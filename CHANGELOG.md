@@ -16,6 +16,7 @@ This changelog was reconstructed from git history (commits + version transitions
   - `.github/ISSUE_TEMPLATE/config.yml`
 - Minimal GitHub Actions CI workflow:
   - `.github/workflows/ci.yml`
+  - push trigger covers `main` and `master`
 
 ### Changed
 - `CODE_OF_CONDUCT.md` simplified to a minimal, practical policy.
