@@ -1,36 +1,45 @@
-# GitHub Repository Settings (One-Time)
+# GitHub Repository Settings
 
-Use these settings to protect `master` and release tags.
+This repository uses GitHub rulesets plus squash-only merges.
 
-## 1. Protect `master`
+## Configuration As Code
 
-GitHub: `Settings` -> `Rules` -> `Rulesets` -> `New branch ruleset`
+- Ruleset spec files:
+  - `.github/rulesets/master.json`
+  - `.github/rulesets/tags_vstar.json`
+- Apply/update script:
+  - `scripts/apply_github_rulesets.sh`
 
-- Target branches: `master`
-- Restrict deletions
-- Restrict force pushes
-- Require a pull request before merging
-- Require status checks to pass before merging:
-  - `CI / Lint`
-  - `CI / Build and test`
+GitHub does not automatically apply rulesets from files in the repo.
+You still apply them via API (using `gh`), but the desired state is kept in version control.
 
-## 2. Protect release tags
+Apply to current repo:
 
-GitHub: `Settings` -> `Rules` -> `Rulesets` -> `New tag ruleset`
+```bash
+./scripts/apply_github_rulesets.sh
+```
 
-- Target tags: `v*`
-- Restrict creations and updates to maintainers/admins only
-- Restrict deletions
+Apply to a specific repo:
 
-## 3. Environments for publishing
+```bash
+./scripts/apply_github_rulesets.sh ingolfured/gr-tdigest
+```
 
-GitHub: `Settings` -> `Environments`
+## Policy (Current)
 
-Create these environments:
+- `master`:
+  - no force-push
+  - no deletion
+  - PR rule active for everyone else
+  - admin role can bypass PR requirement and push directly
+  - PR merge method restricted to squash
+- `v*` tags:
+  - creation/update/deletion restricted to admin role
+
+## Environments
+
+Create these GitHub environments and scope secrets accordingly:
+
 - `pypi`
 - `crates-io`
 - `maven`
-
-Recommended:
-- Add required reviewers for each environment.
-- Keep secrets scoped to their matching environment.

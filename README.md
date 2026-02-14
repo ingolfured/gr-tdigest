@@ -63,7 +63,9 @@ Minimum GitHub setup:
 - Push tag: `git tag v0.2.0 && git push origin v0.2.0`
 
 5. Repository protection (recommended):
-- Apply `.github/REPO_SETTINGS.md` to protect `master` and `v*` tags.
+- Apply rulesets from version-controlled specs:
+  - `./scripts/apply_github_rulesets.sh`
+  - details: `.github/REPO_SETTINGS.md`
 
 ## 📤 Local publish command
 `make publish` publishes to PyPI, crates.io, and Maven from local credentials.

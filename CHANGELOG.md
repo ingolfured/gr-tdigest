@@ -5,7 +5,10 @@ All notable changes to this project are documented in this file.
 ## [Unreleased]
 
 ### Added
-- Added `.github/REPO_SETTINGS.md` with one-time GitHub ruleset guidance for protecting `master`, protecting `v*` tags, and scoping release environments.
+- Version-controlled GitHub ruleset specs:
+  - `.github/rulesets/master.json`
+  - `.github/rulesets/tags_vstar.json`
+- `scripts/apply_github_rulesets.sh` to apply/update repository merge settings and rulesets via `gh api`.
 
 ### Changed
 - CI (`.github/workflows/ci.yml`) now runs `Lint` and `Build and test` as parallel jobs for faster feedback.
@@ -15,6 +18,8 @@ All notable changes to this project are documented in this file.
 - Maven release now runs a preflight `publishToMavenLocal` before repository publish.
 - PyPI release now runs `twine check` on built distributions before publish.
 - `README.md` and `CONTRIBUTING.md` now reference repository protection setup guidance.
+- `Makefile` `setup-hooks` now installs pre-commit via `.venv/bin/python -m pre_commit` and auto-recovers missing `pre_commit` in `.venv` by syncing `bindings/python` dependencies.
+- `.github/REPO_SETTINGS.md` now documents a configuration-as-code workflow for GitHub rulesets.
 
 ### Fixed
 - Track `bindings/java/gradle/wrapper/gradle-wrapper.jar` so GitHub Actions can run Gradle wrapper (`org.gradle.wrapper.GradleWrapperMain` available in CI).

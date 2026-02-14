@@ -165,7 +165,16 @@ setup-hooks:
 	$(call banner,Install pre-commit hooks with repo-local cache)
 	mkdir -p .pre-commit-cache
 	mkdir -p .uv-cache
-	PRE_COMMIT_HOME="$(PWD)/.pre-commit-cache" UV_CACHE_DIR="$(PWD)/.uv-cache" $(UV_ENV) $(UV) run --no-sync pre-commit install
+	@if [ ! -x "$(PWD)/.venv/bin/python" ]; then \
+	  echo "$(STYLE_ERR)✗ Missing .venv Python at $(PWD)/.venv/bin/python$(STYLE_RESET)"; \
+	  echo "  Run: make setup"; \
+	  exit 1; \
+	fi
+	@if ! "$(PWD)/.venv/bin/python" -m pre_commit --version >/dev/null 2>&1; then \
+	  echo "pre_commit module missing in .venv; syncing Python deps from $(PY_DIR)"; \
+	  (cd "$(PY_DIR)" && $(UV_ENV) $(UV) sync --all-groups); \
+	fi
+	PRE_COMMIT_HOME="$(PWD)/.pre-commit-cache" UV_CACHE_DIR="$(PWD)/.uv-cache" "$(PWD)/.venv/bin/python" -m pre_commit install
 	@HOOK=".git/hooks/pre-commit"; \
 	if [ ! -f "$$HOOK" ]; then \
 	  echo "$(STYLE_ERR)✗ pre-commit hook not found at $$HOOK$(STYLE_RESET)"; \

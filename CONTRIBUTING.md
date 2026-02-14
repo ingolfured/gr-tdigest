@@ -24,8 +24,9 @@ make test
 
 ## Repository Protection
 
-- Apply the one-time GitHub rules in `.github/REPO_SETTINGS.md`.
-- Keep `master` protected and keep release tags restricted to maintainers.
+- Rulesets are version-controlled under `.github/rulesets/`.
+- Maintainers can apply/update them with `./scripts/apply_github_rulesets.sh`.
+- Keep `master` protected and keep release tags restricted to admins.
 
 ## Licensing
 
