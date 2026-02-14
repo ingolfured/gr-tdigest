@@ -29,6 +29,7 @@ This changelog was reconstructed from git history (commits + version transitions
 - Removed old mixed CI/release workflow (`.github/workflows/publish_to_pypi.yml`) in favor of a clean CI-only start.
 - `.github/workflows/ci.yml` now syncs Python dependencies directly instead of running hook-installing setup steps.
 - `Makefile` `py-test` now invokes `uv run --project bindings/python python -m pytest ...` for robust local/CI execution.
+- Added local `make publish` orchestration with per-registry publish targets (`publish-pypi`, `publish-cargo`, `publish-maven`) and dry-run mode via `PUBLISH_DRY_RUN=1`.
 - `bindings/java/build.gradle` now supports repository-configured Maven publishing via environment variables, optional in-memory PGP signing, and publishes sources/javadoc jars with SCM/license metadata.
 - `README.md` now documents GitHub release workflow setup for PyPI, Cargo, and Maven publishing.
 

@@ -62,6 +62,31 @@ Minimum GitHub setup:
 - Ensure `Cargo.toml` version equals the release tag without `v` (for example `v0.2.0`).
 - Push tag: `git tag v0.2.0 && git push origin v0.2.0`
 
+## 📤 Local publish command
+`make publish` publishes to PyPI, crates.io, and Maven from local credentials.
+
+Dry run (recommended first):
+
+```bash
+PUBLISH_DRY_RUN=1 make publish
+```
+
+Real publish:
+
+```bash
+MATURIN_PYPI_TOKEN=... \
+CARGO_REGISTRY_TOKEN=... \
+MAVEN_REPOSITORY_URL=... \
+MAVEN_USERNAME=... \
+MAVEN_PASSWORD=... \
+make publish
+```
+
+Optional Maven signing variables:
+
+- `MAVEN_SIGNING_KEY`
+- `MAVEN_SIGNING_PASSWORD`
+
 ## 🧪 Usage
 
 

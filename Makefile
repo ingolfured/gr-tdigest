@@ -114,6 +114,7 @@ CLI_PATH := $(LIB_DIR)/$(CLI_BIN)
 # Python distributions
 DIST      ?= dist
 DIST_DEV  ?= dist-dev
+PUBLISH_DRY_RUN ?= 0
 
 # Canonical API JAR path (symlink updated by release-jar)
 API_JAR := $(DIST)/$(JAR_ARTIFACT)-latest.jar
@@ -136,7 +137,8 @@ JAVA_WRAPPER_CHECK:
         test rust-test py-test java-test \
         lint setup-hooks \
         smoke-rust-cli smoke-wheel  \
-        release-rust release-wheel release-jar release
+        release-rust release-wheel release-jar release \
+        publish-check publish-pypi publish-cargo publish-maven publish
 
 # ==============================================================================
 # Setup
@@ -320,6 +322,62 @@ release: release-rust release-wheel release-jar
 	@printf "  Java JAR   : %s (symlink)\n" "$(API_JAR)"
 	@printf "$(STYLE_OK)✓ All release artifacts built & smoke-tested$(STYLE_RESET)\n"
 
+publish-check:
+	$(call banner,Publish: validate environment)
+	@set -eu; \
+	if [ "$(PUBLISH_DRY_RUN)" = "1" ]; then \
+	  printf "$(STYLE_OK)✓ dry-run mode enabled (PUBLISH_DRY_RUN=1)$(STYLE_RESET)\n"; \
+	  exit 0; \
+	fi; \
+	[ -n "$${MATURIN_PYPI_TOKEN:-}" ] || { echo "$(STYLE_ERR)✗ Missing MATURIN_PYPI_TOKEN$(STYLE_RESET)"; exit 1; }; \
+	[ -n "$${CARGO_REGISTRY_TOKEN:-}" ] || { echo "$(STYLE_ERR)✗ Missing CARGO_REGISTRY_TOKEN$(STYLE_RESET)"; exit 1; }; \
+	[ -n "$${MAVEN_REPOSITORY_URL:-}" ] || { echo "$(STYLE_ERR)✗ Missing MAVEN_REPOSITORY_URL$(STYLE_RESET)"; exit 1; }; \
+	[ -n "$${MAVEN_USERNAME:-}" ] || { echo "$(STYLE_ERR)✗ Missing MAVEN_USERNAME$(STYLE_RESET)"; exit 1; }; \
+	[ -n "$${MAVEN_PASSWORD:-}" ] || { echo "$(STYLE_ERR)✗ Missing MAVEN_PASSWORD$(STYLE_RESET)"; exit 1; }; \
+	printf "$(STYLE_OK)✓ publish credentials present$(STYLE_RESET)\n"
+
+publish-pypi: release-wheel
+	$(call banner,Publish: PyPI)
+	mkdir -p "$(DIST)"
+	$(UV_ENV) $(UV) run --project "$(PY_DIR)" maturin sdist -o "$(abspath $(DIST))"
+	@set -eu; \
+	if [ "$(PUBLISH_DRY_RUN)" = "1" ]; then \
+	  echo "DRY RUN: skipping PyPI upload"; \
+	  ls -1 "$(DIST)"; \
+	else \
+	  [ -n "$${MATURIN_PYPI_TOKEN:-}" ] || { echo "$(STYLE_ERR)✗ Missing MATURIN_PYPI_TOKEN$(STYLE_RESET)"; exit 1; }; \
+	  MATURIN_PYPI_TOKEN="$$MATURIN_PYPI_TOKEN" $(UV_ENV) $(UV) run --project "$(PY_DIR)" maturin upload --non-interactive --skip-existing "$(abspath $(DIST))"/*; \
+	fi
+
+publish-cargo:
+	$(call banner,Publish: crates.io)
+	@set -eu; \
+	if [ "$(PUBLISH_DRY_RUN)" = "1" ]; then \
+	  cargo publish --dry-run --locked --package gr-tdigest; \
+	else \
+	  [ -n "$${CARGO_REGISTRY_TOKEN:-}" ] || { echo "$(STYLE_ERR)✗ Missing CARGO_REGISTRY_TOKEN$(STYLE_RESET)"; exit 1; }; \
+	  CARGO_REGISTRY_TOKEN="$$CARGO_REGISTRY_TOKEN" cargo publish --locked --package gr-tdigest; \
+	fi
+
+publish-maven: JAVA_WRAPPER_CHECK
+	$(call banner,Publish: Maven)
+	@set -eu; \
+	if [ "$(PUBLISH_DRY_RUN)" = "1" ]; then \
+	  GRADLE_USER_HOME="$(GRADLE_USER_HOME)" "$(GRADLE)" --no-daemon --console=plain -p "$(JAVA_SRC)" publishToMavenLocal; \
+	else \
+	  [ -n "$${MAVEN_REPOSITORY_URL:-}" ] || { echo "$(STYLE_ERR)✗ Missing MAVEN_REPOSITORY_URL$(STYLE_RESET)"; exit 1; }; \
+	  [ -n "$${MAVEN_USERNAME:-}" ] || { echo "$(STYLE_ERR)✗ Missing MAVEN_USERNAME$(STYLE_RESET)"; exit 1; }; \
+	  [ -n "$${MAVEN_PASSWORD:-}" ] || { echo "$(STYLE_ERR)✗ Missing MAVEN_PASSWORD$(STYLE_RESET)"; exit 1; }; \
+	  MAVEN_REPOSITORY_URL="$$MAVEN_REPOSITORY_URL" MAVEN_USERNAME="$$MAVEN_USERNAME" MAVEN_PASSWORD="$$MAVEN_PASSWORD" MAVEN_SIGNING_KEY="$${MAVEN_SIGNING_KEY:-}" MAVEN_SIGNING_PASSWORD="$${MAVEN_SIGNING_PASSWORD:-}" GRADLE_USER_HOME="$(GRADLE_USER_HOME)" "$(GRADLE)" --no-daemon --console=plain -p "$(JAVA_SRC)" publish; \
+	fi
+
+publish: publish-check
+	$(MAKE) publish-pypi
+	$(MAKE) publish-cargo
+	$(MAKE) publish-maven
+	@printf "\n$(STYLE_BOLD)==> Publish complete$(STYLE_RESET)\n"
+	@printf "$(STYLE_OK)✓ Published to PyPI, crates.io, and Maven (or dry-run equivalent)$(STYLE_RESET)\n"
+
 help:
 	@printf "\n$(STYLE_BOLD)Core (dev by default)$(STYLE_RESET)\n"
 	@printf "  %-22s %s\n" "setup"          "Install toolchains; sync Python deps (bindings/python) into .venv"
@@ -337,3 +395,15 @@ help:
 	@printf "  %-22s %s\n" "release-wheel"  "Build PROD wheel (release) inline and smoke"
 	@printf "  %-22s %s\n" "release-jar"    "Gradle jar -> dist/ + latest symlink + smoke"
 	@printf "  %-22s %s\n" "release"        "release-rust + release-wheel + release-jar"
+	@printf "  %-22s %s\n" "publish-check"  "Validate publish env vars (skipped in dry-run)"
+	@printf "  %-22s %s\n" "publish-pypi"   "Build sdist/wheel and upload to PyPI (or skip upload in dry-run)"
+	@printf "  %-22s %s\n" "publish-cargo"  "Publish crate to crates.io (or --dry-run)"
+	@printf "  %-22s %s\n" "publish-maven"  "Publish Java artifact to Maven repo (or publishToMavenLocal)"
+	@printf "  %-22s %s\n" "publish"        "publish-pypi + publish-cargo + publish-maven"
+	@printf "\n$(STYLE_BOLD)Publish env vars$(STYLE_RESET)\n"
+	@printf "  %-22s %s\n" "PUBLISH_DRY_RUN=1" "Run publish pipeline without uploading to registries"
+	@printf "  %-22s %s\n" "MATURIN_PYPI_TOKEN" "PyPI API token for maturin upload"
+	@printf "  %-22s %s\n" "CARGO_REGISTRY_TOKEN" "crates.io API token"
+	@printf "  %-22s %s\n" "MAVEN_REPOSITORY_URL" "Maven repository publish URL"
+	@printf "  %-22s %s\n" "MAVEN_USERNAME/PASSWORD" "Maven repository credentials"
+	@printf "  %-22s %s\n" "MAVEN_SIGNING_KEY/PASSWORD" "Optional in-memory PGP signing key/password"
