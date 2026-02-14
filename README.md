@@ -59,8 +59,8 @@ Minimum GitHub setup:
 - Add `MAVEN_SIGNING_KEY` and `MAVEN_SIGNING_PASSWORD` if your Maven repository requires signed artifacts.
 
 4. Release tag:
-- Ensure `Cargo.toml` version equals the release tag without `v` (for example `v0.2.2`).
-- Push tag: `git tag v0.2.2 && git push origin v0.2.2`
+- Ensure `Cargo.toml` version equals the release tag without `v` (for example `v0.2.3`).
+- Push tag: `git tag v0.2.3 && git push origin v0.2.3`
 
 5. Repository protection (recommended):
 - Apply rulesets from version-controlled specs:

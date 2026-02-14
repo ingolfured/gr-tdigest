@@ -4,6 +4,14 @@ All notable changes to this project are documented in this file.
 
 ## [Unreleased]
 
+## [0.2.3] - 2026-02-14
+
+### Changed
+- Release/version transition from `0.2.2` to `0.2.3`.
+- `bindings/java/build.gradle` now declares `sourcesJar` depends on `copyNative`, fixing Gradle task-graph validation failure during Maven preflight publish.
+- `Cargo.lock` is synchronized for the release version so `cargo publish --locked` can run successfully in CI.
+- `README.md` release tag examples now use `v0.2.3`.
+
 ## [0.2.2] - 2026-02-14
 
 ### Added
