@@ -14,6 +14,8 @@ All notable changes to this project are documented in this file.
 - `README.md` features section now includes the full detailed cross-surface capability list again.
 - `README.md` future-improvements bullets were restored to weight-scaling and scale-suggestion items.
 - Added a hard panic guard for centroid weight overflow when converting to storage precision (temporary fail-fast behavior).
+- `AGENTS.md` now explicitly incorporates local production-workload context guidance for tuning decisions.
+- `typical_usecase.md` is now ignored via `.gitignore` for local-only workload notes.
 
 ## [0.2.3] - 2026-02-14
 

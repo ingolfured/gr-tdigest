@@ -76,3 +76,8 @@ tmp/
 *.tmp
 *.bak
 *.old
+
+# =========================
+# Local agent context (not for commit)
+# =========================
+typical_usecase.md

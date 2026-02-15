@@ -13,6 +13,19 @@ This file is a working guide for coding agents in this repository. It is intenti
 
 Cross-surface behavior is enforced by integration tests in `integration/api_coherence/`.
 
+### 1.1 Production Workload Context (Always Keep In Mind)
+
+- If present locally, read `typical_usecase.md` before making performance/accuracy tradeoff decisions.
+- Core workload assumptions:
+  - massive digest counts (millions to up to ~100M digests per process),
+  - merge fan-in is usually modest (around 40 digests),
+  - per-digest sample counts vary from tiny (0-1) to very large (~1M-10M),
+  - CDF and p50 query performance matter most in live paths,
+  - accuracy is primary; memory footprint still matters at fleet scale,
+  - auto-tuning overhead should stay small (target <= ~5% total runtime impact),
+  - deterministic behavior is preferred,
+  - auto-scale should be opt-in first, not default.
+
 ## 2. Repository map (high signal)
 
 - `src/lib.rs`: crate entry, feature gates, module exports, Python module registration.
