@@ -9,6 +9,8 @@ All notable changes to this project are documented in this file.
 - Rust CLI now has explicit build/serialization flow (`build --to-digest`, query with `--from-digest`) and keeps optional `--to-digest` on query commands.
 - Rust CLI structured ingest paths are standardized across training/probes (`text|csv|json|ndjson` + optional column selectors).
 - API coherence CLI tests were updated to the new subcommand interface.
+- `README.md` was reorganized for a cleaner user flow (examples directly under features; community/license moved to bottom).
+- Publish/release setup details were moved from `README.md` into dedicated `PUBLISH.md`.
 
 ## [0.2.3] - 2026-02-14
 

@@ -1,110 +1,25 @@
-# 🌀 tdigest-rs
-T-Digest provides a mergeable summary of a distribution, enabling **approximate quantiles and CDF** with strong tail accuracy. **tdigest-rs** delivers a production-ready Rust core with Python and Polars APIs plus Java (JNI), combining high performance, stable accuracy, and minimal memory overhead.
+# tdigest-rs
+T-Digest provides a mergeable summary of a distribution, enabling approximate quantiles and CDF with strong tail accuracy.
+`gr-tdigest` ships one Rust core with Rust, Python, Polars, and Java surfaces.
 
+## Features
+- Single Rust core shared across Rust, CLI, Python/Polars, and Java.
+- Quantile, CDF, and median support across all surfaces.
+- Mergeable digests for streaming and distributed workflows.
+- Weighted ingest support across Rust/Python/Polars/Java.
+- Explicit precision controls (`f32`/`f64`), including `auto` where supported.
+- TDIG wire format support (v3 default; v1/v2 decode compatibility).
+- Rust CLI subcommands: `build`, `quantile`, `cdf`, `median`.
 
-
-## ✨ Features
-- 🦀 Single Rust core shared across Rust, Polars, Python, and Java
-- 🚀 Mergeable digests for large / streaming data — fast union with consistent accuracy and guaranteed unique centroids
-- 🔁 Cross-surface coherence: Consistent, verified behavior across all bindings
-- ⚡ Quantile & CDF — optimized evaluation loops with half-weight bracketing and singleton-aware interpolation
-- 🧠 Heap-stream k-way digest merge in Rust core for lower peak memory on large digest unions
-- 🧵 Streaming two-way raw-ingest merge path in Rust core (centroids + values) to avoid extra merge buffers
-- 🧊 TDigest Precision: Centroids as `f64` or `f32` — **auto-selected by input dtype**
-- ⚖️ Weighted ingest across Rust/Python/Polars/Java (`add_weighted`, `add_weighted_values`, Java weighted adds)
-- 🔄 Explicit precision casting across surfaces (`cast_precision` / `castPrecision`)
-- 📦 TDIG v3 wire default (flags + header length + precision code + checksum), with v1/v2 decode compatibility
-- 🧭 Explicit wire-version encode controls (`to_bytes(version=1|2|3)`, `toBytes(version)`)
-- 🖥️ Rust CLI subcommands (`build`, `quantile`, `cdf`, `median`) with `text|csv|json|ndjson` data ingestion
-- 🎚️ Scale families: `Quad`, `K1`, `K2`, `K3`
-- 🔩 Singleton handling policy: **edge-precision (keep _N_)**, **respect singletons**, or **uniform merge**
-
-
-## 📜 License
-Apache-2.0
-
-## 🤝 Community
-- Contributing guide: `CONTRIBUTING.md`
-- Code of conduct: `CODE_OF_CONDUCT.md`
-- Security policy: `SECURITY.md`
-- Issue tracker: https://github.com/ingolfured/gr-tdigest/issues
-
-## ⚡ Quick start
-```bash
-make setup    # toolchains + Python deps
-make build    # Rust lib+CLI, Python ext, Java classes (dev)
-make test     # Rust + Python tests
-make release  # release CLI + wheel + JARs
-```
-
-## 🚀 Release automation
-Release workflows are in `.github/workflows/` and trigger on tags matching `v*`:
-
-- `release_pypi.yml`
-- `release_cargo.yml`
-- `release_maven.yml`
-
-Minimum GitHub setup:
-
-1. PyPI (`release_pypi.yml`):
-- Create GitHub environment `pypi`.
-- Configure PyPI Trusted Publisher for this repo/workflow in PyPI.
-
-2. Cargo (`release_cargo.yml`):
-- Create GitHub environment `crates-io`.
-- Add secret `CARGO_REGISTRY_TOKEN`.
-
-3. Maven (`release_maven.yml`):
-- Create GitHub environment `maven`.
-- Add secrets `MAVEN_REPOSITORY_URL`, `MAVEN_USERNAME`, `MAVEN_PASSWORD`.
-- Add `MAVEN_SIGNING_KEY` and `MAVEN_SIGNING_PASSWORD` if your Maven repository requires signed artifacts.
-
-4. Release tag:
-- Ensure `Cargo.toml` version equals the release tag without `v` (for example `v0.2.3`).
-- Push tag: `git tag v0.2.3 && git push origin v0.2.3`
-
-5. Repository protection (recommended):
-- Apply rulesets from version-controlled specs:
-  - `./scripts/apply_github_rulesets.sh`
-  - details: `.github/REPO_SETTINGS.md`
-
-## 📤 Local publish command
-`make publish` publishes to PyPI, crates.io, and Maven from local credentials.
-
-Dry run (recommended first):
-
-```bash
-PUBLISH_DRY_RUN=1 make publish
-```
-
-Real publish:
-
-```bash
-MATURIN_PYPI_TOKEN=... \
-CARGO_REGISTRY_TOKEN=... \
-MAVEN_REPOSITORY_URL=... \
-MAVEN_USERNAME=... \
-MAVEN_PASSWORD=... \
-make publish
-```
-
-Optional Maven signing variables:
-
-- `MAVEN_SIGNING_KEY`
-- `MAVEN_SIGNING_PASSWORD`
-
-## 🧪 Usage
-
+## Examples
 
 **Python**
 ```python
 import gr_tdigest as td
-d = td.TDigest.from_array([0,1,2,3], max_size=100, scale="k2")
+
+d = td.TDigest.from_array([0, 1, 2, 3], max_size=100, scale="k2")
 print("p50 =", d.quantile(0.5))
-print("cdf  =", d.cdf([0.0, 1.5, 3.0]))
-d.add_weighted([10.0, 20.0], [2.0, 3.0])
-blob_v1 = d.to_bytes(version=1)
-d32 = d.cast_precision("f32")
+print("cdf =", d.cdf([0.0, 1.5, 3.0]))
 ```
 
 **Polars**
@@ -112,33 +27,37 @@ d32 = d.cast_precision("f32")
 import polars as pl
 from gr_tdigest import tdigest, quantile
 
-df = pl.DataFrame({"g": ["a"]*5, "x": [0,1,2,3,4]})
 out = (
-    df.lazy()
-      .group_by("g")
-      .agg(tdigest(pl.col("x"), max_size=100, scale="k2").alias("td"))
-      .select(quantile("td", 0.5))
-      .collect()
+    pl.DataFrame({"g": ["a"] * 5, "x": [0, 1, 2, 3, 4]})
+    .lazy()
+    .group_by("g")
+    .agg(tdigest("x", max_size=100, scale="k2").alias("td"))
+    .select(quantile("td", 0.5))
+    .collect()
 )
 print(out)
 ```
 
 **Rust CLI**
 ```bash
-# Build and save a digest from stdin
-echo '0 1 2 3' | target/release/tdigest build --stdin --to-digest /tmp/model.tdig
+# 1) Load numbers from CSV and save a digest
+# numbers.csv
+# value
+# 0
+# 1
+# 2
+# 3
+target/release/tdigest build \
+  --input numbers.csv \
+  --input-format csv \
+  --input-column value \
+  --to-digest model.tdig
 
-# Query quantile from a saved digest
-target/release/tdigest quantile --from-digest /tmp/model.tdig --p 0.5 --no-header
-
-# Query CDF from CSV training data and JSON probes
-target/release/tdigest cdf \
-  --input train.csv --input-format csv --input-column x \
-  --probes-input probes.json --probes-format json \
+# 2) Read the digest and query quantiles
+target/release/tdigest quantile \
+  --from-digest model.tdig \
+  --p 0.5,0.9,0.99 \
   --no-header
-
-# Median directly from JSON training data
-target/release/tdigest median --input values.json --input-format json --no-header
 ```
 
 **Java (AutoCloseable)**
@@ -148,54 +67,64 @@ import gr.tdigest.TDigest.Precision;
 import gr.tdigest.TDigest.Scale;
 import gr.tdigest.TDigest.SingletonPolicy;
 
-import java.util.Arrays;
-
 public class Example {
   public static void main(String[] args) {
     try (TDigest digest = TDigest.builder()
         .maxSize(100)
         .scale(Scale.K2)
-        .singletonPolicy(SingletonPolicy.EDGES).keep(4)
-        .precision(Precision.F32)
-        .build(new float[]{0, 1, 2, 3})) {
-      double[] c = digest.cdf(new double[]{0.0, 1.5, 3.0});
+        .singletonPolicy(SingletonPolicy.USE)
+        .precision(Precision.F64)
+        .build(new double[]{0, 1, 2, 3})) {
       double p50 = digest.quantile(0.5);
+      double[] cdf = digest.cdf(new double[]{0.0, 1.5, 3.0});
+      System.out.println(p50 + " " + cdf.length);
     }
   }
 }
 ```
 
-
-## 🗂️ Project layout
-```
-├── src/                                  # Rust core, CLI entrypoint, algorithm modules
-│   ├── bin/                              # Command-line app (tdigest CLI)
-│   ├── tdigest/                          # Core T-Digest implementation (centroids, merge, scale)
-│   └── quality/                          # Accuracy helpers & scoring utilities
-├── bindings/                             # Language bindings
-│   ├── python/                           # Python wheel (maturin)
-│   │   ├── gr_tdigest/                   # Python package (abi3 native extension)
-│   │   └── tests/                        # Python API + Polars tests
-│   └── java/                             # Java API (Gradle project) + JNI shims
-│       └── src/
-│           └── gr/
-│               └── tdigest/              # Public Java API + native bridge
+## Project layout
+```text
+├── src/                                  # Rust core, CLI, algorithm modules
+│   ├── bin/                              # tdigest CLI
+│   └── tdigest/                          # Core T-Digest implementation
+├── bindings/
+│   ├── python/                           # Python package + tests
+│   └── java/                             # Java API (Gradle) + JNI bridge
 ├── integration/
-│   └── api_coherence/                    # Cross-API contract tests (CLI ↔ Python ↔ Polars ↔ Java)
-├── benches/                              # Rust benchmarks (quantile/CDF/codecs)
+│   └── api_coherence/                    # Cross-surface contract tests
 ├── crates/
-│   └── testdata/                         # Small datasets & fixtures for tests/benches
-└── dist/                                 # Build artifacts (wheels/JARs) after release
+│   └── testdata/                         # Fixtures
+└── dist/                                 # Built artifacts after release
 ```
 
-## 🧩 Versions & compatibility
-- **Rust**: stable (2021 edition)
-- **Python**: CPython 3.12; packaged with **maturin**
-- **Polars**: current 1.x (Python); Rust crate versions tracked in `Cargo.toml`
+## Quick Development Start
+```bash
+make setup
+make build
+make test
+```
 
-## 🧾 Changelog
-- See `CHANGELOG.md` for release notes and unreleased changes.
+## Publishing
+- Publishing and release workflows are documented in `PUBLISH.md`.
 
-## 🔮 Future improvements
-- Allow scaling of weights and guard against centroid weight overflow
-- Auto suggest a scaling function based on distribution
+## Versions and compatibility
+- Rust: stable (edition 2021)
+- Python: CPython 3.12 (built with maturin)
+- Polars: 1.x line (Python)
+
+## Changelog
+- See `CHANGELOG.md`.
+
+## Future improvements
+- Add stronger guidance for large file ingestion patterns.
+- Extend CLI data-source support (for example Parquet).
+
+## Community
+- Contributing guide: `CONTRIBUTING.md`
+- Code of conduct: `CODE_OF_CONDUCT.md`
+- Security policy: `SECURITY.md`
+- Issues: https://github.com/ingolfured/gr-tdigest/issues
+
+## License
+- Apache-2.0
