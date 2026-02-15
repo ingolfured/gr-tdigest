@@ -12,6 +12,8 @@ All notable changes to this project are documented in this file.
 - `README.md` was reorganized for a cleaner user flow (examples directly under features; community/license moved to bottom).
 - Publish/release setup details were moved from `README.md` into dedicated `PUBLISH.md`.
 - `README.md` features section now includes the full detailed cross-surface capability list again.
+- `README.md` future-improvements bullets were restored to weight-scaling and scale-suggestion items.
+- Added a hard panic guard for centroid weight overflow when converting to storage precision (temporary fail-fast behavior).
 
 ## [0.2.3] - 2026-02-14
 

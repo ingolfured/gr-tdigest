@@ -41,6 +41,21 @@ pub struct Centroid<F: FloatLike + FloatCore> {
 }
 
 impl<F: FloatLike + FloatCore> Centroid<F> {
+    #[inline]
+    fn checked_weight(weight: f64) -> F {
+        assert!(
+            weight.is_finite() && weight > 0.0,
+            "centroid weight must be finite and > 0"
+        );
+        let w = F::from_f64(weight);
+        let w64 = w.to_f64();
+        assert!(
+            w64.is_finite() && w64 > 0.0,
+            "centroid weight overflow while converting to storage precision"
+        );
+        w
+    }
+
     /* ---------------------------------------------------------------------
      * Constructors
      * ------------------------------------------------------------------ */
@@ -60,10 +75,9 @@ impl<F: FloatLike + FloatCore> Centroid<F> {
     /// Use this for both units (w=1) and piles (w>1) that remain atomic.
     #[inline]
     pub fn new_atomic_f64(mean: f64, weight: f64) -> Self {
-        debug_assert!(weight > 0.0, "atomic centroid requires weight > 0");
         Self {
             mean: F::from_f64(mean),
-            weight: F::from_f64(weight),
+            weight: Self::checked_weight(weight),
             kind: Kind::Atomic,
         }
     }
@@ -71,10 +85,9 @@ impl<F: FloatLike + FloatCore> Centroid<F> {
     /// Create a **mixed** centroid with positive weight (>0).
     #[inline]
     pub fn new_mixed_f64(mean: f64, weight: f64) -> Self {
-        debug_assert!(weight > 0.0, "mixed centroid requires weight > 0");
         Self {
             mean: F::from_f64(mean),
-            weight: F::from_f64(weight),
+            weight: Self::checked_weight(weight),
             kind: Kind::Mixed,
         }
     }
@@ -161,6 +174,17 @@ impl<F: FloatLike + FloatCore> Centroid<F> {
     #[inline]
     pub fn is_singleton(&self) -> bool {
         self.is_atomic()
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::Centroid;
+
+    #[test]
+    #[should_panic(expected = "centroid weight overflow while converting to storage precision")]
+    fn f32_centroid_weight_overflow_panics() {
+        let _ = Centroid::<f32>::new_atomic_f64(0.0, f64::MAX);
     }
 }
 

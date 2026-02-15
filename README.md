@@ -124,8 +124,8 @@ make test
 - See `CHANGELOG.md`.
 
 ## Future improvements
-- Add stronger guidance for large file ingestion patterns.
-- Extend CLI data-source support (for example Parquet).
+- Allow scaling of weights and guard against centroid weight overflow.
+- Auto suggest a scaling function based on distribution.
 
 ## Community
 - Contributing guide: `CONTRIBUTING.md`
