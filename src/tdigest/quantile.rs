@@ -359,4 +359,26 @@ mod tests {
             assert_exact("Q(mid)", x, td.quantile(q));
         }
     }
+
+    #[test]
+    fn quantile_midrank_is_exact_under_capacity() {
+        use crate::tdigest::test_helpers::assert_exact;
+
+        // Sorted training data with ties; N is intentionally far below max_size.
+        let v = vec![-2.0, -2.0, -1.0, 0.0, 0.0, 0.0, 3.0, 7.0, 7.0];
+        let n = v.len();
+        let td = TDigestBuilder::new()
+            .max_size(1000)
+            .build()
+            .merge_sorted(v.clone())
+            .expect("no NaNs");
+
+        assert!(n < td.max_size());
+        assert_exact("Q(0)", v[0], td.quantile(0.0));
+        assert_exact("Q(1)", v[n - 1], td.quantile(1.0));
+        for (i, &x) in v.iter().enumerate() {
+            let q = (i as f64 + 0.5) / n as f64; // exactness contract point
+            assert_exact(&format!("Q(mid-rank exact) [{i}]"), x, td.quantile(q));
+        }
+    }
 }

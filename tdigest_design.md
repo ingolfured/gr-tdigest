@@ -277,6 +277,19 @@ Current split is intentional:
 - Core `quantile` clamps finite probes.
 - Frontend layer (`FrontendDigest::quantile_strict`) rejects non-finite and out-of-range probes.
 
+### 5.4 Under-capacity exactness (current behavior)
+
+When total training cardinality `N` is below `max_size` (and no later operation forces an over-capacity recompression), exactness is pinned down as follows:
+- `cdf(x)` at training values is exact under midpoint ECDF semantics over ties: `(#<x + 0.5*#=x) / N`.
+- `quantile(q)` is exact at mid-ranks `q = (i + 0.5) / N`, returning the exact order statistic at index `i`.
+
+Non-goal:
+- Exactness for arbitrary quantile probes is not guaranteed; the exactness contract is mid-rank-specific.
+
+These semantics are asserted by focused tests in:
+- `src/tdigest/cdf.rs`
+- `src/tdigest/quantile.rs`
+
 ## 6. TDIG wire format
 
 Implemented in `src/tdigest/wire.rs`.

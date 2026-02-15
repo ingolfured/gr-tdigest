@@ -16,6 +16,7 @@ All notable changes to this project are documented in this file.
 - Added a hard panic guard for centroid weight overflow when converting to storage precision (temporary fail-fast behavior).
 - `AGENTS.md` now explicitly incorporates local production-workload context guidance for tuning decisions.
 - `typical_usecase.md` is now ignored via `.gitignore` for local-only workload notes.
+- Added focused Rust tests and design docs clarifying under-capacity exactness: CDF at training values follows exact midpoint ECDF, and quantile is exact at mid-ranks.
 
 ## [0.2.3] - 2026-02-14
 

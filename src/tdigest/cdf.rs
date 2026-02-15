@@ -303,6 +303,28 @@ mod tests {
     }
 
     #[test]
+    fn cdf_midpoint_ecdf_is_exact_at_training_values_under_capacity() {
+        use crate::tdigest::test_helpers::assert_exact;
+
+        // Sorted training data with ties; N is intentionally far below max_size.
+        let vals = vec![-2.0, -2.0, -1.0, 0.0, 0.0, 0.0, 3.0, 7.0, 7.0];
+        let n = vals.len();
+        let td = TDigestBuilder::new()
+            .max_size(1000)
+            .build()
+            .merge_sorted(vals.clone())
+            .expect("no NaNs");
+
+        assert!(n < td.max_size());
+
+        let expected = exact_ecdf_for_sorted(&vals); // midpoint over ties
+        let got = td.cdf(&vals);
+        for (i, (&e, &g)) in expected.iter().zip(&got).enumerate() {
+            assert_exact(&format!("CDF(midpoint exact @ training value) [{i}]"), e, g);
+        }
+    }
+
+    #[test]
     fn cdf_between_two_atomic_centroids_is_flat_step() {
         use crate::tdigest::ScaleFamily;
 
