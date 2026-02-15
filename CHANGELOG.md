@@ -11,6 +11,7 @@ All notable changes to this project are documented in this file.
 - API coherence CLI tests were updated to the new subcommand interface.
 - `README.md` was reorganized for a cleaner user flow (examples directly under features; community/license moved to bottom).
 - Publish/release setup details were moved from `README.md` into dedicated `PUBLISH.md`.
+- `README.md` features section now includes the full detailed cross-surface capability list again.
 
 ## [0.2.3] - 2026-02-14
 

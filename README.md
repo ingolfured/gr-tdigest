@@ -2,14 +2,21 @@
 T-Digest provides a mergeable summary of a distribution, enabling approximate quantiles and CDF with strong tail accuracy.
 `gr-tdigest` ships one Rust core with Rust, Python, Polars, and Java surfaces.
 
-## Features
-- Single Rust core shared across Rust, CLI, Python/Polars, and Java.
-- Quantile, CDF, and median support across all surfaces.
-- Mergeable digests for streaming and distributed workflows.
-- Weighted ingest support across Rust/Python/Polars/Java.
-- Explicit precision controls (`f32`/`f64`), including `auto` where supported.
-- TDIG wire format support (v3 default; v1/v2 decode compatibility).
-- Rust CLI subcommands: `build`, `quantile`, `cdf`, `median`.
+## ✨ Features
+- 🦀 Single Rust core shared across Rust, Polars, Python, and Java.
+- 🚀 Mergeable digests for large and streaming data with fast union and consistent accuracy.
+- 🔁 Cross-surface coherence: consistent, verified behavior across all bindings.
+- ⚡ Quantile, CDF, and median with optimized evaluation loops using half-weight bracketing and singleton-aware interpolation.
+- 🧠 Heap-stream k-way digest merge in Rust core for lower peak memory on large digest unions.
+- 🧵 Streaming two-way raw-ingest merge path in Rust core (centroids + values) to avoid extra merge buffers.
+- 🧊 TDigest precision as `f64` or `f32`, with `auto` precision selection where supported.
+- ⚖️ Weighted ingest across Rust/Python/Polars/Java (`add_weighted`, `add_weighted_values`, Java weighted adds).
+- 🔄 Explicit precision casting across surfaces (`cast_precision` / `castPrecision`).
+- 📦 TDIG v3 wire default (flags + header length + precision code + checksum), with v1/v2 decode compatibility.
+- 🧭 Explicit wire-version encode controls (`to_bytes(version=1|2|3)`, `toBytes(version)`).
+- 🖥️ Rust CLI subcommands (`build`, `quantile`, `cdf`, `median`) with `text|csv|json|ndjson` ingestion.
+- 🎚️ Scale families: `Quad`, `K1`, `K2`, `K3`.
+- 🔩 Singleton handling policy: edge-precision (`keep N`), respect singletons, or uniform merge.
 
 ## Examples
 
