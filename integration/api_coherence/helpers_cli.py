@@ -21,7 +21,7 @@ def run_cli(cli_bin: Path, args: list[str], data: Iterable[float]) -> str:
 
 
 def cli_build_args(cfg: dict) -> list[str]:
-    """Common CLI args (no --stdin/--cmd/--p; add those in tests)."""
+    """Common CLI args (add command + stdin/probe flags in tests)."""
     args = [
         "--no-header",
         "--output",
@@ -41,9 +41,15 @@ def cli_build_args(cfg: dict) -> list[str]:
 
 
 def cli_supports_precision_auto(cli_bin: Path) -> bool:
-    """Heuristic: check --help for 'auto' in the precision help."""
+    """Heuristic: check command help for 'auto' in precision options."""
     try:
-        out = subprocess.check_output([str(cli_bin), "--help"], text=True).lower()
-        return "precision" in out and "auto" in out
+        helps = [
+            subprocess.check_output([str(cli_bin), "--help"], text=True).lower(),
+            subprocess.check_output([str(cli_bin), "quantile", "--help"], text=True).lower(),
+            subprocess.check_output([str(cli_bin), "cdf", "--help"], text=True).lower(),
+            subprocess.check_output([str(cli_bin), "median", "--help"], text=True).lower(),
+            subprocess.check_output([str(cli_bin), "build", "--help"], text=True).lower(),
+        ]
+        return any("precision" in out and "auto" in out for out in helps)
     except Exception:
         return False

@@ -4,6 +4,12 @@ All notable changes to this project are documented in this file.
 
 ## [Unreleased]
 
+### Changed
+- **Breaking (CLI)**: Rust CLI moved from `--cmd ...` to subcommands: `tdigest build`, `tdigest quantile`, `tdigest cdf`, `tdigest median`.
+- Rust CLI now has explicit build/serialization flow (`build --to-digest`, query with `--from-digest`) and keeps optional `--to-digest` on query commands.
+- Rust CLI structured ingest paths are standardized across training/probes (`text|csv|json|ndjson` + optional column selectors).
+- API coherence CLI tests were updated to the new subcommand interface.
+
 ## [0.2.3] - 2026-02-14
 
 ### Changed

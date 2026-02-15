@@ -51,6 +51,8 @@ All surfaces must support:
 Notes:
 - Polars naming can stay surface-specific (`add_values`, `merge_tdigests`).
 - New APIs should prefer common cross-surface names unless a surface constraint requires otherwise.
+- CLI maps query capabilities to subcommands: `tdigest quantile`, `tdigest cdf`, `tdigest median`.
+- CLI build/serialization flow is explicit: `tdigest build --to-digest ...`, then query via `--from-digest` (with optional additional training/merge input).
 
 ## 4. Normative semantics (target)
 

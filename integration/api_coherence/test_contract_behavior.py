@@ -24,7 +24,7 @@ import pytest
 
 class TestInvalidTrainingData:
     def test_cli_rejects_nan(self, paths, cfg, cli_build_args_fn):
-        args = ["--stdin", "--cmd", "quantile", "--p", "0.5", *cli_build_args_fn(cfg)]
+        args = ["quantile", "--stdin", "--p", "0.5", *cli_build_args_fn(cfg)]
         with pytest.raises(subprocess.CalledProcessError) as e:
             subprocess.check_output(
                 [str(paths.cli_bin), *args],
@@ -35,7 +35,7 @@ class TestInvalidTrainingData:
         assert "nan" in e.value.output.lower()
 
     def test_cli_rejects_infinities(self, paths, cfg, cli_build_args_fn):
-        args = ["--stdin", "--cmd", "quantile", "--p", "0.5", *cli_build_args_fn(cfg)]
+        args = ["quantile", "--stdin", "--p", "0.5", *cli_build_args_fn(cfg)]
         for tok in ("inf", "-inf", "+inf"):
             with pytest.raises(subprocess.CalledProcessError) as e:
                 subprocess.check_output(
@@ -191,7 +191,7 @@ class TestEmptyDigestBehavior:
 
     def test_cli_quantile_empty(self, paths, cfg, cli_build_args_fn):
         # CLI: no stdin → empty digest; quantile should print "p,NaN" (finite p in-range)
-        args = ["--stdin", "--cmd", "quantile", "--p", "0.5", *cli_build_args_fn(cfg)]
+        args = ["quantile", "--stdin", "--p", "0.5", *cli_build_args_fn(cfg)]
         out = subprocess.check_output([str(paths.cli_bin), *args], input="", text=True).strip()
         p_str, val_str = out.split(",", 1)
         assert p_str == "0.5"
@@ -268,13 +268,13 @@ class TestSmokeCoherence:
         )
         data = dataset["DATA"]
 
-        q_args = ["--stdin", "--cmd", "quantile", "--p", str(expect["P"]), *cli_build_args_fn(cfg)]
+        q_args = ["quantile", "--stdin", "--p", str(expect["P"]), *cli_build_args_fn(cfg)]
         out = run_cli_fn(paths.cli_bin, q_args, data)
         p_str, v_str = out.split(",", 1)
         assert_close_fn(float(p_str), expect["P"], expect["EPS"])
         assert_close_fn(float(v_str), expect["Q50"], expect["EPS"])
 
-        c_args = ["--stdin", "--cmd", "cdf", *cli_build_args_fn(cfg)]
+        c_args = ["cdf", "--stdin", *cli_build_args_fn(cfg)]
         out = run_cli_fn(paths.cli_bin, c_args, data)
         p_at_x = None
         for line in out.splitlines():
@@ -368,7 +368,7 @@ class TestPrecisionAuto:
         if not cli_supports_auto_fn():
             pytest.skip("CLI lacks precision=auto")
         data = " ".join(str(float(x)) for x in dataset["DATA"])
-        args = ["--stdin", "--cmd", "quantile", "--p", "0.5",
+        args = ["quantile", "--stdin", "--p", "0.5",
                 "--no-header", "--output", "csv",
                 "--max-size", str(cfg["max_size"]),
                 "--scale", "k2",
@@ -410,7 +410,7 @@ class TestArgumentMatrix:
                         continue
 
                     args = [
-                        "--stdin", "--cmd", "quantile", "--p", str(self.P),
+                        "quantile", "--stdin", "--p", str(self.P),
                         "--no-header", "--output", "csv",
                         "--max-size", str(cfg["max_size"]),
                         "--scale", scale,
@@ -429,7 +429,7 @@ class TestArgumentMatrix:
 
                     # CDF
                     args_c = [
-                        "--stdin", "--cmd", "cdf",
+                        "cdf", "--stdin",
                         "--no-header", "--output", "csv",
                         "--max-size", str(cfg["max_size"]),
                         "--scale", scale,

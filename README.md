@@ -15,6 +15,7 @@ T-Digest provides a mergeable summary of a distribution, enabling **approximate 
 - 🔄 Explicit precision casting across surfaces (`cast_precision` / `castPrecision`)
 - 📦 TDIG v3 wire default (flags + header length + precision code + checksum), with v1/v2 decode compatibility
 - 🧭 Explicit wire-version encode controls (`to_bytes(version=1|2|3)`, `toBytes(version)`)
+- 🖥️ Rust CLI subcommands (`build`, `quantile`, `cdf`, `median`) with `text|csv|json|ndjson` data ingestion
 - 🎚️ Scale families: `Quad`, `K1`, `K2`, `K3`
 - 🔩 Singleton handling policy: **edge-precision (keep _N_)**, **respect singletons**, or **uniform merge**
 
@@ -124,7 +125,20 @@ print(out)
 
 **Rust CLI**
 ```bash
-echo '0 1 2 3' | target/release/tdigest --stdin --cmd quantile --p 0.5 --no-header
+# Build and save a digest from stdin
+echo '0 1 2 3' | target/release/tdigest build --stdin --to-digest /tmp/model.tdig
+
+# Query quantile from a saved digest
+target/release/tdigest quantile --from-digest /tmp/model.tdig --p 0.5 --no-header
+
+# Query CDF from CSV training data and JSON probes
+target/release/tdigest cdf \
+  --input train.csv --input-format csv --input-column x \
+  --probes-input probes.json --probes-format json \
+  --no-header
+
+# Median directly from JSON training data
+target/release/tdigest median --input values.json --input-format json --no-header
 ```
 
 **Java (AutoCloseable)**

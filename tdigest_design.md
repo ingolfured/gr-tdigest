@@ -330,8 +330,5 @@ Adapters (`src/py.rs`, `src/jni.rs`, `src/polars_expr.rs`) should remain thin ar
 2. Strict merge location.
 - Strict compatibility checks are frontend-layer behavior, not core merge behavior.
 
-3. CLI precision flag.
-- CLI accepts `f32|f64|auto` but currently builds digests on f64 path.
-
-4. Doc split discipline.
+3. Doc split discipline.
 - Keep target behavior only in `api_design.md` and current internals only here.

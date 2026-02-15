@@ -278,7 +278,7 @@ smoke-rust-cli:
 	@set -eu; \
 	BIN="target/$(CARGO_DIR)/$(CLI_BIN)"; \
 	[ -x "$$BIN" ] || { echo "❌ missing CLI at $$BIN; build first (PROFILE=$(PROFILE))"; exit 1; }; \
-	OUT="$$( echo '0 1 2 3' | "$$BIN" --stdin --cmd quantile --p $(Q) --no-header --output csv | cut -d, -f2 )"; \
+	OUT="$$( echo '0 1 2 3' | "$$BIN" quantile --stdin --p $(Q) --no-header --output csv | cut -d, -f2 )"; \
 	printf "CLI p%.3g -> %s\n" "$(Q)" "$$OUT"; \
 	[ "$$OUT" = "1.5" ] || { echo "❌ CLI quantile mismatch (got '$$OUT', want '1.5')"; exit 1; }; \
 	echo "✅ smoke-rust-cli ok (PROFILE=$(PROFILE))"

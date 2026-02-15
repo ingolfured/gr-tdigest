@@ -71,14 +71,14 @@ class TestProbeValidation:
 
     def test_cli_quantile_nan_and_out_of_range(self, paths, cfg, cli_build_args_fn):
         # NaN should raise (strict)
-        args = ["--stdin", "--cmd", "quantile", "--p", "NaN", *cli_build_args_fn(cfg)]
+        args = ["quantile", "--stdin", "--p", "NaN", *cli_build_args_fn(cfg)]
         with pytest.raises(subprocess.CalledProcessError) as e:
             subprocess.check_output([str(paths.cli_bin), *args], input="0 1 2 3", text=True, stderr=subprocess.STDOUT)
         assert "p must be" in e.value.output.lower()
 
         # p out of range should raise
         for bad in ("-0.1", "1.1"):
-            args = ["--stdin", "--cmd", "quantile", "--p", bad, *cli_build_args_fn(cfg)]
+            args = ["quantile", "--stdin", "--p", bad, *cli_build_args_fn(cfg)]
             with pytest.raises(subprocess.CalledProcessError) as e:
                 subprocess.check_output([str(paths.cli_bin), *args], input="0 1 2 3", text=True, stderr=subprocess.STDOUT)
             assert "p must be in [0,1]" in e.value.output.lower()

@@ -132,7 +132,9 @@ Use `Makefile` targets by default.
 ### 5.2 CLI (`src/bin/tdigest_cli.rs`)
 
 - CLI is used as a behavior reference in coherence tests.
-- Precision flag is accepted (`f32|f64|auto`) but current CLI build path is f64-backed.
+- CLI surface is subcommand-based: `build`, `quantile`, `cdf`, `median`.
+- Precision flag (`f32|f64|auto`) controls training digest precision; `auto` selects `f32` only when all training values are representable.
+- File ingest supports `text|csv|json|ndjson` plus column selectors for structured inputs.
 - Keep output format stability for tests (`csv`, header/no-header semantics).
 
 ### 5.3 Python native binding (`src/py.rs`)
