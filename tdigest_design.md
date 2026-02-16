@@ -196,6 +196,26 @@ Concatenate without mutation:
 
 `max_size` also sets `d` for `q_to_k`, so it influences cluster admissibility in stage 3 even before stage-4/6 capping.
 
+### 4.8 Experimental auto-scale selector (phase 1)
+
+`src/tdigest/auto_scale.rs` now includes an internal experimental selector that chooses one of:
+- `Quad`
+- `K1`
+- `K2`
+- `K3`
+
+Current behavior:
+- Deterministic, opt-in helper only (no default/API behavior switch yet).
+- Scores each candidate family with a weighted objective:
+  - full-data scoring for small inputs (`len <= full_eval_len`),
+  - deterministic pilot-sample scoring for larger inputs.
+- Objective prioritizes CDF error, then CDF worst-case error, then p50 and quantile MAE.
+- Uses a guarded switch away from `K2`: non-`K2` is selected only when predicted gain clears configurable margins (`k2_guard_rel`, `k2_guard_abs`; default absolute guard `5e-5`).
+- Tiny/non-finite input falls back to `K2`.
+
+Current purpose:
+- Provide a fast, test-driven baseline for iterating on auto-scale heuristics before cross-surface API exposure.
+
 ## 5. Query internals
 
 ### 5.1 CDF (`src/tdigest/cdf.rs`)

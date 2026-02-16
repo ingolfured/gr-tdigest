@@ -7,6 +7,7 @@
 //! - **Scales** — see [`ScaleFamily`] for available k-mappings.
 //! - **CDF** — see [`TDigest::cdf`] for exact semantics and guarantees.
 
+pub(crate) mod auto_scale;
 pub mod cdf;
 pub mod centroids;
 pub mod codecs;

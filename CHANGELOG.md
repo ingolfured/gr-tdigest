@@ -17,6 +17,7 @@ All notable changes to this project are documented in this file.
 - `AGENTS.md` now explicitly incorporates local production-workload context guidance for tuning decisions.
 - `typical_usecase.md` is now ignored via `.gitignore` for local-only workload notes.
 - Added focused Rust tests and design docs clarifying under-capacity exactness: CDF at training values follows exact midpoint ECDF, and quantile is exact at mid-ranks.
+- Added an experimental internal auto-scale selector (`src/tdigest/auto_scale.rs`) plus quality-matrix experiments (`src/quality/auto_scale_quality.rs`) comparing auto-selection against all four fixed scale families; selector now includes guarded switching from `K2` (minimum predicted gain required before choosing a non-`K2` family).
 
 ## [0.2.3] - 2026-02-14
 

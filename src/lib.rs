@@ -30,6 +30,7 @@ pub mod jni;
 // ---- test-only quality modules ----------------------------------------------
 #[cfg(test)]
 pub mod quality {
+    pub mod auto_scale_quality;
     pub mod cdf_quality;
     pub mod quality_base;
     pub mod quantile_quality;
