@@ -4,6 +4,11 @@ All notable changes to this project are documented in this file.
 
 ## [Unreleased]
 
+### Changed
+- Compressor Stage 4 cap strategy now uses a second k-limit merge with binary-searched `d'` (same scale-family geometry as Stage 3) instead of always using equal-weight bucketization.
+- Added Stage 4 unit coverage for cap/weight/order invariants under the new second-pass k-limit cap behavior.
+- Updated `tdigest_design.md` to document the new Stage 4 cap flow and fallback behavior.
+
 ## [0.2.4] - 2026-02-16
 
 ### Changed
