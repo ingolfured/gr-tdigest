@@ -164,11 +164,11 @@ pub struct DigestConfig {
     pub max_size: usize,
     pub scale: ScaleFamily,
     pub policy: SingletonPolicy,
-    pub legacy_delta: Option<f64>,
+    pub delta: Option<f64>,
 }
 
-fn validate_legacy_delta_config(config: DigestConfig) -> Result<(), FrontendError> {
-    let Some(delta) = config.legacy_delta else {
+fn validate_delta_config(config: DigestConfig) -> Result<(), FrontendError> {
+    let Some(delta) = config.delta else {
         return Ok(());
     };
 
@@ -268,7 +268,7 @@ impl FrontendDigest {
         precision: DigestPrecision,
     ) -> Result<Self, FrontendError> {
         ensure_finite_training_values(&values).map_err(FrontendError::from)?;
-        validate_legacy_delta_config(config)?;
+        validate_delta_config(config)?;
 
         match precision {
             DigestPrecision::F32 => {
@@ -277,8 +277,8 @@ impl FrontendDigest {
                     .max_size(config.max_size)
                     .scale(config.scale)
                     .singleton_policy(config.policy);
-                if let Some(delta) = config.legacy_delta {
-                    builder = builder.legacy_delta(delta);
+                if let Some(delta) = config.delta {
+                    builder = builder.delta(delta);
                 }
                 let td = builder
                     .build()
@@ -291,8 +291,8 @@ impl FrontendDigest {
                     .max_size(config.max_size)
                     .scale(config.scale)
                     .singleton_policy(config.policy);
-                if let Some(delta) = config.legacy_delta {
-                    builder = builder.legacy_delta(delta);
+                if let Some(delta) = config.delta {
+                    builder = builder.delta(delta);
                 }
                 let td = builder
                     .build()
@@ -318,13 +318,13 @@ impl FrontendDigest {
                 max_size: td.max_size(),
                 scale: td.scale(),
                 policy: td.singleton_policy(),
-                legacy_delta: td.legacy_delta(),
+                delta: td.delta(),
             },
             FrontendDigest::F64(td) => DigestConfig {
                 max_size: td.max_size(),
                 scale: td.scale(),
                 policy: td.singleton_policy(),
-                legacy_delta: td.legacy_delta(),
+                delta: td.delta(),
             },
         }
     }
@@ -444,8 +444,8 @@ Rebuild or cast to a shared configuration before merge.",
                 rhs_cfg.scale,
                 lhs_cfg.policy,
                 rhs_cfg.policy,
-                lhs_cfg.legacy_delta,
-                rhs_cfg.legacy_delta
+                lhs_cfg.delta,
+                rhs_cfg.delta
             )));
         }
 
@@ -603,7 +603,7 @@ mod tests {
             max_size,
             scale: ScaleFamily::K2,
             policy: SingletonPolicy::Use,
-            legacy_delta: None,
+            delta: None,
         }
     }
 
@@ -716,7 +716,7 @@ mod tests {
                 max_size: 96,
                 scale: ScaleFamily::K3,
                 policy: SingletonPolicy::UseWithProtectedEdges(2),
-                legacy_delta: None,
+                delta: None,
             },
             DigestPrecision::F64,
         )
@@ -770,7 +770,7 @@ mod tests {
                 max_size: 64,
                 scale: ScaleFamily::K2,
                 policy: SingletonPolicy::Use,
-                legacy_delta: None,
+                delta: None,
             },
             DigestPrecision::F64,
         )
@@ -781,7 +781,7 @@ mod tests {
                 max_size: 128,
                 scale: ScaleFamily::K3,
                 policy: SingletonPolicy::Use,
-                legacy_delta: None,
+                delta: None,
             },
             DigestPrecision::F64,
         )

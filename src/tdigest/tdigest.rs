@@ -25,7 +25,7 @@ pub struct TDigest<F: FloatLike + FloatCore> {
     min: OrderedFloat<F>,
     scale: ScaleFamily,
     policy: SingletonPolicy, // interpreted as atomic/edge policy
-    legacy_delta: Option<f64>,
+    delta: Option<f64>,
 }
 
 pub type TDigestF64 = TDigest<f64>;
@@ -42,7 +42,7 @@ impl<F: FloatLike + FloatCore> Default for TDigest<F> {
             min: OrderedFloat::from(F::from_f64(f64::NAN)),
             scale: ScaleFamily::K2,
             policy: SingletonPolicy::Use,
-            legacy_delta: None,
+            delta: None,
         }
     }
 }
@@ -184,7 +184,7 @@ pub struct TDigestBuilder<F: FloatLike + FloatCore> {
     max_size: usize,
     scale: ScaleFamily,
     policy: SingletonPolicy,
-    legacy_delta: Option<f64>,
+    delta: Option<f64>,
     // optional seeds
     init_centroids: Option<Vec<Centroid<F>>>,
     init_stats: Option<DigestStats>,
@@ -196,7 +196,7 @@ impl<F: FloatLike + FloatCore> Default for TDigestBuilder<F> {
             max_size: 1000,
             scale: ScaleFamily::K2,
             policy: SingletonPolicy::Use,
-            legacy_delta: None,
+            delta: None,
             init_centroids: None,
             init_stats: None,
             override_max_size: None,
@@ -233,12 +233,12 @@ impl<F: FloatLike + FloatCore> TDigestBuilder<F> {
 
     /// Enable legacy tdigest-rs `delta` mode.
     #[inline]
-    pub fn legacy_delta(mut self, delta: f64) -> Self {
+    pub fn delta(mut self, delta: f64) -> Self {
         assert!(
             delta.is_finite() && delta > 0.0,
-            "legacy_delta must be finite and > 0"
+            "delta must be finite and > 0"
         );
-        self.legacy_delta = Some(delta);
+        self.delta = Some(delta);
         self
     }
 
@@ -289,7 +289,7 @@ impl<F: FloatLike + FloatCore> TDigestBuilder<F> {
                 max: OrderedFloat::from(F::from_f64(st.data_max)),
                 scale: self.scale,
                 policy: self.policy,
-                legacy_delta: self.legacy_delta,
+                delta: self.delta,
             }
         } else {
             TDigest {
@@ -301,7 +301,7 @@ impl<F: FloatLike + FloatCore> TDigestBuilder<F> {
                 min: OrderedFloat::from(F::from_f64(f64::NAN)),
                 scale: self.scale,
                 policy: self.policy,
-                legacy_delta: self.legacy_delta,
+                delta: self.delta,
             }
         }
     }
@@ -399,8 +399,8 @@ impl<F: FloatLike + FloatCore> TDigest<F> {
             .max_size(self.max_size())
             .scale(self.scale())
             .singleton_policy(self.singleton_policy());
-        if let Some(delta) = self.legacy_delta() {
-            builder = builder.legacy_delta(delta);
+        if let Some(delta) = self.delta() {
+            builder = builder.delta(delta);
         }
         builder.with_centroids_and_stats(cents, stats).build()
     }
@@ -456,8 +456,8 @@ impl<F: FloatLike + FloatCore> TDigest<F> {
     }
 
     #[inline]
-    pub fn legacy_delta(&self) -> Option<f64> {
-        self.legacy_delta
+    pub fn delta(&self) -> Option<f64> {
+        self.delta
     }
 
     /// Ingest **unsorted** values; behavior matches [`TDigest::merge_sorted`] after sorting.
@@ -536,8 +536,8 @@ impl<F: FloatLike + FloatCore> TDigest<F> {
             .max_size(self.max_size)
             .scale(self.scale)
             .singleton_policy(self.policy);
-        if let Some(delta) = self.legacy_delta {
-            weighted_builder = weighted_builder.legacy_delta(delta);
+        if let Some(delta) = self.delta {
+            weighted_builder = weighted_builder.delta(delta);
         }
         let weighted = weighted_builder
             .with_centroids_and_stats(cents, stats)
@@ -560,7 +560,7 @@ impl<F: FloatLike + FloatCore> TDigest<F> {
             let n = d.count();
             if n > 0.0 && !d.centroids.is_empty() {
                 if chosen.is_none() {
-                    chosen = Some((d.max_size, d.scale, d.policy, d.legacy_delta));
+                    chosen = Some((d.max_size, d.scale, d.policy, d.delta));
                 }
                 total_count += n;
                 min = std::cmp::min(min, d.min);
@@ -571,7 +571,7 @@ impl<F: FloatLike + FloatCore> TDigest<F> {
         if total_count == 0.0 {
             return TDigest::default();
         }
-        let (chosen_max_size, chosen_scale, chosen_policy, chosen_legacy_delta) = chosen.unwrap();
+        let (chosen_max_size, chosen_scale, chosen_policy, chosen_delta) = chosen.unwrap();
 
         let mut result = TDigest::<F> {
             centroids: Vec::new(),
@@ -582,7 +582,7 @@ impl<F: FloatLike + FloatCore> TDigest<F> {
             min,
             scale: chosen_scale,
             policy: chosen_policy,
-            legacy_delta: chosen_legacy_delta,
+            delta: chosen_delta,
         };
 
         // Producer: k-way merge of centroid runs (no extra coalescing beyond equal-mean heads).
@@ -727,7 +727,7 @@ impl<F: FloatLike + FloatCore> TDigest<F> {
                 min: OrderedFloat::from(min),
                 scale: ScaleFamily::K2,
                 policy: SingletonPolicy::Use,
-                legacy_delta: None,
+                delta: None,
             }
         } else {
             let sz = centroids.len();
@@ -790,7 +790,7 @@ impl<F: FloatLike + FloatCore> TDigest<F> {
             min: OrderedFloat::from(F::from_f64(f64::NAN)),
             scale: self.scale,
             policy: self.policy,
-            legacy_delta: self.legacy_delta,
+            delta: self.delta,
         };
 
         let vmin = OrderedFloat::from(values[0]);
@@ -878,7 +878,7 @@ mod tests {
         chosen_max_size: usize,
         chosen_scale: ScaleFamily,
         chosen_policy: SingletonPolicy,
-        chosen_legacy_delta: Option<f64>,
+        chosen_delta: Option<f64>,
         total_count: f64,
         min: OrderedFloat<f64>,
         max: OrderedFloat<f64>,
@@ -925,7 +925,7 @@ mod tests {
             let n = d.count();
             if n > 0.0 && !d.centroids.is_empty() {
                 if chosen.is_none() {
-                    chosen = Some((d.max_size, d.scale, d.policy, d.legacy_delta));
+                    chosen = Some((d.max_size, d.scale, d.policy, d.delta));
                 }
                 total_count += n;
                 min = std::cmp::min(min, d.min);
@@ -934,13 +934,13 @@ mod tests {
             }
         }
 
-        let (chosen_max_size, chosen_scale, chosen_policy, chosen_legacy_delta) = chosen?;
+        let (chosen_max_size, chosen_scale, chosen_policy, chosen_delta) = chosen?;
 
         Some(MergeScan {
             chosen_max_size,
             chosen_scale,
             chosen_policy,
-            chosen_legacy_delta,
+            chosen_delta,
             total_count,
             min,
             max,
@@ -958,7 +958,7 @@ mod tests {
             min: scan.min,
             scale: scan.chosen_scale,
             policy: scan.chosen_policy,
-            legacy_delta: scan.chosen_legacy_delta,
+            delta: scan.chosen_delta,
         }
     }
 

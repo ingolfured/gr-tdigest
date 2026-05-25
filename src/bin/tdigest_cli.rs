@@ -743,7 +743,7 @@ fn build_digest(
         max_size: digest_args.max_size,
         scale,
         policy,
-        legacy_delta: None,
+        delta: None,
     };
 
     let mut merge_iter = source.merge_digest.iter();

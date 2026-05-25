@@ -132,7 +132,7 @@ impl PyTDigest {
             max_size,
             scale: sc,
             policy,
-            legacy_delta: delta,
+            delta: delta,
         };
         let precision = if f32_mode {
             DigestPrecision::F32
@@ -181,7 +181,7 @@ impl PyTDigest {
             max_size,
             scale: sc,
             policy,
-            legacy_delta: delta,
+            delta: delta,
         };
         let precision = if f32_mode {
             DigestPrecision::F32

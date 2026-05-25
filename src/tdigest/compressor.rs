@@ -115,8 +115,8 @@ where
 
     // -- 2) Slice -------------------------------------------------------------
     let policy = policy_from(result.singleton_policy(), max_size);
-    let legacy_delta = result.legacy_delta();
-    if legacy_delta.is_none() {
+    let delta = result.delta();
+    if delta.is_none() {
         if let Some(v) = policy.fast_path(&norm.out) {
             debug_assert!(crate::tdigest::centroids::is_sorted_strict_by_mean(&v));
             return v;
@@ -127,8 +127,8 @@ where
     // -- 3) Merge (k-limit) ---------------------------------------------------
     let family: ScaleFamily = result.scale();
     let d: f64 = result.max_size() as f64;
-    let core = if let Some(delta) = legacy_delta {
-        legacy_delta_merge::<F>(slices.interior, delta)
+    let core = if let Some(delta) = delta {
+        delta_merge::<F>(slices.interior, delta)
     } else {
         klimit_merge::<F>(slices.interior, d, family)
     };
@@ -136,7 +136,7 @@ where
     // -- 4) Cap ---------------------------------------------------------------
     // Second k-limit cap pass if the interior exceeds its budget.
     // Fallback to equal-weight bucketization remains as a safety net in cap_core.
-    let core_capped = if legacy_delta.is_some() {
+    let core_capped = if delta.is_some() {
         core
     } else {
         cap_core::<F>(core, slices.caps.core_cap, d, family)
@@ -146,7 +146,7 @@ where
     let assembled = assemble_with_edges::<F>(slices.left, core_capped, slices.right);
 
     // -- 6) Post --------------------------------------------------------------
-    let compressed = if legacy_delta.is_some() {
+    let compressed = if delta.is_some() {
         assembled
     } else {
         policy.post(assembled)
@@ -380,7 +380,7 @@ fn legacy_k2_log_q_limit(q0: f64, delta: f64, n: f64) -> f64 {
 /// This uses the historical K2-like q->k transform:
 /// `k(q) = delta / (4 ln(n/delta) + 24) * ln(q/(1-q))`
 /// with the same one-pass thresholding logic (`q <= q_limit`) used previously.
-fn legacy_delta_merge<F: FloatLike + FloatCore>(
+fn delta_merge<F: FloatLike + FloatCore>(
     items: &[Centroid<F>],
     delta: f64,
 ) -> Vec<Centroid<F>> {
@@ -782,7 +782,7 @@ mod tests {
     }
 
     #[test]
-    fn legacy_delta_merge_matches_old_k2_rule_for_weighted_input() {
+    fn delta_merge_matches_old_k2_rule_for_weighted_input() {
         let items = vec![
             c::<Fp>(0.0, 100.0, true),
             c::<Fp>(1.0, 1.0, true),
@@ -791,7 +791,7 @@ mod tests {
             c::<Fp>(4.0, 1.0, true),
         ];
         let delta = 20.0;
-        let out = super::legacy_delta_merge(&items, delta);
+        let out = super::delta_merge(&items, delta);
 
         // Reference old tdigest-rs 0.2.x behavior:
         // q_limit uses n=len(means), while q uses cumulative/total weights.
@@ -821,12 +821,12 @@ mod tests {
     }
 
     #[test]
-    fn legacy_delta_mode_bypasses_off_fast_path_and_runs_merge() {
+    fn delta_mode_bypasses_off_fast_path_and_runs_merge() {
         let mut td = TDigest::<Fp>::builder()
             .max_size(100)
             .scale(ScaleFamily::K2)
             .singleton_policy(SingletonPolicy::Off)
-            .legacy_delta(20.0)
+            .delta(20.0)
             .build();
 
         let input = vec![
