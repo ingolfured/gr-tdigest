@@ -62,6 +62,7 @@ pub fn parse_scale_str(raw: Option<&str>) -> Result<ScaleFamily, ParseError> {
         Some(ref v) if v == "quad" => Ok(ScaleFamily::Quad),
         Some(ref v) if v == "k1" => Ok(ScaleFamily::K1),
         Some(ref v) if v == "k2" => Ok(ScaleFamily::K2),
+        Some(ref v) if v == "k2norm" => Ok(ScaleFamily::K2Norm),
         Some(ref v) if v == "k3" => Ok(ScaleFamily::K3),
         Some(v) => Err(ParseError::InvalidScale(v)),
     }
@@ -72,6 +73,7 @@ pub fn scale_to_str(s: ScaleFamily) -> &'static str {
         ScaleFamily::Quad => "quad",
         ScaleFamily::K1 => "k1",
         ScaleFamily::K2 => "k2",
+        ScaleFamily::K2Norm => "k2norm",
         ScaleFamily::K3 => "k3",
     }
 }

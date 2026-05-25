@@ -349,6 +349,7 @@ fn scale_to_code(s: ScaleFamily) -> u8 {
         ScaleFamily::K1 => 1,
         ScaleFamily::K2 => 2,
         ScaleFamily::K3 => 3,
+        ScaleFamily::K2Norm => 4,
     }
 }
 
@@ -358,6 +359,7 @@ fn code_to_scale(c: u8) -> WireResult<ScaleFamily> {
         1 => Ok(ScaleFamily::K1),
         2 => Ok(ScaleFamily::K2),
         3 => Ok(ScaleFamily::K3),
+        4 => Ok(ScaleFamily::K2Norm),
         _ => Err(WireError::InvalidScale(c)),
     }
 }
