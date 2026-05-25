@@ -128,9 +128,10 @@ where
     let family: ScaleFamily = result.scale();
     let d: f64 = result.max_size() as f64;
     let core = if let Some(delta) = delta {
-        // delta-mode: canonical Dunning K2 (n-aware) + strict Δk ≤ 1 to match
-        // old tdigest-rs byte-for-byte.
-        klimit_merge::<F>(slices.interior, delta, ScaleFamily::K2Norm, 0.0)
+        // delta-mode is contract-validated upstream (scale = K2Norm, policy = Off);
+        // strict Δk ≤ 1 reproduces old tdigest-rs byte-for-byte.
+        debug_assert_eq!(family, ScaleFamily::K2Norm);
+        klimit_merge::<F>(slices.interior, delta, family, 0.0)
     } else {
         klimit_merge::<F>(slices.interior, d, family, KLIMIT_TOL)
     };
@@ -773,7 +774,7 @@ mod tests {
     fn delta_mode_bypasses_off_fast_path_and_runs_merge() {
         let mut td = TDigest::<Fp>::builder()
             .max_size(100)
-            .scale(ScaleFamily::K2)
+            .scale(ScaleFamily::K2Norm)
             .singleton_policy(SingletonPolicy::Off)
             .delta(20.0)
             .build();

@@ -179,14 +179,14 @@ fn validate_delta_config(config: DigestConfig) -> Result<(), FrontendError> {
             "delta must be finite and > 0".to_string(),
         ));
     }
-    if config.scale != ScaleFamily::K2 {
+    if config.scale != ScaleFamily::K2Norm {
         return Err(FrontendError::InvalidScale(
-            "delta mode only supports scale='k2'".to_string(),
+            "delta-mode requires scale='k2norm' (canonical Dunning K2)".to_string(),
         ));
     }
     if config.policy != SingletonPolicy::Off {
         return Err(FrontendError::InvalidScale(
-            "delta mode only supports singleton_policy='off'".to_string(),
+            "delta-mode requires singleton_policy='off'".to_string(),
         ));
     }
     Ok(())
