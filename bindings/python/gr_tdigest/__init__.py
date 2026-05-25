@@ -48,7 +48,16 @@ class SingletonPolicy(str, Enum):
     EDGES = "edges"
 
 
-_DEFAULT_MAX_SIZE = 200
+#: Default `max_size` when neither `max_size` nor `delta` is specified.
+#: Established in `14b34ac` ("Default arguments k2, 1000 and f64") and used
+#: by the Rust extension (PyO3 signature), Rust CLI (`--max-size`), and this shim.
+DEFAULT_MAX_SIZE: int = 1000
+#: Default `delta` value documented for delta-mode. Matches the constant
+#: `DEFAULT_DELTA = 300.0` from the old `tdigest-rs` Python API so passing
+#: `delta=DEFAULT_DELTA` reproduces that library's out-of-the-box behavior.
+DEFAULT_DELTA: float = 300.0
+
+_DEFAULT_MAX_SIZE = DEFAULT_MAX_SIZE  # backwards-compatible alias for internal callers
 _UNSET = object()
 
 
@@ -522,7 +531,7 @@ setattr(TDigest, "scale_values", _scale_values_patched)
 
 def tdigest(
     values: "IntoExpr",
-    max_size: int = 200,
+    max_size: int = 1000,
     *,
     scale: ScaleFamily | str = "k2",
     precision: str = "auto",
