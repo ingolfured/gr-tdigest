@@ -4,6 +4,15 @@ All notable changes to this project are documented in this file.
 
 ## [Unreleased]
 
+### Added
+- Added deep maintainer docs under `docs/` for the compressor pipeline, query kernels, quality checks, wire/precision behavior, and review compatibility workflow.
+- Added a byte-for-byte copied upstream `tdigest-rs` Python test and benchmark snapshot under `compat/tdigest-rs-upstream/` with provenance/checksum metadata.
+- Added a Python `tdigest_rs` compatibility module and dedicated `make compat-test` / `make compat-bench` targets for upstream review parity.
+- Added real Python `delta` construction mode as an alternative to `max_size`, using the old `tdigest-rs` K2 delta merge behavior.
+- Added Python `from_means_weights`, centroid `means`/`weights`, `trimmed_mean`, and pickle/deepcopy support for reviewer-facing legacy API coverage.
+- Added a strict legacy adapter and failure report for running copied upstream Python tests against the real `gr_tdigest` extension.
+- Marked the abandoned 1/4 branch obsolete in review docs and added the first non-legacy duplication scan notes.
+
 ### Changed
 - Compressor Stage 4 cap strategy now uses a second k-limit merge with binary-searched `d'` (same scale-family geometry as Stage 3) instead of always using equal-weight bucketization.
 - Added Stage 4 unit coverage for cap/weight/order invariants under the new second-pass k-limit cap behavior.
@@ -12,6 +21,7 @@ All notable changes to this project are documented in this file.
 - Added `ScaleFamily::K2Norm`: the canonical n-aware Dunning K2 from the t-digest paper (eq 8). Pairs with existing `K2` (Dunning's no-norm Java variant). `delta`-mode now routes through `klimit_merge` with `K2Norm` and strict `Δk ≤ 1` tolerance, replacing the parallel `legacy_delta_merge`/`legacy_k2_*` helpers. `klimit_merge` now takes a `tol` parameter (use `KLIMIT_TOL` for tolerant, `0.0` for strict byte-equivalence with old tdigest-rs).
 - `delta`-mode now defaults all other knobs to the old tdigest-rs contract: passing `delta=X` (with no other args) implies `scale='k2norm'` and `singleton_policy='off'`. Explicit values that disagree (e.g. `delta=X, scale='k1'`) are rejected with a clear error instead of being silently overridden, so the digest the user gets matches the old library byte-for-byte.
 - DRY: shared `validate_trimmed_mean_bounds` helper now used by both `trimmed_mean` (silent, returns NaN on invalid bounds) and `trimmed_mean_strict` (loud, returns `FrontendError::InvalidProbe`).
+- `make compat-test` / `make legacy-strict-test` now run the copied upstream Python tests through the strict adapter instead of the old pure-Python shim.
 
 ## [0.2.4] - 2026-02-16
 

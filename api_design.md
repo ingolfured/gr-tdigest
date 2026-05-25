@@ -53,6 +53,9 @@ Notes:
 - New APIs should prefer common cross-surface names unless a surface constraint requires otherwise.
 - CLI maps query capabilities to subcommands: `tdigest quantile`, `tdigest cdf`, `tdigest median`.
 - CLI build/serialization flow is explicit: `tdigest build --to-digest ...`, then query via `--from-digest` (with optional additional training/merge input).
+- Python also exposes review-compatibility `delta` construction mode for the old
+  `tdigest-rs` API. `delta` is mutually exclusive with `max_size` and uses the
+  legacy K2/off compressor path.
 
 ## 4. Normative semantics (target)
 
@@ -98,6 +101,7 @@ Shape behavior:
   - `max_size`
   - `scale`
   - `singleton_policy`
+  - `delta` / legacy delta mode
 - No implicit coercion in merge.
 
 Canonical empty for `merge_all([])`:
@@ -105,11 +109,13 @@ Canonical empty for `merge_all([])`:
 - `max_size=1000`
 - `scale=K2`
 - `singleton_policy=Use`
+- `delta=None`
 
 ### 4.4 Serialization / `from_bytes`
 
 - TDIG written by one surface must decode on all surfaces.
 - `to_bytes` supports explicit version selection (`1|2|3`) where surfaced.
+- Python pickle/deepcopy support uses TDIG bytes.
 - Wire precision (`f32`/`f64`) must round-trip.
 - Empty digest to/from bytes is valid.
 - Empty blob bytes (`b""`) are invalid TDIG and must error.
