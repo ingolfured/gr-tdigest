@@ -159,11 +159,35 @@ pub fn validate_quantile_probe(q: f64) -> Result<(), &'static str> {
 
 /* ---------------------- shared frontend service ---------------------- */
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, PartialEq)]
 pub struct DigestConfig {
     pub max_size: usize,
     pub scale: ScaleFamily,
     pub policy: SingletonPolicy,
+    pub legacy_delta: Option<f64>,
+}
+
+fn validate_legacy_delta_config(config: DigestConfig) -> Result<(), FrontendError> {
+    let Some(delta) = config.legacy_delta else {
+        return Ok(());
+    };
+
+    if !(delta.is_finite() && delta > 0.0) {
+        return Err(FrontendError::InvalidScale(
+            "delta must be finite and > 0".to_string(),
+        ));
+    }
+    if config.scale != ScaleFamily::K2 {
+        return Err(FrontendError::InvalidScale(
+            "delta mode only supports scale='k2'".to_string(),
+        ));
+    }
+    if config.policy != SingletonPolicy::Off {
+        return Err(FrontendError::InvalidScale(
+            "delta mode only supports singleton_policy='off'".to_string(),
+        ));
+    }
+    Ok(())
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -244,24 +268,33 @@ impl FrontendDigest {
         precision: DigestPrecision,
     ) -> Result<Self, FrontendError> {
         ensure_finite_training_values(&values).map_err(FrontendError::from)?;
+        validate_legacy_delta_config(config)?;
 
         match precision {
             DigestPrecision::F32 => {
                 let xs: Vec<f32> = values.into_iter().map(|v| v as f32).collect();
-                let td = TDigest::<f32>::builder()
+                let mut builder = TDigest::<f32>::builder()
                     .max_size(config.max_size)
                     .scale(config.scale)
-                    .singleton_policy(config.policy)
+                    .singleton_policy(config.policy);
+                if let Some(delta) = config.legacy_delta {
+                    builder = builder.legacy_delta(delta);
+                }
+                let td = builder
                     .build()
                     .merge_unsorted(xs)
                     .map_err(FrontendError::from)?;
                 Ok(FrontendDigest::F32(td))
             }
             DigestPrecision::F64 => {
-                let td = TDigest::<f64>::builder()
+                let mut builder = TDigest::<f64>::builder()
                     .max_size(config.max_size)
                     .scale(config.scale)
-                    .singleton_policy(config.policy)
+                    .singleton_policy(config.policy);
+                if let Some(delta) = config.legacy_delta {
+                    builder = builder.legacy_delta(delta);
+                }
+                let td = builder
                     .build()
                     .merge_unsorted(values)
                     .map_err(FrontendError::from)?;
@@ -285,11 +318,13 @@ impl FrontendDigest {
                 max_size: td.max_size(),
                 scale: td.scale(),
                 policy: td.singleton_policy(),
+                legacy_delta: td.legacy_delta(),
             },
             FrontendDigest::F64(td) => DigestConfig {
                 max_size: td.max_size(),
                 scale: td.scale(),
                 policy: td.singleton_policy(),
+                legacy_delta: td.legacy_delta(),
             },
         }
     }
@@ -401,14 +436,16 @@ Cast explicitly before merge (e.g. cast_precision('f64')).",
         let rhs_cfg = other.config();
         if lhs_cfg != rhs_cfg {
             return Err(FrontendError::IncompatibleMerge(format!(
-                "tdigest merge: incompatible configs (max_size {} vs {}, scale {:?} vs {:?}, singleton_policy {:?} vs {:?}). \
+                "tdigest merge: incompatible configs (max_size {} vs {}, scale {:?} vs {:?}, singleton_policy {:?} vs {:?}, delta {:?} vs {:?}). \
 Rebuild or cast to a shared configuration before merge.",
                 lhs_cfg.max_size,
                 rhs_cfg.max_size,
                 lhs_cfg.scale,
                 rhs_cfg.scale,
                 lhs_cfg.policy,
-                rhs_cfg.policy
+                rhs_cfg.policy,
+                lhs_cfg.legacy_delta,
+                rhs_cfg.legacy_delta
             )));
         }
 
@@ -458,6 +495,48 @@ Rebuild or cast to a shared configuration before merge.",
         match self {
             FrontendDigest::F32(td) => td.cdf_or_nan(xs),
             FrontendDigest::F64(td) => td.cdf_or_nan(xs),
+        }
+    }
+
+    pub fn trimmed_mean_strict(&self, lower: f64, upper: f64) -> Result<f64, FrontendError> {
+        if !lower.is_finite() || !upper.is_finite() {
+            return Err(FrontendError::InvalidProbe(
+                "trimmed_mean bounds must be finite values in [0,1]".to_string(),
+            ));
+        }
+        if !(0.0..=1.0).contains(&lower) || !(0.0..=1.0).contains(&upper) || lower > upper {
+            return Err(FrontendError::InvalidProbe(
+                "trimmed_mean bounds must satisfy 0 <= lower <= upper <= 1".to_string(),
+            ));
+        }
+
+        Ok(match self {
+            FrontendDigest::F32(td) => td.trimmed_mean(lower, upper),
+            FrontendDigest::F64(td) => td.trimmed_mean(lower, upper),
+        })
+    }
+
+    #[inline]
+    pub fn centroid_means_f64(&self) -> Vec<f64> {
+        match self {
+            FrontendDigest::F32(td) => td.centroids_ref().iter().map(|c| c.mean_f64()).collect(),
+            FrontendDigest::F64(td) => td.centroids_ref().iter().map(|c| c.mean_f64()).collect(),
+        }
+    }
+
+    #[inline]
+    pub fn centroid_weights_f64(&self) -> Vec<f64> {
+        match self {
+            FrontendDigest::F32(td) => td.centroids_ref().iter().map(|c| c.weight_f64()).collect(),
+            FrontendDigest::F64(td) => td.centroids_ref().iter().map(|c| c.weight_f64()).collect(),
+        }
+    }
+
+    #[inline]
+    pub fn centroid_len(&self) -> usize {
+        match self {
+            FrontendDigest::F32(td) => td.centroids_ref().len(),
+            FrontendDigest::F64(td) => td.centroids_ref().len(),
         }
     }
 
@@ -524,6 +603,7 @@ mod tests {
             max_size,
             scale: ScaleFamily::K2,
             policy: SingletonPolicy::Use,
+            legacy_delta: None,
         }
     }
 
@@ -636,6 +716,7 @@ mod tests {
                 max_size: 96,
                 scale: ScaleFamily::K3,
                 policy: SingletonPolicy::UseWithProtectedEdges(2),
+                legacy_delta: None,
             },
             DigestPrecision::F64,
         )
@@ -689,6 +770,7 @@ mod tests {
                 max_size: 64,
                 scale: ScaleFamily::K2,
                 policy: SingletonPolicy::Use,
+                legacy_delta: None,
             },
             DigestPrecision::F64,
         )
@@ -699,6 +781,7 @@ mod tests {
                 max_size: 128,
                 scale: ScaleFamily::K3,
                 policy: SingletonPolicy::Use,
+                legacy_delta: None,
             },
             DigestPrecision::F64,
         )
