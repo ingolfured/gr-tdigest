@@ -236,12 +236,7 @@ impl<F: FloatLike + FloatCore> TDigest<F> {
     ///
     /// Invalid bounds and empty digests return `NaN`.
     pub fn trimmed_mean(&self, lower: f64, upper: f64) -> f64 {
-        if !lower.is_finite()
-            || !upper.is_finite()
-            || !(0.0..=1.0).contains(&lower)
-            || !(0.0..=1.0).contains(&upper)
-            || lower > upper
-        {
+        if crate::tdigest::frontends::validate_trimmed_mean_bounds(lower, upper).is_err() {
             return f64::NAN;
         }
 

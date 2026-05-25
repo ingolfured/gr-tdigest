@@ -159,6 +159,20 @@ pub fn validate_quantile_probe(q: f64) -> Result<(), &'static str> {
     Ok(())
 }
 
+/// Shared `[lower, upper]` bounds check for `trimmed_mean`. Used by both the
+/// silent core method (which maps `Err` to `NaN`) and the strict frontend
+/// wrapper (which propagates the `Err` to the caller).
+#[inline]
+pub fn validate_trimmed_mean_bounds(lower: f64, upper: f64) -> Result<(), &'static str> {
+    if !lower.is_finite() || !upper.is_finite() {
+        return Err("trimmed_mean bounds must be finite values in [0,1]");
+    }
+    if !(0.0..=1.0).contains(&lower) || !(0.0..=1.0).contains(&upper) || lower > upper {
+        return Err("trimmed_mean bounds must satisfy 0 <= lower <= upper <= 1");
+    }
+    Ok(())
+}
+
 /* ---------------------- shared frontend service ---------------------- */
 
 #[derive(Debug, Clone, Copy, PartialEq)]
@@ -501,17 +515,8 @@ Rebuild or cast to a shared configuration before merge.",
     }
 
     pub fn trimmed_mean_strict(&self, lower: f64, upper: f64) -> Result<f64, FrontendError> {
-        if !lower.is_finite() || !upper.is_finite() {
-            return Err(FrontendError::InvalidProbe(
-                "trimmed_mean bounds must be finite values in [0,1]".to_string(),
-            ));
-        }
-        if !(0.0..=1.0).contains(&lower) || !(0.0..=1.0).contains(&upper) || lower > upper {
-            return Err(FrontendError::InvalidProbe(
-                "trimmed_mean bounds must satisfy 0 <= lower <= upper <= 1".to_string(),
-            ));
-        }
-
+        validate_trimmed_mean_bounds(lower, upper)
+            .map_err(|msg| FrontendError::InvalidProbe(msg.to_string()))?;
         Ok(match self {
             FrontendDigest::F32(td) => td.trimmed_mean(lower, upper),
             FrontendDigest::F64(td) => td.trimmed_mean(lower, upper),

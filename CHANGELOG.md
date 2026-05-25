@@ -11,6 +11,7 @@ All notable changes to this project are documented in this file.
 - Renamed `DigestConfig.legacy_delta` (and `TDigest`/builder methods) to `delta`. The field is the user-facing alternative-to-`max_size` mode, not a legacy escape hatch.
 - Added `ScaleFamily::K2Norm`: the canonical n-aware Dunning K2 from the t-digest paper (eq 8). Pairs with existing `K2` (Dunning's no-norm Java variant). `delta`-mode now routes through `klimit_merge` with `K2Norm` and strict `Δk ≤ 1` tolerance, replacing the parallel `legacy_delta_merge`/`legacy_k2_*` helpers. `klimit_merge` now takes a `tol` parameter (use `KLIMIT_TOL` for tolerant, `0.0` for strict byte-equivalence with old tdigest-rs).
 - `delta`-mode now defaults all other knobs to the old tdigest-rs contract: passing `delta=X` (with no other args) implies `scale='k2norm'` and `singleton_policy='off'`. Explicit values that disagree (e.g. `delta=X, scale='k1'`) are rejected with a clear error instead of being silently overridden, so the digest the user gets matches the old library byte-for-byte.
+- DRY: shared `validate_trimmed_mean_bounds` helper now used by both `trimmed_mean` (silent, returns NaN on invalid bounds) and `trimmed_mean_strict` (loud, returns `FrontendError::InvalidProbe`).
 
 ## [0.2.4] - 2026-02-16
 
