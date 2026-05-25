@@ -50,6 +50,13 @@ PY_DIR          := bindings/python
 PY_PKG_DIR      := $(PY_DIR)/gr_tdigest
 PY_TESTS_DIR    := $(PY_DIR)/tests
 
+# Upstream tdigest-rs review compatibility snapshot
+COMPAT_PY_DIR     := compat/tdigest-rs-upstream/bindings/python
+COMPAT_TESTS_DIR  := $(COMPAT_PY_DIR)/tests
+COMPAT_BENCH      := $(COMPAT_PY_DIR)/benchmarks/run.py
+STRICT_COMPAT_ADAPTER_DIR := compat/tdigest-rs-strict-python
+STRICT_COMPAT_BENCH := $(STRICT_COMPAT_ADAPTER_DIR)/benchmarks/run.py
+
 # Java layout (wrapper-only — no system Gradle fallback)
 JAVA_SRC        := bindings/java
 JAVA_BUILD_REL  := build
@@ -134,7 +141,7 @@ JAVA_WRAPPER_CHECK:
 # ==============================================================================
 .PHONY: help setup clean \
         build build-rust build-python build-java \
-        test rust-test py-test java-test \
+        test rust-test py-test java-test compat-test legacy-strict-test compat-bench legacy-bench-smoke \
         lint setup-hooks \
         smoke-rust-cli smoke-wheel  \
         release-rust release-wheel release-jar release \
@@ -214,7 +221,7 @@ build-java: JAVA_WRAPPER_CHECK
 # ==============================================================================
 # Tests
 # ==============================================================================
-.PHONY: test rust-test py-test java-test
+.PHONY: test rust-test py-test java-test compat-test legacy-strict-test compat-bench legacy-bench-smoke
 
 test: rust-test java-test py-test
 	@echo "✅ all unit tests passed"
@@ -228,6 +235,17 @@ py-test: build-python
 
 java-test: JAVA_WRAPPER_CHECK
 	@GRADLE_USER_HOME="$(GRADLE_USER_HOME)" "$(GRADLE)" --no-daemon --console=plain -p "$(JAVA_SRC)" test
+
+compat-test:
+	@(cd "$(COMPAT_PY_DIR)" && PYTHONPATH="$(abspath $(STRICT_COMPAT_ADAPTER_DIR)):$(abspath $(COMPAT_PY_DIR)):$${PYTHONPATH:-}" $(UV_ENV) $(UV) run --project "$(abspath $(PY_DIR))" --no-sync python -m pytest -q tests)
+
+legacy-strict-test: compat-test
+
+compat-bench:
+	@(cd "$(STRICT_COMPAT_ADAPTER_DIR)" && PYTHONPATH="$(abspath $(STRICT_COMPAT_ADAPTER_DIR)):$(abspath $(COMPAT_PY_DIR)):$${PYTHONPATH:-}" $(UV_ENV) $(UV) run --project "$(abspath $(PY_DIR))" --no-sync python "$(abspath $(STRICT_COMPAT_BENCH))")
+
+legacy-bench-smoke:
+	@(cd "$(STRICT_COMPAT_ADAPTER_DIR)" && PYTHONPATH="$(abspath $(STRICT_COMPAT_ADAPTER_DIR)):$(abspath $(COMPAT_PY_DIR)):$${PYTHONPATH:-}" $(UV_ENV) $(UV) run --project "$(abspath $(PY_DIR))" --no-sync python "$(abspath $(STRICT_COMPAT_BENCH))" --n 256 --n-arrays 16 --iterations 1 --delta 100 --workers 2)
 
 # ==============================================================================
 # Lint (autofix where possible) + docs must be warning-free
@@ -397,6 +415,8 @@ help:
 	@printf "  %-22s %s\n" "build-java"     "Build Java JAR with Gradle (clean+jar)"
 	@printf "  %-22s %s\n" "test"           "Run tests: rust + java + python"
 	@printf "  %-22s %s\n" "java-test"      "Run Java/JNI tests via Gradle"
+	@printf "  %-22s %s\n" "legacy-strict-test" "Run copied upstream Python tests against gr_tdigest via strict adapter"
+	@printf "  %-22s %s\n" "legacy-bench-smoke" "Run a small manual legacy benchmark smoke"
 	@printf "  %-22s %s\n" "lint"           "Autofix (ruff/clippy/format) + mypy + rustdoc (deny warnings)"
 	@printf "  %-22s %s\n" "clean"          "Remove ALL build artifacts (Rust/Gradle/Python)"
 	@printf "\n$(STYLE_BOLD)Releases (release profile)$(STYLE_RESET)\n"
