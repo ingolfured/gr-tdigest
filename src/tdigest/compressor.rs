@@ -115,27 +115,45 @@ where
 
     // -- 2) Slice -------------------------------------------------------------
     let policy = policy_from(result.singleton_policy(), max_size);
-    if let Some(v) = policy.fast_path(&norm.out) {
-        debug_assert!(crate::tdigest::centroids::is_sorted_strict_by_mean(&v));
-        return v;
+    let delta = result.delta();
+    if delta.is_none() {
+        if let Some(v) = policy.fast_path(&norm.out) {
+            debug_assert!(crate::tdigest::centroids::is_sorted_strict_by_mean(&v));
+            return v;
+        }
     }
     let slices = policy.slice(&norm.out);
 
     // -- 3) Merge (k-limit) ---------------------------------------------------
     let family: ScaleFamily = result.scale();
     let d: f64 = result.max_size() as f64;
-    let core = klimit_merge::<F>(slices.interior, d, family);
+    let core = if let Some(delta) = delta {
+        // delta-mode is contract-validated upstream (scale = K2Norm, policy = Off);
+        // strict Δk ≤ 1 reproduces old tdigest-rs byte-for-byte.
+        debug_assert_eq!(family, ScaleFamily::K2Norm);
+        klimit_merge::<F>(slices.interior, delta, family, 0.0)
+    } else {
+        klimit_merge::<F>(slices.interior, d, family, KLIMIT_TOL)
+    };
 
     // -- 4) Cap ---------------------------------------------------------------
     // Second k-limit cap pass if the interior exceeds its budget.
     // Fallback to equal-weight bucketization remains as a safety net in cap_core.
-    let core_capped = cap_core::<F>(core, slices.caps.core_cap, d, family);
+    let core_capped = if delta.is_some() {
+        core
+    } else {
+        cap_core::<F>(core, slices.caps.core_cap, d, family)
+    };
 
     // -- 5) Assemble ----------------------------------------------------------
     let assembled = assemble_with_edges::<F>(slices.left, core_capped, slices.right);
 
     // -- 6) Post --------------------------------------------------------------
-    let compressed = policy.post(assembled);
+    let compressed = if delta.is_some() {
+        assembled
+    } else {
+        policy.post(assembled)
+    };
 
     debug_assert!(crate::tdigest::centroids::is_sorted_strict_by_mean(
         &compressed
@@ -272,15 +290,23 @@ impl Policy {
 /// - Order and total weight are preserved.
 /// - Single-item clusters remain **atomic** only when the head was data-true atomic.
 /// - Multi-item clusters are **mixed**.
+///
+/// `tol` is added to the `Δk ≤ 1` check (pass [`KLIMIT_TOL`] for the default
+/// tolerant behaviour, `0.0` for strict equality — used by delta-mode to match
+/// the old tdigest-rs merge byte-for-byte).
 fn klimit_merge<F: FloatLike + FloatCore>(
     items: &[Centroid<F>],
     d: f64,
     family: ScaleFamily,
+    tol: f64,
 ) -> Vec<Centroid<F>> {
     if items.is_empty() {
         return Vec::new();
     }
     let total_w: f64 = items.iter().map(|c| c.weight_f64()).sum();
+    // n in the canonical Dunning K2 normalizer is the centroid count of the
+    // current merge pass; for non-K2Norm families this argument is ignored.
+    let n = items.len() as f64;
 
     // C = mass of completed clusters already emitted.
     let mut c_acc = 0.0_f64; // running capacity accumulator
@@ -291,14 +317,14 @@ fn klimit_merge<F: FloatLike + FloatCore>(
     let mut singleton_head = true;
 
     let mut q_l = c_acc / total_w;
-    let mut k_left = q_to_k(q_l, d, family);
+    let mut k_left = q_to_k(q_l, d, family, n);
 
     for c in items {
         let w_next = c.weight_f64();
         let q_r = (c_acc + acc.w_sum + w_next) / total_w;
-        let k_right = q_to_k(q_r, d, family);
+        let k_right = q_to_k(q_r, d, family, n);
 
-        if (k_right - k_left) <= 1.0 + KLIMIT_TOL {
+        if (k_right - k_left) <= 1.0 + tol {
             acc.add(c.mean_f64(), w_next);
             if cluster_len == 0 {
                 singleton_head = c.is_singleton();
@@ -317,7 +343,7 @@ fn klimit_merge<F: FloatLike + FloatCore>(
                 c_acc += last.weight_f64();
             }
             q_l = c_acc / total_w;
-            k_left = q_to_k(q_l, d, family);
+            k_left = q_to_k(q_l, d, family, n);
 
             acc.add(c.mean_f64(), w_next);
             cluster_len = 1;
@@ -376,7 +402,7 @@ fn cap_with_second_klimit<F: FloatLike + FloatCore>(
 
     for _ in 0..CAP_SEARCH_ITERS {
         let mid = 0.5 * (lo + hi);
-        let len_mid = klimit_merge(core, mid, family).len();
+        let len_mid = klimit_merge(core, mid, family, KLIMIT_TOL).len();
         if len_mid <= core_cap {
             found = true;
             best = mid;
@@ -386,14 +412,19 @@ fn cap_with_second_klimit<F: FloatLike + FloatCore>(
         }
     }
 
-    let mut out = klimit_merge(core, if found { best } else { CAP_SEARCH_LO }, family);
+    let mut out = klimit_merge(
+        core,
+        if found { best } else { CAP_SEARCH_LO },
+        family,
+        KLIMIT_TOL,
+    );
 
     // Guard against rare non-monotone/plateau effects.
     let mut guard = 0usize;
     let mut tuned = if found { best } else { CAP_SEARCH_LO };
     while out.len() > core_cap && guard < CAP_FALLBACK_ITERS {
         tuned *= 0.95;
-        out = klimit_merge(core, tuned, family);
+        out = klimit_merge(core, tuned, family, KLIMIT_TOL);
         guard += 1;
     }
 
@@ -658,7 +689,7 @@ mod tests {
             c::<Fp>(1.1, 1.0, true),
             c::<Fp>(3.0, 2.0, false),
         ];
-        let out = super::klimit_merge(&items, 10.0, ScaleFamily::K2);
+        let out = super::klimit_merge(&items, 10.0, ScaleFamily::K2, super::KLIMIT_TOL);
         assert!(!out.is_empty());
 
         let w_in: f64 = items.iter().map(|x| x.weight_f64()).sum();
@@ -673,6 +704,94 @@ mod tests {
             assert!(out[0].is_singleton(), "single-item cluster remains atomic");
             assert!(!out[1].is_singleton(), "multi-item cluster must be mixed");
         }
+    }
+
+    #[test]
+    fn delta_merge_matches_old_k2_rule_for_weighted_input() {
+        // delta-mode merges via klimit_merge with K2Norm + strict (tol=0). This
+        // must reproduce the old tdigest-rs `compute()` merge byte-for-byte:
+        // q_limit derived from the canonical Dunning K2 (paper eq 8), with
+        // n = len(items) and q = cumulative weights / total weight.
+        let items = vec![
+            c::<Fp>(0.0, 100.0, true),
+            c::<Fp>(1.0, 1.0, true),
+            c::<Fp>(2.0, 1.0, true),
+            c::<Fp>(3.0, 1.0, true),
+            c::<Fp>(4.0, 1.0, true),
+        ];
+        let delta = 20.0;
+        let out = super::klimit_merge(&items, delta, ScaleFamily::K2Norm, 0.0);
+
+        // Hand-roll the old tdigest-rs q_limit loop using the same K2Norm
+        // formula via q_to_k, so the reference computation goes through the
+        // single source of truth.
+        let total_w: f64 = items.iter().map(|x| x.weight_f64()).sum();
+        let n = items.len() as f64;
+        let q_limit_at = |q0: f64| -> f64 {
+            // q_limit = inv(k(q0) + 1). We compute it numerically by solving
+            // q_to_k(q, delta, K2Norm, n) = q_to_k(q0, ..) + 1 via bisection
+            // — accurate enough for the equality assertion below.
+            let target =
+                crate::tdigest::scale::q_to_k(q0, delta, ScaleFamily::K2Norm, n) + 1.0;
+            let mut lo = q0;
+            let mut hi = 1.0 - 1e-15;
+            for _ in 0..200 {
+                let mid = 0.5 * (lo + hi);
+                let k = crate::tdigest::scale::q_to_k(mid, delta, ScaleFamily::K2Norm, n);
+                if k < target {
+                    lo = mid;
+                } else {
+                    hi = mid;
+                }
+            }
+            0.5 * (lo + hi)
+        };
+
+        let mut count = 0usize;
+        let mut cumulative = 0.0_f64;
+        let mut sigma = items[0].weight_f64();
+        let mut q_limit = q_limit_at(0.0);
+        for c in items.iter().skip(1) {
+            let w = c.weight_f64();
+            let q = (cumulative + sigma + w) / total_w;
+            if q <= q_limit {
+                sigma += w;
+            } else {
+                count += 1;
+                cumulative += sigma;
+                q_limit = q_limit_at(cumulative / total_w);
+                sigma = w;
+            }
+        }
+        count += 1;
+
+        assert_eq!(out.len(), count);
+        let w_out: f64 = out.iter().map(|x| x.weight_f64()).sum();
+        assert!(approx(total_w, w_out, 1e-12), "weight preserved");
+    }
+
+    #[test]
+    fn delta_mode_bypasses_off_fast_path_and_runs_merge() {
+        let mut td = TDigest::<Fp>::builder()
+            .max_size(100)
+            .scale(ScaleFamily::K2Norm)
+            .singleton_policy(SingletonPolicy::Off)
+            .delta(20.0)
+            .build();
+
+        let input = vec![
+            c::<Fp>(0.0, 100.0, true),
+            c::<Fp>(1.0, 1.0, true),
+            c::<Fp>(2.0, 1.0, true),
+            c::<Fp>(3.0, 1.0, true),
+            c::<Fp>(4.0, 1.0, true),
+        ];
+        let out = super::compress_into(&mut td, 100, input);
+        assert_eq!(
+            out.len(),
+            4,
+            "legacy mode must still merge when len <= max_size"
+        );
     }
 
     // ---------- edge run length ----------

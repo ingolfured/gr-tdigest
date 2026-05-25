@@ -95,6 +95,7 @@ impl NativeDigest {
             max_size,
             scale,
             policy,
+            delta: None,
         };
         FrontendDigest::from_values(values, config, precision)
             .map(|inner| Self { inner })

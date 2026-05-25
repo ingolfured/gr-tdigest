@@ -25,6 +25,7 @@ pub struct TDigest<F: FloatLike + FloatCore> {
     min: OrderedFloat<F>,
     scale: ScaleFamily,
     policy: SingletonPolicy, // interpreted as atomic/edge policy
+    delta: Option<f64>,
 }
 
 pub type TDigestF64 = TDigest<f64>;
@@ -41,6 +42,7 @@ impl<F: FloatLike + FloatCore> Default for TDigest<F> {
             min: OrderedFloat::from(F::from_f64(f64::NAN)),
             scale: ScaleFamily::K2,
             policy: SingletonPolicy::Use,
+            delta: None,
         }
     }
 }
@@ -182,6 +184,7 @@ pub struct TDigestBuilder<F: FloatLike + FloatCore> {
     max_size: usize,
     scale: ScaleFamily,
     policy: SingletonPolicy,
+    delta: Option<f64>,
     // optional seeds
     init_centroids: Option<Vec<Centroid<F>>>,
     init_stats: Option<DigestStats>,
@@ -193,6 +196,7 @@ impl<F: FloatLike + FloatCore> Default for TDigestBuilder<F> {
             max_size: 1000,
             scale: ScaleFamily::K2,
             policy: SingletonPolicy::Use,
+            delta: None,
             init_centroids: None,
             init_stats: None,
             override_max_size: None,
@@ -224,6 +228,17 @@ impl<F: FloatLike + FloatCore> TDigestBuilder<F> {
     #[inline]
     pub fn singleton_policy(mut self, p: SingletonPolicy) -> Self {
         self.policy = p;
+        self
+    }
+
+    /// Enable legacy tdigest-rs `delta` mode.
+    #[inline]
+    pub fn delta(mut self, delta: f64) -> Self {
+        assert!(
+            delta.is_finite() && delta > 0.0,
+            "delta must be finite and > 0"
+        );
+        self.delta = Some(delta);
         self
     }
 
@@ -274,6 +289,7 @@ impl<F: FloatLike + FloatCore> TDigestBuilder<F> {
                 max: OrderedFloat::from(F::from_f64(st.data_max)),
                 scale: self.scale,
                 policy: self.policy,
+                delta: self.delta,
             }
         } else {
             TDigest {
@@ -285,6 +301,7 @@ impl<F: FloatLike + FloatCore> TDigestBuilder<F> {
                 min: OrderedFloat::from(F::from_f64(f64::NAN)),
                 scale: self.scale,
                 policy: self.policy,
+                delta: self.delta,
             }
         }
     }
@@ -378,12 +395,14 @@ impl<F: FloatLike + FloatCore> TDigest<F> {
             data_min: self.min(),
             data_max: self.max(),
         };
-        TDigest::<T>::builder()
+        let mut builder = TDigest::<T>::builder()
             .max_size(self.max_size())
             .scale(self.scale())
-            .singleton_policy(self.singleton_policy())
-            .with_centroids_and_stats(cents, stats)
-            .build()
+            .singleton_policy(self.singleton_policy());
+        if let Some(delta) = self.delta() {
+            builder = builder.delta(delta);
+        }
+        builder.with_centroids_and_stats(cents, stats).build()
     }
 
     // --- internal metadata setters (small & inlined) ---
@@ -434,6 +453,11 @@ impl<F: FloatLike + FloatCore> TDigest<F> {
     #[inline]
     pub fn singleton_policy(&self) -> SingletonPolicy {
         self.policy
+    }
+
+    #[inline]
+    pub fn delta(&self) -> Option<f64> {
+        self.delta
     }
 
     /// Ingest **unsorted** values; behavior matches [`TDigest::merge_sorted`] after sorting.
@@ -508,10 +532,14 @@ impl<F: FloatLike + FloatCore> TDigest<F> {
             data_min: <F as FloatLike>::to_f64(pairs[0].0),
             data_max: <F as FloatLike>::to_f64(pairs[pairs.len() - 1].0),
         };
-        let weighted = TDigest::<F>::builder()
+        let mut weighted_builder = TDigest::<F>::builder()
             .max_size(self.max_size)
             .scale(self.scale)
-            .singleton_policy(self.policy)
+            .singleton_policy(self.policy);
+        if let Some(delta) = self.delta {
+            weighted_builder = weighted_builder.delta(delta);
+        }
+        let weighted = weighted_builder
             .with_centroids_and_stats(cents, stats)
             .build();
 
@@ -522,7 +550,7 @@ impl<F: FloatLike + FloatCore> TDigest<F> {
     /// the same pipeline used for raw values.
     pub fn merge_digests(digests: Vec<TDigest<F>>) -> TDigest<F> {
         // Decide defaults by first non-empty digest to keep semantics stable.
-        let mut chosen: Option<(usize, ScaleFamily, SingletonPolicy)> = None;
+        let mut chosen: Option<(usize, ScaleFamily, SingletonPolicy, Option<f64>)> = None;
         let mut runs: Vec<&[Centroid<F>]> = Vec::with_capacity(digests.len());
         let mut total_count = 0.0_f64;
         let mut min = OrderedFloat::from(F::from_f64(f64::INFINITY));
@@ -532,7 +560,7 @@ impl<F: FloatLike + FloatCore> TDigest<F> {
             let n = d.count();
             if n > 0.0 && !d.centroids.is_empty() {
                 if chosen.is_none() {
-                    chosen = Some((d.max_size, d.scale, d.policy));
+                    chosen = Some((d.max_size, d.scale, d.policy, d.delta));
                 }
                 total_count += n;
                 min = std::cmp::min(min, d.min);
@@ -543,7 +571,7 @@ impl<F: FloatLike + FloatCore> TDigest<F> {
         if total_count == 0.0 {
             return TDigest::default();
         }
-        let (chosen_max_size, chosen_scale, chosen_policy) = chosen.unwrap();
+        let (chosen_max_size, chosen_scale, chosen_policy, chosen_delta) = chosen.unwrap();
 
         let mut result = TDigest::<F> {
             centroids: Vec::new(),
@@ -554,6 +582,7 @@ impl<F: FloatLike + FloatCore> TDigest<F> {
             min,
             scale: chosen_scale,
             policy: chosen_policy,
+            delta: chosen_delta,
         };
 
         // Producer: k-way merge of centroid runs (no extra coalescing beyond equal-mean heads).
@@ -698,6 +727,7 @@ impl<F: FloatLike + FloatCore> TDigest<F> {
                 min: OrderedFloat::from(min),
                 scale: ScaleFamily::K2,
                 policy: SingletonPolicy::Use,
+                delta: None,
             }
         } else {
             let sz = centroids.len();
@@ -760,6 +790,7 @@ impl<F: FloatLike + FloatCore> TDigest<F> {
             min: OrderedFloat::from(F::from_f64(f64::NAN)),
             scale: self.scale,
             policy: self.policy,
+            delta: self.delta,
         };
 
         let vmin = OrderedFloat::from(values[0]);
@@ -847,6 +878,7 @@ mod tests {
         chosen_max_size: usize,
         chosen_scale: ScaleFamily,
         chosen_policy: SingletonPolicy,
+        chosen_delta: Option<f64>,
         total_count: f64,
         min: OrderedFloat<f64>,
         max: OrderedFloat<f64>,
@@ -883,7 +915,7 @@ mod tests {
     }
 
     fn scan_non_empty_runs<'a>(digests: &'a [TDigest<f64>]) -> Option<MergeScan<'a>> {
-        let mut chosen: Option<(usize, ScaleFamily, SingletonPolicy)> = None;
+        let mut chosen: Option<(usize, ScaleFamily, SingletonPolicy, Option<f64>)> = None;
         let mut runs: Vec<&[Centroid<f64>]> = Vec::with_capacity(digests.len());
         let mut total_count = 0.0_f64;
         let mut min = OrderedFloat::from(f64::INFINITY);
@@ -893,7 +925,7 @@ mod tests {
             let n = d.count();
             if n > 0.0 && !d.centroids.is_empty() {
                 if chosen.is_none() {
-                    chosen = Some((d.max_size, d.scale, d.policy));
+                    chosen = Some((d.max_size, d.scale, d.policy, d.delta));
                 }
                 total_count += n;
                 min = std::cmp::min(min, d.min);
@@ -902,12 +934,13 @@ mod tests {
             }
         }
 
-        let (chosen_max_size, chosen_scale, chosen_policy) = chosen?;
+        let (chosen_max_size, chosen_scale, chosen_policy, chosen_delta) = chosen?;
 
         Some(MergeScan {
             chosen_max_size,
             chosen_scale,
             chosen_policy,
+            chosen_delta,
             total_count,
             min,
             max,
@@ -925,6 +958,7 @@ mod tests {
             min: scan.min,
             scale: scan.chosen_scale,
             policy: scan.chosen_policy,
+            delta: scan.chosen_delta,
         }
     }
 
@@ -1232,15 +1266,13 @@ mod tests {
     #[test]
     #[ignore = "slow proof run; prints CPU/memory/precision summary for heap merge"]
     fn heap_kway_merge_proof_cpu_memory_precision() {
-        let cases = [
-            PerfCase {
-                label: "mix-10m-k40-max1000",
-                dist: DistKind::Mixture,
-                n: 10_000_000,
-                shards: 40,
-                max_size: 1_000,
-            },
-        ];
+        let cases = [PerfCase {
+            label: "mix-10m-k40-max1000",
+            dist: DistKind::Mixture,
+            n: 10_000_000,
+            shards: 40,
+            max_size: 1_000,
+        }];
 
         // Keep these conservative because n is intentionally very large.
         let trials_per_case = 1usize;

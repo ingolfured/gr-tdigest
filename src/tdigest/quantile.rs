@@ -231,6 +231,60 @@ impl<F: FloatLike + FloatCore> TDigest<F> {
         );
         (ml + mr) * 0.5
     }
+
+    /// Approximate trimmed mean over quantile bounds `[lower, upper]`.
+    ///
+    /// Invalid bounds and empty digests return `NaN`.
+    pub fn trimmed_mean(&self, lower: f64, upper: f64) -> f64 {
+        if crate::tdigest::frontends::validate_trimmed_mean_bounds(lower, upper).is_err() {
+            return f64::NAN;
+        }
+
+        let total = self.count();
+        if total <= 0.0 || self.centroids().is_empty() {
+            return f64::NAN;
+        }
+
+        let min_w = lower * total;
+        let max_w = upper * total;
+        if max_w <= min_w {
+            return f64::NAN;
+        }
+
+        let mut cur = 0.0_f64;
+        let mut acc_sum = 0.0_f64;
+        let mut acc_w = 0.0_f64;
+
+        for c in self.centroids() {
+            let w = c.weight_f64();
+            if w <= 0.0 {
+                continue;
+            }
+            let next = cur + w;
+            if next <= min_w {
+                cur = next;
+                continue;
+            }
+            if cur >= max_w {
+                break;
+            }
+
+            let take_start = min_w.max(cur);
+            let take_end = max_w.min(next);
+            let take = (take_end - take_start).max(0.0);
+            if take > 0.0 {
+                acc_sum += c.mean_f64() * take;
+                acc_w += take;
+            }
+            cur = next;
+        }
+
+        if acc_w > 0.0 {
+            acc_sum / acc_w
+        } else {
+            f64::NAN
+        }
+    }
 }
 
 #[cfg(test)]
