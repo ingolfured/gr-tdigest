@@ -1,14 +1,6 @@
 # Upstream tdigest-rs Compatibility Snapshot
 
-Source repository: `https://github.com/ingolfured/tdigest-rs.git`
-
-Upstream remote recorded locally: `https://github.com/G-Research/tdigest-rs.git`
-
-Source path used for this snapshot:
-
-```text
-/home/ingo/git/tdigest-rs/tdigest-rs
-```
+Source repository: `https://github.com/G-Research/tdigest-rs.git`
 
 Source commit:
 
@@ -17,11 +9,12 @@ Source commit:
 ```
 
 Copied files are intentionally kept byte-for-byte identical to the source
-snapshot. Verification command:
+snapshot. To verify against a fresh checkout of the source repository at the
+commit above (set `UPSTREAM` to its path):
 
 ```bash
-diff -qr /home/ingo/git/tdigest-rs/tdigest-rs/bindings/python/tests compat/tdigest-rs-upstream/bindings/python/tests
-diff -q /home/ingo/git/tdigest-rs/tdigest-rs/bindings/python/benchmarks/run.py compat/tdigest-rs-upstream/bindings/python/benchmarks/run.py
+diff -qr "$UPSTREAM/bindings/python/tests"            bindings/python/tests
+diff -q  "$UPSTREAM/bindings/python/benchmarks/run.py" bindings/python/benchmarks/run.py
 ```
 
 ## SHA256
