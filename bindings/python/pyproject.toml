@@ -32,6 +32,7 @@ dev = [
   "pre-commit>=4.3.0",
   "maturin[patchelf,zig]>=1.9.5",
   "numpy>=2.3.3",
+  "scipy>=1.16.0",
   "mypy>=1.18.2",
 ]
 
