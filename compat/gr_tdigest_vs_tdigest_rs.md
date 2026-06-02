@@ -111,7 +111,7 @@ TDigest.from_array(np.array([1, 2, 3], dtype=np.float16))  # accepted (f64 backe
 
 ---
 
-The vendored upstream test suite under `compat/tdigest-rs-upstream/` exercises
-these differences directly; see [`compat/tdigest-rs-upstream/PROVENANCE.md`](../compat/tdigest-rs-upstream/PROVENANCE.md)
+The vendored upstream test suite under `tdigest-rs-upstream/` exercises these
+differences directly; see [`tdigest-rs-upstream/PROVENANCE.md`](tdigest-rs-upstream/PROVENANCE.md)
 for its source, and `make legacy-strict-test` to run it against the current
 extension.
