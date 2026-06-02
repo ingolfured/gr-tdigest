@@ -21,7 +21,7 @@ pub enum ScaleFamily {
     /// Matches Dunning's Java `K_2` and the paper's eq (8). Used by `delta`-mode
     /// to reproduce the old tdigest-rs merge behavior. Requires `n` (the number
     /// of centroids in the current merge pass), which must be passed by the
-    /// caller of [`q_to_k`].
+    /// caller of `q_to_k`.
     K2Norm,
     /// k3: double-log scale.
     K3,
