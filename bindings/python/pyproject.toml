@@ -33,7 +33,6 @@ dev = [
   "maturin[patchelf,zig]>=1.9.5",
   "numpy>=2.3.3",
   "scipy>=1.16.0",
-  "joblib>=1.5.0",
   "mypy>=1.18.2",
 ]
 
