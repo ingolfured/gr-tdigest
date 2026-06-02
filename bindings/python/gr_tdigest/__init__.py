@@ -39,6 +39,7 @@ class ScaleFamily(str, Enum):
     QUAD = "QUAD"
     K1 = "K1"
     K2 = "K2"
+    K2NORM = "K2NORM"
     K3 = "K3"
 
 
@@ -64,16 +65,34 @@ _UNSET = object()
 # --- helpers ------------------------------------------------------------------
 def _coerce_scale_for_class(scale: ScaleFamily | str) -> str:
     s = scale.value if isinstance(scale, ScaleFamily) else str(scale).strip().upper()
-    if s in {"QUAD", "K1", "K2", "K3"}:
+    if s in {"QUAD", "K1", "K2", "K2NORM", "K3"}:
         return s
-    raise ValueError(f"Unknown scale family: {scale!r}. Use one of: 'QUAD'|'K1'|'K2'|'K3' (case-insensitive).")
+    raise ValueError(f"Unknown scale family: {scale!r}. Use one of: 'QUAD'|'K1'|'K2'|'K2NORM'|'K3' (case-insensitive).")
 
 
 def _coerce_scale_for_plugin(scale: ScaleFamily | str) -> str:
     s = scale.value.lower() if isinstance(scale, ScaleFamily) else str(scale).strip().lower()
-    if s in {"quad", "k1", "k2", "k3"}:
+    if s in {"quad", "k1", "k2", "k2norm", "k3"}:
         return s
-    raise ValueError(f"Unknown scale family: {scale!r}. Use one of: 'quad'|'k1'|'k2'|'k3' (case-insensitive).")
+    raise ValueError(f"Unknown scale family: {scale!r}. Use one of: 'quad'|'k1'|'k2'|'k2norm'|'k3' (case-insensitive).")
+
+
+def _resolve_scale_for_mode(scale_raw: Any, is_delta: bool) -> str:
+    """Resolve the scale string honoring the delta-mode contract.
+
+    Mirrors native ``resolve_delta_mode_defaults`` (src/py.rs): when ``delta``
+    is set, scale defaults to ``K2NORM`` (canonical Dunning K2) and anything
+    else is rejected; otherwise the historical ``K2`` default applies.
+    """
+    if scale_raw is _UNSET:
+        return "K2NORM" if is_delta else "K2"
+    s = _coerce_scale_for_class(scale_raw)
+    if is_delta and s != "K2NORM":
+        raise ValueError(
+            "delta mode only supports scale='k2norm' (canonical Dunning K2); "
+            "omit scale or pass scale='k2norm' to use delta."
+        )
+    return s
 
 
 def _coerce_precision(precision: str | None) -> str:
@@ -251,7 +270,7 @@ def _from_array_cls(
     delta: Any = _UNSET,
     *,
     max_size: Any = _UNSET,
-    scale: ScaleFamily | str = "k2",
+    scale: Any = _UNSET,
     singleton_policy: SingletonPolicy | str | None = None,
     pin_per_side: Optional[int] = None,
     **kwargs: Any,
@@ -269,12 +288,10 @@ def _from_array_cls(
         raise TypeError("TDigest.from_array() missing required argument: 'data'")
 
     max_size, legacy_delta = _resolve_size_mode(max_size, delta)
-    s = _coerce_scale_for_class(scale)
+    s = _resolve_scale_for_mode(scale, legacy_delta is not None)
     m = _norm_policy(singleton_policy)
 
     if legacy_delta is not None:
-        if s != "K2":
-            raise ValueError("delta mode only supports scale='k2'.")
         if singleton_policy is not None and m != "off":
             raise ValueError("delta mode only supports singleton_policy='off'.")
         if pin_per_side is not None:
@@ -340,18 +357,16 @@ def _from_means_weights_cls(
     delta: Any = _UNSET,
     *,
     max_size: Any = _UNSET,
-    scale: ScaleFamily | str = "k2",
+    scale: Any = _UNSET,
     singleton_policy: SingletonPolicy | str | None = None,
     pin_per_side: Optional[int] = None,
     **kwargs: Any,
 ) -> _NativeTDigest:
     max_size, legacy_delta = _resolve_size_mode(max_size, delta)
-    s = _coerce_scale_for_class(scale)
+    s = _resolve_scale_for_mode(scale, legacy_delta is not None)
     m = _norm_policy(singleton_policy)
 
     if legacy_delta is not None:
-        if s != "K2":
-            raise ValueError("delta mode only supports scale='k2'.")
         if singleton_policy is not None and m != "off":
             raise ValueError("delta mode only supports singleton_policy='off'.")
         if pin_per_side is not None:

@@ -182,7 +182,7 @@ class TestPythonApiValidation:
         with pytest.raises(ValueError, match="either max_size or delta"):
             TDigest.from_array([0.0, 1.0], max_size=64, delta=20.0)
 
-        with pytest.raises(ValueError, match="scale='k2'"):
+        with pytest.raises(ValueError, match="scale='k2norm'"):
             TDigest.from_array([0.0, 1.0], delta=20.0, scale="k3")
 
         with pytest.raises(ValueError, match="singleton_policy='off'"):
