@@ -1,5 +1,7 @@
 # bindings/python/tests/test_api_python.py
 import math
+import pickle
+from copy import deepcopy
 
 import numpy as np
 import pytest
@@ -96,6 +98,26 @@ class TestPythonApiSmoke:
             rt = TDigest.from_bytes(blob)
             assert math.isfinite(rt.quantile(0.5))
 
+    def test_delta_mode_uses_legacy_k2_cluster_rule(self):
+        d = TDigest.from_means_weights(
+            [0.0, 1.0, 2.0, 3.0, 4.0],
+            [100.0, 1.0, 1.0, 1.0, 1.0],
+            delta=20.0,
+        )
+
+        assert len(d) == 4
+
+    def test_pickle_and_deepcopy_roundtrip_via_wire_bytes(self):
+        d = TDigest.from_array([0.0, 1.0, 2.0, 3.0], max_size=64, scale="k2", precision="f32")
+
+        loaded = pickle.loads(pickle.dumps(d))
+        copied = deepcopy(d)
+
+        assert loaded.inner_kind() == "f32"
+        assert copied.inner_kind() == "f32"
+        assert loaded.median() == pytest.approx(d.median(), abs=1e-9)
+        assert copied.quantile(0.5) == pytest.approx(d.quantile(0.5), abs=1e-9)
+
 
 class TestPythonApiValidation:
     @pytest.mark.parametrize("bad", [float("nan"), float("+inf"), float("-inf")])
@@ -155,3 +177,13 @@ class TestPythonApiValidation:
             d.add_weighted([1.0, 2.0], [1.0])
         with pytest.raises(ValueError):
             d.add_weighted([1.0], [0.0])
+
+    def test_delta_rejects_max_size_and_incompatible_options(self):
+        with pytest.raises(ValueError, match="either max_size or delta"):
+            TDigest.from_array([0.0, 1.0], max_size=64, delta=20.0)
+
+        with pytest.raises(ValueError, match="scale='k2norm'"):
+            TDigest.from_array([0.0, 1.0], delta=20.0, scale="k3")
+
+        with pytest.raises(ValueError, match="singleton_policy='off'"):
+            TDigest.from_array([0.0, 1.0], delta=20.0, singleton_policy=SingletonPolicy.USE)
