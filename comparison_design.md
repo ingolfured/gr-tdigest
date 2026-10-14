@@ -104,17 +104,14 @@ Key algorithmic difference in philosophy:
 - DataSketches emphasizes guaranteed-rank-error families (KLL/REQ) when guarantees are required.
 - `gr-tdigest` emphasizes t-digest tail quality + practical interoperability contracts.
 
-### 3.5 Legacy G-Research `tdigest-rs` compatibility
+### 3.5 G-Research `tdigest-rs` compatibility
 
-The shipped `tdigest_rs` Python interface uses the shared Rust core with the old
-input/default/merge policy. All 91 unchanged upstream Python cases pass on Linux.
-CI runs them as part of `make test` and against a clean installed wheel; the
-modern API's strict validation/coherence tests remain separate requirements.
-
-See [legacy compatibility](compat/gr_tdigest_vs_tdigest_rs.md) for the pinned
-source, reproduction commands, corrected defects, and serialization details.
-This establishes the tested API contract, not byte-identical output for every
-input or an accuracy guarantee beyond the tested workloads.
+`tdigest_rs.TDigest` retains the pinned original calculations and Python wrapper.
+Existing applications keep their import, API, dtype, weights, and numerical
+behavior; the modern `gr_tdigest` engine requires an explicit choice. The 91
+unchanged upstream tests and 70 exact-output cases run on Linux, including from
+an installed wheel. Source hashes protect the original numerical implementation.
+See [compatibility](compat/gr_tdigest_vs_tdigest_rs.md) for scope and provenance.
 
 ## 4. Which is best? (scenario-based)
 
