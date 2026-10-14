@@ -460,6 +460,10 @@ impl<F: FloatLike + FloatCore> TDigest<F> {
         self.delta
     }
 
+    pub(crate) fn set_delta(&mut self, delta: Option<f64>) {
+        self.delta = delta;
+    }
+
     /// Ingest **unsorted** values; behavior matches [`TDigest::merge_sorted`] after sorting.
     pub fn merge_unsorted(&self, mut unsorted_values: Vec<F>) -> TdResult<TDigest<F>> {
         ensure_no_non_finite_values(&unsorted_values)?;

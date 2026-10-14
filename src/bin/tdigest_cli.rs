@@ -691,6 +691,10 @@ fn save_digest(
     digest: &FrontendDigest,
     version: WireVersionOpt,
 ) -> Result<(), String> {
+    version
+        .into_wire()
+        .validate_delta(digest.config().delta)
+        .map_err(|e| e.to_string())?;
     let bytes = digest.to_bytes_with_version(version.into_wire());
     std::fs::write(path, bytes).map_err(|e| format!("failed to write {}: {e}", path.display()))
 }

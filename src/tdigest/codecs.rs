@@ -38,6 +38,8 @@ use polars::prelude::*;
 
 use crate::tdigest::centroids::Centroid;
 use crate::tdigest::precision::FloatLike;
+use crate::tdigest::singleton_policy::SingletonPolicy;
+use crate::tdigest::wire::{code_to_scale, scale_to_code};
 use crate::tdigest::{DigestStats, TDigest};
 
 /* --------------------- field names (public) -------------------------------- */
@@ -50,6 +52,11 @@ pub const F_MIN: &str = "min";
 pub const F_MAX: &str = "max";
 pub const F_COUNT: &str = "count";
 pub const F_MAX_SIZE: &str = "max_size";
+pub const F_ATOMIC: &str = "atomic";
+pub const F_SCALE: &str = "scale";
+pub const F_POLICY: &str = "policy";
+pub const F_PIN: &str = "pin_per_side";
+pub const F_DELTA: &str = "delta";
 
 /* --------------------- errors (public) ------------------------------------- */
 
@@ -60,6 +67,7 @@ pub enum CodecError {
         series_name: String,
     },
     MissingField(&'static str),
+    InvalidField(&'static str),
     WrongDtype {
         field: &'static str,
         found: Box<DataType>,
@@ -90,6 +98,7 @@ impl fmt::Display for CodecError {
                 write!(f, "series '{series_name}' is not a struct column")
             }
             MissingField(field) => write!(f, "missing field '{field}'"),
+            InvalidField(field) => write!(f, "invalid field '{field}'"),
             WrongDtype {
                 field,
                 found,
@@ -219,6 +228,7 @@ where
                 DataType::List(Box::new(DataType::Struct(vec![
                     Field::new(F_MEAN.into(), num.clone()),
                     Field::new(F_WEIGHT.into(), num.clone()),
+                    Field::new(F_ATOMIC.into(), DataType::Boolean),
                 ]))),
             ),
             Field::new(F_SUM.into(), DataType::Float64),
@@ -226,6 +236,10 @@ where
             Field::new(F_MAX.into(), num),
             Field::new(F_COUNT.into(), DataType::Float64),
             Field::new(F_MAX_SIZE.into(), DataType::Int64),
+            Field::new(F_SCALE.into(), DataType::Int64),
+            Field::new(F_POLICY.into(), DataType::Int64),
+            Field::new(F_PIN.into(), DataType::Int64),
+            Field::new(F_DELTA.into(), DataType::Float64),
         ])
     }
 }
@@ -250,10 +264,17 @@ where
     // Build centroid inner struct and wrap as a single-element list
     let mean_s = N::series_from_vec(F_MEAN, means);
     let weight_s = N::series_from_vec(F_WEIGHT, weights);
+    let atomic_s = Series::new(
+        F_ATOMIC.into(),
+        td.centroids()
+            .iter()
+            .map(|c| c.is_atomic())
+            .collect::<Vec<_>>(),
+    );
     let inner = StructChunked::from_series(
         "centroid".into(),
         mean_s.len(),
-        [&mean_s, &weight_s].into_iter(),
+        [&mean_s, &weight_s, &atomic_s].into_iter(),
     )?
     .into_series();
     let centroids_s = Series::new(F_CENTROIDS.into(), &[inner]);
@@ -264,12 +285,33 @@ where
     let max_s = N::series_from_vec(F_MAX, vec![N::from_f64(td.max())]);
     let count_s = Series::new(F_COUNT.into(), [td.count()]);
     let max_size_s = Series::new(F_MAX_SIZE.into(), [td.max_size() as i64]);
+    let scale_s = Series::new(F_SCALE.into(), [scale_to_code(td.scale()) as i64]);
+    let (policy, pin) = match td.singleton_policy() {
+        SingletonPolicy::Off => (0_i64, 0_i64),
+        SingletonPolicy::Use => (1, 0),
+        SingletonPolicy::UseWithProtectedEdges(k) => (2, k as i64),
+    };
+    let policy_s = Series::new(F_POLICY.into(), [policy]);
+    let pin_s = Series::new(F_PIN.into(), [pin]);
+    let delta_s = Series::new(F_DELTA.into(), [td.delta()]);
 
     // Outer struct (single row)
     StructChunked::from_series(
         name.into(),
         1,
-        [&centroids_s, &sum_s, &min_s, &max_s, &count_s, &max_size_s].into_iter(),
+        [
+            &centroids_s,
+            &sum_s,
+            &min_s,
+            &max_s,
+            &count_s,
+            &max_size_s,
+            &scale_s,
+            &policy_s,
+            &pin_s,
+            &delta_s,
+        ]
+        .into_iter(),
     )
     .map(|sc| sc.into_series())
 }
@@ -334,9 +376,39 @@ where
         let data_max = read_scalar::<N>(&max, F_MAX, i)?;
         let cents = unpack_centroids::<N, F>(centroids_list, i)?;
 
+        let mut builder = TDigest::<F>::builder().max_size(max_size);
+        // Older structs omitted configuration and kind; retain their historical defaults.
+        if s.field_by_name(F_SCALE).is_ok() {
+            let integer = |name| -> Result<i64, CodecError> {
+                let column = field(s, name)?;
+                expect_dtype(&column, DataType::Int64, name)?;
+                column.i64().unwrap().get(i).ok_or(CodecError::NullField {
+                    field: name,
+                    row: i,
+                })
+            };
+            let scale_code =
+                u8::try_from(integer(F_SCALE)?).map_err(|_| CodecError::InvalidField(F_SCALE))?;
+            let scale = code_to_scale(scale_code).map_err(|_| CodecError::InvalidField(F_SCALE))?;
+            let pin = integer(F_PIN)?;
+            let policy = match integer(F_POLICY)? {
+                0 if pin == 0 => SingletonPolicy::Off,
+                1 if pin == 0 => SingletonPolicy::Use,
+                2 if pin > 0 => SingletonPolicy::UseWithProtectedEdges(pin as usize),
+                _ => return Err(CodecError::InvalidField(F_POLICY)),
+            };
+            builder = builder.scale(scale).singleton_policy(policy);
+            let delta_s = field(s, F_DELTA)?;
+            expect_dtype(&delta_s, DataType::Float64, F_DELTA)?;
+            if let Some(delta) = delta_s.f64().unwrap().get(i) {
+                if !delta.is_finite() || delta <= 0.0 {
+                    return Err(CodecError::InvalidField(F_DELTA));
+                }
+                builder = builder.delta(delta);
+            }
+        }
         out.push(
-            TDigest::<F>::builder()
-                .max_size(max_size)
+            builder
                 .with_centroids_and_stats(
                     cents,
                     DigestStats {
@@ -385,7 +457,13 @@ fn ensure_centroid_dtype<N: PlFloat>(centroids: &Series) -> Result<(), CodecErro
             found: Box::new(centroids.dtype().clone()),
         });
     };
-    if fields.len() != 2 || fields[0].name() != F_MEAN || fields[1].name() != F_WEIGHT {
+    if !(fields.len() == 2
+        || fields.len() == 3
+            && fields[2].name() == F_ATOMIC
+            && fields[2].dtype() == &DataType::Boolean)
+        || fields[0].name() != F_MEAN
+        || fields[1].name() != F_WEIGHT
+    {
         return Err(CodecError::BadCentroidLayout {
             found: Box::new(centroids.dtype().clone()),
         });
@@ -435,6 +513,7 @@ where
         .map_err(|_| CodecError::MissingField(F_WEIGHT))?;
     let m = N::as_chunked(&m_ser, F_MEAN)?;
     let w = N::as_chunked(&w_ser, F_WEIGHT)?;
+    let atomic_ser = sc.field_by_name(F_ATOMIC).ok();
 
     let len = m.len().min(w.len());
     let mut out = Vec::with_capacity(len);
@@ -448,8 +527,18 @@ where
         // Heuristic reconstruction of kind:
         // - weight == 1 → atomic unit (flat CDF step behavior preserved)
         // - weight > 1  → mixed (cannot reliably infer “atomic pile” from wire)
-        if w_f64 == 1.0 {
-            out.push(Centroid::<F>::new_atomic_unit_f64(mean_f64));
+        let atomic = if let Some(column) = &atomic_ser {
+            expect_dtype(column, DataType::Boolean, F_ATOMIC)?;
+            column
+                .bool()
+                .unwrap()
+                .get(idx)
+                .ok_or(CodecError::NullCentroid { row, index: idx })?
+        } else {
+            w_f64 == 1.0
+        };
+        if atomic {
+            out.push(Centroid::<F>::new_atomic_f64(mean_f64, w_f64));
         } else {
             out.push(Centroid::<F>::new_mixed_f64(mean_f64, w_f64));
         }
