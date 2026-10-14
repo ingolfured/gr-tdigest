@@ -2,26 +2,28 @@
 
 The compatibility interface (`tdigest_rs`) keeps the original arithmetic. The modern engine (`gr_tdigest`) is opt-in. The useful story is measured tradeoffs: compatibility, much smaller reserved result capacity, and workload-dependent modern speed/accuracy improvements. These measurements do **not** establish a global speed or accuracy lead.
 
-## What was measured
+## Current committed evidence
 
-The [recorded run](results/2026-10-14-metadata.json) took place on 2026-10-14, 21:02–21:05 UTC: release Rust cores, Linux/WSL, Intel Core Ultra 9 288V, one pinned CPU, Rust 1.90.0, delta=300, f32 and f64. Each timing uses calibration and seven batches; full batch samples and accuracy results are in [raw JSONL](results/2026-10-14.jsonl). The original core comes from independently extracted G-Research commit `8d9cf1fe82c5c9254e5dc9593f01717e317f4333` with [verified checksums](original-source-provenance.json).
+The latest full run targets clean commit `756d221d35bd6d382cdfb8705598bb445a665997`; no source changed during the run. See [current results and limitations](RESULTS-756d221.md), [raw samples](results/2026-10-14-756d221.jsonl) and [provenance](results/2026-10-14-756d221-metadata.json). It includes the first-batch correctness fixes. The scratch scalar-CDF optimization is not included.
 
-**This is a historical intermediate snapshot**, based on `b89527187219c83768f50416fa8ac61fe3ca2f6d` plus first-wave CDF, quantile and extrema fixes. [The exact measured core patch](measured-core.patch) and per-file hashes identify it. Later overflow-safe interpolation and wire-validation fixes were **not** in this binary. Do not describe these numbers as a fresh benchmark of a later commit. The runner can produce new evidence against the current checkout.
+Release Rust cores on Linux/WSL, Intel Core Ultra 9 288V, one pinned CPU, Rust 1.90.0, delta=300, both precisions, seven batches per operation:
 
-Selected results from this one run:
-
-| Workload | Result |
+| Selected workload | Original → modern |
 |---|---|
-| Build 10M random uniform f64 values | Original 3.215 s; modern 0.808 s (~4.0× faster) |
-| Build 10M random uniform f32 values | Original 2.473 s; modern 0.529 s (~4.7× faster) |
-| Build 1K random uniform f64 values | Original 18.2 µs; modern 21.2 µs (modern slower) |
-| Build 100K sorted f32 values | Original 787 µs; modern 1,120 µs (modern slower) |
-| Merge 40 random uniform f64 shards, 100K total values | Modern sequential fold is slower; modern one-shot k-way merge is ~1.5× faster than original sequential fold, with different recompression semantics |
-| Quantile grid on 100K values from ten repeated values | Maximum sampled rank error 0.05466 original → 0 modern; 142 → 10 centroids |
-| 10M uniform f32 quantile accuracy | Maximum sampled rank error 0.002082 original → 0.0000806 modern |
-| Original-core f64 result after 10M inputs | Reserved vector capacity 120,000,000 bytes → 1,776 after `shrink_to_fit`; identical centroid values and weights |
+| Build 10M random uniform f64 values | 2.896 s → 0.634 s (~4.6× faster) |
+| Build 10M random uniform f32 values | 2.186 s → 0.427 s (~5.1× faster) |
+| Build 1K random uniform f64 values | 15.3 µs → 18.6 µs |
+| Build 100K sorted f32 values | 1121 µs → 1429 µs |
+| Merge 40 uniform f64 shards, 100K total values | Pairwise modern is slower; modern one-shot k-way is ~1.5× faster than original pairwise |
+| Maximum sampled rank error, ten repeated values | 0.05466 → 0 |
 
-Compaction is a numerically neutral operation used by the compatibility adapter; the harness measures that operation separately from the independent original core. Capacity bytes are **not RSS savings**. The modern object and centroid layout also consume more logical bytes than the compact original representation for many tiny/continuous digests. See the full [results and limitations](RESULTS.md) before selecting a default or making production claims.
+The independent original core plus numerically neutral compaction reduced 10M-input f64 reserved vector capacity from 120,000,000 to 1,776 bytes with identical centroid contents. Capacity is **not RSS savings**. Compact modern state is also larger than compact original state for many tiny/continuous digests.
+
+**Known unresolved limit:** modern f32 weight/mass accounting beyond this matrix remains open. The largest input here is 10M unit samples, below 2²⁴; these results do not prove exact mass conservation for larger or arbitrarily scaled/fractional f32 weights.
+
+## Preserved historical evidence
+
+The earlier intermediate run remains in [RESULTS.md](RESULTS.md), its [raw data](results/2026-10-14.jsonl), and [metadata](results/2026-10-14-metadata.json). It used `b89527187219c83768f50416fa8ac61fe3ca2f6d` plus the [measured core patch](measured-core.patch), before later interpolation and wire fixes. It must not be relabeled as current evidence. 14/30 cases had identical non-timing fields between the runs. The other cases show tiny modern rounding differences after overflow-safe interpolation: the largest stored quantile change is 1.1921e-7 near ±1e9; original outputs, centroid counts and capacities are unchanged. See the full comparison in the current report. Timing differences alone are not evidence of a performance change.
 
 ## Reproduce on the current checkout
 
