@@ -36,7 +36,7 @@ Out of scope for this file:
 ### 2.2 Digest and centroid model
 
 `TDigest<F>` where `F` is `f32` or `f64`:
-- Centroid means/weights are stored in `F`.
+- Centroid means are stored in `F`; centroid weights are always `f64`.
 - Digest stats `sum` and `count` are `f64`.
 - Optional `delta` selects K2Norm compression with singleton policy Off, bypassing the max-size cap.
 - Digest min/max are stored in `F` and surfaced as `f64`.
@@ -46,6 +46,24 @@ Centroid kind is explicit:
 - `Mixed`: merged/interpolated mass.
 
 `is_singleton()` is kept as compatibility naming and maps to `is_atomic()`.
+
+Mean precision must not narrow mass: at an f32 weight of 2^24, adding one sample
+could previously leave the centroid weight unchanged while the digest count
+advanced. For two equal piles, adding a value to the left could then move the
+median to the right. We retain weights in f64 throughout normalization, compression,
+merge, scaling, and precision casts. This fixes the storage loss for exact integer
+totals through 2^53; ordinary f64 rounding and aggregate overflow still require
+care for larger or extremely disparate weights. It cannot recover mass already
+lost in an older stored digest.
+
+On the tested Linux x86_64 target with Rust 1.90, a modern `Centroid<f32>` occupies
+16 bytes instead of 12; `Centroid<f64>` remains 24 bytes. The f32 digest shell
+remains 96 bytes. This costs four bytes per allocated f32 centroid (one third more
+centroid storage), and its speed/cache impact must be measured. Means and extrema
+retain their chosen precision. Public Rust `weight() -> F` remains a potentially
+lossy compatibility accessor; `weight_f64()` exposes the authoritative mass.
+Python weights remain Float64 arrays and Java weighted inputs remain double[].
+The separate original `tdigest_rs` implementation retains its uint32 weights.
 
 ## 3. How new values are merged
 
@@ -325,20 +343,31 @@ Decode behavior:
 - v2 decodes centroid kind explicitly from payload and preserves atomic-vs-mixed identity.
 - v2/v3 preserve fractional centroid weights on wire.
 - v3 checksum is verified when present.
+- v3 flag bit3 (0x08) means an f32-mean digest contains weights that require f64
+  precision. It adds no bytes: the payload already stores f64 weights. The flag
+  is checksum-covered, and older readers reject it instead of narrowing mass.
+  It is valid only with f32 mean precision. Existing representable-weight blobs
+  keep the same layout and flag bytes. Explicit v1/v2 export rejects these
+  f32-mean digests; callers may explicitly cast to f64 before older-format export.
+  New readers still accept old v1/v2 payloads and retain their encoded weights.
 - v3 flag bit2 carries an optional u64 `pin_per_side` for edge settings above 255.
   It follows the delta extension when present; otherwise it starts at byte 64.
   The fixed pin byte is 255, the edge policy is required, and header length/checksum
   cover the full extension. Older versions reject export of these settings.
 - v1 export rejects fractional/out-of-range weights; its historical kind heuristic
   can still change weighted-query behavior, so use v3 for faithful state transfer.
-  Decoders reject nonpositive or unrepresentable weights before constructing centroids.
+  Decoders reject nonpositive or nonfinite weights before constructing centroids.
 - v3 flag bit1 stores an optional positive finite delta at header bytes 64..72;
   the extension is covered by the checksum. Absent extension means max-size mode.
 - Explicit v1/v2 export cannot represent delta mode and is rejected. The existing
   infallible Rust encoder asserts this precondition; language wrappers return errors.
 - Polars struct codecs carry scale, policy, pin count, optional delta, and atomic
-  flags. Older structs still decode with their original defaults and weight-based
-  kind inference. Single-digest serialization avoids recompression.
+  flags. New structs always store centroid weights as Float64; mean/min/max
+  dtypes still identify f32 or f64 precision. Readers accept older Float32 weights
+  with Float32 means and promote those weights exactly. Older structs also retain
+  their original defaults and weight-based kind inference. Mutation/serialization
+  upgrades to the current schema without changing mean precision. Single-digest
+  serialization avoids recompression.
 
 ## 7. Frontend service role
 

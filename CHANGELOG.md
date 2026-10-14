@@ -5,6 +5,8 @@ All notable changes to this project are documented in this file.
 ## [Unreleased]
 
 ### Fixed
+- Preserve modern centroid mass in f64 even with f32 means, fixing lost repeated additions and reversed large-pile medians. Precision casts retain weight bits; Polars writes Float64 weights and still reads older Float32-weight structs. On Linux x86_64 the f32 centroid grows from 12 to 16 bytes; f64 stays 24 bytes. The original `tdigest_rs` path is unchanged.
+- Mark f32-mean TDIG v3 blobs whose weights need f64 precision with flag 0x08, making older readers reject instead of silently rounding them. Payload bytes retain the existing layout; explicit v1/v2 exports of these states require an explicit f64 cast.
 - Keep weighted CDF tails monotone and bounded, preserve true extrema during updates, and retain every sample when protected edges overlap. Apply Polars configuration before compression and preserve identity-operation state and planned schemas.
 - Reject lossy fractional v1 export and malformed decoded weights/configuration; preserve full-width edge pins in checksum-covered TDIG v3 extensions and reject unsupported old-format exports.
 - Correct weighted/fractional median interpolation and preserve mixed centroid provenance across merges.
