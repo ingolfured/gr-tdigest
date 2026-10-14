@@ -8,7 +8,7 @@ All notable changes to this project are documented in this file.
 - Correct weighted/fractional median interpolation and preserve mixed centroid provenance across merges.
 - Preserve delta in TDIG v3 and configuration/kind in Polars structs; reject lossy v1/v2 delta export and support Float32 Polars median.
 - Add modern Python and cross-surface regressions, including backward-compatible Polars struct reading.
-- Ship `tdigest_rs` over Rust legacy policy with dtype inference, NaN/infinity handling, immutable merge/update, and configuration-preserving copy/pickle.
+- Preserve `tdigest_rs.TDigest` with unchanged upstream calculations and Python wrapper (embedded with namespace-only import changes to avoid an unpublished crate dependency): original f32 arithmetic, uint32 weights, merge/update, and copy/pickle behavior. Keep the new engine opt-in via `gr_tdigest`; matching delta and approximate upstream tests alone do not ensure unchanged results.
 
 ### Changed
 - Compressor Stage 4 cap strategy now uses a second k-limit merge with binary-searched `d'` (same scale-family geometry as Stage 3) instead of always using equal-weight bucketization.
