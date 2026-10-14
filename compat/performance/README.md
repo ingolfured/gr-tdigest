@@ -4,24 +4,24 @@ The compatibility interface (`tdigest_rs`) keeps the original arithmetic. The mo
 
 ## Current committed evidence
 
-The latest full run targets clean commit `22867bd55739a96a6fab3c8c48b27406ecb32197` and includes the f64-weight and single-centroid mean fixes. No source changed during compilation or timing. See [current results and limitations](RESULTS-22867bd.md), [raw samples](results/2026-10-14-22867bd.jsonl), [provenance](results/2026-10-14-22867bd-metadata.json) and [comparison with 756d221](results/2026-10-14-22867bd-comparison.json). The scalar-CDF optimization remains scratch-only.
-
-Release Rust cores on Linux/WSL, Intel Core Ultra 9 288V, one pinned CPU, Rust 1.90.0, delta=300, both precisions, seven batches per operation:
+The latest unchanged 30-case matrix targets clean candidate `c5dec35059990b40fe6f036dc83590bf0cdf2a70`, including finite-mean bounds and subnormal-total query normalization. Source hashes were stable throughout compilation/timing. See [current results](RESULTS-c5dec35.md), [raw batches](results/2026-10-14-c5dec35.jsonl), [provenance](results/2026-10-14-c5dec35-metadata.json), and [comparison with 22867bd](results/2026-10-14-c5dec35-comparison.json). The transactional scaling and packaging-hygiene proposals are outside this measured source.
 
 | Selected workload | Original → modern |
 |---|---|
-| Build 10M random uniform f64 values | 2.840 s → 0.687 s (~4.1× faster) |
-| Build 10M random uniform f32 values | 2.186 s → 0.436 s (~5.0× faster) |
-| Build 1K random uniform f64 values | 15.7 µs → 17.9 µs |
-| Build 100K sorted f32 values | 930 µs → 1257 µs |
-| Merge 40 uniform f64 shards, 100K total values | Original sequential 329.6 µs; modern sequential 564.7 µs; modern k-way 211.9 µs |
+| Build 10M uniform F64 values | 2.878 s → 0.789 s (~3.6× faster) |
+| Build 10M uniform F32 values | 2.252 s → 0.487 s (~4.6× faster) |
+| Build 1K uniform F64 values | 15.7 µs → 18.8 µs |
+| Build 100K sorted F32 values | 598 µs → 969 µs |
+| Merge 40 F64 shards, 100K uniform values | Original sequential 325.0 µs; modern sequential 555.7 µs; modern k-way 204.7 µs |
 | Maximum sampled rank error, ten repeated values | 0.05466 → 0 |
 
-F32 centroid memory is now measured at 16 bytes versus 12 before the weight fix; F64 stays 24 bytes. At 142 centroids this adds 568 bytes (+31.6%) to the F32 logical digest size. Compact modern state is larger than compact original state for many tiny/continuous digests. Original result compaction reduced the 10M-input f64 reserved vector capacity from 120,000,000 to 1,776 bytes with identical centroids; capacity is **not RSS savings**.
+Linux/WSL, Intel Core Ultra 9 288V, one pinned CPU, Rust 1.90.0 release, delta 300, seven timed batches per operation. Results are workload-specific; same delta does not mean same memory. F32/F64 centroid sizes remain 16/24 bytes. Modern state is larger than compact original state for many tiny/continuous digests; capacity is not RSS. No global speed/accuracy lead is established.
 
-The largest matrix input is 10M unit samples, below 2²⁴. Separate regression tests cover the corrected large-pile accounting; this benchmark does not establish arbitrary exact mass conservation. Subnormal masses and overflowing totals remain separate open limits. Modern improvements are workload-dependent; small/sorted builds and repeated pairwise merging can lose.
+Against 22867bd, 0 of 30 cases changed non-timing fields; see the complete comparison rather than treating cross-run timing variation as a proven code effect. Separate [validation](../validation/c5dec35-validation.json) covers the corrected numerical boundary cases and installed wheel.
 
 ## Preserved historical evidence
+
+The prior [22867bd report](RESULTS-22867bd.md) remains intact. It predates the finite-mean and subnormal-query fixes, while retaining the same f64-weight representation. The new c5dec35 run has identical non-timing fields across all 30 cases. Large-build and p50 timing differences need a focused interleaved comparison before attributing them to code.
 
 The pre-weight-fix committed run remains in [RESULTS-756d221.md](RESULTS-756d221.md), [raw data](results/2026-10-14-756d221.jsonl) and [metadata](results/2026-10-14-756d221-metadata.json). It measured 12-byte F32 centroids and must not be presented as current performance. The new [comparison](results/2026-10-14-22867bd-comparison.json) shows that all recorded numerical fields, centroid counts and wire lengths are unchanged; only 13 F32 logical-memory fields differ. Cross-run timing medians are descriptive rather than paired evidence of a code speedup or regression.
 

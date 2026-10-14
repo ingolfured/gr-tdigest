@@ -1,0 +1,11 @@
+{
+  "source_commit": "c5dec35059990b40fe6f036dc83590bf0cdf2a70",
+  "source_tree": "962167247bd9aeee08a2f5d1f94a9ec23f786308",
+  "wheel": "/var/tmp/codex-tdigest-pr3-20261014/overnight/release-wheel-c5dec35/gr_tdigest-0.2.4-cp312-abi3-linux_x86_64.whl",
+  "sha256": "1e5e48b0789f2aa336b9d36b387b2997acfb2da9ed92bb98159dc01e04267f99",
+  "native_sha256": {
+    "gr_tdigest/_gr_tdigest.abi3.so": "44247fa34031a74180a4ab3c8c0e019b7e5304af9a19e83cf7f249ba418c448c"
+  },
+  "copied_utc": "2026-10-14T22:33:07Z",
+  "note": "Optimized Linux wheel preserved from the canonical installed-wheel compatibility gate. Test outcome is recorded separately."
+}

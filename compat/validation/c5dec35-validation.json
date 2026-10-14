@@ -1,0 +1,89 @@
+{
+  "source_commit": "c5dec35059990b40fe6f036dc83590bf0cdf2a70",
+  "environment": "ArchFresh WSL Linux x86_64; Python 3.12.12; NumPy 2.3.4; Polars 1.34.0; Rust 1.90.0; JDK 21",
+  "canonical_commands": {
+    "build": {
+      "phase": "build",
+      "command": [
+        "make",
+        "build"
+      ],
+      "exit_code": 0,
+      "elapsed_seconds": 12.551746129989624
+    },
+    "test": {
+      "phase": "test",
+      "command": [
+        "make",
+        "test"
+      ],
+      "exit_code": 0,
+      "elapsed_seconds": 28.57173776626587
+    },
+    "wheel": {
+      "phase": "wheel",
+      "command": [
+        "make",
+        "legacy-wheel-test"
+      ],
+      "exit_code": 0,
+      "elapsed_seconds": 22.654839515686035
+    },
+    "lint": {
+      "phase": "lint",
+      "command": [
+        "make",
+        "lint"
+      ],
+      "exit_code": 0,
+      "elapsed_seconds": 3.7229530811309814
+    }
+  },
+  "make_test_counts": {
+    "python_and_coherence": 294,
+    "unchanged_upstream": 91,
+    "rust_and_java": "passed; three existing Rust ignored tests remain ignored"
+  },
+  "installed_release_wheel": {
+    "source_commit": "c5dec35059990b40fe6f036dc83590bf0cdf2a70",
+    "source_tree": "962167247bd9aeee08a2f5d1f94a9ec23f786308",
+    "wheel": "/var/tmp/codex-tdigest-pr3-20261014/overnight/release-wheel-c5dec35/gr_tdigest-0.2.4-cp312-abi3-linux_x86_64.whl",
+    "sha256": "1e5e48b0789f2aa336b9d36b387b2997acfb2da9ed92bb98159dc01e04267f99",
+    "native_sha256": {
+      "gr_tdigest/_gr_tdigest.abi3.so": "44247fa34031a74180a4ab3c8c0e019b7e5304af9a19e83cf7f249ba418c448c"
+    },
+    "copied_utc": "2026-10-14T22:33:07Z",
+    "note": "Optimized Linux wheel preserved from the canonical installed-wheel compatibility gate. Test outcome is recorded separately."
+  },
+  "installed_compatibility_gate": {
+    "passed": 208,
+    "groups": {
+      "unchanged_upstream": 91,
+      "exact_numerical": 70,
+      "api": 13,
+      "optional_import": 2,
+      "published_pickle": 32
+    },
+    "warnings": "16 NumPy deprecation warnings loading genuine old pickles; no compatibility skips/xfails"
+  },
+  "additional_installed_wheel_checks": {
+    "api_python_and_polars": 40,
+    "weighted_point_digests": 800,
+    "cdf_checks": 13568,
+    "quantile_rank_checks": 19968,
+    "integer_mass_checks": 304,
+    "ordinary_failures": 0,
+    "compressed_routes": 1440,
+    "compressed_states": 3840,
+    "compressed_failures": 0,
+    "compressed_cdf_values": 180594,
+    "compressed_quantile_values": 503040
+  },
+  "limits": [
+    "Linux optimized wheel, not the full platform/manylinux matrix.",
+    "Query-only subnormal normalization cannot recover earlier compression underflow or resolve all tiny components within normal total mass.",
+    "Aggregate/product overflow and transactional invalid weight scaling remain separate work.",
+    "Original public Rust API compatibility and real package-upgrade path remain unproven."
+  ],
+  "logs": "/var/tmp/codex-tdigest-pr3-20261014/logs/numerical-boundaries-c5dec35"
+}

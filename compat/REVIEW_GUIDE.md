@@ -6,6 +6,13 @@ explicit choice for richer operations and measured performance or accuracy gains
 These are two reviewable contracts; the original interface does not silently
 switch algorithms when this stack is installed.
 
+Keeping the old calculations preserves their answers and their performance
+profile. Compatible optimizations, such as releasing spare vector capacity, are
+still possible. The modern engine changes compression and query conventions, so
+we cannot silently route old calls through it while promising both identical old
+answers and its measured speedups. Any future switch needs measured differences
+and an explicit numerical-contract decision.
+
 ## The three changes
 
 1. **Correct the modern engine and preserve its state (PR #6).** Start with the
@@ -25,6 +32,31 @@ switch algorithms when this stack is installed.
    published-package pickles, and an optimized Linux wheel installed outside the
    checkout. Keep performance measurements reproducible and tied to their actual
    source hashes.
+
+## The latest boundary fixes
+
+The historical compressed-state audit at `22867bd` found two strict-order
+failures among 3,840 checked states. A finite weighted average had rounded beyond
+its cluster's last input mean, colliding with the next centroid. Commit `1d9993f`
+bounds the finite result to its input interval; single-input clusters still keep
+their exact mean bits. The [original failing report](compressed-state-audit/README.md)
+stays intact. Its fixed-source rerun is **PASS: 1,440 routes and 3,840 states, with zero failures** at
+`c5dec35`; regression tests and an audit rerun are separate evidence.
+
+Commit `8ce82fc` also handles positive subnormal total mass: weights so small that
+halving them or multiplying them by a quantile can round to zero. CDF and quantile
+use a temporary view scaled by two exact powers of two, with total mass in
+`[1,2)`. Stored state and the original `tdigest_rs` arithmetic are untouched.
+This repairs queries of the stored centroids; it cannot recover information
+already lost during compression. Tiny components inside a normal total,
+inconsistent headers and aggregate/product overflow remain separate limits.
+
+The two fixes add **13 Rust tests and 10 parameterized Python/Polars cases**.
+They passed in the full Linux suite: **Linux make build/test/lint passed, with 294 Python/coherence cases plus 91 unchanged upstream cases and passing Rust/Java tests; the optimized installed-wheel compatibility gate passed all 208 cases**. Normal-total
+queries retain their arithmetic and allocation behavior, with an extra condition;
+the rare subnormal path allocates a copy. The fresh performance report below
+records the new source; cross-run timing changes are not a causal measurement
+of the added compression checks.
 
 ## Preserve mass independently of mean precision
 
@@ -88,9 +120,13 @@ artifact; the final stack must pass its own installed-wheel gate.
 
 ## Performance evidence
 
-The [current 30-case release comparison](performance/RESULTS-22867bd.md) measures the corrected engine at `22867bd`. On this WSL machine, ten-million-value uniform builds were about 4.1x faster for f64 and 5.0x for f32 than the independent original core. Some tiny/sorted builds and sequential merges were slower. At 142 centroids, f32 logical state grew from 1,800 to 2,368 bytes; wire lengths in the matrix were unchanged. The complete report preserves every measured tradeoff.
+The [recorded 30-case release comparison](performance/RESULTS-22867bd.md) measures the engine at `22867bd`, before the two boundary fixes above. On this WSL machine, ten-million-value uniform builds were about 4.1x faster for f64 and 5.0x for f32 than the independent original core. Some tiny/sorted builds and sequential merges were slower. At 142 centroids, f32 logical state grew from 1,800 to 2,368 bytes; wire lengths in the matrix were unchanged. The complete report preserves every measured tradeoff.
 
-The [validation record](validation/22867bd-validation.json) identifies the exact release wheel: the original compatibility gate passed 208 cases, and an additional 40 modern Python/Polars cases passed outside the checkout. The [weighted-point audit](weighted-point-audit/README.md) supplies a separate reproducible correctness check with exact rational input weights; the same installed wheel passed all 800 digests, 33,536 CDF/rank checks, and 304 integer-mass checks.
+The [historical validation record](validation/22867bd-validation.json) identifies that exact release wheel: the original compatibility gate passed 208 cases, and an additional 40 modern Python/Polars cases passed outside the checkout. The [weighted-point audit](weighted-point-audit/README.md) supplies a separate reproducible correctness check with exact rational input weights; the same installed wheel passed all 800 digests, 33,536 CDF/rank checks, and 304 integer-mass checks.
+
+Those results remain attached to `22867bd`; they are not new-source validation
+or timing. Boundary-fix performance evidence: **The [fresh 30-case run at c5dec35](performance/RESULTS-c5dec35.md) retained every recorded numerical/count/memory/wire field. On this run, 10M uniform construction was about 3.6× faster for f64 and 4.6× for f32 than the original core. Small/sorted construction and sequential merges still lose in selected cases. Modern large-build medians rose versus the previous run; a focused interleaved comparison is required to determine the cause**.
+Final release artifact and gate evidence: **[exact artifact validation](validation/c5dec35-validation.json)**.
 
 Compare optimized builds on the same machine and inputs. Separate construction,
 merge, p50/CDF queries, retained capacity, and peak memory. Match or disclose delta,
@@ -107,16 +143,11 @@ RSS. One upstream comparison on one machine cannot establish a global lead.
 
 ## Remaining release decisions
 
-- A broader [compressed-state audit](compressed-state-audit/README.md) found duplicate centroid means for adjacent
-  f64 values with weights around `1e100` at `max_size=20`. Its 1,440 routes checked
-  3,840 states and reported two strict-order failures; other sampled invariants
-  passed. This is a confirmed open modern-core defect, not a passing gate. The
-  original compatibility arithmetic is a separate implementation.
 - **Upgrade packaging is still a release gate.** The published `tdigest-rs` and current private `gr-tdigest` wheels share `tdigest_rs` files. If both are installed, the old `tdigest_rs.abi3.so` takes precedence over the new Python shim; uninstalling either can also remove shared files. The upstream replacement must use a normal same-distribution `tdigest-rs` upgrade, keep one owner per namespace, and test the actual upgrade/uninstall path. See [package ownership evidence](package-ownership/README.md).
-- Accumulation still uses f64. Extremely small subnormal masses, very disparate
-  weights, and finite weights whose totals/products overflow remain numerical
-  limits requiring explicit handling. The f32 storage fix does not establish
-  correct queries or exact mass for every finite input.
+- Accumulation still uses f64. Subnormal compression can lose mean/sum
+  information before queries; tiny components within a normal total and finite
+  weights whose totals/products overflow remain numerical limits. The query
+  fallback and f32 mass fix do not establish correct answers for every finite input.
 - Agree distribution identity, Python/NumPy/Polars support, and upgrade/uninstall
   behavior. This checkout still packages `gr-tdigest` for Python 3.12; upstream
   supported a wider Python range and owns the `tdigest_rs` namespace.

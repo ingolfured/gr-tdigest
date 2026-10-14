@@ -6,3 +6,4 @@ compat/weighted-point-audit/recorded_results/* linguist-generated=true
 compat/compressed-state-audit/recorded_public_result.json linguist-generated=true
 compat/compressed-state-audit/initial_configuration_report.json linguist-generated=true
 compat/compressed-state-audit/historical_initial_audit.py linguist-generated=true
+compat/validation/*.json linguist-generated=true
