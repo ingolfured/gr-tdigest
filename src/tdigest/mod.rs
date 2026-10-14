@@ -12,7 +12,6 @@ pub mod centroids;
 pub mod codecs;
 pub mod compressor;
 pub mod frontends;
-pub mod legacy;
 pub mod merges;
 pub mod precision;
 pub mod quantile;

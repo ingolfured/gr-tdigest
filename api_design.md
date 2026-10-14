@@ -65,11 +65,15 @@ Notes:
 
 ### 4.1.1 Shipped legacy Python interface
 
-`tdigest_rs.TDigest` is an explicit compatibility interface over the Rust core.
-It defaults to delta 300 and infers float32/float64 precision from NumPy dtype.
-Only this interface filters NaNs and retains infinity endpoint masses; modern
-training remains strict. Its `merge` and `update` return new objects and honor
-the requested delta; mixed precision raises `TypeError`. Focused regression tests cover immutable merge/update, dtype, copy/pickle, and the original dictionary state.
+`tdigest_rs.TDigest` preserves the original public API and numerical behavior,
+not merely approximate accuracy or passing upstream tolerances. It uses the
+pinned original Rust arithmetic and unmodified Python wrapper. Existing calls,
+dtype inference, uint32 weights, immutable merge/update, dictionary state, and
+copy/pickle reconstruction retain their upstream behavior, including quirks.
+Do not apply modern numerical fixes or validation to this interface. The modern
+engine is explicitly selected through `gr_tdigest`; matching delta alone does
+not make its answers identical. The original interface has no new delta
+property, cdf method, or wire-state format. Focused regression tests cover immutable merge/update, dtype, copy/pickle, and the original dictionary state.
 
 ### 4.2 Queries
 
