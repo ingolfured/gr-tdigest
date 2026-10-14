@@ -1,4 +1,4 @@
-"""Run the unchanged upstream suite using only an installed production wheel."""
+"""Run the unchanged upstream suite using an installed release Linux wheel."""
 
 from __future__ import annotations
 
@@ -47,6 +47,7 @@ def main() -> None:
             "--no-sync",
             "maturin",
             "build",
+            "--release",
             "-F",
             "python",
             "--compatibility",
@@ -91,7 +92,11 @@ def main() -> None:
         # Run exact original-output cases and API regressions from the wheel too.
         parity = temporary / "parity"
         (parity / "data").mkdir(parents=True)
-        for name in ("test_original_numerics.py", "test_legacy_compatibility.py"):
+        for name in (
+            "test_original_numerics.py",
+            "test_legacy_compatibility.py",
+            "test_optional_polars_import.py",
+        ):
             shutil.copyfile(root / "bindings/python/tests" / name, parity / name)
         shutil.copyfile(
             root / "bindings/python/tests/data/upstream_numerical_golden.json",

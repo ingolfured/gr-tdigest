@@ -20,7 +20,9 @@ The new engine is explicitly selected with `from gr_tdigest import TDigest`.
 Matching delta does not imply identical numbers between the two engines.
 For example, means `[0,10]` and weights `[90,10]` give median `1` in the original
 interface and `0` in the modern engine. Modern corrections and state handling
-also apply through Polars, Java, and the CLI; they must not change `tdigest_rs`.
+also apply through Polars, Java, and the CLI. They do not silently change the
+existing interface. See the [review guide](REVIEW_GUIDE.md) for the numerical
+change policy and the remaining release decisions.
 
 ## Validation
 
@@ -28,7 +30,7 @@ also apply through Polars, Java, and the CLI; they must not change `tdigest_rs`.
 make build
 make test                 # Full project, original 91 cases, 70 exact-output cases
 make legacy-strict-test   # Original suite and numerical source checksums
-make legacy-wheel-test    # Installed wheel: 91 upstream + 70 numerical + 13 API cases
+make legacy-wheel-test    # Installed release Linux wheel: 91 upstream + 70 numerical + 13 API + 2 import cases
 ```
 
 The original test/support files and benchmark are unchanged; see
@@ -40,7 +42,7 @@ compression settings, large integer weights, non-finite input, merge/update,
 copy/pickle/dict, centroids, quantiles, medians, and trimmed means. Finite outputs
 are checked bit-for-bit, with no relaxed tolerance. NaN payload bits are excluded.
 
-CI runs the full test suite and clean installed-wheel checks outside the source
+CI runs the full test suite and clean installed release-wheel checks outside the source
 checkout. Passing the old tolerance-based suite alone was insufficient: the
 previous shared-core adapter passed all 91 tests while changing outputs. The
 separate original calculation path addresses that incompatibility. These are
@@ -49,6 +51,9 @@ Linux x86_64 regression checks, not proof across every possible platform/input.
 This review stack does not change the distribution's existing Python 3.12 and
 NumPy/Polars dependency requirements or publish a `tdigest-rs` release. Upstream
 release packaging and supported environments still need agreement before rollout.
+Numerical-only imports no longer load Polars, but package installation metadata
+still declares it as a dependency. The wheel gate builds an optimized Linux wheel;
+it does not establish manylinux portability or validate the published release artifact.
 
 ## Benchmark scope
 
