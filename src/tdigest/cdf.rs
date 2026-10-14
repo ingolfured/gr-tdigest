@@ -77,6 +77,13 @@ impl<F: FloatLike + FloatCore> TDigest<F> {
             run += c.weight_f64();
         }
         let count_f64 = run;
+        if count_f64 > 0.0 && count_f64 < f64::MIN_POSITIVE {
+            // Half-weight arithmetic can underflow even when every stored
+            // weight is positive. Only this rare path allocates a query copy.
+            return self
+                .normalized_subnormal_mass_for_queries(count_f64)
+                .cdf(vals);
+        }
 
         let min_v = self.min();
         let max_v = self.max();
