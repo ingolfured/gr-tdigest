@@ -1,0 +1,19 @@
+{
+  "commit": "8d9cf1fe82c5c9254e5dc9593f01717e317f4333",
+  "license": "Apache-2.0",
+  "measured_bytes_sha256": {
+    "core.rs": "7df2f76a40e6b639a765b6e7338a58fa4b8c8fabb2b5e56c6c35914e4f7e604a",
+    "lib.rs": "af21a6e6ad7314b34cf627cb0932abf9949398d2051a2e82e525eca67f0f47be",
+    "scale.rs": "83fc7090ecf19a875e992ba2265529c584fe4c9ff69b21a8ad0e42bbbbc28168",
+    "traits.rs": "49780e6bc74b3cd2227c10a0b3f526a8f3f94300ddfa58be2e34421f2eeef64a"
+  },
+  "measured_source_line_endings": "CRLF",
+  "normalized_lf_sha256": {
+    "core.rs": "1753d6c48728561f77dd076c1a063ee9abe25251b1ed94a798b520173b7d3412",
+    "lib.rs": "eeb21b517557df106eb57c7d03dde1b8f26fe4b1745ee6f4b30cb604ddcaf63b",
+    "scale.rs": "034cf845a9e283d51fe076a6b22956acb21aa31738094f18ed4d6e08c3240558",
+    "traits.rs": "74324e7ec5fc5e9e8d448b88fa35c8a0525354eef10eb7fead694cf2d9754868"
+  },
+  "note": "The isolated original core preserves pinned arithmetic. Minimal Cargo manifest omits the Python workspace member, and line endings do not affect arithmetic. Runner reads these four files from this exact git commit in an independent upstream checkout and verifies normalized hashes.",
+  "repository": "https://github.com/G-Research/tdigest-rs"
+}
