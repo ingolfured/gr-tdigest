@@ -1,0 +1,79 @@
+{
+  "status": "Initial matrix contained unsupported configurations; not a numerical failure report.",
+  "initial_public": {
+    "seed": 202610140712,
+    "max_sizes": [
+      1,
+      2,
+      3,
+      10,
+      100
+    ],
+    "checks": {
+      "cases_attempted": 1440,
+      "failures_exception": 864,
+      "states": 1536,
+      "mass_checks": 3072,
+      "cdf_values": 70767,
+      "quantile_values": 201216,
+      "cases_completed": 576
+    },
+    "provenance": {
+      "script_sha256": "05fa88a1d79fe1ceedee72641966f8fe713796555256f818f9b703abb718925d",
+      "python": "3.12.12 (main, Oct 14 2025, 21:25:31) [Clang 20.1.4 ]",
+      "package": "/var/tmp/codex-tdigest-pr3-20261014/overnight/release-wheel-22867bd/modern-venv/lib/python3.12/site-packages/gr_tdigest/__init__.py",
+      "native_sha256": {
+        "/var/tmp/codex-tdigest-pr3-20261014/overnight/release-wheel-22867bd/modern-venv/lib/python3.12/site-packages/gr_tdigest/_gr_tdigest.abi3.so": "c4cc54c8aa0e841272bc91b6c34ded50a8d286dd0a9609a861b34c5f9bb6c9f4"
+      },
+      "git_head": "fae92a4aa31231e054c88e12a9c8502c629bf2bd",
+      "source_sha256": {
+        "src/tdigest/centroids.rs": "8b25d23223086bde557c5ba365e72892fc006f5c1e2be97be3f954dfd50ebe02",
+        "src/tdigest/compressor.rs": "668994b47a40660da6424d7a349611d86b58caf6ff798a48fc03760a8d9f8dff",
+        "src/tdigest/tdigest.rs": "75acb373ed8698ea7028d7e038dfcbddc047551acff33de0becf98d215c66030",
+        "src/tdigest/cdf.rs": "419d67e56c99878f4c2a4d001f3c22c27fa6ec7691c0751e64719f18fd184e1f",
+        "src/tdigest/quantile.rs": "8f3fe7ea795f9f97c2288cb016041893a2390e26fcacf339f93ada3f0818d50c"
+      }
+    }
+  },
+  "initial_representative_error": {
+    "precision": "f32",
+    "max_size": 1,
+    "route": "batch",
+    "exception_type": "ValueError",
+    "message": "max_size must be >= 10."
+  },
+  "explanation": "Capacities 1/2/3 are rejected by the public Python facade. All 576 supported routes at 10/100 passed; capacity 20 was absent from this initial matrix. The revised default uses 10/20/40/100/1000 and explicitly checks six expected small-capacity rejections.",
+  "native_followup": {
+    "checks": {
+      "cases_attempted": 864,
+      "failures_exception": 864
+    },
+    "provenance": {
+      "script_sha256": "4d32e83fc011ca04baba0dc2291669c8a656b63d7d9b9406381c66e3f63c30fe",
+      "python": "3.12.12 (main, Oct 14 2025, 21:25:31) [Clang 20.1.4 ]",
+      "package": "/var/tmp/codex-tdigest-pr3-20261014/overnight/release-wheel-22867bd/modern-venv/lib/python3.12/site-packages/gr_tdigest/__init__.py",
+      "native_sha256": {
+        "/var/tmp/codex-tdigest-pr3-20261014/overnight/release-wheel-22867bd/modern-venv/lib/python3.12/site-packages/gr_tdigest/_gr_tdigest.abi3.so": "c4cc54c8aa0e841272bc91b6c34ded50a8d286dd0a9609a861b34c5f9bb6c9f4"
+      },
+      "git_head": "fae92a4aa31231e054c88e12a9c8502c629bf2bd",
+      "source_sha256": {
+        "src/tdigest/centroids.rs": "8b25d23223086bde557c5ba365e72892fc006f5c1e2be97be3f954dfd50ebe02",
+        "src/tdigest/compressor.rs": "668994b47a40660da6424d7a349611d86b58caf6ff798a48fc03760a8d9f8dff",
+        "src/tdigest/tdigest.rs": "75acb373ed8698ea7028d7e038dfcbddc047551acff33de0becf98d215c66030",
+        "src/tdigest/cdf.rs": "419d67e56c99878f4c2a4d001f3c22c27fa6ec7691c0751e64719f18fd184e1f",
+        "src/tdigest/quantile.rs": "8f3fe7ea795f9f97c2288cb016041893a2390e26fcacf339f93ada3f0818d50c"
+      },
+      "source_ref": "22867bd55739a96a6fab3c8c48b27406ecb32197",
+      "source_ref_sha256": {
+        "src/tdigest/centroids.rs": "8b25d23223086bde557c5ba365e72892fc006f5c1e2be97be3f954dfd50ebe02",
+        "src/tdigest/compressor.rs": "668994b47a40660da6424d7a349611d86b58caf6ff798a48fc03760a8d9f8dff",
+        "src/tdigest/tdigest.rs": "75acb373ed8698ea7028d7e038dfcbddc047551acff33de0becf98d215c66030",
+        "src/tdigest/cdf.rs": "419d67e56c99878f4c2a4d001f3c22c27fa6ec7691c0751e64719f18fd184e1f",
+        "src/tdigest/quantile.rs": "8f3fe7ea795f9f97c2288cb016041893a2390e26fcacf339f93ada3f0818d50c"
+      },
+      "worktree_core_matches_source_ref": true
+    },
+    "message": "max_size must be >= 10.",
+    "interpretation": "The native frontend also rejects capacities below 10. No numerical assertion about Rust core capacities 1/2/3 follows from these validation errors."
+  }
+}
