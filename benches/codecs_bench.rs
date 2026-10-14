@@ -1,5 +1,6 @@
 // benches/codecs_bench.rs
-use gr_tdigest::tdigest::{Centroid, TDigest};
+use gr_tdigest::tdigest::centroids::Centroid;
+use gr_tdigest::tdigest::TDigest;
 use std::hint::black_box;
 use std::time::{Duration, Instant};
 
@@ -9,12 +10,12 @@ const DIGESTS: usize = 100; // number of TDigest objects (rows)
 const CENTROIDS: usize = 1000; // centroids per digest
 const MAX_SIZE: usize = 1000; // digest max capacity (k)
 
-fn synth_digest(centroids: usize, shift: f64) -> TDigest {
-    let cs: Vec<Centroid> = (0..centroids)
+fn synth_digest(centroids: usize, shift: f64) -> TDigest<f64> {
+    let cs: Vec<Centroid<f64>> = (0..centroids)
         .map(|i| {
             let mean = (i as f64 + 0.5 + shift) * 1e-3;
             let weight = 1.0 + ((i as f64 + shift) % 3.0);
-            Centroid::new(mean, weight)
+            Centroid::new_atomic_f64(mean, weight)
         })
         .collect();
 
@@ -42,25 +43,25 @@ fn codec_bench(c: &mut Criterion) {
     group.sampling_mode(SamplingMode::Flat); // keep per-sample iters steady
 
     // Pre-build some digests and their Series encodings once per benchmark group
-    let digests: Vec<TDigest> = (0..DIGESTS)
+    let digests: Vec<TDigest<f64>> = (0..DIGESTS)
         .map(|r| synth_digest(CENTROIDS, r as f64 * 0.123))
         .collect();
 
+    let compact: Vec<TDigest<f32>> = digests.iter().map(TDigest::cast_precision).collect();
+
     let ser_f64 = {
-        let mut acc = digests[0].try_to_series("td").expect("to_series f64");
+        let mut acc = digests[0].to_series("td").expect("to_series f64");
         for td in &digests[1..] {
-            let part = td.try_to_series("td").expect("to_series f64");
+            let part = td.to_series("td").expect("to_series f64");
             acc.append(&part).expect("append f64");
         }
         acc
     };
 
     let ser_f32 = {
-        let mut acc = digests[0]
-            .try_to_series_compact("td")
-            .expect("to_series f32");
-        for td in &digests[1..] {
-            let part = td.try_to_series_compact("td").expect("to_series f32");
+        let mut acc = compact[0].to_series("td").expect("to_series f32");
+        for td in &compact[1..] {
+            let part = td.to_series("td").expect("to_series f32");
             acc.append(&part).expect("append f32");
         }
         acc
@@ -77,9 +78,9 @@ fn codec_bench(c: &mut Criterion) {
         b.iter_custom(|iters| {
             let start = Instant::now();
             for _ in 0..iters {
-                let mut acc = digests[0].try_to_series("td").unwrap();
+                let mut acc = digests[0].to_series("td").unwrap();
                 for td in &digests[1..] {
-                    let part = td.try_to_series("td").unwrap();
+                    let part = td.to_series("td").unwrap();
                     acc.append(&part).unwrap();
                 }
                 black_box(acc.len());
@@ -95,9 +96,9 @@ fn codec_bench(c: &mut Criterion) {
         b.iter_custom(|iters| {
             let start = Instant::now();
             for _ in 0..iters {
-                let mut acc = digests[0].try_to_series_compact("td").unwrap();
-                for td in &digests[1..] {
-                    let part = td.try_to_series_compact("td").unwrap();
+                let mut acc = compact[0].to_series("td").unwrap();
+                for td in &compact[1..] {
+                    let part = td.to_series("td").unwrap();
                     acc.append(&part).unwrap();
                 }
                 black_box(acc.len());
@@ -109,12 +110,12 @@ fn codec_bench(c: &mut Criterion) {
         });
     });
 
-    // ---------------- READ: Series -> Vec<TDigest> ----------------
+    // ---------------- READ: Series -> Vec<TDigest<f64>> ----------------
     group.bench_function("read_f64", |b| {
         b.iter_custom(|iters| {
             let start = Instant::now();
             for _ in 0..iters {
-                let v = TDigest::try_from_series(black_box(&ser_f64)).unwrap();
+                let v = TDigest::<f64>::from_series(black_box(&ser_f64)).unwrap();
                 black_box(v.len());
             }
             let dur = start.elapsed();
@@ -128,7 +129,7 @@ fn codec_bench(c: &mut Criterion) {
         b.iter_custom(|iters| {
             let start = Instant::now();
             for _ in 0..iters {
-                let v = TDigest::try_from_series_compact(black_box(&ser_f32)).unwrap();
+                let v = TDigest::<f32>::from_series(black_box(&ser_f32)).unwrap();
                 black_box(v.len());
             }
             let dur = start.elapsed();
