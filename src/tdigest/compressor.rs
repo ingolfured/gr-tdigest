@@ -2,7 +2,7 @@
 //!
 //! ### Pipeline (referenced by numbers throughout)
 //! 1. **Normalize**: validate non-decreasing means; coalesce adjacent equal-means into a single
-//!    **atomic** centroid at that mean (weight adds up); compute (∑w, ∑w·mean, min, max).
+//!    centroid preserving mixed provenance (weight adds up); compute (∑w, ∑w·mean, min, max).
 //! 2. **Slice**: partition `(left edges, interior, right edges)` and compute interior capacity
 //!    from the active [`SingletonPolicy`].
 //! 3. **Merge (k-limit)**: greedily merge interior under Δk ≤ 1 for the selected [`ScaleFamily`].
@@ -38,20 +38,51 @@ const CAP_SEARCH_LO: f64 = 1e-6;
 struct WeightedStats {
     w_sum: f64,
     mw_sum: f64,
+    first_mean: f64,
+    last_mean: f64,
+    first_atomic: bool,
+    items: usize,
 }
 
 impl WeightedStats {
     #[inline]
-    fn add(&mut self, mean_f64: f64, weight_f64: f64) {
-        self.w_sum += weight_f64;
-        self.mw_sum += weight_f64 * mean_f64;
+    fn add<F: FloatLike + FloatCore>(&mut self, centroid: &Centroid<F>) {
+        if self.items == 0 {
+            self.first_mean = centroid.mean_f64();
+            self.first_atomic = centroid.is_atomic();
+        }
+        self.last_mean = centroid.mean_f64();
+        self.items += 1;
+        self.w_sum += centroid.weight_f64();
+        self.mw_sum += centroid.weight_f64() * centroid.mean_f64();
     }
     #[inline]
     fn mean(&self) -> f64 {
-        if self.w_sum > 0.0 {
-            self.mw_sum / self.w_sum
+        if self.items == 1 {
+            // A pass-through centroid has not been averaged. Recomputing m*w/w
+            // can move its mean by an ulp, changing point-mass CDFs and making
+            // later merges produce duplicate or out-of-order means.
+            self.first_mean
+        } else if self.w_sum > 0.0 {
+            let mean = self.mw_sum / self.w_sum;
+            // Weighted averaging can round beyond both input means by an ulp.
+            // Disjoint sorted clusters must retain disjoint mean intervals.
+            // Do not hide aggregate/weighted-sum overflow behind this bound.
+            if self.w_sum.is_finite() && self.mw_sum.is_finite() && mean.is_finite() {
+                mean.clamp(self.first_mean, self.last_mean)
+            } else {
+                mean
+            }
         } else {
             0.0
+        }
+    }
+    #[inline]
+    fn centroid<F: FloatLike + FloatCore>(&self) -> Centroid<F> {
+        if self.items == 1 && self.first_atomic {
+            Centroid::<F>::new_atomic_f64(self.mean(), self.w_sum)
+        } else {
+            Centroid::<F>::new_mixed_f64(self.mean(), self.w_sum)
         }
     }
     #[inline]
@@ -62,24 +93,7 @@ impl WeightedStats {
     fn clear(&mut self) {
         self.w_sum = 0.0;
         self.mw_sum = 0.0;
-    }
-}
-
-/// Build a centroid from an accumulated cluster (used in **3**).
-///
-/// - Single-item clusters remain **atomic** only if the head was data-true atomic.
-/// - Multi-item clusters are emitted as **mixed**.
-#[inline]
-fn build_centroid<F: FloatLike + FloatCore>(
-    mean_f64: f64,
-    weight_f64: f64,
-    singleton_head: bool,
-    cluster_len: usize,
-) -> Centroid<F> {
-    if singleton_head && cluster_len == 1 {
-        Centroid::<F>::new_singleton_f64(mean_f64, weight_f64)
-    } else {
-        Centroid::<F>::new_mixed_f64(mean_f64, weight_f64)
+        self.items = 0;
     }
 }
 
@@ -107,11 +121,13 @@ where
         return norm.out;
     }
 
-    // Update digest-level metadata derived from normalized stream.
+    // Centroid mass and weighted sums can be recomputed, but centroid means
+    // do not retain the true extrema of mixed clusters. Keep the data bounds
+    // carried by the add/merge result shell; use the stream for an unset bound.
     result.set_count(norm.total_w);
     result.set_sum(norm.total_mw);
-    result.set_min(norm.min);
-    result.set_max(norm.max);
+    result.set_min(result.min().min(norm.min));
+    result.set_max(result.max().max(norm.max));
 
     // -- 2) Slice -------------------------------------------------------------
     let policy = policy_from(result.singleton_policy(), max_size);
@@ -129,7 +145,7 @@ where
     let d: f64 = result.max_size() as f64;
     let core = if let Some(delta) = delta {
         // delta-mode is contract-validated upstream (scale = K2Norm, policy = Off);
-        // strict Δk ≤ 1 reproduces old tdigest-rs byte-for-byte.
+        // Use the strict delta-mode k-limit; this is not a byte-identity guarantee.
         debug_assert_eq!(family, ScaleFamily::K2Norm);
         klimit_merge::<F>(slices.interior, delta, family, 0.0)
     } else {
@@ -192,7 +208,7 @@ impl Policy {
                     return Some(if out.len() == 1 {
                         out.to_vec()
                     } else {
-                        vec![weighted_collapse_mixed(out)]
+                        vec![weighted_collapse(out)]
                     });
                 }
                 if max == 2 {
@@ -239,19 +255,13 @@ impl Policy {
                 let r_prot = edge_run_len(out, k, false);
 
                 let left_end = l_prot.min(n);
-                let right_start = n.saturating_sub(r_prot);
+                // Protected ranges may touch or overlap on small digests. Keep
+                // their union exactly once instead of discarding the right tail.
+                let right_start = n.saturating_sub(r_prot).max(left_end);
 
                 let left = &out[..left_end];
-                let right = if right_start > left_end {
-                    &out[right_start..]
-                } else {
-                    &[]
-                };
-                let interior = if right_start > left_end {
-                    &out[left_end..right_start]
-                } else {
-                    &[]
-                };
+                let right = &out[right_start..];
+                let interior = &out[left_end..right_start];
 
                 EdgeSlices {
                     left,
@@ -292,8 +302,7 @@ impl Policy {
 /// - Multi-item clusters are **mixed**.
 ///
 /// `tol` is added to the `Δk ≤ 1` check (pass [`KLIMIT_TOL`] for the default
-/// tolerant behaviour, `0.0` for strict equality — used by delta-mode to match
-/// the old tdigest-rs merge byte-for-byte).
+/// tolerant behaviour, `0.0` for the strict delta-mode bound).
 fn klimit_merge<F: FloatLike + FloatCore>(
     items: &[Centroid<F>],
     d: f64,
@@ -313,8 +322,6 @@ fn klimit_merge<F: FloatLike + FloatCore>(
 
     let mut clusters: Vec<Centroid<F>> = Vec::with_capacity(items.len());
     let mut acc = WeightedStats::default();
-    let mut cluster_len: usize = 0;
-    let mut singleton_head = true;
 
     let mut q_l = c_acc / total_w;
     let mut k_left = q_to_k(q_l, d, family, n);
@@ -325,37 +332,19 @@ fn klimit_merge<F: FloatLike + FloatCore>(
         let k_right = q_to_k(q_r, d, family, n);
 
         if (k_right - k_left) <= 1.0 + tol {
-            acc.add(c.mean_f64(), w_next);
-            if cluster_len == 0 {
-                singleton_head = c.is_singleton();
-            } else {
-                singleton_head = false;
-            }
-            cluster_len += 1;
+            acc.add(c);
         } else {
-            flush_cluster::<F>(
-                &mut clusters,
-                &mut acc,
-                &mut cluster_len,
-                &mut singleton_head,
-            );
+            flush_cluster::<F>(&mut clusters, &mut acc);
             if let Some(last) = clusters.last() {
                 c_acc += last.weight_f64();
             }
             q_l = c_acc / total_w;
             k_left = q_to_k(q_l, d, family, n);
 
-            acc.add(c.mean_f64(), w_next);
-            cluster_len = 1;
-            singleton_head = c.is_singleton();
+            acc.add(c);
         }
     }
-    flush_cluster::<F>(
-        &mut clusters,
-        &mut acc,
-        &mut cluster_len,
-        &mut singleton_head,
-    );
+    flush_cluster::<F>(&mut clusters, &mut acc);
 
     clusters
 }
@@ -438,7 +427,7 @@ fn cap_with_second_klimit<F: FloatLike + FloatCore>(
 /// **(4) Cap** — order-preserving equal-weight bucketization into `buckets` groups.
 ///
 /// - Emits up to `buckets` outputs; a tiny trailing remainder may be skipped (see [`cap_core`]).
-/// - Outputs are **mixed** centroids.
+/// - Multi-item buckets are **mixed**; a one-item bucket retains its input kind.
 fn bucketize_equal_weight<F: FloatLike + FloatCore>(
     cs: &[Centroid<F>],
     buckets: usize,
@@ -448,16 +437,12 @@ fn bucketize_equal_weight<F: FloatLike + FloatCore>(
         return Vec::new();
     }
     if buckets == 1 {
-        return vec![weighted_collapse_mixed(cs)];
+        return vec![weighted_collapse(cs)];
     }
 
     let total_w: f64 = cs.iter().map(|c| c.weight_f64()).sum();
     if total_w <= 0.0 {
-        return cs
-            .iter()
-            .take(buckets)
-            .map(|c| Centroid::<F>::new_mixed_f64(c.mean_f64(), c.weight_f64()))
-            .collect();
+        return cs.iter().take(buckets).copied().collect();
     }
 
     let target = total_w / buckets as f64;
@@ -465,9 +450,9 @@ fn bucketize_equal_weight<F: FloatLike + FloatCore>(
     let mut acc = WeightedStats::default();
 
     for c in cs {
-        acc.add(c.mean_f64(), c.weight_f64());
+        acc.add(c);
         if acc.w_sum >= target && acc.w_sum > 0.0 {
-            out.push(Centroid::<F>::new_mixed_f64(acc.mean(), acc.w_sum));
+            out.push(acc.centroid::<F>());
             acc.clear();
             if out.len() == buckets {
                 break;
@@ -475,7 +460,7 @@ fn bucketize_equal_weight<F: FloatLike + FloatCore>(
         }
     }
     if !acc.is_empty() && out.len() < buckets {
-        out.push(Centroid::<F>::new_mixed_f64(acc.mean(), acc.w_sum));
+        out.push(acc.centroid::<F>());
     }
     out
 }
@@ -546,34 +531,109 @@ fn edge_run_len<F: FloatLike + FloatCore>(cs: &[Centroid<F>], k: usize, from_lef
 fn flush_cluster<F: FloatLike + FloatCore>(
     clusters: &mut Vec<Centroid<F>>,
     acc: &mut WeightedStats,
-    cluster_len: &mut usize,
-    singleton_head: &mut bool,
 ) {
     if acc.is_empty() {
         return;
     }
-    let mean = acc.mean();
-    let out = build_centroid::<F>(mean, acc.w_sum, *singleton_head, *cluster_len);
-    clusters.push(out);
-
+    clusters.push(acc.centroid::<F>());
     acc.clear();
-    *cluster_len = 0;
-    *singleton_head = true;
 }
 
-/// Collapse a slice into a single **mixed** centroid (helper for **4**).
-fn weighted_collapse_mixed<F: FloatLike + FloatCore>(slice: &[Centroid<F>]) -> Centroid<F> {
+/// Collapse multiple centroids into one mixed cluster; preserve a lone input.
+fn weighted_collapse<F: FloatLike + FloatCore>(slice: &[Centroid<F>]) -> Centroid<F> {
     let mut acc = WeightedStats::default();
     for c in slice {
-        acc.add(c.mean_f64(), c.weight_f64());
+        acc.add(c);
     }
-    Centroid::<F>::new_mixed_f64(acc.mean(), acc.w_sum)
+    acc.centroid::<F>()
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
     use crate::tdigest::{singleton_policy::SingletonPolicy, ScaleFamily, TDigest};
+
+    #[test]
+    fn finite_cluster_average_stays_inside_its_input_mean_interval() {
+        let left = 1.0000000000000009_f64;
+        let right = 1.000000000000001_f64;
+        let weights = [2e100, 3.0000000000000002e100];
+        let raw_mean = (left * weights[0] + right * weights[1]) / (weights[0] + weights[1]);
+        assert!(
+            raw_mean > right,
+            "fixture must exercise averaging overshoot"
+        );
+        for sign in [1.0, -1.0] {
+            let mut inputs = [
+                Centroid::<f64>::new_atomic_f64(left * sign, weights[0]),
+                Centroid::<f64>::new_atomic_f64(right * sign, weights[1]),
+            ];
+            inputs.sort_by(|a, b| f64::total_cmp(&a.mean_f64(), &b.mean_f64()));
+            let mut stats = WeightedStats::default();
+            for centroid in &inputs {
+                stats.add(centroid);
+            }
+            assert!(stats.mean() >= inputs[0].mean_f64());
+            assert!(stats.mean() <= inputs[1].mean_f64());
+            assert_eq!(
+                stats.centroid::<f64>().weight_f64(),
+                weights.iter().sum::<f64>()
+            );
+            assert!(!stats.centroid::<f64>().is_atomic());
+        }
+    }
+
+    #[test]
+    fn cluster_interval_bound_does_not_hide_nonfinite_accumulators() {
+        for (mean, weight) in [(2.0, 1e308), (0.0, 1e308)] {
+            let mut stats = WeightedStats::default();
+            for _ in 0..2 {
+                stats.add(&Centroid::<f64>::new_atomic_f64(mean, weight));
+            }
+            assert!(!stats.w_sum.is_finite());
+            assert_eq!(stats.mean().is_nan(), (stats.mw_sum / stats.w_sum).is_nan());
+            if !stats.mean().is_nan() {
+                assert_eq!(stats.mean(), stats.mw_sum / stats.w_sum);
+            }
+        }
+        let mut weighted_sum_overflow = WeightedStats::default();
+        for _ in 0..2 {
+            weighted_sum_overflow.add(&Centroid::<f64>::new_atomic_f64(1e308, 2.0));
+        }
+        assert!(weighted_sum_overflow.w_sum.is_finite());
+        assert!(weighted_sum_overflow.mean().is_infinite());
+    }
+
+    #[test]
+    fn all_compressor_paths_preserve_single_input_mean_bits_and_kind() {
+        for centroid in [
+            Centroid::<f64>::new_atomic_f64(-3.0, 0.1),
+            Centroid::<f64>::new_mixed_f64(-3.0, 0.1),
+            Centroid::<f64>::new_atomic_f64(-0.0, 0.1),
+            Centroid::<f64>::new_mixed_f64(-0.0, 0.1),
+        ] {
+            let input = [centroid];
+            let outputs = [
+                klimit_merge(&input, 1000.0, ScaleFamily::K2, KLIMIT_TOL),
+                bucketize_equal_weight(&input, 1),
+                bucketize_equal_weight(&input, 2),
+                vec![weighted_collapse(&input)],
+                cap_core(input.to_vec(), 1, 1000.0, ScaleFamily::K2),
+            ];
+            for output in outputs {
+                assert_eq!(output.len(), 1);
+                assert_eq!(
+                    output[0].mean_f64().to_bits(),
+                    centroid.mean_f64().to_bits()
+                );
+                assert_eq!(
+                    output[0].weight_f64().to_bits(),
+                    centroid.weight_f64().to_bits()
+                );
+                assert_eq!(output[0].kind(), centroid.kind());
+            }
+        }
+    }
 
     // ---- tiny helpers ----
     fn c<F: FloatLike + FloatCore>(m: f64, w: f64, singleton: bool) -> Centroid<F> {
@@ -592,7 +652,7 @@ mod tests {
     // ---------- streaming/coalescing pass ----------
 
     #[test]
-    fn coalesces_equal_means_into_atomic_centroid() {
+    fn coalescing_equal_means_preserves_mixed_provenance() {
         let mut td = TDigest::<Fp>::builder()
             .max_size(100)
             .scale(ScaleFamily::K2)
@@ -607,7 +667,10 @@ mod tests {
 
         let out = super::compress_into(&mut td, 100, input);
         assert_eq!(out.len(), 2);
-        assert!(out[0].is_singleton(), "equal-mean run collapses to atomic");
+        assert!(
+            !out[0].is_singleton(),
+            "a mixed centroid cannot become an exact point mass"
+        );
         assert!(approx(out[0].mean_f64(), 1.0, 1e-12));
         assert!(approx(out[0].weight_f64(), 3.5, 1e-12));
         assert!(out[1].is_singleton());
@@ -731,8 +794,7 @@ mod tests {
             // q_limit = inv(k(q0) + 1). We compute it numerically by solving
             // q_to_k(q, delta, K2Norm, n) = q_to_k(q0, ..) + 1 via bisection
             // — accurate enough for the equality assertion below.
-            let target =
-                crate::tdigest::scale::q_to_k(q0, delta, ScaleFamily::K2Norm, n) + 1.0;
+            let target = crate::tdigest::scale::q_to_k(q0, delta, ScaleFamily::K2Norm, n) + 1.0;
             let mut lo = q0;
             let mut hi = 1.0 - 1e-15;
             for _ in 0..200 {

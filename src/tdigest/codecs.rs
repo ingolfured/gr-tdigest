@@ -1,9 +1,9 @@
 //! Polars ↔ TDigest codec — strict, DRY, fully generic.
 //!
 //! # Design
-//! - Writer mirrors the digest’s in-memory precision: `F = f32` → f32 on the wire; `F = f64` → f64 on the wire.
-//! - Reader is strict: the wire dtype must match `F`’s mapped wire dtype (no lossy auto-cast).
-//! - `sum`/`count` are always `f64` on the wire for numerical stability.
+//! - Means and extrema follow `F`; centroid weights, `sum`, and `count` are always `f64`.
+//! - Reader requires the mean/extrema dtype to match `F` (no lossy auto-cast).
+//! - Old f32-weight structs remain readable: their weights promote exactly to f64.
 //!
 //! # Public API on `TDigest<F>`
 //! - `td.to_series(name)           -> polars::prelude::Series`
@@ -38,6 +38,8 @@ use polars::prelude::*;
 
 use crate::tdigest::centroids::Centroid;
 use crate::tdigest::precision::FloatLike;
+use crate::tdigest::singleton_policy::SingletonPolicy;
+use crate::tdigest::wire::{code_to_scale, scale_to_code};
 use crate::tdigest::{DigestStats, TDigest};
 
 /* --------------------- field names (public) -------------------------------- */
@@ -50,6 +52,11 @@ pub const F_MIN: &str = "min";
 pub const F_MAX: &str = "max";
 pub const F_COUNT: &str = "count";
 pub const F_MAX_SIZE: &str = "max_size";
+pub const F_ATOMIC: &str = "atomic";
+pub const F_SCALE: &str = "scale";
+pub const F_POLICY: &str = "policy";
+pub const F_PIN: &str = "pin_per_side";
+pub const F_DELTA: &str = "delta";
 
 /* --------------------- errors (public) ------------------------------------- */
 
@@ -60,6 +67,7 @@ pub enum CodecError {
         series_name: String,
     },
     MissingField(&'static str),
+    InvalidField(&'static str),
     WrongDtype {
         field: &'static str,
         found: Box<DataType>,
@@ -68,7 +76,7 @@ pub enum CodecError {
     BadCentroidLayout {
         found: Box<DataType>,
     },
-    MixedCentroidDtypes, // mean/weight not both f32 or both f64
+    MixedCentroidDtypes, // unsupported mean/weight pair
     WirePrecisionMismatch {
         expected: DataType,
     }, // incoming wire doesn't match F’s wire dtype
@@ -90,6 +98,7 @@ impl fmt::Display for CodecError {
                 write!(f, "series '{series_name}' is not a struct column")
             }
             MissingField(field) => write!(f, "missing field '{field}'"),
+            InvalidField(field) => write!(f, "invalid field '{field}'"),
             WrongDtype {
                 field,
                 found,
@@ -103,11 +112,11 @@ impl fmt::Display for CodecError {
                 "centroids must be List<Struct{{mean,weight}}>, found {found:?}"
             ),
             MixedCentroidDtypes => {
-                write!(f, "centroid mean/weight must both be f32 or both be f64")
+                write!(f, "centroid means must be f32/f64 with f64 weights (old f32/f32 is also accepted)")
             }
             WirePrecisionMismatch { expected } => write!(
                 f,
-                "wire precision mismatch (expected centroids/min/max as {expected:?})"
+                "wire precision mismatch (expected means/min/max as {expected:?})"
             ),
             NullField { field, row } => write!(f, "null in scalar field '{field}' at row {row}"),
             NullCentroid { row, index } => {
@@ -200,7 +209,7 @@ impl<F> TDigest<F>
 where
     F: FloatLike + FloatCore + WireOf,
 {
-    /// Encode; wire precision (centroids/min/max) follows `F` (f32→f32, f64→f64).
+    /// Encode; means/min/max follow `F`, while weights always retain f64 precision.
     pub fn to_series(&self, name: &str) -> PolarsResult<Series> {
         tdigest_to_series::<F, <F as WireOf>::Pl>(self, name)
     }
@@ -218,7 +227,8 @@ where
                 F_CENTROIDS.into(),
                 DataType::List(Box::new(DataType::Struct(vec![
                     Field::new(F_MEAN.into(), num.clone()),
-                    Field::new(F_WEIGHT.into(), num.clone()),
+                    Field::new(F_WEIGHT.into(), DataType::Float64),
+                    Field::new(F_ATOMIC.into(), DataType::Boolean),
                 ]))),
             ),
             Field::new(F_SUM.into(), DataType::Float64),
@@ -226,6 +236,10 @@ where
             Field::new(F_MAX.into(), num),
             Field::new(F_COUNT.into(), DataType::Float64),
             Field::new(F_MAX_SIZE.into(), DataType::Int64),
+            Field::new(F_SCALE.into(), DataType::Int64),
+            Field::new(F_POLICY.into(), DataType::Int64),
+            Field::new(F_PIN.into(), DataType::Int64),
+            Field::new(F_DELTA.into(), DataType::Float64),
         ])
     }
 }
@@ -244,16 +258,21 @@ where
     // Cast into wire-native
     let means: Vec<<N as PolarsNumericType>::Native> =
         means_f64.iter().copied().map(N::from_f64).collect();
-    let weights: Vec<<N as PolarsNumericType>::Native> =
-        wgts_f64.iter().copied().map(N::from_f64).collect();
 
     // Build centroid inner struct and wrap as a single-element list
     let mean_s = N::series_from_vec(F_MEAN, means);
-    let weight_s = N::series_from_vec(F_WEIGHT, weights);
+    let weight_s = Series::new(F_WEIGHT.into(), wgts_f64);
+    let atomic_s = Series::new(
+        F_ATOMIC.into(),
+        td.centroids()
+            .iter()
+            .map(|c| c.is_atomic())
+            .collect::<Vec<_>>(),
+    );
     let inner = StructChunked::from_series(
         "centroid".into(),
         mean_s.len(),
-        [&mean_s, &weight_s].into_iter(),
+        [&mean_s, &weight_s, &atomic_s].into_iter(),
     )?
     .into_series();
     let centroids_s = Series::new(F_CENTROIDS.into(), &[inner]);
@@ -264,12 +283,33 @@ where
     let max_s = N::series_from_vec(F_MAX, vec![N::from_f64(td.max())]);
     let count_s = Series::new(F_COUNT.into(), [td.count()]);
     let max_size_s = Series::new(F_MAX_SIZE.into(), [td.max_size() as i64]);
+    let scale_s = Series::new(F_SCALE.into(), [scale_to_code(td.scale()) as i64]);
+    let (policy, pin) = match td.singleton_policy() {
+        SingletonPolicy::Off => (0_i64, 0_i64),
+        SingletonPolicy::Use => (1, 0),
+        SingletonPolicy::UseWithProtectedEdges(k) => (2, k as i64),
+    };
+    let policy_s = Series::new(F_POLICY.into(), [policy]);
+    let pin_s = Series::new(F_PIN.into(), [pin]);
+    let delta_s = Series::new(F_DELTA.into(), [td.delta()]);
 
     // Outer struct (single row)
     StructChunked::from_series(
         name.into(),
         1,
-        [&centroids_s, &sum_s, &min_s, &max_s, &count_s, &max_size_s].into_iter(),
+        [
+            &centroids_s,
+            &sum_s,
+            &min_s,
+            &max_s,
+            &count_s,
+            &max_size_s,
+            &scale_s,
+            &policy_s,
+            &pin_s,
+            &delta_s,
+        ]
+        .into_iter(),
     )
     .map(|sc| sc.into_series())
 }
@@ -334,9 +374,39 @@ where
         let data_max = read_scalar::<N>(&max, F_MAX, i)?;
         let cents = unpack_centroids::<N, F>(centroids_list, i)?;
 
+        let mut builder = TDigest::<F>::builder().max_size(max_size);
+        // Older structs omitted configuration and kind; retain their historical defaults.
+        if s.field_by_name(F_SCALE).is_ok() {
+            let integer = |name| -> Result<i64, CodecError> {
+                let column = field(s, name)?;
+                expect_dtype(&column, DataType::Int64, name)?;
+                column.i64().unwrap().get(i).ok_or(CodecError::NullField {
+                    field: name,
+                    row: i,
+                })
+            };
+            let scale_code =
+                u8::try_from(integer(F_SCALE)?).map_err(|_| CodecError::InvalidField(F_SCALE))?;
+            let scale = code_to_scale(scale_code).map_err(|_| CodecError::InvalidField(F_SCALE))?;
+            let pin = integer(F_PIN)?;
+            let policy = match integer(F_POLICY)? {
+                0 if pin == 0 => SingletonPolicy::Off,
+                1 if pin == 0 => SingletonPolicy::Use,
+                2 if pin > 0 => SingletonPolicy::UseWithProtectedEdges(pin as usize),
+                _ => return Err(CodecError::InvalidField(F_POLICY)),
+            };
+            builder = builder.scale(scale).singleton_policy(policy);
+            let delta_s = field(s, F_DELTA)?;
+            expect_dtype(&delta_s, DataType::Float64, F_DELTA)?;
+            if let Some(delta) = delta_s.f64().unwrap().get(i) {
+                if !delta.is_finite() || delta <= 0.0 {
+                    return Err(CodecError::InvalidField(F_DELTA));
+                }
+                builder = builder.delta(delta);
+            }
+        }
         out.push(
-            TDigest::<F>::builder()
-                .max_size(max_size)
+            builder
                 .with_centroids_and_stats(
                     cents,
                     DigestStats {
@@ -385,7 +455,13 @@ fn ensure_centroid_dtype<N: PlFloat>(centroids: &Series) -> Result<(), CodecErro
             found: Box::new(centroids.dtype().clone()),
         });
     };
-    if fields.len() != 2 || fields[0].name() != F_MEAN || fields[1].name() != F_WEIGHT {
+    if !(fields.len() == 2
+        || fields.len() == 3
+            && fields[2].name() == F_ATOMIC
+            && fields[2].dtype() == &DataType::Boolean)
+        || fields[0].name() != F_MEAN
+        || fields[1].name() != F_WEIGHT
+    {
         return Err(CodecError::BadCentroidLayout {
             found: Box::new(centroids.dtype().clone()),
         });
@@ -393,13 +469,14 @@ fn ensure_centroid_dtype<N: PlFloat>(centroids: &Series) -> Result<(), CodecErro
     let dt_m = fields[0].dtype();
     let dt_w = fields[1].dtype();
 
-    let both_f64 = dt_m == &DataType::Float64 && dt_w == &DataType::Float64;
-    let both_f32 = dt_m == &DataType::Float32 && dt_w == &DataType::Float32;
+    let canonical =
+        matches!(dt_m, DataType::Float32 | DataType::Float64) && dt_w == &DataType::Float64;
+    let old_f32 = dt_m == &DataType::Float32 && dt_w == &DataType::Float32;
 
-    if !(both_f32 || both_f64) {
+    if !(canonical || old_f32) {
         return Err(CodecError::MixedCentroidDtypes);
     }
-    if *dt_m != N::DTYPE || *dt_w != N::DTYPE {
+    if *dt_m != N::DTYPE {
         return Err(CodecError::WirePrecisionMismatch {
             expected: N::DTYPE.clone(),
         });
@@ -434,7 +511,15 @@ where
         .field_by_name(F_WEIGHT)
         .map_err(|_| CodecError::MissingField(F_WEIGHT))?;
     let m = N::as_chunked(&m_ser, F_MEAN)?;
-    let w = N::as_chunked(&w_ser, F_WEIGHT)?;
+    // Promotion of old f32 weights is exact. Canonical f64 weights are never narrowed.
+    let w = match w_ser.dtype() {
+        DataType::Float32 => w_ser
+            .cast(&DataType::Float64)
+            .map_err(|_| CodecError::InvalidField(F_WEIGHT))?,
+        _ => w_ser,
+    };
+    let w = Float64Type::as_chunked(&w, F_WEIGHT)?;
+    let atomic_ser = sc.field_by_name(F_ATOMIC).ok();
 
     let len = m.len().min(w.len());
     let mut out = Vec::with_capacity(len);
@@ -443,13 +528,29 @@ where
             return Err(CodecError::NullCentroid { row, index: idx });
         };
         let mean_f64 = N::to_f64(mv);
-        let w_f64 = N::to_f64(wv);
+        let w_f64 = wv;
+        if !mean_f64.is_finite() {
+            return Err(CodecError::InvalidField(F_MEAN));
+        }
+        if !w_f64.is_finite() || w_f64 <= 0.0 {
+            return Err(CodecError::InvalidField(F_WEIGHT));
+        }
 
         // Heuristic reconstruction of kind:
         // - weight == 1 → atomic unit (flat CDF step behavior preserved)
         // - weight > 1  → mixed (cannot reliably infer “atomic pile” from wire)
-        if w_f64 == 1.0 {
-            out.push(Centroid::<F>::new_atomic_unit_f64(mean_f64));
+        let atomic = if let Some(column) = &atomic_ser {
+            expect_dtype(column, DataType::Boolean, F_ATOMIC)?;
+            column
+                .bool()
+                .unwrap()
+                .get(idx)
+                .ok_or(CodecError::NullCentroid { row, index: idx })?
+        } else {
+            w_f64 == 1.0
+        };
+        if atomic {
+            out.push(Centroid::<F>::new_atomic_f64(mean_f64, w_f64));
         } else {
             out.push(Centroid::<F>::new_mixed_f64(mean_f64, w_f64));
         }

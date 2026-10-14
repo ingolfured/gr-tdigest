@@ -85,7 +85,7 @@ Median:
 - Empty digest:
   - Rust/Python/Java: `NaN`
   - Polars: `None`
-- Non-empty digest returns finite value.
+- Non-empty modern digest returns `quantile(0.5)` using centroid weights, including fractional weights.
 
 Shape behavior:
 - Scalar probe in -> scalar out.
@@ -98,6 +98,7 @@ Shape behavior:
   - `max_size`
   - `scale`
   - `singleton_policy`
+  - `delta`
 - No implicit coercion in merge.
 
 Canonical empty for `merge_all([])`:
@@ -105,12 +106,18 @@ Canonical empty for `merge_all([])`:
 - `max_size=1000`
 - `scale=K2`
 - `singleton_policy=Use`
+- `delta=None`
 
 ### 4.4 Serialization / `from_bytes`
 
 - TDIG written by one surface must decode on all surfaces.
 - `to_bytes` supports explicit version selection (`1|2|3`) where surfaced.
-- Wire precision (`f32`/`f64`) must round-trip.
+- Wire precision (`f32`/`f64`) and delta must round-trip in default TDIG v3.
+- Delta-mode digests require v3; wrappers reject explicit v1/v2 export rather than losing configuration.
+- V3 uses flag bit1 and an 8-byte header extension for delta; older readers reject the unknown flag.
+- Polars structs retain centroid atomic/mixed kind, scale, singleton policy, pins, and delta.
+  Older structs remain readable with their historical default configuration and kind inference.
+- Python pickle/deepcopy use TDIG bytes.
 - Empty digest to/from bytes is valid.
 - Empty blob bytes (`b""`) are invalid TDIG and must error.
 - Null blobs (Polars) are errors.

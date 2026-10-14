@@ -76,13 +76,14 @@ fn tdigest_output_dtype(inputs: &[Field]) -> PolarsResult<Field> {
     Ok(Field::new("tdigest".into(), dt))
 }
 
-// merge keeps the incoming digest precision
+// Mutations keep precision, but upgrade old structs to the current schema.
 fn merge_output_dtype(inputs: &[Field]) -> PolarsResult<Field> {
-    let dt = inputs
-        .get(0)
-        .map(|f| f.dtype())
-        .cloned()
-        .unwrap_or(DataType::Null);
+    let input = inputs.first().map(|f| f.dtype()).unwrap_or(&DataType::Null);
+    let dt = if is_compact_digest_dtype(input) {
+        TDigest::<f32>::polars_dtype()
+    } else {
+        TDigest::<f64>::polars_dtype()
+    };
     Ok(Field::new("tdigest".into(), dt))
 }
 
@@ -136,12 +137,22 @@ fn quantile(inputs: &[Series], kwargs: QuantileKwargs) -> PolarsResult<Series> {
 
 #[polars_expr(output_type = Float64)]
 fn median(inputs: &[Series]) -> PolarsResult<Series> {
-    let td = parse_and_merge::<f64>(inputs)?;
-    if td.is_empty() {
-        Ok(Series::new("".into(), [None::<f64>]))
+    let value = if is_compact_digest_dtype(inputs[0].dtype()) {
+        let td = parse_and_merge::<f32>(inputs)?;
+        if td.is_empty() {
+            None
+        } else {
+            Some(td.median())
+        }
     } else {
-        Ok(Series::new("".into(), [Some(td.median())]))
-    }
+        let td = parse_and_merge::<f64>(inputs)?;
+        if td.is_empty() {
+            None
+        } else {
+            Some(td.median())
+        }
+    };
+    Ok(Series::new("".into(), [value]))
 }
 
 #[polars_expr(output_type_func = merge_output_dtype)]
@@ -328,9 +339,15 @@ fn to_bytes_versioned(inputs: &[Series], kwargs: ToBytesKwargs) -> PolarsResult<
 
     let td_bytes: Vec<u8> = if is_compact_digest_dtype(s.dtype()) {
         let td = parse_and_merge::<f32>(inputs)?;
+        version
+            .validate_digest(&td)
+            .map_err(|e| PolarsError::ComputeError(e.to_string().into()))?;
         encode_digest_with_version(&td, version)
     } else {
         let td = parse_and_merge::<f64>(inputs)?;
+        version
+            .validate_digest(&td)
+            .map_err(|e| PolarsError::ComputeError(e.to_string().into()))?;
         encode_digest_with_version(&td, version)
     };
 
@@ -621,57 +638,14 @@ where
         }
     };
 
-    // 3) Empty training input → return an empty digest carrying the chosen params.
-    //    Downstream:
-    //      - quantile(...) → None (via quantile_impl)
-    //      - cdf(...)      → NaN  (via cdf_or_nan)
-    if vf.is_empty() {
-        let td = TDigest::<F>::builder()
-            .max_size(max_size)
-            .scale(scale)
-            .singleton_policy(policy)
-            .build(); // empty digest
-        return Ok(td);
-    }
-
-    let td0: TDigest<F> = TDigest::<F>::from_unsorted(&vf, max_size)
-        .map_err(|e| PolarsError::ComputeError(e.to_string().into()))?;
-
-    if td0.scale() == scale && td0.singleton_policy() == policy {
-        Ok(td0)
-    } else {
-        use crate::tdigest::centroids::Centroid;
-        use crate::tdigest::tdigest::DigestStats;
-
-        let cents: Vec<Centroid<F>> = td0
-            .centroids()
-            .iter()
-            .map(|c| {
-                if c.is_atomic_unit() {
-                    Centroid::<F>::new_atomic_unit_f64(c.mean_f64())
-                } else if c.is_atomic() {
-                    Centroid::<F>::new_atomic_f64(c.mean_f64(), c.weight_f64())
-                } else {
-                    Centroid::<F>::new_mixed_f64(c.mean_f64(), c.weight_f64())
-                }
-            })
-            .collect();
-
-        Ok(TDigest::<F>::builder()
-            .max_size(max_size)
-            .scale(scale)
-            .singleton_policy(policy)
-            .with_centroids_and_stats(
-                cents,
-                DigestStats {
-                    data_sum: td0.sum(),
-                    total_weight: td0.count(),
-                    data_min: td0.min(),
-                    data_max: td0.max(),
-                },
-            )
-            .build())
-    }
+    // Apply the requested configuration before compression, including for empty input.
+    TDigest::<F>::builder()
+        .max_size(max_size)
+        .scale(scale)
+        .singleton_policy(policy)
+        .build()
+        .merge_unsorted(vf)
+        .map_err(|e| PolarsError::ComputeError(e.to_string().into()))
 }
 
 fn parse_and_merge<F>(inputs: &[Series]) -> PolarsResult<TDigest<F>>
@@ -679,7 +653,10 @@ where
     F: Copy + 'static + FloatCore + FloatLike + WireOf,
 {
     let s = &inputs[0];
-    let parsed = parse_digest_column_lenient::<F>(s)?;
+    let mut parsed = parse_digest_column_lenient::<F>(s)?;
+    if parsed.len() == 1 {
+        return Ok(parsed.pop().unwrap());
+    }
     Ok(TDigest::<F>::merge_digests(parsed))
 }
 
@@ -687,8 +664,7 @@ fn add_values_generic<F>(digest_s: &Series, values_s: &Series) -> PolarsResult<S
 where
     F: Copy + 'static + FloatCore + FloatLike + WireOf,
 {
-    let parsed = parse_digest_column_lenient::<F>(digest_s)?;
-    let mut td = TDigest::<F>::merge_digests(parsed);
+    let mut td = parse_and_merge::<F>(std::slice::from_ref(digest_s))?;
     let vals = extract_add_values::<F>(values_s)?;
     if !vals.is_empty() {
         td.add_many(vals)
@@ -705,8 +681,7 @@ fn add_weighted_values_generic<F>(
 where
     F: Copy + 'static + FloatCore + FloatLike + WireOf,
 {
-    let parsed = parse_digest_column_lenient::<F>(digest_s)?;
-    let mut td = TDigest::<F>::merge_digests(parsed);
+    let mut td = parse_and_merge::<F>(std::slice::from_ref(digest_s))?;
     let (vals, weights) = extract_weighted_add_values::<F>(values_s, weights_s)?;
     if !vals.is_empty() {
         td.add_weighted_many(&vals, &weights)
@@ -719,8 +694,7 @@ fn scale_weights_generic<F>(digest_s: &Series, factor: f64) -> PolarsResult<Seri
 where
     F: Copy + 'static + FloatCore + FloatLike + WireOf,
 {
-    let parsed = parse_digest_column_lenient::<F>(digest_s)?;
-    let mut td = TDigest::<F>::merge_digests(parsed);
+    let mut td = parse_and_merge::<F>(std::slice::from_ref(digest_s))?;
     td.scale_weights(factor)
         .map_err(|e| PolarsError::ComputeError(e.to_string().into()))?;
     td.to_series(digest_s.name())
@@ -730,8 +704,7 @@ fn scale_values_generic<F>(digest_s: &Series, factor: f64) -> PolarsResult<Serie
 where
     F: Copy + 'static + FloatCore + FloatLike + WireOf,
 {
-    let parsed = parse_digest_column_lenient::<F>(digest_s)?;
-    let mut td = TDigest::<F>::merge_digests(parsed);
+    let mut td = parse_and_merge::<F>(std::slice::from_ref(digest_s))?;
     td.scale_values(factor)
         .map_err(|e| PolarsError::ComputeError(e.to_string().into()))?;
     td.to_series(digest_s.name())

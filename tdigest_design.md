@@ -36,8 +36,9 @@ Out of scope for this file:
 ### 2.2 Digest and centroid model
 
 `TDigest<F>` where `F` is `f32` or `f64`:
-- Centroid means/weights are stored in `F`.
+- Centroid means are stored in `F`; centroid weights are always `f64`.
 - Digest stats `sum` and `count` are `f64`.
+- Optional `delta` selects K2Norm compression with singleton policy Off, bypassing the max-size cap.
 - Digest min/max are stored in `F` and surfaced as `f64`.
 
 Centroid kind is explicit:
@@ -45,6 +46,24 @@ Centroid kind is explicit:
 - `Mixed`: merged/interpolated mass.
 
 `is_singleton()` is kept as compatibility naming and maps to `is_atomic()`.
+
+Mean precision must not narrow mass: at an f32 weight of 2^24, adding one sample
+could previously leave the centroid weight unchanged while the digest count
+advanced. For two equal piles, adding a value to the left could then move the
+median to the right. We retain weights in f64 throughout normalization, compression,
+merge, scaling, and precision casts. This fixes the storage loss for exact integer
+totals through 2^53; ordinary f64 rounding and aggregate overflow still require
+care for larger or extremely disparate weights. It cannot recover mass already
+lost in an older stored digest.
+
+On the tested Linux x86_64 target with Rust 1.90, a modern `Centroid<f32>` occupies
+16 bytes instead of 12; `Centroid<f64>` remains 24 bytes. The f32 digest shell
+remains 96 bytes. This costs four bytes per allocated f32 centroid (one third more
+centroid storage), and its speed/cache impact must be measured. Means and extrema
+retain their chosen precision. Public Rust `weight() -> F` remains a potentially
+lossy compatibility accessor; `weight_f64()` exposes the authoritative mass.
+Python weights remain Float64 arrays and Java weighted inputs remain double[].
+The separate original `tdigest_rs` implementation retains its uint32 weights.
 
 ## 3. How new values are merged
 
@@ -65,6 +84,17 @@ Weighted add path:
   - finite, strictly positive weights
 - Weighted values are converted to atomic centroids, then merged through the same digest merge/compression path.
 - Frontend surfaces route weighted add through `FrontendDigest::add_weighted_f64(...)`, so Python/JNI/Polars share the same validation and merge semantics.
+
+Weight scaling is transactional. `scale_weights` validates the positive finite
+factor, prepares centroid products locally, and rejects any nonpositive or
+nonfinite product before calling checked constructors. It also rejects a
+nonfinite accumulated product total or nonpositive/nonfinite scaled stored
+count. Only then does it replace centroids and scale count/sum. Errors use the
+existing `InvalidWeight` variant and preserve the original digest bytes. Empty
+digests remain no-ops after factor validation; valid positive subnormal products
+remain supported. Successful count and sum arithmetic retains its prior order.
+This validation is limited to weight scaling: aggregate input/merge validation,
+weighted-value product overflow, and the raw-sum overflow policy are separate.
 
 ### 3.2 Raw-value ingest (`merge_unsorted` / `merge_sorted`)
 
@@ -93,7 +123,7 @@ Weighted constructor/merge helpers:
 
 `TDigest::merge_digests(digests)`:
 1. Scan digests and keep only non-empty runs (`count>0` and non-empty centroid vector).
-2. Pick the first non-empty digest as the config source (`max_size`, `scale`, `policy`).
+2. Pick the first non-empty digest as the config source (`max_size`, `scale`, `policy`, `delta`).
 3. Perform a streaming k-way merge of sorted centroid runs via `KWayCentroidMerge::from_runs`.
   - Implementation uses a min-heap over run heads (`O(total_len * log(k))`).
   - It avoids materializing one full concat+sort buffer before compression.
@@ -111,13 +141,28 @@ Note: core merge is permissive by design. Strict precision/config checks are enf
 
 `normalize_stream` does three jobs:
 1. Validate non-decreasing mean order (panic on decreasing mean).
-2. Coalesce adjacent equal-mean items into one atomic run (`new_singleton_f64(mean, combined_weight)`).
+2. Coalesce adjacent equal-mean items; the result is atomic only when every input was atomic. Mixed provenance and fractional weights are preserved.
 3. Accumulate:
 - `total_w`
 - `total_mw = sum(mean * weight)`
 - `min`/`max` mean
 
 Output at this stage is strictly increasing by mean.
+
+All later compressor paths preserve a one-input cluster's mean bits and
+Atomic/Mixed kind. The shared accumulator emits that input without recomputing
+`mean * weight / weight`; even one rounding step would move an exact point mass,
+change CDF results at the observed value, and risk duplicate means on a later
+merge. K-limit passes, equal-weight bucketization and single-bucket collapse use
+the same emission rule. Clusters containing multiple inputs remain Mixed.
+Their weighted-average arithmetic is unchanged while its result lies within the
+cluster's first/last input means. If finite accumulation rounds that result
+outside the interval, clamp it to the nearest endpoint. Consecutive disjoint
+input clusters then retain disjoint mean intervals after compression and f32
+rounding, preventing duplicate or out-of-order centroids. The transient
+accumulator tracks the last input mean; centroid storage and wire layouts do not
+change. The bound applies only when the weight sum, weighted sum, and quotient
+are all finite. It must not hide overflow or repair invalid aggregate state.
 
 ### 4.2 Stage 2: policy slice
 
@@ -163,6 +208,8 @@ Loop sketch:
 Cluster kind emission:
 - Single-item cluster stays atomic only if its head item was atomic.
 - Multi-item cluster is always emitted as mixed.
+
+Delta mode uses the same k-limit merge with K2Norm and zero tolerance. Its normalizer uses the number of centroids in the current pass; quantiles use cumulative weight. Delta mode bypasses Stage 4 and Stage 6.
 
 ### 4.4 Stage 4: cap
 
@@ -249,31 +296,28 @@ Performance:
 2. Empty digest -> `NaN`.
 3. Finite `q` is clamped to `[0,1]` in core.
 4. Convert to target weight index: `index = q * total_weight`.
-5. Edge clamps:
-- `index < 1` -> `min`
-- `index > total_weight - 1` -> `max`
+5. Edge handling:
+- `q=0` -> `min`; `q=1` -> `max`.
+- Outside the first/last centroid centers, retain atomic mass or interpolate toward data extrema.
+- All boundaries use actual weights, including totals below one.
 6. Find bracketing centroids using half-weight center-to-center spans.
 7. Interpolate with singleton-aware rules.
 
 Singleton-aware interpolation rules:
 
-Atomic pile snap (`weight > 1`):
-- If `index` is strictly inside pile half-width, return pile mean exactly.
-
-Unit singleton snap (`weight == 1`):
-- If probe is within `0.5` of centroid center, snap to centroid mean.
+Atomic pile snap (any positive weight):
+- If `index` is strictly inside the atomic mass, return its mean exactly.
 
 Otherwise interpolate with dead zones:
-- `dead_left = 0.5` when left is unit singleton else `0`.
-- `dead_right = 0.5` when right is unit singleton else `0`.
+- `dead_left = weight_left / 2` when left is atomic, else `0`.
+- `dead_right = weight_right / 2` when right is atomic, else `0`.
 - Interpolate in remaining span.
 
 This keeps quantile behavior symmetric with CDF atomic exclusions.
 
 `median()`:
 - Empty -> `NaN`.
-- Odd total count -> `quantile(0.5)`.
-- Even total count -> average means of bracketing centroids (dedicated even-count branch).
+- Non-empty -> `quantile(0.5)`; there is no even-count shortcut that ignores centroid weights.
 
 ### 5.3 Strictness split for quantile probes
 
@@ -293,6 +337,34 @@ Non-goal:
 These semantics are asserted by focused tests in:
 - `src/tdigest/cdf.rs`
 - `src/tdigest/quantile.rs`
+
+### 5.5 Positive subnormal total mass
+
+Half-weight arithmetic and `q * total` can underflow when the entire stored
+centroid mass is positive and subnormal. These queries use a temporary digest
+view whose weights first multiply by `2^1022` (`1 / f64::MIN_POSITIVE`). A
+second exact power-of-two scale, derived from that normal total's exponent,
+places the total in `[1, 2)`. The two factors stay separate because their
+combined reciprocal could overflow. Every positive weight becomes normal, and
+the total no longer makes a tiny positive `q` smaller before tail interpolation.
+Means, kinds, extrema, and configuration stay unchanged, and queries never
+mutate the stored digest.
+
+CDF uses the actual centroid total already computed for its prefix array.
+Quantile first checks its stored total, then computes actual mass only in the
+subnormal branch. The temporary count is the scaled actual mass, so recursion
+terminates after one copy even if a directly seeded subnormal header differs
+from its subnormal centroid total. Empty/NaN handling, quantile endpoints, and
+weight-independent single-centroid quantiles retain their existing branches.
+Normal-total queries keep the previous summation order, kernels, and allocation
+behavior, with only an extra condition. The rare fallback allocates a query copy.
+
+This evaluates the stored centroid distribution; it cannot recover mean or sum
+information already lost during compression. A normal total with a
+minimum-subnormal component remains on the ordinary path and may still lose
+that component's tiny half-weight or rank boundary. Malformed normal header
+counts hiding subnormal actual mass are not repaired by the quantile prefilter.
+Aggregate overflow and malformed-state validation remain separate concerns.
 
 ## 6. TDIG wire format
 
@@ -325,6 +397,31 @@ Decode behavior:
 - v2 decodes centroid kind explicitly from payload and preserves atomic-vs-mixed identity.
 - v2/v3 preserve fractional centroid weights on wire.
 - v3 checksum is verified when present.
+- v3 flag bit3 (0x08) means an f32-mean digest contains weights that require f64
+  precision. It adds no bytes: the payload already stores f64 weights. The flag
+  is checksum-covered, and older readers reject it instead of narrowing mass.
+  It is valid only with f32 mean precision. Existing representable-weight blobs
+  keep the same layout and flag bytes. Explicit v1/v2 export rejects these
+  f32-mean digests; callers may explicitly cast to f64 before older-format export.
+  New readers still accept old v1/v2 payloads and retain their encoded weights.
+- v3 flag bit2 carries an optional u64 `pin_per_side` for edge settings above 255.
+  It follows the delta extension when present; otherwise it starts at byte 64.
+  The fixed pin byte is 255, the edge policy is required, and header length/checksum
+  cover the full extension. Older versions reject export of these settings.
+- v1 export rejects fractional/out-of-range weights; its historical kind heuristic
+  can still change weighted-query behavior, so use v3 for faithful state transfer.
+  Decoders reject nonpositive or nonfinite weights before constructing centroids.
+- v3 flag bit1 stores an optional positive finite delta at header bytes 64..72;
+  the extension is covered by the checksum. Absent extension means max-size mode.
+- Explicit v1/v2 export cannot represent delta mode and is rejected. The existing
+  infallible Rust encoder asserts this precondition; language wrappers return errors.
+- Polars struct codecs carry scale, policy, pin count, optional delta, and atomic
+  flags. New structs always store centroid weights as Float64; mean/min/max
+  dtypes still identify f32 or f64 precision. Readers accept older Float32 weights
+  with Float32 means and promote those weights exactly. Older structs also retain
+  their original defaults and weight-based kind inference. Mutation/serialization
+  upgrades to the current schema without changing mean precision. Single-digest
+  serialization avoids recompression.
 
 ## 7. Frontend service role
 
@@ -341,8 +438,8 @@ Adapters (`src/py.rs`, `src/jni.rs`, `src/polars_expr.rs`) should remain thin ar
 ## 8. Known current-state gaps
 
 1. Legacy wire compatibility mode.
-- Decoder supports v1 and v2.
-- Re-encoding a v1 blob produces v2 output (format changes intentionally).
+- Decoder supports v1, v2, and v3.
+- Default re-encoding writes v3; old formats cannot store delta mode.
 
 2. Strict merge location.
 - Strict compatibility checks are frontend-layer behavior, not core merge behavior.

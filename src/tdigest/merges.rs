@@ -5,7 +5,7 @@
 //!   into a single centroid stream ordered by mean.
 //! - `KWayCentroidMerge<F>`: k-way merge of multiple centroid runs, ordered by mean.
 //! - `normalize_stream`: tiny normalization pass used by the compressor (kept here
-//!   for minimal churn), coalescing equal-mean runs into singleton piles and
+//!   for minimal churn), coalescing equal-mean runs while preserving atomic/mixed kind and
 //!   validating sort order.
 //!
 //! The API uses `mean_f64()` / `weight_f64()` to keep math in `f64`,
@@ -227,7 +227,7 @@ pub struct Normalized<F: FloatLike + FloatCore> {
 
 /// Normalize an input stream of centroids:
 /// - **validate** non-decreasing means (panic on violation to match tests)
-/// - **coalesce** adjacent equal-mean centroids into a **singleton pile**
+/// - **coalesce** adjacent equal-mean centroids, preserving mixed provenance
 /// - **accumulate** total weight/sum and min/max
 pub fn normalize_stream<F, I>(items: I) -> Normalized<F>
 where
@@ -255,6 +255,7 @@ where
 
     let mut cur_mean = first.mean_f64();
     let mut cur_w = first.weight_f64();
+    let mut cur_atomic = first.is_atomic();
 
     let min_mean = cur_mean;
     let mut max_mean = cur_mean;
@@ -270,15 +271,20 @@ where
 
         if m == cur_mean {
             cur_w += w;
+            cur_atomic &= c.is_atomic();
         } else {
-            // Flush previous run as a **singleton** pile.
-            out.push(Centroid::<F>::new_singleton_f64(cur_mean, cur_w));
+            out.push(if cur_atomic {
+                Centroid::<F>::new_atomic_f64(cur_mean, cur_w)
+            } else {
+                Centroid::<F>::new_mixed_f64(cur_mean, cur_w)
+            });
             total_w += cur_w;
             total_mw += cur_mean * cur_w;
 
             // Start new run
             cur_mean = m;
             cur_w = w;
+            cur_atomic = c.is_atomic();
         }
 
         if m > max_mean {
@@ -287,7 +293,11 @@ where
     }
 
     // Flush last run
-    out.push(Centroid::<F>::new_singleton_f64(cur_mean, cur_w));
+    out.push(if cur_atomic {
+        Centroid::<F>::new_atomic_f64(cur_mean, cur_w)
+    } else {
+        Centroid::<F>::new_mixed_f64(cur_mean, cur_w)
+    });
     total_w += cur_w;
     total_mw += cur_mean * cur_w;
 
@@ -304,6 +314,20 @@ where
 mod tests {
     use super::*;
     use rand::{rngs::StdRng, Rng, SeedableRng};
+
+    #[test]
+    fn normalization_preserves_mixed_kind_and_fractional_mass() {
+        let result = normalize_stream(vec![
+            Centroid::<f64>::new_mixed_f64(0.0, 90.0),
+            Centroid::<f64>::new_atomic_f64(0.0, 0.25),
+            Centroid::<f64>::new_atomic_f64(10.0, 0.5),
+        ]);
+        assert!(!result.out[0].is_atomic());
+        assert!(result.out[1].is_atomic());
+        assert_eq!(result.out[0].weight_f64(), 90.25);
+        assert_eq!(result.out[1].weight_f64(), 0.5);
+        assert_eq!(result.total_w, 90.75);
+    }
 
     fn merge_by_mean_baseline(
         centroids: &[Centroid<f64>],

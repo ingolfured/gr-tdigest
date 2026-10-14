@@ -4,15 +4,29 @@ All notable changes to this project are documented in this file.
 
 ## [Unreleased]
 
+### Fixed
+- Validate every scaled centroid weight and both total-mass representations before committing weight scaling. Positive finite factors that underflow weights to zero or overflow weights/totals now return ordinary errors with unchanged state across Rust, Python, and Polars.
+- Keep the numerical-boundary regressions executable with an explicit floating-point comparator and a finite-sum reference for tiny-probability tail queries.
+- Evaluate CDF and quantiles for positive subnormal total mass through an exact power-of-two temporary query view, retaining stored state and ordinary-query arithmetic. Cover Atomic/Mixed tails and Python/Polars coherence; this cannot restore information lost during compression or resolve tiny components inside a normal total.
+- Bound finite multi-centroid weighted averages to their input mean interval, preventing rounding from producing duplicate or out-of-order compressed means; retain explicit overflow handling as separate work. Add Rust and Python/Polars regressions for adjacent means and large finite weights.
+- Preserve the exact mean and Atomic/Mixed kind when a compressor cluster contains one input centroid, including cap/bucket fallback paths. This fixes pre-existing weighted CDF drift and duplicate-mean merge panics without changing multi-centroid averaging.
+- Preserve modern centroid mass in f64 even with f32 means, fixing lost repeated additions and reversed large-pile medians. Precision casts retain weight bits; Polars writes Float64 weights and still reads older Float32-weight structs. On Linux x86_64 the f32 centroid grows from 12 to 16 bytes; f64 stays 24 bytes. The original `tdigest_rs` path is unchanged.
+- Mark f32-mean TDIG v3 blobs whose weights need f64 precision with flag 0x08, making older readers reject instead of silently rounding them. Payload bytes retain the existing layout; explicit v1/v2 exports of these states require an explicit f64 cast.
+- Keep weighted CDF tails monotone and bounded, preserve true extrema during updates, and retain every sample when protected edges overlap. Apply Polars configuration before compression and preserve identity-operation state and planned schemas.
+- Reject lossy fractional v1 export and malformed decoded weights/configuration; preserve full-width edge pins in checksum-covered TDIG v3 extensions and reject unsupported old-format exports.
+- Correct weighted/fractional median interpolation and preserve mixed centroid provenance across merges.
+- Preserve delta in TDIG v3 and configuration/kind in Polars structs; reject lossy v1/v2 delta export and support Float32 Polars median.
+- Add modern Python and cross-surface regressions, including backward-compatible Polars struct reading.
+
 ### Changed
 - Compressor Stage 4 cap strategy now uses a second k-limit merge with binary-searched `d'` (same scale-family geometry as Stage 3) instead of always using equal-weight bucketization.
 - Added Stage 4 unit coverage for cap/weight/order invariants under the new second-pass k-limit cap behavior.
 - Updated `tdigest_design.md` to document the new Stage 4 cap flow and fallback behavior.
 - Renamed `DigestConfig.legacy_delta` (and `TDigest`/builder methods) to `delta`. The field is the user-facing alternative-to-`max_size` mode, not a legacy escape hatch.
-- Added `ScaleFamily::K2Norm`: the canonical n-aware Dunning K2 from the t-digest paper (eq 8). Pairs with existing `K2` (Dunning's no-norm Java variant). `delta`-mode now routes through `klimit_merge` with `K2Norm` and strict `Δk ≤ 1` tolerance, replacing the parallel `legacy_delta_merge`/`legacy_k2_*` helpers. `klimit_merge` now takes a `tol` parameter (use `KLIMIT_TOL` for tolerant, `0.0` for strict byte-equivalence with old tdigest-rs).
-- `delta`-mode now defaults all other knobs to the old tdigest-rs contract: passing `delta=X` (with no other args) implies `scale='k2norm'` and `singleton_policy='off'`. Explicit values that disagree (e.g. `delta=X, scale='k1'`) are rejected with a clear error instead of being silently overridden, so the digest the user gets matches the old library byte-for-byte.
+- Added `ScaleFamily::K2Norm`: the canonical n-aware Dunning K2 from the t-digest paper (eq 8). Pairs with existing `K2` (Dunning's no-norm Java variant). `delta`-mode now routes through `klimit_merge` with `K2Norm` and strict `Δk ≤ 1` tolerance, replacing the parallel `legacy_delta_merge`/`legacy_k2_*` helpers. `klimit_merge` now takes a `tol` parameter (use `KLIMIT_TOL` for tolerant, `0.0` for the strict delta-mode bound).
+- `delta`-mode now defaults all other knobs to the old tdigest-rs contract: passing `delta=X` (with no other args) implies `scale='k2norm'` and `singleton_policy='off'`. Explicit values that disagree (e.g. `delta=X, scale='k1'`) are rejected with a clear error instead of being silently overridden, so the requested compression mode is honored consistently.
 - DRY: shared `validate_trimmed_mean_bounds` helper now used by both `trimmed_mean` (silent, returns NaN on invalid bounds) and `trimmed_mean_strict` (loud, returns `FrontendError::InvalidProbe`).
-- Reconciled defaults across surfaces. There are now exactly two: `DEFAULT_MAX_SIZE = 1000` (used when neither `max_size` nor `delta` is set; consistent across Rust `py.rs` PyO3 signature, Rust CLI `--max-size`, the Python shim's `from_array` etc., and the Polars `tdigest()` expression) and `DEFAULT_DELTA = 300.0` (matches old `tdigest-rs`'s `DEFAULT_DELTA`; exposed as a public Python constant so `delta=DEFAULT_DELTA` reproduces that library's out-of-the-box behavior). The historical intent was `1000` (commit `14b34ac` "Default arguments k2, 1000 and f64"); the Python shim's `200` default was drift introduced when the shim layer was created and now follows the rest.
+- Reconciled defaults across surfaces. There are now exactly two: `DEFAULT_MAX_SIZE = 1000` (used when neither `max_size` nor `delta` is set; consistent across Rust `py.rs` PyO3 signature, Rust CLI `--max-size`, the Python shim's `from_array` etc., and the Polars `tdigest()` expression) and `DEFAULT_DELTA = 300.0` (matches old `tdigest-rs`'s `DEFAULT_DELTA`; exposed as a public Python constant for the matching compression setting). The historical intent was `1000` (commit `14b34ac` "Default arguments k2, 1000 and f64"); the Python shim's `200` default was drift introduced when the shim layer was created and now follows the rest.
 
 ## [0.2.4] - 2026-02-16
 

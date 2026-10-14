@@ -77,6 +77,13 @@ impl<F: FloatLike + FloatCore> TDigest<F> {
             run += c.weight_f64();
         }
         let count_f64 = run;
+        if count_f64 > 0.0 && count_f64 < f64::MIN_POSITIVE {
+            // Half-weight arithmetic can underflow even when every stored
+            // weight is positive. Only this rare path allocates a query copy.
+            return self
+                .normalized_subnormal_mass_for_queries(count_f64)
+                .cdf(vals);
+        }
 
         let min_v = self.min();
         let max_v = self.max();
@@ -104,6 +111,17 @@ impl<F: FloatLike + FloatCore> TDigest<F> {
             }
             out
         }
+    }
+}
+
+// A difference between finite opposite-sign endpoints can overflow. Halving
+// first preserves the fraction without introducing an infinite denominator.
+fn fraction_between(value: f64, left: f64, right: f64) -> f64 {
+    let span = right - left;
+    if span.is_infinite() {
+        (value * 0.5 - left * 0.5) / (right * 0.5 - left * 0.5)
+    } else {
+        (value - left) / span
     }
 }
 
@@ -139,11 +157,10 @@ fn cdf_at_val_fast<F: FloatLike + FloatCore>(
                 let w0 = cents[0].weight_f64();
                 let gap = m0 - min_v;
                 if gap > 0.0 {
-                    if val == min_v {
-                        return 0.5 / count_f64;
-                    }
-                    // Guarded ramp from min → mean[0] with half-weight at edge centroid.
-                    return (1.0 + (val - min_v) / gap * (w0 / 2.0 - 1.0)) / count_f64;
+                    // A mixed edge carries half its mass between the data minimum
+                    // and its mean. No unit sample can be assumed for weighted data:
+                    // fixed masses here break monotonicity after scaling weights.
+                    return fraction_between(val, min_v, m0) * (0.5 * (w0 / count_f64));
                 } else {
                     // Degenerate (all equal); idx==0 implies val<=min.
                     return 0.0;
@@ -159,11 +176,8 @@ fn cdf_at_val_fast<F: FloatLike + FloatCore>(
                 let wn = cents[n - 1].weight_f64();
                 let gap = max_v - mn;
                 if gap > 0.0 {
-                    if val == max_v {
-                        return 1.0 - 0.5 / count_f64;
-                    }
-                    // Guarded ramp from mean[last] → max with half-weight at edge centroid.
-                    let dq = (1.0 + (max_v - val) / gap * (wn / 2.0 - 1.0)) / count_f64;
+                    // Symmetric half-mass ramp, independent of the weight units.
+                    let dq = (1.0 - fraction_between(val, mn, max_v)) * (0.5 * (wn / count_f64));
                     return 1.0 - dq;
                 } else {
                     return 1.0;
@@ -195,7 +209,7 @@ fn cdf_at_val_fast<F: FloatLike + FloatCore>(
 
             // Base mass at left center plus any left exclusion.
             let base = prefix[li] + wl * 0.5 + left_excl;
-            let frac = (val - ml) / gap;
+            let frac = fraction_between(val, ml, mr);
 
             (base + dw_span * frac) / count_f64
         }

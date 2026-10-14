@@ -8,16 +8,12 @@
 //! - **Center-to-center spans**: treat each centroid's *center* as located at
 //!   half its weight from its left boundary. Between adjacent centroids, the
 //!   span weight is `(w_left + w_right)/2`.
-//! - **Edge clamps**: indices `< 1.0` clamp to `min`, and indices `> N−1.0` clamp
-//!   to `max` so boundary cases never run off the interior logic.
-//! - **Piles (discrete mass)**: a centroid with `is_singleton()==true` and `w>1`
-//!   represents multiple identical values (an *atomic pile*). If the target index
-//!   falls **strictly inside** that pile’s half-width, return the centroid mean.
-//! - **Unit singletons**: for a unit centroid (`w==1`), if the target index lies
-//!   within `0.5` of its center, snap exactly to its mean (prevents over-smearing).
-//! - **Interpolation**: otherwise, interpolate *linearly in weight* between
-//!   bracketing centroids, with **dead zones** of `0.5` removed from the span on
-//!   sides that are unit singletons. This mirrors the CDF’s singleton-exclusion.
+//! - **Edges**: probabilities 0 and 1 return extrema; beyond the outer centroid
+//!   centers, retain atomic mass or interpolate toward the data extrema.
+//! - **Atomic mass**: strictly inside a point mass, return its mean. This applies
+//!   to all positive weights, including fractional weights.
+//! - **Interpolation**: interpolate linearly in weight between centers after
+//!   excluding each atomic neighbor's half-weight, mirroring the CDF.
 //!
 //! # Guarantees
 //! - The result is **monotone** in `q`.
@@ -36,6 +32,21 @@ use crate::tdigest::precision::FloatLike;
 use crate::tdigest::TDigest;
 use ordered_float::FloatCore;
 
+// Convex interpolation without overflowing a finite opposite-sign span.
+fn interpolate_value(left: f64, right: f64, fraction: f64) -> f64 {
+    if fraction <= 0.0 {
+        return left;
+    }
+    if fraction >= 1.0 {
+        return right;
+    }
+    if left.is_sign_negative() == right.is_sign_negative() {
+        left + (right - left) * fraction
+    } else {
+        left * (1.0 - fraction) + right * fraction
+    }
+}
+
 impl<F: FloatLike + FloatCore> TDigest<F> {
     /// Estimate the value at quantile `q` (inclusive) using half-weight
     /// bracketing and singleton-aware interpolation.
@@ -43,7 +54,7 @@ impl<F: FloatLike + FloatCore> TDigest<F> {
     /// - `q` is clamped to `[0, 1]` (when finite).
     /// - **Empty digest** → **`NaN`**.
     /// - **NaN `q`** → **`NaN`**.
-    /// - For single-centroid digests, returns that mean.
+    /// - A single atomic centroid is constant; a mixed centroid retains its tails.
     pub fn quantile(&self, q: f64) -> f64 {
         // NaN probe propagates
         if q.is_nan() {
@@ -53,20 +64,63 @@ impl<F: FloatLike + FloatCore> TDigest<F> {
         if self.centroids().is_empty() {
             return f64::NAN;
         }
-        if self.centroids().len() == 1 {
-            return self.centroids()[0].mean_f64();
-        }
-
         // Only clamp after guarding NaN
         let q = q.clamp(0.0, 1.0);
         let (target_index, total_weight) = self.quantile_to_weight_index(q);
 
-        // Strict edge clamps: keep boundary cases (index==1 or index==N-1) in the interior logic.
-        if target_index < 1.0 {
+        if q == 0.0 {
             return self.min();
         }
-        if target_index > total_weight - 1.0 {
+        if q == 1.0 {
             return self.max();
+        }
+        let first = &self.centroids()[0];
+        if self.centroids().len() == 1 {
+            let mean = first.mean_f64();
+            if first.is_atomic() {
+                return mean;
+            }
+            // One mixed cluster still represents a range, with its center at
+            // q=0.5. Use probabilities directly so rounded f32 mass cannot
+            // create a gap between the two half-weight branches.
+            return if q <= 0.5 {
+                interpolate_value(self.min(), mean, 2.0 * q)
+            } else {
+                interpolate_value(mean, self.max(), 2.0 * q - 1.0)
+            };
+        }
+        // Keep the ordinary path free of an extra centroid scan. A malformed
+        // normal header hiding subnormal stored mass is outside this fallback.
+        if total_weight > 0.0 && total_weight < f64::MIN_POSITIVE {
+            let stored_mass: f64 = self.centroids().iter().map(|c| c.weight_f64()).sum();
+            if stored_mass > 0.0 && stored_mass < f64::MIN_POSITIVE {
+                // q*total and centroid half-weights would lose rank resolution.
+                // Use the same actual mass as CDF, without altering the digest.
+                return self
+                    .normalized_subnormal_mass_for_queries(stored_mass)
+                    .quantile(q);
+            }
+        }
+        let last = self.centroids().last().unwrap();
+        let first_center = first.weight_f64() / 2.0;
+        let last_half = last.weight_f64() / 2.0;
+        if target_index <= first_center {
+            return if first.is_atomic() {
+                first.mean_f64()
+            } else {
+                interpolate_value(self.min(), first.mean_f64(), target_index / first_center)
+            };
+        }
+        if target_index >= total_weight - last_half {
+            return if last.is_atomic() {
+                last.mean_f64()
+            } else {
+                interpolate_value(
+                    last.mean_f64(),
+                    self.max(),
+                    1.0 - (total_weight - target_index) / last_half,
+                )
+            };
         }
 
         let (left_idx, right_idx, left_center_cum_w, center_span_w) =
@@ -116,16 +170,13 @@ impl<F: FloatLike + FloatCore> TDigest<F> {
         let m = self.centroids().len();
         let w_last = self.centroids()[m - 1].weight_f64();
         let span_w = (self.centroids()[m - 2].weight_f64() + w_last) / 2.0;
-        (m - 2, m - 1, self.count() - w_last / 2.0, span_w)
+        (m - 2, m - 1, self.count() - w_last / 2.0 - span_w, span_w)
     }
 
     /// Interpolate between bracketing centroids with symmetric singleton/pile logic.
     ///
-    /// - If the target index lies **strictly inside** a multi-weight singleton pile,
-    ///   return its mean (discrete mass).
-    /// - For **unit** singletons, snap to the mean if within ±0.5 of its center.
-    /// - Otherwise, interpolate linearly in weight after removing `0.5` dead zones
-    ///   on sides that are unit singletons.
+    /// Snap inside atomic mass; otherwise interpolate after excluding atomic
+    /// half-weights. Mixed centroids retain their interpolated mass.
     fn interpolate_between_centroids(
         &self,
         left_idx: usize,
@@ -141,95 +192,62 @@ impl<F: FloatLike + FloatCore> TDigest<F> {
         let (m_left, m_right) = (left.mean_f64(), right.mean_f64());
         let right_center_cum_w = cum_w_at_left_center + center_span_weight;
 
+        if left.is_atomic() && right.is_atomic() {
+            // Atomic neighbors share one boundary, with no interpolated mass.
+            // Deriving that boundary independently from both centers can leave
+            // a rounding-sized positive span (even for equal weights like 0.1),
+            // incorrectly moving the boundary quantile to one of the means.
+            let boundary = cum_w_at_left_center + w_left / 2.0;
+            return if target_index < boundary {
+                m_left
+            } else if target_index > boundary {
+                m_right
+            } else {
+                interpolate_value(m_left, m_right, 0.5)
+            };
+        }
+
         // Inside a multi-weight singleton "pile" → return exact mean.
         if left.is_singleton()
-            && w_left > 1.0
             && Self::inside_pile_strict(target_index, cum_w_at_left_center, w_left)
         {
             return m_left;
         }
         if right.is_singleton()
-            && w_right > 1.0
             && Self::inside_pile_strict(target_index, right_center_cum_w, w_right)
         {
             return m_right;
         }
 
-        // Unit-singleton snap to avoid over-smearing a point-mass.
-        if w_left == 1.0 && (target_index - cum_w_at_left_center) < 0.5 {
-            return m_left;
-        }
-        if w_right == 1.0 && (right_center_cum_w - target_index) < 0.5 {
-            return m_right;
-        }
-
-        // Remove dead zones contributed by unit singletons.
-        let dead_left = if w_left == 1.0 { 0.5 } else { 0.0 };
-        let dead_right = if w_right == 1.0 { 0.5 } else { 0.0 };
+        // Atomic mass has no interpolated interior, including fractional piles.
+        let dead_left = if left.is_atomic() { w_left / 2.0 } else { 0.0 };
+        let dead_right = if right.is_atomic() {
+            w_right / 2.0
+        } else {
+            0.0
+        };
         let weight_toward_right = target_index - cum_w_at_left_center - dead_left;
         let weight_toward_left = right_center_cum_w - target_index - dead_right;
         let denom = weight_toward_right + weight_toward_left;
 
         if denom <= 0.0 {
-            0.5 * (m_left + m_right)
+            interpolate_value(m_left, m_right, 0.5)
         } else {
-            (m_left * weight_toward_left + m_right * weight_toward_right) / denom
+            interpolate_value(m_left, m_right, weight_toward_right / denom)
         }
     }
 
     #[inline]
     fn inside_pile_strict(target_index: f64, center_cum_w: f64, pile_weight: f64) -> bool {
-        // A “pile” is a centroid representing multiple identical values (singleton && weight>1).
-        if pile_weight <= 1.0 {
-            return false;
-        }
+        // Atomic point masses may have any positive, including fractional, weight.
         let half = pile_weight / 2.0;
         (center_cum_w - half) < target_index && target_index < (center_cum_w + half)
     }
 
-    /// Return the indices of the two centroids that bracket the median (q = 0.5)
-    /// using the same half-weight bracketing as `quantile`.
-    fn bracket_centroids_for_median(&self) -> (usize, usize) {
-        debug_assert!(!self.centroids().is_empty());
-        if self.centroids().len() == 1 {
-            return (0, 0);
-        }
-        let total_w = self.count();
-        if self.centroids().len() == 2 || total_w <= 2.0 {
-            return (0, 1);
-        }
-        let index = 0.5 * total_w;
-
-        if index < 1.0 {
-            return (0, 1);
-        }
-        if index > total_w - 1.0 {
-            let m = self.centroids().len();
-            return (m - 2, m - 1);
-        }
-        let (li, ri, _cw, _span) = self.find_bracketing_centroids(index);
-        (li, ri)
-    }
-
-    /// Median with an even-count special case to avoid over-interpolation.
-    ///
-    /// - If total count is **even**: average the two neighboring centroid means around q=0.5.
-    /// - If **odd**: fall back to `quantile(0.5)`.
-    /// - **Empty**: returns `NaN`.
+    /// Estimate the median using the same weighted interpolation as `quantile(0.5)`.
+    /// Empty digests return `NaN`; centroid weights may be fractional.
     pub fn median(&self) -> f64 {
-        let total = self.count();
-        if total <= 0.0 {
-            return f64::NAN; // align with empty quantile/cdf semantics
-        }
-        if (total as i64) % 2 != 0 {
-            return self.quantile(0.5);
-        }
-        let (li, ri) = self.bracket_centroids_for_median();
-        let (ml, mr) = (
-            self.centroids()[li].mean_f64(),
-            self.centroids()[ri].mean_f64(),
-        );
-        (ml + mr) * 0.5
+        self.quantile(0.5)
     }
 
     /// Approximate trimmed mean over quantile bounds `[lower, upper]`.
@@ -387,6 +405,27 @@ mod tests {
             assert_exact("Q(0.5)", 0.0, t.quantile(0.5));
             assert_exact("median()", 0.0, t.median());
         }
+    }
+
+    #[test]
+    fn median_respects_unequal_and_fractional_weights() {
+        for weights in [
+            [90.0, 10.0],
+            [10.0, 90.0],
+            [9.5, 0.5],
+            [0.1, 0.9],
+            [0.9, 0.1],
+        ] {
+            let td = TDigestBuilder::<f64>::new()
+                .max_size(1000)
+                .build()
+                .merge_weighted_unsorted(&[0.0, 10.0], &weights)
+                .unwrap();
+            let expected = if weights[0] > weights[1] { 0.0 } else { 10.0 };
+            assert_eq!(td.median(), expected);
+            assert_eq!(td.median(), td.quantile(0.5));
+        }
+        assert!(TDigestBuilder::<f64>::new().build().median().is_nan());
     }
 
     #[test]
