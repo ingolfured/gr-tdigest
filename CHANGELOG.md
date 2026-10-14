@@ -5,6 +5,8 @@ All notable changes to this project are documented in this file.
 ## [Unreleased]
 
 ### Fixed
+- Keep weighted CDF tails monotone and bounded, preserve true extrema during updates, and retain every sample when protected edges overlap. Apply Polars configuration before compression and preserve identity-operation state and planned schemas.
+- Reject lossy fractional v1 export and malformed decoded weights/configuration; preserve full-width edge pins in checksum-covered TDIG v3 extensions and reject unsupported old-format exports.
 - Correct weighted/fractional median interpolation and preserve mixed centroid provenance across merges.
 - Preserve delta in TDIG v3 and configuration/kind in Polars structs; reject lossy v1/v2 delta export and support Float32 Polars median.
 - Add modern Python and cross-surface regressions, including backward-compatible Polars struct reading.

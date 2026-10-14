@@ -107,11 +107,13 @@ where
         return norm.out;
     }
 
-    // Update digest-level metadata derived from normalized stream.
+    // Centroid mass and weighted sums can be recomputed, but centroid means
+    // do not retain the true extrema of mixed clusters. Keep the data bounds
+    // carried by the add/merge result shell; use the stream for an unset bound.
     result.set_count(norm.total_w);
     result.set_sum(norm.total_mw);
-    result.set_min(norm.min);
-    result.set_max(norm.max);
+    result.set_min(result.min().min(norm.min));
+    result.set_max(result.max().max(norm.max));
 
     // -- 2) Slice -------------------------------------------------------------
     let policy = policy_from(result.singleton_policy(), max_size);
@@ -239,19 +241,13 @@ impl Policy {
                 let r_prot = edge_run_len(out, k, false);
 
                 let left_end = l_prot.min(n);
-                let right_start = n.saturating_sub(r_prot);
+                // Protected ranges may touch or overlap on small digests. Keep
+                // their union exactly once instead of discarding the right tail.
+                let right_start = n.saturating_sub(r_prot).max(left_end);
 
                 let left = &out[..left_end];
-                let right = if right_start > left_end {
-                    &out[right_start..]
-                } else {
-                    &[]
-                };
-                let interior = if right_start > left_end {
-                    &out[left_end..right_start]
-                } else {
-                    &[]
-                };
+                let right = &out[right_start..];
+                let interior = &out[left_end..right_start];
 
                 EdgeSlices {
                     left,

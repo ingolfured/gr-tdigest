@@ -26,7 +26,7 @@
 // v3 header (64 bytes minimum, little-endian):
 //   0..4   : magic = b"TDIG"
 //   4      : version (3)
-//   5      : flags (bit0: checksum present, bit1: delta extension present)
+//   5      : flags (bit0: checksum, bit1: delta extension, bit2: full-width pin extension)
 //   6      : header_len (u8, >= 64)
 //   7      : payload_precision (1=f32, 2=f64)
 //   8      : scale_code
@@ -40,7 +40,11 @@
 //   44..52 : centroid_count (u64)
 //   52..60 : data_sum (f64)
 //   60..64 : checksum (u32, CRC32 when flags bit0 set)
-//   64..72 : delta (f64), when flags bit1 set; header_len is then >= 72
+//   64..   : optional extensions, in flag order:
+//            bit1: delta (f64, 8 bytes)
+//            bit2: pin_per_side (u64, 8 bytes); follows delta when both are present
+//            full-width pins require the edges policy; the fixed pin byte is 255
+//            header_len includes every extension; checksums cover all extension bytes
 //
 // v3 payload:
 //   - f32: mean(f32) + weight(f64) + kind(u8)
@@ -68,6 +72,7 @@ const V3_CHECKSUM_OFFSET: usize = 60;
 
 const V3_FLAG_CHECKSUM: u8 = 0x01;
 const V3_FLAG_DELTA: u8 = 0x02;
+const V3_FLAG_WIDE_PIN: u8 = 0x04;
 
 const PRECISION_CODE_F32: u8 = 1;
 const PRECISION_CODE_F64: u8 = 2;
@@ -86,6 +91,50 @@ impl WireVersion {
     pub fn validate_delta(self, delta: Option<f64>) -> WireResult<()> {
         if delta.is_some() && self != Self::V3 {
             return Err(WireError::InvalidHeader("delta mode requires TDIG v3"));
+        }
+        Ok(())
+    }
+
+    /// Check whether this version can represent the digest's weights and config.
+    /// V1 still reconstructs centroid kind using its historical weight heuristic.
+    pub fn validate_digest<F: FloatLike + FloatCore>(self, td: &TDigest<F>) -> WireResult<()> {
+        self.validate_delta(td.delta())?;
+        if td.delta().is_some()
+            && (td.scale() != ScaleFamily::K2Norm || td.singleton_policy() != SingletonPolicy::Off)
+        {
+            return Err(WireError::InvalidHeader(
+                "delta mode requires K2Norm scale and singleton policy Off",
+            ));
+        }
+        if self != Self::V3 {
+            if let SingletonPolicy::UseWithProtectedEdges(pin) = td.singleton_policy() {
+                if pin > u8::MAX as usize {
+                    return Err(WireError::InvalidHeader(
+                        "pin_per_side > 255 requires TDIG v3",
+                    ));
+                }
+            }
+        }
+        if self == Self::V1 {
+            let mut total = 0_u64;
+            for centroid in td.centroids() {
+                let weight = centroid.weight_f64();
+                // The cast of u64::MAX rounds UP to 2^64; this is an exclusive bound.
+                if !weight.is_finite()
+                    || weight <= 0.0
+                    || weight.fract() != 0.0
+                    || weight >= u64::MAX as f64
+                {
+                    return Err(WireError::InvalidPayload(
+                        "TDIG v1 requires positive integer centroid weights within u64 range",
+                    ));
+                }
+                total = total
+                    .checked_add(weight as u64)
+                    .ok_or(WireError::InvalidHeader(
+                        "TDIG v1 total weight exceeds u64 range",
+                    ))?;
+            }
         }
         Ok(())
     }
@@ -454,16 +503,18 @@ where
 /// Encode a digest using the selected TDIG format.
 ///
 /// # Panics
-/// Panics when a delta-configured digest is encoded as V1 or V2, which cannot
-/// represent delta. Call [`WireVersion::validate_delta`] for a fallible check,
-/// or use [`encode_digest`] to select the latest format automatically.
+/// Panics when the selected version cannot represent the digest's state:
+/// V1 requires positive integer weights and a u64 total; V1/V2 cannot store
+/// delta or edge pins above 255. Delta always requires K2Norm and policy Off.
+/// Call [`WireVersion::validate_digest`] for a
+/// fallible check, or use [`encode_digest`] to select the latest format.
 pub fn encode_digest_with_version<F>(td: &TDigest<F>, version: WireVersion) -> Vec<u8>
 where
     F: FloatLike + FloatCore,
 {
     version
-        .validate_delta(td.delta())
-        .expect("delta mode requires TDIG v3");
+        .validate_digest(td)
+        .expect("selected TDIG version cannot represent digest state");
     match version {
         WireVersion::V1 | WireVersion::V2 => encode_digest_v12(td, version),
         WireVersion::V3 => encode_digest_v3(td),
@@ -501,20 +552,8 @@ where
 
     let cents = td.centroids();
     if version == WireVersion::V1 {
-        // Backward-compatible integerized weight header.
-        let mut total_weight_u64: u64 = 0;
-        for c in cents {
-            let w = c.weight_f64();
-            let w_rounded = w.round();
-            let w_u64 = if w_rounded <= 0.0 {
-                0
-            } else if w_rounded > u64::MAX as f64 {
-                u64::MAX
-            } else {
-                w_rounded as u64
-            };
-            total_weight_u64 = total_weight_u64.saturating_add(w_u64);
-        }
+        // validate_digest has checked exact integer conversion and total range.
+        let total_weight_u64: u64 = cents.iter().map(|c| c.weight_f64() as u64).sum();
         write_u64(&mut buf, total_weight_u64);
     } else {
         // Version 2 stores exact f64 total_weight.
@@ -538,15 +577,7 @@ where
             WireFloatWidth::F32 => {
                 write_f32(&mut buf, mean_f64 as f32);
                 if version == WireVersion::V1 {
-                    let w_rounded = w.round();
-                    let w_u64 = if w_rounded <= 0.0 {
-                        0
-                    } else if w_rounded > u64::MAX as f64 {
-                        u64::MAX
-                    } else {
-                        w_rounded as u64
-                    };
-                    write_u64(&mut buf, w_u64);
+                    write_u64(&mut buf, w as u64);
                 } else {
                     write_f64(&mut buf, w);
                     write_u8(&mut buf, kind_to_code(c));
@@ -555,15 +586,7 @@ where
             WireFloatWidth::F64 => {
                 write_f64(&mut buf, mean_f64);
                 if version == WireVersion::V1 {
-                    let w_rounded = w.round();
-                    let w_u64 = if w_rounded <= 0.0 {
-                        0
-                    } else if w_rounded > u64::MAX as f64 {
-                        u64::MAX
-                    } else {
-                        w_rounded as u64
-                    };
-                    write_u64(&mut buf, w_u64);
+                    write_u64(&mut buf, w as u64);
                 } else {
                     write_f64(&mut buf, w);
                     write_u8(&mut buf, kind_to_code(c));
@@ -585,13 +608,24 @@ where
         _ => WireFloatWidth::F64,
     };
 
+    let wide_pin = match td.singleton_policy() {
+        SingletonPolicy::UseWithProtectedEdges(pin) if pin > u8::MAX as usize => Some(pin),
+        _ => None,
+    };
     let flags = V3_FLAG_CHECKSUM
         | if td.delta().is_some() {
             V3_FLAG_DELTA
         } else {
             0
+        }
+        | if wide_pin.is_some() {
+            V3_FLAG_WIDE_PIN
+        } else {
+            0
         };
-    let header_len = HEADER_LEN_V3_MIN + if td.delta().is_some() { 8 } else { 0 };
+    let header_len = HEADER_LEN_V3_MIN
+        + if td.delta().is_some() { 8 } else { 0 }
+        + if wide_pin.is_some() { 8 } else { 0 };
     let per_centroid_len = centroid_stride(WireVersion::V3, width);
 
     let mut buf = Vec::with_capacity(header_len + per_centroid_len * (n as usize));
@@ -618,7 +652,10 @@ where
     write_f64(&mut buf, td.sum()); // 52..60
     write_u32(&mut buf, 0); // 60..64 checksum placeholder
     if let Some(delta) = td.delta() {
-        write_f64(&mut buf, delta); // 64..72 optional delta extension
+        write_f64(&mut buf, delta); // first optional extension
+    }
+    if let Some(pin) = wide_pin {
+        write_u64(&mut buf, pin as u64); // follows delta when present
     }
 
     debug_assert_eq!(buf.len(), header_len);
@@ -753,7 +790,7 @@ fn parse_v3_header(bytes: &[u8], verify_checksum: bool) -> WireResult<DecodedV3H
     }
 
     let flags = bytes[5];
-    if (flags & !(V3_FLAG_CHECKSUM | V3_FLAG_DELTA)) != 0 {
+    if (flags & !(V3_FLAG_CHECKSUM | V3_FLAG_DELTA | V3_FLAG_WIDE_PIN)) != 0 {
         return Err(WireError::InvalidFlags(flags));
     }
 
@@ -784,7 +821,32 @@ fn parse_v3_header(bytes: &[u8], verify_checksum: bool) -> WireResult<DecodedV3H
     };
 
     let scale = code_to_scale(bytes[8])?;
-    let policy = code_to_policy(bytes[9], bytes[10])?;
+    let mut policy = code_to_policy(bytes[9], bytes[10])?;
+    if flags & V3_FLAG_WIDE_PIN != 0 {
+        let mut pin_offset = HEADER_LEN_V3_MIN + if delta.is_some() { 8 } else { 0 };
+        if header_len < pin_offset + 8 {
+            return Err(WireError::InvalidHeader("missing pin_per_side extension"));
+        }
+        if bytes[9] != 2 || bytes[10] != u8::MAX {
+            return Err(WireError::InvalidHeader(
+                "pin_per_side extension requires edges policy and pin byte 255",
+            ));
+        }
+        let pin_u64 = read_u64(bytes, &mut pin_offset)?;
+        let pin = usize::try_from(pin_u64)
+            .map_err(|_| WireError::InvalidHeader("pin_per_side exceeds platform size"))?;
+        if pin <= u8::MAX as usize {
+            return Err(WireError::InvalidHeader(
+                "full-width pin_per_side must exceed 255",
+            ));
+        }
+        policy = SingletonPolicy::UseWithProtectedEdges(pin);
+    }
+    if delta.is_some() && (scale != ScaleFamily::K2Norm || policy != SingletonPolicy::Off) {
+        return Err(WireError::InvalidHeader(
+            "delta mode requires K2Norm scale and singleton policy Off",
+        ));
+    }
 
     let mut offset = 12;
 
@@ -875,6 +937,16 @@ fn decode_digest_v3(bytes: &[u8]) -> WireResult<WireDecodedDigest> {
     })
 }
 
+fn validate_decoded_weight<F: FloatLike>(weight: f64) -> WireResult<()> {
+    let stored = F::from_f64(weight).to_f64();
+    if !weight.is_finite() || weight <= 0.0 || !stored.is_finite() || stored <= 0.0 {
+        return Err(WireError::InvalidPayload(
+            "invalid centroid weight for storage precision",
+        ));
+    }
+    Ok(())
+}
+
 #[allow(clippy::too_many_arguments)]
 fn decode_payload_into_digest(
     bytes: &[u8],
@@ -911,6 +983,7 @@ fn decode_payload_into_digest(
                     p += 8;
                     let w_u64 = u64::from_le_bytes(arr_w);
                     let w_f64 = w_u64 as f64;
+                    validate_decoded_weight::<f32>(w_f64)?;
                     if w_u64 == 1 {
                         Centroid::<f32>::new_atomic_unit_f64(mean_f64)
                     } else {
@@ -918,9 +991,7 @@ fn decode_payload_into_digest(
                     }
                 } else {
                     let w_f64 = read_f64(bytes, &mut p)?;
-                    if !w_f64.is_finite() || w_f64 <= 0.0 {
-                        return Err(WireError::InvalidPayload("invalid centroid weight"));
-                    }
+                    validate_decoded_weight::<f32>(w_f64)?;
                     let kind = read_u8(bytes, &mut p)?;
                     if code_is_atomic(kind)? {
                         if (w_f64 - 1.0).abs() <= f64::EPSILON {
@@ -966,6 +1037,7 @@ fn decode_payload_into_digest(
                     p += 8;
                     let w_u64 = u64::from_le_bytes(arr_w);
                     let w_f64 = w_u64 as f64;
+                    validate_decoded_weight::<f64>(w_f64)?;
                     if w_u64 == 1 {
                         Centroid::<f64>::new_atomic_unit_f64(mean_f64)
                     } else {
@@ -973,9 +1045,7 @@ fn decode_payload_into_digest(
                     }
                 } else {
                     let w_f64 = read_f64(bytes, &mut p)?;
-                    if !w_f64.is_finite() || w_f64 <= 0.0 {
-                        return Err(WireError::InvalidPayload("invalid centroid weight"));
-                    }
+                    validate_decoded_weight::<f64>(w_f64)?;
                     let kind = read_u8(bytes, &mut p)?;
                     if code_is_atomic(kind)? {
                         if (w_f64 - 1.0).abs() <= f64::EPSILON {

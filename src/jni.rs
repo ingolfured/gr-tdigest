@@ -241,7 +241,7 @@ pub extern "system" fn Java_gr_tdigest_TDigestNative_toBytesVersion(
     };
 
     let d = unsafe { from_handle::<NativeDigest>(handle) };
-    if let Err(error) = version.validate_delta(d.inner.config().delta) {
+    if let Err(error) = d.inner.validate_wire_version(version) {
         throw_illegal_arg(&mut env, error.to_string());
         return arr.into_raw();
     }
