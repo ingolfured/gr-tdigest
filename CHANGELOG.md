@@ -5,6 +5,8 @@ All notable changes to this project are documented in this file.
 ## [Unreleased]
 
 ### Fixed
+- Retain the unchanged 30-case release comparison and optimized-wheel validation for c5dec35 after finite-mean and subnormal-query fixes, with exact prior-run differences, passing boundary-audit provenance and explicit remaining release limits.
+- Record passing installed-wheel evidence for finite cluster-mean bounds and subnormal query normalization, including the unchanged compressed-state audit that previously failed; preserve historical failures and explain the remaining numerical and rollout limits.
 - Disclose verified co-installation/native-module shadowing and packaged bytecode in the release plan; retain the broader compressed-state audit with two confirmed ordering failures as explicit open evidence, not a passing gate.
 - Record the unchanged 30-case Linux release matrix at corrected commit 22867bd: all sampled numerical fields match 756d221, while F32 centroid memory grows from 12 to 16 bytes. Preserve earlier evidence, add portable comparison tooling and exact installed-wheel validation provenance, and collapse generated audit records in review.
 - Document the corrected mass/mean representation and saved-state migration contract; add a reproducible 800-digest weighted-point audit with an explicit failing baseline control and separately disclosed extreme-weight limits.

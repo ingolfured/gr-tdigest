@@ -73,13 +73,17 @@ builds panic on duplicate output means; optimized builds can silently retain the
 ## Known limits outside the passing gate
 
 `--include-extremes` separately reports minimum-subnormal weights and overflowing
-aggregate masses in both precisions. These are **known failing edge cases**, not
-evidence of correctness and not part of the passing gate. Nonfinite results are
+aggregate masses in both precisions. The historical extreme results are **failing evidence**, separate from
+the passing ordinary gate. Later fixes must be evaluated under their own source labels. Nonfinite results are
 written as JSON strings. The flag does not excuse any ordinary gate failure.
 
 At weights `5e-324`, half-weight/query rank calculations can underflow. Finite
 individual weights `[1e308,1e308]` overflow the total, producing invalid CDFs or
-a duplicate-value constructor panic. The retained source fixes neither limit.
+a duplicate-value constructor panic. The historical source fixes neither limit. At `c5dec35`, a separate query-only
+normalization handles positive subnormal totals, with dedicated Rust/Python/Polars
+regressions. It cannot recover compression underflow; aggregate overflow remains
+open. The [new ordinary audit](../validation/c5dec35-modern-weighted-point-audit.json)
+passed the same 800-digest matrix.
 The ordinary gate also does not establish compressed-data accuracy, preserve
 historically lost mass, prove every fractional addition survives f64 rounding,
 or replace canonical build/test and installed-wheel validation.

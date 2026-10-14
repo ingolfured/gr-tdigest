@@ -1,0 +1,88 @@
+{
+  "source_commit": "c5dec35059990b40fe6f036dc83590bf0cdf2a70",
+  "wheel_sha256": "1e5e48b0789f2aa336b9d36b387b2997acfb2da9ed92bb98159dc01e04267f99",
+  "commands": [
+    {
+      "command": [
+        "uv",
+        "venv",
+        "--python",
+        "/var/tmp/codex-tdigest-pr3-20261014/work/gr-tdigest-f64-weights/.venv/bin/python",
+        "/var/tmp/codex-tdigest-pr3-20261014/overnight/release-wheel-c5dec35/modern-venv"
+      ],
+      "exit_code": 0,
+      "seconds": 0.039990901947021484
+    },
+    {
+      "command": [
+        "uv",
+        "pip",
+        "install",
+        "--offline",
+        "--python",
+        "/var/tmp/codex-tdigest-pr3-20261014/overnight/release-wheel-c5dec35/modern-venv/bin/python",
+        "/var/tmp/codex-tdigest-pr3-20261014/overnight/release-wheel-c5dec35/gr_tdigest-0.2.4-cp312-abi3-linux_x86_64.whl",
+        "numpy==2.3.4",
+        "polars==1.34.0",
+        "pytest==8.4.2"
+      ],
+      "exit_code": 0,
+      "seconds": 0.10789847373962402
+    },
+    {
+      "command": [
+        "/var/tmp/codex-tdigest-pr3-20261014/overnight/release-wheel-c5dec35/modern-venv/bin/python",
+        "-I",
+        "-c",
+        "import pathlib,sys,gr_tdigest,gr_tdigest._gr_tdigest as native; root=pathlib.Path(sys.prefix).resolve(); paths=[pathlib.Path(x.__file__).resolve() for x in [gr_tdigest,native]]; assert all(p.is_relative_to(root) for p in paths),paths; print(paths)"
+      ],
+      "exit_code": 0,
+      "seconds": 0.04386615753173828
+    },
+    {
+      "command": [
+        "/var/tmp/codex-tdigest-pr3-20261014/overnight/release-wheel-c5dec35/modern-venv/bin/python",
+        "-I",
+        "-m",
+        "pytest",
+        "-q",
+        "-c",
+        "/dev/null",
+        "-p",
+        "no:cacheprovider",
+        "test_api_python.py",
+        "test_api_polars.py"
+      ],
+      "exit_code": 0,
+      "seconds": 0.819908857345581
+    },
+    {
+      "command": [
+        "/var/tmp/codex-tdigest-pr3-20261014/overnight/release-wheel-c5dec35/modern-venv/bin/python",
+        "-I",
+        "/var/tmp/codex-tdigest-pr3-20261014/overnight/release-wheel-c5dec35/modern-checks/audit_weighted_points.py",
+        "--source-dir",
+        "/var/tmp/codex-tdigest-pr3-20261014/work/gr-tdigest-f64-weights",
+        "--output",
+        "/var/tmp/codex-tdigest-pr3-20261014/overnight/release-wheel-c5dec35/modern-weighted-point-audit.json"
+      ],
+      "exit_code": 0,
+      "seconds": 0.42431211471557617
+    },
+    {
+      "command": [
+        "/var/tmp/codex-tdigest-pr3-20261014/overnight/release-wheel-c5dec35/modern-venv/bin/python",
+        "-I",
+        "/var/tmp/codex-tdigest-pr3-20261014/work/gr-tdigest-f64-weights/compat/compressed-state-audit/audit_compressed_invariants.py",
+        "--output",
+        "/var/tmp/codex-tdigest-pr3-20261014/overnight/release-wheel-c5dec35/modern-compressed-state-audit.json",
+        "--source-dir",
+        "/var/tmp/codex-tdigest-pr3-20261014/work/gr-tdigest-f64-weights",
+        "--source-ref",
+        "c5dec35059990b40fe6f036dc83590bf0cdf2a70"
+      ],
+      "exit_code": 0,
+      "seconds": 0.6916918754577637
+    }
+  ]
+}

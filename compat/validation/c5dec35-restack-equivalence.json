@@ -1,0 +1,8 @@
+{
+  "validated_source": "c5dec35059990b40fe6f036dc83590bf0cdf2a70",
+  "restacked_head": "ab8e61118ca5b96be39648bd3bcccad8805e545f",
+  "restacked_tree": "c659c6f37c02c5526f11e7aa66054e89229e9cf0",
+  "only_tree_difference": "CHANGELOG.md entry ordering; all other tracked files match exactly",
+  "proof_command": "git diff --name-only c5dec35059990b40fe6f036dc83590bf0cdf2a70 ab8e61118ca5b96be39648bd3bcccad8805e545f",
+  "source_is_preserved_on": "review/evidence-numerical-boundaries-20261014"
+}
