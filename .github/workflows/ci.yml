@@ -120,3 +120,6 @@ jobs:
 
       - name: Test
         run: make test
+
+      - name: Legacy tests against installed wheel
+        run: make legacy-wheel-test
