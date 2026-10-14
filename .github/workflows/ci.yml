@@ -64,7 +64,7 @@ jobs:
         run: |
           UV_PROJECT_ENVIRONMENT="${{ github.workspace }}/.venv" \
           UV_CACHE_DIR="${{ github.workspace }}/.uv-cache" \
-          uv sync --all-groups --project bindings/python
+          uv sync --locked --python 3.12 --all-groups --project bindings/python
 
       - name: Lint
         run: make lint
@@ -113,7 +113,7 @@ jobs:
         run: |
           UV_PROJECT_ENVIRONMENT="${{ github.workspace }}/.venv" \
           UV_CACHE_DIR="${{ github.workspace }}/.uv-cache" \
-          uv sync --all-groups --project bindings/python
+          uv sync --locked --python 3.12 --all-groups --project bindings/python
 
       - name: Build
         run: make build
@@ -121,5 +121,5 @@ jobs:
       - name: Test
         run: make test
 
-      - name: Legacy tests against installed wheel
-        run: make legacy-wheel-test
+      - name: Runtime matrix and Polars-free install against one wheel
+        run: make python-support-test

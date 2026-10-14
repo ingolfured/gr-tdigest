@@ -163,9 +163,9 @@ setup:
 	$(UV) --version
 	$(call banner,Create repo .venv and install Python deps (all groups))
 	$(UV_ENV) $(UV) python install 3.12 || true
-	@(cd "$(PY_DIR)" && $(UV_ENV) $(UV) sync --all-groups)
+	@(cd "$(PY_DIR)" && $(UV_ENV) $(UV) sync --locked --python 3.12 --all-groups)
 	$(call banner,Quick Python import smoke)
-	$(UV_ENV) $(UV) run python -c "import polars as pl, sys; print('python', sys.version.split()[0], '| polars', pl.__version__, '| env ok')"
+	$(UV_ENV) $(UV) run --project "$(PY_DIR)" --no-sync python -c "import polars as pl, sys; print('python', sys.version.split()[0], '| polars', pl.__version__, '| env ok')"
 	$(MAKE) setup-hooks
 
 setup-hooks:
@@ -179,7 +179,7 @@ setup-hooks:
 	fi
 	@if ! "$(PWD)/.venv/bin/python" -m pre_commit --version >/dev/null 2>&1; then \
 	  echo "pre_commit module missing in .venv; syncing Python deps from $(PY_DIR)"; \
-	  (cd "$(PY_DIR)" && $(UV_ENV) $(UV) sync --all-groups); \
+	  (cd "$(PY_DIR)" && $(UV_ENV) $(UV) sync --locked --python 3.12 --all-groups); \
 	fi
 	PRE_COMMIT_HOME="$(PWD)/.pre-commit-cache" UV_CACHE_DIR="$(PWD)/.uv-cache" "$(PWD)/.venv/bin/python" -m pre_commit install
 	@HOOK=".git/hooks/pre-commit"; \
@@ -221,7 +221,7 @@ build-java: JAVA_WRAPPER_CHECK
 # ==============================================================================
 # Tests
 # ==============================================================================
-.PHONY: test rust-test py-test java-test compat-test legacy-strict-test compat-bench legacy-bench-smoke legacy-wheel-test
+.PHONY: test rust-test py-test java-test compat-test legacy-strict-test compat-bench legacy-bench-smoke legacy-wheel-test python-support-test
 
 test: rust-test java-test py-test compat-test
 	@echo "✅ all unit tests passed"
@@ -246,6 +246,9 @@ legacy-strict-test: compat-test
 legacy-wheel-test:
 	@$(UV_ENV) $(UV) run --project "$(PY_DIR)" --no-sync python scripts/test_legacy_wheel.py
 
+python-support-test:
+	@$(UV_ENV) $(UV) run --project "$(PY_DIR)" --no-sync python scripts/test_python_support.py
+
 compat-bench: build-python
 	@$(UV_ENV) $(UV) run --project "$(PY_DIR)" --no-sync python "$(STRICT_COMPAT_BENCH)"
 
@@ -263,11 +266,15 @@ lint:
 	$(CARGO) clippy --fix --allow-dirty --allow-staged
 
 	$(call banner,Python: ruff check --fix + ruff format)
-	@(cd "$(PY_DIR)" && $(UV_ENV) $(UV) run ruff check --fix .)
-	@(cd "$(PY_DIR)" && $(UV_ENV) $(UV) run ruff format .)
+	@(cd "$(PY_DIR)" && $(UV_ENV) $(UV) run --no-sync ruff check --fix .)
+	@(cd "$(PY_DIR)" && $(UV_ENV) $(UV) run --no-sync ruff format .)
+
+	$(call banner,Python: installed-artifact gate scripts)
+	$(UV_ENV) $(UV) run --project "$(PY_DIR)" --no-sync ruff check --config "$(PY_DIR)/pyproject.toml" scripts/test_legacy_wheel.py scripts/test_python_support.py scripts/check_python_sdist.py
+	$(UV_ENV) $(UV) run --project "$(PY_DIR)" --no-sync ruff format --check --config "$(PY_DIR)/pyproject.toml" scripts/test_legacy_wheel.py scripts/test_python_support.py scripts/check_python_sdist.py
 
 	$(call banner,Python: mypy (auto-install types if missing))
-	@(cd "$(PY_DIR)" && $(UV_ENV) $(UV) run python -m mypy gr_tdigest --install-types --non-interactive)
+	@(cd "$(PY_DIR)" && $(UV_ENV) $(UV) run --no-sync python -m mypy gr_tdigest --install-types --non-interactive)
 
 	$(call banner,Rust docs: deny warnings)
 	@set -euo pipefail; \
@@ -313,8 +320,8 @@ smoke-wheel:
 	TMP="$$(mktemp -d)"; \
 	$(UV) venv --python 3.12 --seed "$$TMP"; \
 	$(UV) pip install --python "$$TMP/bin/python" --upgrade pip; \
-	$(UV) pip install --python "$$TMP/bin/python" 'polars>=1.34.0,<2.0.0' numpy; \
-	$(UV) pip install --python "$$TMP/bin/python" --no-index --find-links "$$(dirname "$$LATEST")" gr-tdigest; \
+	$(UV) pip install --python "$$TMP/bin/python" 'polars==1.34.0' 'numpy>=1.26.4,<3'; \
+	$(UV) pip install --python "$$TMP/bin/python" --no-index "$${LATEST}[polars]"; \
 	"$$TMP/bin/python" -c "import gr_tdigest as td; d=td.TDigest.from_array([0.0,1.0,2.0,3.0], max_size=100, scale='k2'); print('p50=', d.quantile(0.5)); print('cdf=', td.cdf); print('ok')"; \
 	rm -rf "$$TMP"; \
 	echo "✅ smoke-wheel ok (file=$$LATEST)"
@@ -331,7 +338,7 @@ release-rust:
 release-wheel:
 	$(call banner,Release: Python PROD wheel (manylinux_2_28 + zig) + smoke)
 	mkdir -p "$(DIST)"
-	@(cd "$(PY_DIR)" && $(UV_ENV) $(UV) run maturin build -r -F python --compatibility manylinux_2_28 --zig -o "$(abspath $(DIST))")
+	@(cd "$(PY_DIR)" && $(UV_ENV) $(UV) run --no-sync maturin build --locked -r -F python --compatibility manylinux_2_28 --zig -o "$(abspath $(DIST))")
 	@printf "$(STYLE_OK)✓ wheel(s) in $(DIST)$(STYLE_RESET)\n"
 	$(MAKE) -f $(CURDIR)/Makefile smoke-wheel
 
@@ -371,7 +378,7 @@ publish-check:
 publish-pypi: release-wheel
 	$(call banner,Publish: PyPI)
 	mkdir -p "$(DIST)"
-	$(UV_ENV) $(UV) run --project "$(PY_DIR)" maturin sdist -o "$(abspath $(DIST))"
+	@(cd "$(PY_DIR)" && $(UV_ENV) $(UV) run --no-sync maturin sdist -o "$(abspath $(DIST))")
 	@set -eu; \
 	if [ "$(PUBLISH_DRY_RUN)" = "1" ]; then \
 	  echo "DRY RUN: skipping PyPI upload"; \

@@ -5,6 +5,7 @@ All notable changes to this project are documented in this file.
 ## [Unreleased]
 
 ### Fixed
+- Restore CPython 3.10–3.12 wheel support with a rebuilt py310 ABI3 baseline and NumPy 1.26.4/2.x compatibility; make the tested Polars 1.34.0 integration an optional extra, align the canonical development lock, and gate one real wheel across six full runtimes plus a Polars-free installation. Verify actual source-archive contents and reuse the exact release artifacts before publication.
 - Preserve the original public Rust package as a lightweight shared-source tdigest_core workspace member, retaining its fields, methods, result types, and pinned arithmetic; add new Rust API and independent-output regressions.
 - Record the controlled interleaved performance comparison with exact state/wire controls: the prior large-case slowdown was not consistent across blocks, and correlated original-control shifts prevent unsupported new speedup claims.
 - Record validated transactional scaling, cache-free release artifacts, an actual source-archive wheel rebuild, and real same-distribution upgrade/removal evidence; clarify the three-PR review story and remaining runtime/ownership limits.
