@@ -237,6 +237,7 @@ java-test: JAVA_WRAPPER_CHECK
 	@GRADLE_USER_HOME="$(GRADLE_USER_HOME)" "$(GRADLE)" --no-daemon --console=plain -p "$(JAVA_SRC)" test
 
 compat-test: build-python
+	@$(UV_ENV) $(UV) run --project "$(PY_DIR)" --no-sync python scripts/check_upstream_sources.py
 	@(cd "$(COMPAT_PY_DIR)" && $(UV_ENV) $(UV) run --project "$(abspath $(PY_DIR))" --no-sync python -m pytest -q tests)
 
 legacy-strict-test: compat-test
