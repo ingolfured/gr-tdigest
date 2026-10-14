@@ -1,71 +1,40 @@
-"""Argument and array conversion for the native legacy API."""
-
-from __future__ import annotations
-
-from typing import Any, Iterable
+from dataclasses import dataclass
+from functools import cached_property
+from typing import Any, Dict, Type, Union
 
 import numpy as np
+import numpy.typing as npt
 
-from gr_tdigest._gr_tdigest import _LegacyTDigest
+from tdigest_rs.tdigest_rs import _TDigestInternal32, _TDigestInternal64  # type: ignore
 
-DEFAULT_DELTA = 300.0
+DEFAULT_DELTA: float = 300.0
 
 
+NpFloatArr = npt.NDArray[Union[np.float32, np.float64]]
+_TDigestInternal = Union[_TDigestInternal32, _TDigestInternal64]
+
+
+@dataclass
 class TDigest:
-    def __init__(self, digest: _LegacyTDigest) -> None:
-        self._digest = digest
+    _digest: _TDigestInternal
 
-    @classmethod
-    def from_array(cls, arr: np.ndarray, delta: float = DEFAULT_DELTA) -> TDigest:
-        cls._check_array(arr)
-        return cls(_LegacyTDigest.from_weighted(arr, np.ones(arr.size), delta, arr.dtype == np.float32))
-
-    @classmethod
-    def from_means_weights(cls, arr: np.ndarray, weights: np.ndarray, delta: float = DEFAULT_DELTA) -> TDigest:
-        cls._check_array(arr)
-        return cls(_LegacyTDigest.from_weighted(arr, weights, delta, arr.dtype == np.float32))
-
-    @staticmethod
-    def _check_array(arr: np.ndarray) -> None:
-        if not isinstance(arr, np.ndarray) or arr.dtype not in (np.dtype("float32"), np.dtype("float64")):
-            raise TypeError(f"TDigest is not implemented for arr with type {getattr(arr, 'dtype', type(arr))}")
-        if arr.ndim != 1:
-            raise ValueError("TDigest expects a one-dimensional array")
-
-    def merge(self, other: Any, delta: float = DEFAULT_DELTA) -> TDigest:
+    def merge(self, other: Any, delta: float = DEFAULT_DELTA) -> "TDigest":
         if not isinstance(other, TDigest):
-            raise ValueError(f"Cannot merge object {other!r} to TDigest")
-        return type(self)(self._digest.merge(other._digest, delta))
+            raise ValueError(f"Cannot merge object {other} to {self}")
 
-    def update(self, buffer: np.ndarray, delta: float = DEFAULT_DELTA, merge_delta: float = DEFAULT_DELTA) -> TDigest:
-        return self.merge(type(self).from_array(buffer, delta), merge_delta)
+        if (sc := self._digest.__class__) != (oc := other._digest.__class__):
+            raise TypeError(f"self ({sc}) has a different type to ({oc})")
 
-    @classmethod
-    def merge_all(cls, digests: Iterable[TDigest], delta: float = DEFAULT_DELTA) -> TDigest:
-        items = iter(digests)
-        first = next(items, None)
-        if first is None:
-            return cls.from_array(np.array([], dtype=np.float64), delta)
-        result = cls(first._digest.copy())
-        for digest in items:
-            result = result.merge(digest, delta)
-        return result
+        digest = self._digest.merge(other._digest, delta=delta)
+        return self.__class__(digest)
 
-    @property
-    def means(self) -> np.ndarray:
-        dtype = np.float32 if self.inner_kind() == "f32" else np.float64
-        return np.asarray(self._digest.means, dtype=dtype)
+    @cached_property
+    def means(self) -> npt.NDArray[np.float32]:
+        return self._digest.means
 
-    @property
-    def weights(self) -> np.ndarray:
-        return np.asarray(self._digest.weights, dtype=np.uint32)
-
-    @property
-    def delta(self) -> float:
-        return self._digest.delta
-
-    def inner_kind(self) -> str:
-        return self._digest.inner_kind()
+    @cached_property
+    def weights(self) -> npt.NDArray[np.uint32]:
+        return self._digest.weights
 
     def quantile(self, q: float) -> float:
         return self._digest.quantile(q)
@@ -73,31 +42,60 @@ class TDigest:
     def median(self) -> float:
         return self._digest.median()
 
-    def cdf(self, x: float) -> float:
-        return self._digest.cdf(x)
-
     def trimmed_mean(self, lower: float, upper: float) -> float:
         return self._digest.trimmed_mean(lower, upper)
+
+    @classmethod
+    def from_array(cls, arr: npt.NDArray[np.float32], delta: float = DEFAULT_DELTA) -> "TDigest":
+        _cls = cls._get_internal_cls(arr)
+        digest = _cls.from_array(arr, delta)
+        return cls(digest)
+
+    @classmethod
+    def from_means_weights(
+        cls, arr: npt.NDArray[np.float32], weights: npt.NDArray[np.uint32], delta: float = DEFAULT_DELTA
+    ) -> "TDigest":
+        _cls = cls._get_internal_cls(arr)
+        _digest = _cls.from_means_weights(arr, weights, delta=delta)
+        return cls(_digest)
+
+    @classmethod
+    def from_dict(cls, d: Dict[str, Any]) -> "TDigest":
+        return cls.from_means_weights(arr=np.array(d["means"]), weights=np.array(d["weights"]))
+
+    def to_dict(self) -> Dict[str, Any]:
+        return {"means": self.means, "weights": self.weights}
 
     def __len__(self) -> int:
         return len(self._digest)
 
-    def to_dict(self) -> dict[str, Any]:
-        return {"means": self.means, "weights": self.weights}
+    def __getstate__(self) -> object:
+        return self.to_dict()
 
-    @classmethod
-    def from_dict(cls, d: dict[str, Any]) -> TDigest:
-        return cls.from_means_weights(np.asarray(d["means"]), np.asarray(d["weights"]))
+    def __setstate__(self, d: Dict[str, Any]) -> None:
+        obj = self.__class__.from_dict(d)
+        self._digest = obj._digest
 
-    def __getstate__(self) -> tuple[bytes, float, float]:
-        return self._digest.state()
+    def __copy__(self) -> "TDigest":
+        means = self.means.copy()
+        weights = self.weights.copy()
+        return self.__class__.from_means_weights(means, weights)
 
-    def __setstate__(self, state: tuple[bytes, float, float] | dict[str, Any]) -> None:
-        # Accept the original package's dictionary pickle state as well.
-        self._digest = self.from_dict(state)._digest if isinstance(state, dict) else _LegacyTDigest.from_state(*state)
-
-    def __copy__(self) -> TDigest:
-        return type(self)(self._digest.copy())
-
-    def __deepcopy__(self, memo: Any) -> TDigest:
+    def __deepcopy__(self, memo: Any) -> "TDigest":
         return self.__copy__()
+
+    @staticmethod
+    def _get_internal_cls(arr: NpFloatArr) -> Type[_TDigestInternal]:
+        match arr.dtype:
+            case np.float32:
+                return _TDigestInternal32
+            case np.float64:
+                return _TDigestInternal64
+            case _:
+                raise TypeError(f"TDigest is not implemented for arr with type {arr.dtype}")
+
+    def update(
+        self, buffer: npt.NDArray[np.float32], delta: float = DEFAULT_DELTA, merge_delta: float = DEFAULT_DELTA
+    ) -> "TDigest":
+        buffer_digest = TDigest.from_array(buffer, delta)
+        return self.merge(buffer_digest, merge_delta)
