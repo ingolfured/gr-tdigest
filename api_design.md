@@ -63,6 +63,14 @@ Notes:
 - Any null value (where representable) is an error.
 - Adding an empty vector/list is a no-op success.
 
+### 4.1.1 Shipped legacy Python interface
+
+`tdigest_rs.TDigest` is an explicit compatibility interface over the Rust core.
+It defaults to delta 300 and infers float32/float64 precision from NumPy dtype.
+Only this interface filters NaNs and retains infinity endpoint masses; modern
+training remains strict. Its `merge` and `update` return new objects and honor
+the requested delta; mixed precision raises `TypeError`. Focused regression tests cover immutable merge/update, dtype, copy/pickle, and the original dictionary state.
+
 ### 4.2 Queries
 
 Quantile:

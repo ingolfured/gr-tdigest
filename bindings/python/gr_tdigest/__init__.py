@@ -54,8 +54,8 @@ class SingletonPolicy(str, Enum):
 #: by the Rust extension (PyO3 signature), Rust CLI (`--max-size`), and this shim.
 DEFAULT_MAX_SIZE: int = 1000
 #: Default `delta` value documented for delta-mode. Matches the constant
-#: `DEFAULT_DELTA = 300.0` from the old `tdigest-rs` Python API so passing
-#: `delta=DEFAULT_DELTA` reproduces that library's out-of-the-box behavior.
+#: `DEFAULT_DELTA = 300.0` from the old `tdigest-rs` Python API. Full legacy
+#: input and mutation semantics are exposed by the shipped `tdigest_rs` package.
 DEFAULT_DELTA: float = 300.0
 
 _DEFAULT_MAX_SIZE = DEFAULT_MAX_SIZE  # backwards-compatible alias for internal callers
