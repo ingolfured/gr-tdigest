@@ -122,7 +122,12 @@ make test
 - Python: CPython 3.12 (built with maturin)
 - Polars: 1.x line (Python)
 
-The wheel also ships `tdigest_rs.TDigest`, backed by the shared Rust core. It preserves legacy dtype inference, NaN/infinity handling, and non-mutating merge/update. `gr_tdigest` retains its strict modern API.
+Existing G-Research applications keep `from tdigest_rs import TDigest` and
+`TDigest.from_array(values, delta=300)`. This interface uses the unmodified
+original numerical implementation and Python wrapper, including float32
+arithmetic, uint32 weights, and the original copy/pickle behavior. The new engine
+is opt-in through `from gr_tdigest import TDigest`; using `delta` there does not
+promise the same numbers. See [source provenance](crates/tdigest_core/PROVENANCE.md).
 
 ## Changelog
 - See `CHANGELOG.md`.

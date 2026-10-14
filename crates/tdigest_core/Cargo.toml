@@ -1,0 +1,13 @@
+[package]
+name = "tdigest_core"
+version = "0.2.0"
+edition = "2021"
+license = "Apache-2.0"
+description = "Pinned G-Research t-digest numerical implementation for compatibility"
+repository = "https://github.com/G-Research/tdigest-rs"
+
+[dependencies]
+anyhow = "1.0.93"
+itertools = "0.14.0"
+num = "0.4.3"
+num-traits = "0.2.19"

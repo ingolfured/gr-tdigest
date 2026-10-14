@@ -55,7 +55,8 @@ zig = true
 [tool.ruff]
 line-length = 120
 target-version = "py312"
-extend-exclude = ["target","dist","build",".venv",".maturin",".pytest_cache",".ruff_cache"]
+# Keep the byte-for-byte upstream wrapper out of automatic formatting.
+extend-exclude = ["tdigest_rs/lib.py","target","dist","build",".venv",".maturin",".pytest_cache",".ruff_cache"]
 
 # ------------------------------------------------------------
 # Pytest
