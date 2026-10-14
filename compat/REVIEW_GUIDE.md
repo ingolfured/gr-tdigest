@@ -88,7 +88,9 @@ artifact; the final stack must pass its own installed-wheel gate.
 
 ## Performance evidence
 
-The [retained 30-case comparison](performance/RESULTS-756d221.md) records the earlier source at `756d221`. A fresh run of the corrected engine is pending; no final speed claim is made here. The [weighted-point audit](weighted-point-audit/README.md) supplies a separate reproducible correctness check with exact rational input weights.
+The [current 30-case release comparison](performance/RESULTS-22867bd.md) measures the corrected engine at `22867bd`. On this WSL machine, ten-million-value uniform builds were about 4.1x faster for f64 and 5.0x for f32 than the independent original core. Some tiny/sorted builds and sequential merges were slower. At 142 centroids, f32 logical state grew from 1,800 to 2,368 bytes; wire lengths in the matrix were unchanged. The complete report preserves every measured tradeoff.
+
+The [validation record](validation/22867bd-validation.json) identifies the exact release wheel: the original compatibility gate passed 208 cases, and an additional 40 modern Python/Polars cases passed outside the checkout. The [weighted-point audit](weighted-point-audit/README.md) supplies a separate reproducible correctness check with exact rational input weights; the same installed wheel passed all 800 digests, 33,536 CDF/rank checks, and 304 integer-mass checks.
 
 Compare optimized builds on the same machine and inputs. Separate construction,
 merge, p50/CDF queries, retained capacity, and peak memory. Match or disclose delta,
@@ -96,15 +98,21 @@ centroid count, memory, and error budgets. Report sampled empirical rank error
 alongside value error, including ties, skew, tails, tiny inputs, and roughly
 40-way merges. Distinguish sequential and one-shot merge semantics.
 
-Measurements at `756d221` predate the f64-weight and single-centroid fixes. Preserve
-that evidence with its original labels; it cannot establish the final code's
-performance. The larger f32 representation needs fresh timing and memory evidence.
+Measurements at `756d221` predate the f64-weight and single-centroid fixes. They
+remain under their original labels; the new `22867bd` run records the larger f32
+representation and its actual timing and memory costs.
 Modern speedups do not apply to unchanged `tdigest_rs` imports. Adapter compaction
 reduces reserved result capacity, not the original construction peak or measured
 RSS. One upstream comparison on one machine cannot establish a global lead.
 
 ## Remaining release decisions
 
+- A broader [compressed-state audit](compressed-state-audit/README.md) found duplicate centroid means for adjacent
+  f64 values with weights around `1e100` at `max_size=20`. Its 1,440 routes checked
+  3,840 states and reported two strict-order failures; other sampled invariants
+  passed. This is a confirmed open modern-core defect, not a passing gate. The
+  original compatibility arithmetic is a separate implementation.
+- **Upgrade packaging is still a release gate.** The published `tdigest-rs` and current private `gr-tdigest` wheels share `tdigest_rs` files. If both are installed, the old `tdigest_rs.abi3.so` takes precedence over the new Python shim; uninstalling either can also remove shared files. The upstream replacement must use a normal same-distribution `tdigest-rs` upgrade, keep one owner per namespace, and test the actual upgrade/uninstall path. See [package ownership evidence](package-ownership/README.md).
 - Accumulation still uses f64. Extremely small subnormal masses, very disparate
   weights, and finite weights whose totals/products overflow remain numerical
   limits requiring explicit handling. The f32 storage fix does not establish

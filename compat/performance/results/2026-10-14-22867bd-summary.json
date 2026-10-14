@@ -1,0 +1,43 @@
+{
+  "source_head": "22867bd55739a96a6fab3c8c48b27406ecb32197",
+  "case_count": 30,
+  "started_utc": "2026-10-14T22:09:40.413206+00:00",
+  "finished_utc": "2026-10-14T22:12:54.076648+00:00",
+  "baseline": "756d221d35bd6d382cdfb8705598bb445a665997",
+  "cases_with_non_timing_changes": 13,
+  "original_numerical_control_failures": 0,
+  "largest_stored_query_changes": {
+    "f32": null,
+    "f64": null
+  },
+  "layouts": {
+    "f32": {
+      "baseline": {
+        "object_bytes": 96.0,
+        "centroid_bytes": 12.0,
+        "consistent_linear_layout": true
+      },
+      "candidate": {
+        "object_bytes": 96.0,
+        "centroid_bytes": 16.0,
+        "consistent_linear_layout": true
+      }
+    },
+    "f64": {
+      "baseline": {
+        "object_bytes": 104.0,
+        "centroid_bytes": 24.0,
+        "consistent_linear_layout": true
+      },
+      "candidate": {
+        "object_bytes": 104.0,
+        "centroid_bytes": 24.0,
+        "consistent_linear_layout": true
+      }
+    }
+  },
+  "centroid_count_changes": [],
+  "wire_length_changes": [],
+  "scope_limit": "One seed, 10M maximum unit samples; does not independently exercise >2^24 mass regressions or settle subnormal/overflowing mass limits.",
+  "only_non_timing_changes": "13 F32 modern_retained_bytes_lower_bound fields; all recorded numerical fields, centroid counts and wire lengths are unchanged."
+}

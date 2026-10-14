@@ -1,0 +1,71 @@
+{
+  "source_commit": "22867bd55739a96a6fab3c8c48b27406ecb32197",
+  "wheel_sha256": "66cce5d5483ae05151bca7f7b55383f01578c66b0ad8bbdd4a1b2983583f3869",
+  "commands": [
+    {
+      "command": [
+        "uv",
+        "venv",
+        "--python",
+        "/var/tmp/codex-tdigest-pr3-20261014/work/gr-tdigest/.venv/bin/python",
+        "/var/tmp/codex-tdigest-pr3-20261014/overnight/release-wheel-22867bd/modern-venv"
+      ],
+      "exit_code": 0,
+      "seconds": 0.03556966781616211
+    },
+    {
+      "command": [
+        "uv",
+        "pip",
+        "install",
+        "--offline",
+        "--python",
+        "/var/tmp/codex-tdigest-pr3-20261014/overnight/release-wheel-22867bd/modern-venv/bin/python",
+        "/var/tmp/codex-tdigest-pr3-20261014/overnight/release-wheel-22867bd/gr_tdigest-0.2.4-cp312-abi3-linux_x86_64.whl",
+        "numpy==2.3.4",
+        "polars==1.34.0",
+        "pytest==8.4.2"
+      ],
+      "exit_code": 0,
+      "seconds": 0.09682011604309082
+    },
+    {
+      "command": [
+        "/var/tmp/codex-tdigest-pr3-20261014/overnight/release-wheel-22867bd/modern-venv/bin/python",
+        "-I",
+        "-c",
+        "import pathlib,sys,gr_tdigest,gr_tdigest._gr_tdigest as native; root=pathlib.Path(sys.prefix).resolve(); paths=[pathlib.Path(x.__file__).resolve() for x in [gr_tdigest,native]]; assert all(p.is_relative_to(root) for p in paths),paths; print(paths)"
+      ],
+      "exit_code": 0,
+      "seconds": 0.04622197151184082
+    },
+    {
+      "command": [
+        "/var/tmp/codex-tdigest-pr3-20261014/overnight/release-wheel-22867bd/modern-venv/bin/python",
+        "-I",
+        "-m",
+        "pytest",
+        "-q",
+        "-c",
+        "/dev/null",
+        "test_api_python.py",
+        "test_api_polars.py"
+      ],
+      "exit_code": 0,
+      "seconds": 0.8024122714996338
+    },
+    {
+      "command": [
+        "/var/tmp/codex-tdigest-pr3-20261014/overnight/release-wheel-22867bd/modern-venv/bin/python",
+        "-I",
+        "/var/tmp/codex-tdigest-pr3-20261014/overnight/release-wheel-22867bd/modern-checks/audit_weighted_points.py",
+        "--source-dir",
+        "/var/tmp/codex-tdigest-pr3-20261014/work/gr-tdigest",
+        "--output",
+        "/var/tmp/codex-tdigest-pr3-20261014/overnight/release-wheel-22867bd/modern-weighted-point-audit.json"
+      ],
+      "exit_code": 0,
+      "seconds": 0.38130855560302734
+    }
+  ]
+}

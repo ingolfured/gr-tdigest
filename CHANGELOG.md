@@ -5,6 +5,8 @@ All notable changes to this project are documented in this file.
 ## [Unreleased]
 
 ### Fixed
+- Disclose verified co-installation/native-module shadowing and packaged bytecode in the release plan; retain the broader compressed-state audit with two confirmed ordering failures as explicit open evidence, not a passing gate.
+- Record the unchanged 30-case Linux release matrix at corrected commit 22867bd: all sampled numerical fields match 756d221, while F32 centroid memory grows from 12 to 16 bytes. Preserve earlier evidence, add portable comparison tooling and exact installed-wheel validation provenance, and collapse generated audit records in review.
 - Document the corrected mass/mean representation and saved-state migration contract; add a reproducible 800-digest weighted-point audit with an explicit failing baseline control and separately disclosed extreme-weight limits.
 - Preserve the exact mean and Atomic/Mixed kind when a compressor cluster contains one input centroid, including cap/bucket fallback paths. This fixes pre-existing weighted CDF drift and duplicate-mean merge panics without changing multi-centroid averaging.
 - Preserve modern centroid mass in f64 even with f32 means, fixing lost repeated additions and reversed large-pile medians. Precision casts retain weight bits; Polars writes Float64 weights and still reads older Float32-weight structs. On Linux x86_64 the f32 centroid grows from 12 to 16 bytes; f64 stays 24 bytes. The original `tdigest_rs` path is unchanged.
