@@ -119,6 +119,9 @@ make test
 - Rust: stable (edition 2021)
 - Python: CPython 3.12 (built with maturin)
 - Polars: 1.x line (Python)
+- Legacy `tdigest-rs` compatibility is still under investigation. See the
+  [strict compatibility baseline](compat/gr_tdigest_vs_tdigest_rs.md) for known
+  failures and commands to reproduce them.
 
 ## Changelog
 - See `CHANGELOG.md`.

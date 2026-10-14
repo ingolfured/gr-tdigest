@@ -1,117 +1,105 @@
-# gr-tdigest vs. tdigest-rs
+# gr-tdigest vs. tdigest-rs: compatibility status
 
-`gr-tdigest` is the successor to the original `tdigest-rs` Python library. Its
-legacy Python surface is designed as a **drop-in replacement**: the old
-constructors and serialization APIs keep working unchanged, including
+Preserving the old `tdigest-rs` Python API is a goal that still has unresolved
+failures. The strict harness runs the upstream assertions against the compiled
+`gr_tdigest` extension through an import-only `tdigest_rs` shim. It does not
+adapt numerical behavior or change the assertions.
 
-```python
-from gr_tdigest import TDigest, DEFAULT_DELTA  # DEFAULT_DELTA == 300.0
+## Reproduce the diagnostic baseline
 
-d = TDigest.from_array(values, delta=DEFAULT_DELTA)   # delta-mode, as before
-d = TDigest.from_means_weights(means, weights, delta=DEFAULT_DELTA)
-blob = d.to_dict(); TDigest.from_dict(blob)           # and pickle round-trips
+After the normal development environment setup, run from the repository root:
+
+```bash
+make legacy-strict-test
+make legacy-bench-smoke
 ```
 
-Passing `delta=` selects the same compression behavior as the old library
-(`scale="k2norm"`, singletons off). gr-tdigest additionally offers a
-`max_size`-based mode, explicit `precision`, scale families, and singleton
-policies — none of which the old library exposed.
+Both commands rebuild the Python extension first. `legacy-strict-test` is an
+alias for `compat-test` and propagates pytest failures as a nonzero exit status.
+It is currently an opt-in diagnostic, outside `make test` and CI. Green standard
+tests do not establish legacy compatibility.
 
-This document records the **deliberate behavioral differences** a project
-migrating from `tdigest-rs` may observe. These are intentional design choices,
-not bugs.
+The copied tests and original benchmark are unchanged from G-Research
+`tdigest-rs` commit `8d9cf1fe82c5c9254e5dc9593f01717e317f4333`; see
+[`PROVENANCE.md`](tdigest-rs-upstream/PROVENANCE.md) for the source and checksums.
+The benchmark Make targets execute the separate custom runner in
+`tdigest-rs-strict-python/benchmarks/run.py`. `legacy-bench-smoke` uses a small
+workload; `compat-bench` uses that runner's larger defaults. Neither target runs
+the copied upstream benchmark, and a smoke pass is not an accuracy comparison.
 
-## 1. Non-finite input is rejected, not silently dropped
+## Verified baseline: 70 passed, 21 failed
 
-The old library silently discarded `NaN` values and accepted `±inf` as
-centroid means. gr-tdigest rejects any non-finite training value up front:
+Validation on 2026-10-14 used Linux under WSL, Python 3.12.12, Rust 1.90.0,
+Java 21, and Python dependencies from the committed `uv.lock`. The library
+implementation tested was PR #3 commit
+`dc330c0fb0c7661252065b97a47a69de58702913`; the subsequent harness/documentation
+correction does not change it. `make build`, `make test`, and
+`make legacy-bench-smoke` passed. The strict legacy suite collected 91 cases:
 
-```python
-TDigest.from_array([1.0, float("nan"), 2.0])
-# ValueError: tdigest: non-finite values are not allowed ...
-#             hint: clean your data or drop NaN/±inf before building the digest
-```
+| Failure group | Cases | Status |
+| --- | ---: | --- |
+| Median accuracy / equality | 13 | Defect and legacy API mismatch requiring fixes |
+| Quantile accuracy | 1 | Outside an existing upstream tolerance; investigate |
+| NaN / infinity input handling | 5 | Current strict contract differs from legacy behavior |
+| Input dtype / merge dtype handling | 2 | Current precision and validation rules differ from legacy behavior |
 
-**Why:** silently dropping data, or letting `±inf` poison quantile estimates,
-hides data-quality problems. Failing loudly is safer for a summary structure
-whose whole purpose is faithful distribution estimation.
+These are 21 failing test cases, not necessarily 21 independent defects. The
+failures have not been accepted as compatible behavior. Preserve the upstream
+assertions and tolerances while investigating; compatibility acceptance still
+requires the old suite to pass.
 
-**Migration:** if you previously relied on `NaN` being dropped, filter the
-input yourself, e.g. `arr = arr[np.isfinite(arr)]`.
+## Median and quantile failures
 
-## 2. `median()` is not guaranteed to equal `quantile(0.5)`
-
-In the old library `median()` was an alias for `quantile(0.5)`. In gr-tdigest
-they are computed independently and may differ slightly:
-
-```python
-d.median()        # e.g. -0.04979
-d.quantile(0.5)   # e.g. -0.06035
-```
-
-**Why:** the two follow gr-tdigest's interpolation rules separately. The
-difference is within normal t-digest estimation error.
-
-**Migration:** do not assume `median() == quantile(0.5)`. Pick one and use it
-consistently; use `quantile(0.5)` if you specifically need the 0.5-quantile
-estimate.
-
-## 3. Quantile and median estimates differ within tolerance
-
-gr-tdigest uses revised interpolation (half-weight bracketing, singleton-aware
-edges). For the same input and `delta`, individual quantile/median values can
-differ from the old library by small amounts — well inside typical t-digest
-accuracy bounds, but enough to break tests that pinned exact values or used
-very tight tolerances.
-
-**Migration:** compare against expected quantiles with realistic tolerances
-rather than exact equality.
-
-## 4. Precision is chosen explicitly, not inferred from input dtype
-
-The old library inferred its backend precision from the input array's dtype, so
-a `float32`-built digest and a `float64`-built digest were considered different
-types and could not be merged.
-
-gr-tdigest decouples precision from input dtype. The backend defaults to **f64**
-regardless of the input array's dtype, and you opt into 32-bit explicitly:
+Twelve Gaussian cases fail median accuracy checks, and
+`test_median_random_data` fails the old `median() == quantile(0.5)` contract.
+A deterministic weighted example also demonstrates a median defect:
 
 ```python
-TDigest.from_array(np.array([1, 2, 3], dtype=np.float32)).inner_kind()  # "f64"
-TDigest.from_array(values, precision="f32").inner_kind()                # "f32"
+from gr_tdigest import TDigest
+
+d = TDigest.from_means_weights([0.0, 10.0], [90.0, 10.0], delta=300)
+print(d.median())       # 5.0 at the baseline
+print(d.quantile(0.5))  # 0.0 at the baseline
 ```
 
-As a result, two digests built from differently-typed inputs (without an
-explicit `precision`) are both f64 and merge cleanly. Merging digests of
-genuinely different precision is still rejected, with a clear instruction:
+The digest retains those two means and weights. The represented population has
+90 zeros and 10 tens, whose median is 0. This discrepancy needs a regression
+test and a library fix; it is not justified by ordinary estimation error.
 
-```python
-f32 = TDigest.from_array(values, precision="f32")
-f64 = TDigest.from_array(values, precision="f64")
-f32.merge(f64)
-# ValueError: tdigest merge: incompatible digests (precision f32 vs f64).
-#             Cast explicitly before merge (e.g. cast_precision('f64')).
-```
+`test_uniform[1.0--2.0-10000]` also fails: at `q=0.75`, the estimate is about
+0.274090 while NumPy gives 0.220019, outside the test's existing tolerance.
+This requires investigation rather than a blanket claim that all estimates
+remain within tolerance.
 
-**Migration:** set `precision="f32"` where you previously relied on a
-`float32` input to select the 32-bit backend, and use `cast_precision(...)`
-to align two digests before merging.
+## Input and precision differences requiring resolution
 
-## 5. Non-`float64` numeric input is accepted
+The modern API rejects non-finite training values. The old tests expect NaN
+filtering and permit infinities in some inputs. Five cases fail:
+`test_only_nan_values`, `test_single_nan_value`, `test_only_inf_values`,
+`test_non_inf_extremas`, and `test_merge_with_infs`. Any compatibility solution
+must account for the modern cross-surface validation contract as well as the
+legacy API requirement.
 
-The old library raised `TypeError` for unsupported input dtypes (e.g.
-`float16`). gr-tdigest converts numeric input to its backend precision instead
-of raising:
+The backend currently defaults to f64 regardless of input array dtype, with f32
+selected through `precision="f32"`. Float16 input is accepted, and float32 and
+float64 arrays both produce f64 digests by default. Consequently,
+`test_raises_invalid_input_type` and `test_raises_merge_different_types` do not
+raise the `TypeError` expected by the old suite. These differences require an
+explicit compatibility decision and implementation; they are not resolved by
+describing them as intentional.
 
-```python
-TDigest.from_array(np.array([1, 2, 3], dtype=np.float16))  # accepted (f64 backend)
-```
+## Coverage beyond the copied tests
 
-**Migration:** no action needed; previously-rejected numeric dtypes now work.
+Additional runtime probes found issues that need follow-up regression tests:
 
----
+- `TDigest.update` is absent from the current Python class.
+- `merge` mutates and returns its receiver; compare this with the old API's
+  return-new-digest behavior.
+- Pickle, deepcopy, and byte-wire round-trips lose `delta`. A restored
+  `delta=20` digest fails to merge with its original because configuration
+  validation sees `delta=None` versus `delta=20`.
 
-The vendored upstream test suite under `tdigest-rs-upstream/` exercises these
-differences directly; see [`tdigest-rs-upstream/PROVENANCE.md`](tdigest-rs-upstream/PROVENANCE.md)
-for its source, and `make legacy-strict-test` to run it against the current
-extension.
+Passing the copied suite is the required baseline, but these additional API
+and serialization checks are also needed before claiming a drop-in replacement.
+Library fixes and their regression tests belong in follow-up changes; this
+harness records the failures so they can be addressed reproducibly.

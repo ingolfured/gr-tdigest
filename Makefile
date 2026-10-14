@@ -236,15 +236,15 @@ py-test: build-python
 java-test: JAVA_WRAPPER_CHECK
 	@GRADLE_USER_HOME="$(GRADLE_USER_HOME)" "$(GRADLE)" --no-daemon --console=plain -p "$(JAVA_SRC)" test
 
-compat-test:
+compat-test: build-python
 	@(cd "$(COMPAT_PY_DIR)" && PYTHONPATH="$(abspath $(STRICT_COMPAT_ADAPTER_DIR)):$(abspath $(COMPAT_PY_DIR)):$${PYTHONPATH:-}" $(UV_ENV) $(UV) run --project "$(abspath $(PY_DIR))" --no-sync python -m pytest -q tests)
 
 legacy-strict-test: compat-test
 
-compat-bench:
+compat-bench: build-python
 	@(cd "$(STRICT_COMPAT_ADAPTER_DIR)" && PYTHONPATH="$(abspath $(STRICT_COMPAT_ADAPTER_DIR)):$(abspath $(COMPAT_PY_DIR)):$${PYTHONPATH:-}" $(UV_ENV) $(UV) run --project "$(abspath $(PY_DIR))" --no-sync python "$(abspath $(STRICT_COMPAT_BENCH))")
 
-legacy-bench-smoke:
+legacy-bench-smoke: build-python
 	@(cd "$(STRICT_COMPAT_ADAPTER_DIR)" && PYTHONPATH="$(abspath $(STRICT_COMPAT_ADAPTER_DIR)):$(abspath $(COMPAT_PY_DIR)):$${PYTHONPATH:-}" $(UV_ENV) $(UV) run --project "$(abspath $(PY_DIR))" --no-sync python "$(abspath $(STRICT_COMPAT_BENCH))" --n 256 --n-arrays 16 --iterations 1 --delta 100 --workers 2)
 
 # ==============================================================================

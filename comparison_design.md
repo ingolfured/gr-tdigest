@@ -104,6 +104,21 @@ Key algorithmic difference in philosophy:
 - DataSketches emphasizes guaranteed-rank-error families (KLL/REQ) when guarantees are required.
 - `gr-tdigest` emphasizes t-digest tail quality + practical interoperability contracts.
 
+### 3.5 Legacy G-Research `tdigest-rs` compatibility
+
+Preserving the old Python API requires separate validation from the modern
+cross-surface contracts. The unchanged upstream suite currently reports
+70 passed and 21 failed cases against the real extension on Linux. The failures
+include a demonstrated weighted median defect, a quantile outside the upstream
+tolerance, and unresolved input/precision differences. Additional probes found
+API and serialization gaps. Standard CI passing does not establish that this
+library can replace the old API unchanged.
+
+See the [compatibility status](compat/gr_tdigest_vs_tdigest_rs.md) for the pinned
+source, reproduction commands, and failure inventory. Keep the old assertions
+intact while resolving the failures; do not infer compatibility from shared
+scale-function choices or dismiss accuracy failures as intentional differences.
+
 ## 4. Which is best? (scenario-based)
 
 There is no single globally best sketch/library. Best choice is workload-driven:

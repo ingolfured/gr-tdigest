@@ -4,6 +4,10 @@ All notable changes to this project are documented in this file.
 
 ## [Unreleased]
 
+### Fixed
+- Rebuild the Python extension before strict legacy tests and benchmark targets so they exercise the current Rust source.
+- Replace unsupported legacy compatibility claims with the verified 70-pass/21-failure baseline, a weighted median counterexample, and outstanding API/serialization gaps. Clarify that benchmark targets run a custom runner and that legacy compatibility remains unresolved.
+
 ### Changed
 - Compressor Stage 4 cap strategy now uses a second k-limit merge with binary-searched `d'` (same scale-family geometry as Stage 3) instead of always using equal-weight bucketization.
 - Added Stage 4 unit coverage for cap/weight/order invariants under the new second-pass k-limit cap behavior.
