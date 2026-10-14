@@ -27,12 +27,13 @@ fn rss_peak_kib() -> u64 {
     0
 }
 
-fn build_digest_unsorted(vals: Vec<f64>) -> TDigest {
+fn build_digest_unsorted(vals: Vec<f64>) -> TDigest<f64> {
     TDigest::builder()
         .max_size(1_000)
         .scale(ScaleFamily::K2)
         .build()
         .merge_unsorted(vals)
+        .expect("finite benchmark data")
 }
 
 fn bench_merge_unsorted(c: &mut Criterion) {
