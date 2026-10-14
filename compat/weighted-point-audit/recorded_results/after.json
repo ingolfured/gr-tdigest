@@ -1,0 +1,14 @@
+{
+  "seed": 202610140639,
+  "checks": {
+    "cdf": 13568,
+    "quantile_rank": 19968,
+    "digests": 800,
+    "integer_mass": 304
+  },
+  "seconds": 0.6167953370004398,
+  "compressor_sha256": "668994b47a40660da6424d7a349611d86b58caf6ff798a48fc03760a8d9f8dff",
+  "reference_audit_script_sha256": "43c569079cb728b1f35047d43bf3564e60ef285b9d0509ab3e45927b2b56621d",
+  "status": "PASS",
+  "note": "Historical capture from the original scratch harness. The portable gate retains the same default cases/reference but adds exit status, controls and provenance."
+}
