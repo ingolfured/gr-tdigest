@@ -5,6 +5,7 @@ All notable changes to this project are documented in this file.
 ## [Unreleased]
 
 ### Fixed
+- Keep the numerical-boundary regressions executable with an explicit floating-point comparator and a finite-sum reference for tiny-probability tail queries.
 - Evaluate CDF and quantiles for positive subnormal total mass through an exact power-of-two temporary query view, retaining stored state and ordinary-query arithmetic. Cover Atomic/Mixed tails and Python/Polars coherence; this cannot restore information lost during compression or resolve tiny components inside a normal total.
 - Bound finite multi-centroid weighted averages to their input mean interval, preventing rounding from producing duplicate or out-of-order compressed means; retain explicit overflow handling as separate work. Add Rust and Python/Polars regressions for adjacent means and large finite weights.
 - Preserve the exact mean and Atomic/Mixed kind when a compressor cluster contains one input centroid, including cap/bucket fallback paths. This fixes pre-existing weighted CDF drift and duplicate-mean merge panics without changing multi-centroid averaging.

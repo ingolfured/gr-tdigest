@@ -568,7 +568,7 @@ mod tests {
                 Centroid::<f64>::new_atomic_f64(left * sign, weights[0]),
                 Centroid::<f64>::new_atomic_f64(right * sign, weights[1]),
             ];
-            inputs.sort_by(|a, b| a.mean_f64().total_cmp(&b.mean_f64()));
+            inputs.sort_by(|a, b| f64::total_cmp(&a.mean_f64(), &b.mean_f64()));
             let mut stats = WeightedStats::default();
             for centroid in &inputs {
                 stats.add(centroid);

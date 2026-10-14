@@ -51,11 +51,11 @@ fn compressed_adjacent_means<F: FloatLike + FloatCore>() {
         assert!((actual - total).abs() <= total * 1e-14);
         let min = values
             .iter()
-            .map(|x| x.to_f64())
+            .map(|x| FloatLike::to_f64(*x))
             .fold(f64::INFINITY, f64::min);
         let max = values
             .iter()
-            .map(|x| x.to_f64())
+            .map(|x| FloatLike::to_f64(*x))
             .fold(f64::NEG_INFINITY, f64::max);
         assert_eq!(td.min(), min);
         assert_eq!(td.max(), max);

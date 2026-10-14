@@ -291,7 +291,7 @@ fn tiny_positive_quantiles_retain_large_finite_mixed_tail_values() {
             .build()
     };
     let tiny = build(f64::from_bits(1));
-    let normal = build(1.0);
+    let normal = build(0.5);
     let before = tiny.to_bytes();
     for q in [f64::from_bits(1), 1e-310, 1e-300, 0.25, 0.5, 0.75, 1.0] {
         let expected = normal.quantile(q);
