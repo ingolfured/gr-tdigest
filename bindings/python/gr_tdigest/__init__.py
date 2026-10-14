@@ -5,12 +5,11 @@ import math
 from enum import Enum
 from importlib.metadata import PackageNotFoundError, version
 from pathlib import Path
+from types import ModuleType
 from typing import TYPE_CHECKING, Any, Callable, Dict, Literal, Optional, cast
 
-import polars as pl
-from polars.plugins import register_plugin_function
-
 if TYPE_CHECKING:
+    import polars as pl
     from polars.type_aliases import IntoExpr
 
 # Path to the compiled plugin (shared library lives next to this file)
@@ -54,8 +53,8 @@ class SingletonPolicy(str, Enum):
 #: by the Rust extension (PyO3 signature), Rust CLI (`--max-size`), and this shim.
 DEFAULT_MAX_SIZE: int = 1000
 #: Default `delta` value documented for delta-mode. Matches the constant
-#: `DEFAULT_DELTA = 300.0` from the old `tdigest-rs` Python API so passing
-#: `delta=DEFAULT_DELTA` reproduces that library's out-of-the-box behavior.
+#: `DEFAULT_DELTA = 300.0` from the old `tdigest-rs` Python API. Full legacy
+#: input and mutation semantics are exposed by the shipped `tdigest_rs` package.
 DEFAULT_DELTA: float = 300.0
 
 _DEFAULT_MAX_SIZE = DEFAULT_MAX_SIZE  # backwards-compatible alias for internal callers
@@ -122,7 +121,40 @@ def _norm_policy(mode: SingletonPolicy | str | None) -> str:
     raise ValueError("singleton_policy must be 'off'|'use'|'edges' or SingletonPolicy enum.")
 
 
+def _require_polars() -> ModuleType:
+    """Load Polars only for expression/DataFrame operations."""
+    try:
+        import polars
+    except ModuleNotFoundError as exc:
+        if exc.name != "polars":
+            raise
+        raise ModuleNotFoundError(
+            "Polars is required for expression and DataFrame operations; install polars to use this API.",
+            name="polars",
+        ) from exc
+    return polars
+
+
+class _PolarsNamespace:
+    """Resolve postponed Polars annotations without eager package imports."""
+
+    def __getattr__(self, name: str) -> Any:
+        return getattr(_require_polars(), name)
+
+
+if not TYPE_CHECKING:
+    pl = _PolarsNamespace()
+
+
+def _register_plugin_function(**kwargs: Any) -> pl.Expr:
+    _require_polars()
+    from polars.plugins import register_plugin_function
+
+    return register_plugin_function(**kwargs)
+
+
 def _into_expr(x: "IntoExpr | Any") -> pl.Expr:
+    pl = _require_polars()
     if isinstance(x, pl.Expr):
         return x
     if isinstance(x, str):
@@ -221,6 +253,7 @@ def infer_column_precision(
     - If mixed and strict=False → default to \"f64\".
     - If no non-null blobs → default to \"f64\".
     """
+    pl = _require_polars()
     s = df[col]
     if s.null_count() == len(s):
         return "f64"
@@ -573,7 +606,7 @@ def tdigest(
     if eps is not None:
         kwargs["edges_per_side"] = int(eps)
 
-    return register_plugin_function(
+    return _register_plugin_function(
         plugin_path=str(lib),
         function_name="tdigest",
         args=[v_expr],
@@ -593,7 +626,7 @@ def cdf(digest: "IntoExpr", values: "IntoExpr") -> pl.Expr:
     d_expr = _into_expr(digest)
     v_expr = _into_expr(values)
 
-    expr = register_plugin_function(
+    expr = _register_plugin_function(
         plugin_path=str(lib),
         function_name="cdf",
         args=[d_expr, v_expr],
@@ -620,7 +653,7 @@ def quantile(digest: "IntoExpr", q: float) -> pl.Expr:
         )
         raise ValueError(f"q must be within [0, 1]; got {q_val}. {hint}")
 
-    return register_plugin_function(
+    return _register_plugin_function(
         plugin_path=str(lib),
         function_name="quantile",
         args=[d_expr],
@@ -631,7 +664,7 @@ def quantile(digest: "IntoExpr", q: float) -> pl.Expr:
 
 def median(digest: "IntoExpr") -> pl.Expr:
     d_expr = _into_expr(digest)
-    return register_plugin_function(
+    return _register_plugin_function(
         plugin_path=str(lib),
         function_name="median",
         args=[d_expr],
@@ -647,7 +680,7 @@ def merge_tdigests(digest: "IntoExpr") -> pl.Expr:
     - If a group's input is null/empty, this yields a *real empty digest* (n=0) for that group.
     """
     d_expr = _into_expr(digest)
-    return register_plugin_function(
+    return _register_plugin_function(
         plugin_path=str(lib),
         function_name="merge_tdigests",
         args=[d_expr],
@@ -663,7 +696,7 @@ def add_values(digest: "IntoExpr", values: "IntoExpr") -> pl.Expr:
     """
     d_expr = _into_expr(digest)
     v_expr = _into_expr(values)
-    return register_plugin_function(
+    return _register_plugin_function(
         plugin_path=str(lib),
         function_name="add_values",
         args=[d_expr, v_expr],
@@ -680,7 +713,7 @@ def add_weighted_values(digest: "IntoExpr", values: "IntoExpr", weights: "IntoEx
     d_expr = _into_expr(digest)
     v_expr = _into_expr(values)
     w_expr = _into_expr(weights)
-    return register_plugin_function(
+    return _register_plugin_function(
         plugin_path=str(lib),
         function_name="add_weighted_values",
         args=[d_expr, v_expr, w_expr],
@@ -695,8 +728,9 @@ def cast_precision(digest: "IntoExpr", *, precision: str) -> pl.Expr:
     """
     d_expr = _into_expr(digest)
     prec = _coerce_cast_precision(precision)
+    pl = _require_polars()
     hint = pl.lit(0.0, dtype=pl.Float32) if prec == "f32" else pl.lit(0.0, dtype=pl.Float64)
-    return register_plugin_function(
+    return _register_plugin_function(
         plugin_path=str(lib),
         function_name="cast_precision",
         args=[d_expr, hint],
@@ -712,7 +746,7 @@ def scale_weights(digest: "IntoExpr", factor: float) -> pl.Expr:
     except Exception as exc:  # noqa: BLE001
         raise TypeError(f"factor must be a float; got {type(factor).__name__}.") from exc
 
-    return register_plugin_function(
+    return _register_plugin_function(
         plugin_path=str(lib),
         function_name="scale_weights",
         args=[d_expr],
@@ -728,7 +762,7 @@ def scale_values(digest: "IntoExpr", factor: float) -> pl.Expr:
     except Exception as exc:  # noqa: BLE001
         raise TypeError(f"factor must be a float; got {type(factor).__name__}.") from exc
 
-    return register_plugin_function(
+    return _register_plugin_function(
         plugin_path=str(lib),
         function_name="scale_values",
         args=[d_expr],
@@ -753,7 +787,7 @@ def to_bytes(digest: "IntoExpr", *, version: int | None = None) -> pl.Expr:
             raise TypeError(f"version must be an int in {{1,2,3}}; got {type(version).__name__}.") from exc
         if v not in {1, 2, 3}:
             raise ValueError(f"version must be one of 1, 2, or 3; got {v}.")
-        return register_plugin_function(
+        return _register_plugin_function(
             plugin_path=str(lib),
             function_name="to_bytes_versioned",
             args=[d_expr],
@@ -761,7 +795,7 @@ def to_bytes(digest: "IntoExpr", *, version: int | None = None) -> pl.Expr:
             returns_scalar=True,
         )
 
-    return register_plugin_function(
+    return _register_plugin_function(
         plugin_path=str(lib),
         function_name="to_bytes",
         args=[d_expr],
@@ -780,6 +814,7 @@ def from_bytes(blob: "IntoExpr", *, precision: str = "auto") -> pl.Expr:
       - "f64": Polars schema uses Float64-backed struct
       - "f32": Polars schema uses the compact Float32-backed struct
     """
+    pl = _require_polars()
     b_expr = _into_expr(blob)
     prec_norm = _coerce_precision(precision)  # "auto" | "f64" | "f32"
 
@@ -793,7 +828,7 @@ def from_bytes(blob: "IntoExpr", *, precision: str = "auto") -> pl.Expr:
             hint = pl.lit(0.0, dtype=pl.Float64)
         args = [b_expr, hint]
 
-    return register_plugin_function(
+    return _register_plugin_function(
         plugin_path=str(lib),
         function_name="from_bytes",
         args=args,

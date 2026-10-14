@@ -46,8 +46,15 @@ use jemallocator::Jemalloc;
 #[global_allocator]
 static ALLOC: Jemalloc = Jemalloc;
 
+#[cfg(any(test, feature = "python"))]
+mod compact_storage;
 #[cfg(feature = "python")]
 mod py;
+#[cfg(feature = "python")]
+#[path = "upstream/lib.rs"]
+mod upstream;
+#[cfg(feature = "python")]
+mod upstream_py;
 #[cfg(feature = "python")]
 use pyo3::prelude::*;
 #[cfg(feature = "python")]

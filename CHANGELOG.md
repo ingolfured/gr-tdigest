@@ -12,11 +12,13 @@ All notable changes to this project are documented in this file.
 - Preserve the exact mean and Atomic/Mixed kind when a compressor cluster contains one input centroid, including cap/bucket fallback paths. This fixes pre-existing weighted CDF drift and duplicate-mean merge panics without changing multi-centroid averaging.
 - Preserve modern centroid mass in f64 even with f32 means, fixing lost repeated additions and reversed large-pile medians. Precision casts retain weight bits; Polars writes Float64 weights and still reads older Float32-weight structs. On Linux x86_64 the f32 centroid grows from 12 to 16 bytes; f64 stays 24 bytes. The original `tdigest_rs` path is unchanged.
 - Mark f32-mean TDIG v3 blobs whose weights need f64 precision with flag 0x08, making older readers reject instead of silently rounding them. Payload bytes retain the existing layout; explicit v1/v2 exports of these states require an explicit f64 cast.
+- Release unused result-vector capacity at the original Python boundary without changing arithmetic or centroid contents; keep numerical imports independent of Polars and preserve annotation introspection.
 - Keep weighted CDF tails monotone and bounded, preserve true extrema during updates, and retain every sample when protected edges overlap. Apply Polars configuration before compression and preserve identity-operation state and planned schemas.
 - Reject lossy fractional v1 export and malformed decoded weights/configuration; preserve full-width edge pins in checksum-covered TDIG v3 extensions and reject unsupported old-format exports.
 - Correct weighted/fractional median interpolation and preserve mixed centroid provenance across merges.
 - Preserve delta in TDIG v3 and configuration/kind in Polars structs; reject lossy v1/v2 delta export and support Float32 Polars median.
 - Add modern Python and cross-surface regressions, including backward-compatible Polars struct reading.
+- Preserve `tdigest_rs.TDigest` with unchanged upstream calculations and Python wrapper (embedded with namespace-only import changes to avoid an unpublished crate dependency): original f32 arithmetic, uint32 weights, merge/update, and copy/pickle behavior. Keep the new engine opt-in via `gr_tdigest`; matching delta and approximate upstream tests alone do not ensure unchanged results.
 
 ### Changed
 - Compressor Stage 4 cap strategy now uses a second k-limit merge with binary-searched `d'` (same scale-family geometry as Stage 3) instead of always using equal-weight bucketization.

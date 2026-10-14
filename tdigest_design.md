@@ -446,3 +446,14 @@ Adapters (`src/py.rs`, `src/jni.rs`, `src/polars_expr.rs`) should remain thin ar
 
 3. Doc split discipline.
 - Keep target behavior only in `api_design.md` and current internals only here.
+
+## Original G-Research numerical compatibility
+
+`tdigest_rs.TDigest` uses the pinned `src/upstream` implementation through
+`src/upstream_py.rs`. Both f32 arithmetic and u32 centroid weights are retained.
+The Python wrapper is unchanged from upstream, including its cached arrays and
+default-delta reconstruction during copy/pickle. This deliberate separate path
+preserves existing application outputs; `gr_tdigest`, Polars, Java, and the CLI
+continue using the modern shared core. Numerical fixes there must not silently
+change the original interface. See the vendored source provenance and exact
+output regression tests.

@@ -21,7 +21,7 @@ fn parse_policy(kind: Option<&str>, pin_per_side: Option<usize>) -> Result<Singl
 /// Resolve `(scale, policy)` honoring delta-mode contract.
 ///
 /// `delta` selects the compression family used by the old tdigest-rs library.
-/// This setting preserves the modern API input and mutation contract.
+/// The full legacy API is provided separately by the shipped `tdigest_rs` package.
 /// Compression-mode settings are:
 /// - `scale` defaults to `K2Norm` (canonical Dunning K2 from paper eq 8);
 /// - `singleton_policy` defaults to `Off` (no edge protection / pinning);
@@ -434,6 +434,7 @@ fn merge_all(digests: Bound<'_, PyAny>) -> PyResult<PyTDigest> {
 
 pub(crate) fn register(m: &Bound<'_, PyModule>) -> PyResult<()> {
     m.add_class::<PyTDigest>()?;
+    crate::upstream_py::register(m)?;
     m.add_function(wrap_pyfunction!(wire_precision_py, m)?)?;
     m.add_function(wrap_pyfunction!(merge_all, m)?)?;
     Ok(())
