@@ -46,6 +46,8 @@ use jemallocator::Jemalloc;
 #[global_allocator]
 static ALLOC: Jemalloc = Jemalloc;
 
+#[cfg(any(test, feature = "python"))]
+mod compact_storage;
 #[cfg(feature = "python")]
 mod py;
 #[cfg(feature = "python")]
