@@ -325,6 +325,13 @@ Decode behavior:
 - v2 decodes centroid kind explicitly from payload and preserves atomic-vs-mixed identity.
 - v2/v3 preserve fractional centroid weights on wire.
 - v3 checksum is verified when present.
+- v3 flag bit2 carries an optional u64 `pin_per_side` for edge settings above 255.
+  It follows the delta extension when present; otherwise it starts at byte 64.
+  The fixed pin byte is 255, the edge policy is required, and header length/checksum
+  cover the full extension. Older versions reject export of these settings.
+- v1 export rejects fractional/out-of-range weights; its historical kind heuristic
+  can still change weighted-query behavior, so use v3 for faithful state transfer.
+  Decoders reject nonpositive or unrepresentable weights before constructing centroids.
 - v3 flag bit1 stores an optional positive finite delta at header bytes 64..72;
   the extension is covered by the checksum. Absent extension means max-size mode.
 - Explicit v1/v2 export cannot represent delta mode and is rejected. The existing
