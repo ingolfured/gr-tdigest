@@ -8,6 +8,14 @@ use pyo3::types::*;
 
 use crate::upstream::TDigest;
 
+// The original compressor reserves one output slot per input and retains that
+// capacity. Release unused slots at the Python boundary without changing any
+// centroid, integer weight, arithmetic, or query convention.
+fn compact_digest<T>(mut digest: TDigest<T>) -> TDigest<T> {
+    crate::compact_storage::compact_digest_storage(&mut digest.means, &mut digest.weights);
+    digest
+}
+
 macro_rules! generate {
     ($name: ident, $type: ident) => {
         #[pyclass]
@@ -44,7 +52,7 @@ macro_rules! generate {
                 let arr = arr.as_array().to_vec();
                 py.allow_threads(|| {
                     Ok(Self {
-                        inner: TDigest::from_array(&arr, delta)?,
+                        inner: compact_digest(TDigest::from_array(&arr, delta)?),
                     })
                 })
             }
@@ -68,7 +76,7 @@ macro_rules! generate {
 
                 py.allow_threads(|| {
                     Ok(Self {
-                        inner: TDigest::from_means_weights(&arr, &weights, delta)?,
+                        inner: compact_digest(TDigest::from_means_weights(&arr, &weights, delta)?),
                     })
                 })
             }
@@ -88,7 +96,7 @@ macro_rules! generate {
             fn merge(&self, py: Python, other: &Self, delta: $type) -> PyResult<Self> {
                 py.allow_threads(|| {
                     Ok(Self {
-                        inner: self.inner.merge(&other.inner, delta)?,
+                        inner: compact_digest(self.inner.merge(&other.inner, delta)?),
                     })
                 })
             }
