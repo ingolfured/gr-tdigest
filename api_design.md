@@ -74,7 +74,7 @@ Do not apply modern numerical fixes or validation to this interface. The modern
 engine is explicitly selected through `gr_tdigest`; matching delta alone does
 not make its answers identical. The original interface has no new delta
 property, cdf method, or wire-state format. Focused regression tests cover immutable merge/update, dtype, copy/pickle, and the original dictionary state.
-The unchanged upstream suite is required by `make test` and installed-wheel CI.
+The unchanged 91-case upstream suite, 70 exact original-output cases, and pinned-source checksums are required by `make test` and installed-wheel CI.
 
 ### 4.2 Queries
 
