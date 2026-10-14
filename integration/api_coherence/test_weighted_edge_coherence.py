@@ -105,3 +105,17 @@ def test_fractional_cdf_and_retained_extrema_in_java_and_cli(
             text=True,
         )
         assert float(output.strip().split(",")[-1]) == expected
+
+
+@pytest.mark.parametrize("precision", ["f32", "f64"])
+def test_fractional_point_mass_stays_at_the_original_mean(precision):
+    digest = td.TDigest.from_means_weights(
+        [-4.0, -3.0, -2.0], [1.0, 0.1, 1.0], precision=precision, max_size=1000
+    )
+    np.testing.assert_array_equal(digest.means, [-4.0, -3.0, -2.0])
+    assert digest.cdf([-3.0])[0] == pytest.approx(0.5, abs=1e-14)
+    frame = pl.DataFrame({"blob": [digest.to_bytes()]}).select(d=td.from_bytes("blob"))
+    assert frame.select(td.cdf("d", pl.lit(-3.0))).item() == pytest.approx(
+        0.5, abs=1e-14
+    )
+    assert frame.select(td.to_bytes("d")).item() == digest.to_bytes()

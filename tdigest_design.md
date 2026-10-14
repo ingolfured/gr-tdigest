@@ -138,6 +138,14 @@ Note: core merge is permissive by design. Strict precision/config checks are enf
 
 Output at this stage is strictly increasing by mean.
 
+All later compressor paths preserve a one-input cluster's mean bits and
+Atomic/Mixed kind. The shared accumulator emits that input without recomputing
+`mean * weight / weight`; even one rounding step would move an exact point mass,
+change CDF results at the observed value, and risk duplicate means on a later
+merge. K-limit passes, equal-weight bucketization and single-bucket collapse use
+the same emission rule. Clusters containing multiple inputs remain Mixed and
+use the existing weighted-average calculation.
+
 ### 4.2 Stage 2: policy slice
 
 Policy is derived from `SingletonPolicy` and current `max_size`.
