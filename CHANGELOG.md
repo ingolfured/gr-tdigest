@@ -5,6 +5,7 @@ All notable changes to this project are documented in this file.
 ## [Unreleased]
 
 ### Fixed
+- Document the corrected mass/mean representation and saved-state migration contract; add a reproducible 800-digest weighted-point audit with an explicit failing baseline control and separately disclosed extreme-weight limits.
 - Validate every scaled centroid weight and both total-mass representations before committing weight scaling. Positive finite factors that underflow weights to zero or overflow weights/totals now return ordinary errors with unchanged state across Rust, Python, and Polars.
 - Keep the numerical-boundary regressions executable with an explicit floating-point comparator and a finite-sum reference for tiny-probability tail queries.
 - Evaluate CDF and quantiles for positive subnormal total mass through an exact power-of-two temporary query view, retaining stored state and ordinary-query arithmetic. Cover Atomic/Mixed tails and Python/Polars coherence; this cannot restore information lost during compression or resolve tiny components inside a normal total.

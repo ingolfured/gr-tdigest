@@ -1,0 +1,77 @@
+{
+  "ordinary_atomic_mean_drift": {
+    "values": [
+      -4.0,
+      -3.0,
+      -2.0
+    ],
+    "weights": [
+      1.0,
+      0.1,
+      1.0
+    ],
+    "precision": "f64",
+    "expected_cdf_at_minus3": 0.5,
+    "before_cdf": 0.5238095238095238,
+    "after_cdf": 0.5
+  },
+  "ordinary_merge_panic_or_duplicate_means": {
+    "ordered_single_centroid_shards": [
+      [
+        -3.0,
+        0.1
+      ],
+      [
+        -4.0,
+        0.30000000000000004
+      ],
+      [
+        -1.0,
+        0.5
+      ],
+      [
+        -3.0,
+        0.1
+      ]
+    ],
+    "precision": "f64",
+    "before_release_means": [
+      -4.0,
+      -3.0000000000000004,
+      -3.0000000000000004,
+      -1.0
+    ],
+    "before_debug": "PanicException: strict centroid order assertion",
+    "after_means": [
+      -4.0,
+      -3.0,
+      -1.0
+    ]
+  },
+  "separate_subnormal_limit": {
+    "values": [
+      0.0,
+      1.0
+    ],
+    "weights": [
+      5e-324,
+      5e-324
+    ],
+    "probe": 0.5,
+    "expected_cdf": 0.5,
+    "observed_cdf": 0.0,
+    "note": "Both mean precisions; known limitation, excluded from passing gate."
+  },
+  "separate_aggregate_overflow_limit": {
+    "values": [
+      0.0,
+      1.0
+    ],
+    "weights": [
+      1e+308,
+      1e+308
+    ],
+    "observed": "Infinite total, invalid CDFs; duplicate means instead cause PanicException.",
+    "note": "Both mean precisions; known limitation, excluded from passing gate."
+  }
+}

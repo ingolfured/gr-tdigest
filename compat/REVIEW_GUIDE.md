@@ -1,87 +1,127 @@
 # Reviewing the replacement
 
-The goal is to let existing G-Research applications keep using `tdigest_rs.TDigest`,
-while making the modern engine a trustworthy option for better storage, richer
-operations, and measured performance or accuracy improvements.
+Existing G-Research applications should keep using `tdigest_rs.TDigest`, with its
+original Python API and numerical baseline. The modern `gr_tdigest` engine is an
+explicit choice for richer operations and measured performance or accuracy gains.
+These are two reviewable contracts; the original interface does not silently
+switch algorithms when this stack is installed.
 
 ## The three changes
 
-1. **Correct the modern engine and preserve its state (PR #6).** Weighted queries
-   must use actual mass, CDF must remain monotone and bounded after weight scaling,
-   and updates must retain true data extrema. Configuration must affect compression
-   when data is ingested and survive Python, Polars, Java, and wire round trips.
-   Inspect the small counterexamples before reading the compressor and codec changes.
+1. **Correct the modern engine and preserve its state (PR #6).** Start with the
+   small counterexamples: weighted medians, scaled CDF tails, true extrema,
+   overlapping protected edges, large f32 piles, and single-centroid clusters.
+   A cluster containing one input must retain that input's mean bits and kind;
+   recomputing `mean * weight / weight` can move an exact point mass and change
+   the CDF at the observed value. Then review compression, Polars configuration,
+   and the codecs that preserve this state.
 2. **Keep existing applications working (PR #7).** Preserve the public import,
-   constructors, delta parameters, dtype rules, immutable merge/update, and saved
-   state. The pinned original arithmetic provides a conservative numerical baseline.
-   The adapter releases unused vector capacity without modifying centroid values or
-   weights. NumPy-only use no longer imports Polars.
-3. **Prove and explain the contract (PR #8).** Require the untouched original suite,
-   an independent numerical oracle, cross-surface regressions, and installation of
-   an optimized Linux wheel outside the checkout. Keep performance tooling runnable
-   and publish comparisons with their settings, provenance, and limitations.
+   constructors, delta parameters, dtype rules, uint32 weights, immutable
+   merge/update, and original saved-state behavior. Pinned upstream arithmetic
+   supplies the baseline. The adapter releases spare vector capacity without
+   changing centroid contents, and NumPy-only imports defer Polars loading.
+3. **Prove and explain the contract (PR #8).** Require the unchanged upstream
+   suite, independent exact-output fixtures, cross-surface regressions, genuine
+   published-package pickles, and an optimized Linux wheel installed outside the
+   checkout. Keep performance measurements reproducible and tied to their actual
+   source hashes.
+
+## Preserve mass independently of mean precision
+
+Modern centroid weights now stay in f64 for both mean precisions. Previously,
+adding one observation to an f32 pile of weight `2**24` could advance the total
+count while leaving that centroid's weight unchanged. With two equal piles,
+adding on the left could even move the median to the right. The new representation
+retains the increment through construction, updates, merge, scaling, precision
+casts, and saved state. It cannot recover mass already lost in old stored data.
+
+This has an explicit cost: on the tested Linux x86_64/Rust 1.90 target, an f32
+centroid grows from **12 to 16 bytes**; the f64 centroid remains 24 bytes. Means
+and extrema retain their selected precision. Rust `weight() -> F` remains a
+potentially lossy compatibility view; `weight_f64()` is authoritative.
+
+Polars now writes Float64 weights with either Float32 or Float64 means. It reads
+old Float32-weight structs by exact promotion, and mutations report the new
+schema. Consumers that assume the old schema need to account for that change.
+TDIG v3 sets checksum-covered flag **0x08** only when f32 means accompany weights
+that cannot round-trip through f32. It adds no bytes because payload weights were
+already f64; older readers reject the flag instead of silently narrowing mass.
+Explicit v1/v2 export rejects such digests. An explicit f64 mean cast can satisfy
+this weight restriction where the other old-format restrictions also permit
+export. Delta and full-width protected-edge extensions retain their own guards.
 
 ## Numerical change policy
 
-Identical original results are the preferred baseline, not a reason to reject a
-useful improvement forever. A justified small difference can be acceptable, but
-it must be visible: give the input, old result, new result, absolute/relative
-difference, and error against the underlying data. Test both precisions and merge
-patterns. Do not apply one absolute epsilon to all data scales or describe a
-changed weighted/tail convention as floating-point noise.
+Identical original results are the preferred baseline. A useful numerical change
+can be acceptable if it is disclosed with inputs, old/new results, absolute and
+relative differences, and accuracy against the underlying data. Cover both
+precisions and merge patterns; one absolute epsilon is not meaningful at every
+scale. Changed weighted or tail conventions are not floating-point noise.
 
-For example, old means `[0,10]` with weights `[90,10]` yield median `1`, while the
-modern weighted-point interpretation yields `0`. That is a substantive semantic
-choice. For values `[1,2]`, the original low-tail extrapolation can return `0.7`
-at `q=0.1`; the modern result stays within the observed range. These changes are
-currently confined to the explicitly selected modern engine.
+For means `[0,10]` and weights `[90,10]`, the original median is `1`, while the
+modern weighted-point interpretation gives `0`. For values `[1,2]`, the original
+`q=0.1` estimate can be `0.7`; the modern result stays within the observed range.
+These modern semantics do not change the original import's calculations.
 
-Serialization that preserves the same state should preserve answers. A smaller
-format is not by itself a reason to change numbers; any lossy encoding would need
-its own accuracy evidence and a clear opt-in contract.
+Serialization of the same state should preserve its answers. Smaller storage
+alone does not justify changing numbers; lossy storage needs its own accuracy
+evidence and an explicit contract.
 
-## What the measurements must establish
+## Genuine saved-state migration
+
+The [published-pickle gate](published-pickle/README.md) uses the actual PyPI
+`tdigest-rs` **0.1.0** wheel with NumPy 1.26.4, distinct from the pinned source
+advertising **0.2.0**. It checks both precisions, weighted data, construction and
+merge deltas, and pickle protocols 4/5 against the old package's restored results.
+
+The original pickle stores means/weights and reconstructs with default delta 300.
+It can already recompress state: the delta-5000 example shrinks from 1833 to 134
+centroids in the old package itself. Matching that restored result preserves the
+existing behavior; it does not imply the original pickle was lossless.
+
+Forward migration passed the recorded candidate wheel with NumPy 2.3.4. Reverse
+protocol-4 migration passed the tested NumPy 1.26.4 environment; protocol 5 failed
+because NumPy 2 writes `numpy._core.numeric`, absent there. This is a rollback
+constraint, not numerical drift. Retain old state or use an explicitly tested
+interoperable policy if rollback is required. Provenance identifies the historical
+artifact; the final stack must pass its own installed-wheel gate.
+
+## Performance evidence
+
+The [retained 30-case comparison](performance/RESULTS-756d221.md) records the earlier source at `756d221`. A fresh run of the corrected engine is pending; no final speed claim is made here. The [weighted-point audit](weighted-point-audit/README.md) supplies a separate reproducible correctness check with exact rational input weights.
 
 Compare optimized builds on the same machine and inputs. Separate construction,
-merge, p50/CDF/query costs, retained memory, and peak memory. State whether controls
-are matched by delta, centroid count, memory budget, or error target. Report
-empirical rank error alongside value error, including ties, skew, extreme tails,
-tiny inputs, and roughly 40-way merges. Separate core measurements from Python
-adapter overhead and record source hashes for each result.
+merge, p50/CDF queries, retained capacity, and peak memory. Match or disclose delta,
+centroid count, memory, and error budgets. Report sampled empirical rank error
+alongside value error, including ties, skew, tails, tiny inputs, and roughly
+40-way merges. Distinguish sequential and one-shot merge semantics.
 
-The [performance report](performance/README.md) records the measured source, raw
-samples, tradeoffs, and reproduction instructions.
-
-The old-import path still uses original arithmetic. Modern-engine timings cannot
-be advertised as a speedup for unchanged old imports. Releasing spare vector
-capacity can improve retained memory without changing calculations, but it does
-not remove the original construction peak. A comparison with one upstream engine
-on one machine cannot establish world-leading speed or accuracy.
+Measurements at `756d221` predate the f64-weight and single-centroid fixes. Preserve
+that evidence with its original labels; it cannot establish the final code's
+performance. The larger f32 representation needs fresh timing and memory evidence.
+Modern speedups do not apply to unchanged `tdigest_rs` imports. Adapter compaction
+reduces reserved result capacity, not the original construction peak or measured
+RSS. One upstream comparison on one machine cannot establish a global lead.
 
 ## Remaining release decisions
 
-- The current distribution is `gr-tdigest`, with Python 3.12 and current NumPy/Polars
-  dependencies. Upstream `tdigest-rs` supported a wider Python range. Agree the
-  package identity, runtime support matrix, and upgrade/uninstall behavior before
-  replacing an installed distribution that owns the same import namespace.
-- These gates preserve the original Python contract. Direct compatibility with the
-  original public Rust crate API is not yet implemented or verified; confirm whether
-  any G-Research consumers need it before preparing the upstream replacement.
-- The release Linux wheel gate does not cover every platform or manylinux policy.
-  Validate the actual release artifacts and supported environment matrix.
-- The modern f32 engine stores centroid weights in f32. Very large atomic piles
-  can lose unit-weight increments above `2**24`; this is not a negligible absolute
-  output drift. The default f64 engine and the original interface's uint32 weights
-  have different limits. Do not claim exact mass preservation for arbitrary f32
-  workloads until the representation/accumulation contract is resolved.
-- The original arithmetic retains upstream quirks, including uint32 overflow and
-  some malformed-input behavior. Passing its suite is compatibility evidence, not
-  a claim that those inherited behaviors are ideal.
-- Update upstream PR #38 from the validated final tree and refresh its description:
-  its earlier snapshot removed delta and required migration, which is not the
-  contract of this review stack. It is not ready merely because these private PRs
-  are green.
+- Accumulation still uses f64. Extremely small subnormal masses, very disparate
+  weights, and finite weights whose totals/products overflow remain numerical
+  limits requiring explicit handling. The f32 storage fix does not establish
+  correct queries or exact mass for every finite input.
+- Agree distribution identity, Python/NumPy/Polars support, and upgrade/uninstall
+  behavior. This checkout still packages `gr-tdigest` for Python 3.12; upstream
+  supported a wider Python range and owns the `tdigest_rs` namespace.
+- The original public Rust crate API is not restored by the Python compatibility
+  tests. Confirm whether G-Research has direct Rust consumers and define that
+  migration contract before replacing the upstream project.
+- Validate the actual platform and manylinux release artifacts. A release Linux
+  wheel test covers only its recorded environment, including its pickle limits.
+- Original arithmetic retains uint32 overflow and other upstream quirks. Passing
+  its tests is compatibility evidence, not a claim those behaviors are ideal.
+- Refresh upstream PR #38 from the final validated tree and rewrite its migration
+  story. Green private review PRs do not by themselves make it release-ready.
 
-Review and merge in order: #6, then rebase/retarget #7, then #8. The user owns those
-merge decisions. Source checksums and golden outputs should change only through
-an explicit, documented numerical-contract change.
+Review and merge #6, then rebase/retarget #7, then #8. The user owns these merge
+decisions. Change source checksums and golden outputs only through a documented
+numerical-contract decision.

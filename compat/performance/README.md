@@ -2,9 +2,9 @@
 
 The compatibility interface (`tdigest_rs`) keeps the original arithmetic. The modern engine (`gr_tdigest`) is opt-in. The useful story is measured tradeoffs: compatibility, much smaller reserved result capacity, and workload-dependent modern speed/accuracy improvements. These measurements do **not** establish a global speed or accuracy lead.
 
-## Current committed evidence
+## Retained comparison before the weight and mean fixes
 
-The latest full run targets clean commit `756d221d35bd6d382cdfb8705598bb445a665997`; no source changed during the run. See [current results and limitations](RESULTS-756d221.md), [raw samples](results/2026-10-14-756d221.jsonl) and [provenance](results/2026-10-14-756d221-metadata.json). It includes the first-batch correctness fixes. The scratch scalar-CDF optimization is not included.
+The recorded full run targets clean commit `756d221d35bd6d382cdfb8705598bb445a665997`; no source changed during the run. See [current results and limitations](RESULTS-756d221.md), [raw samples](results/2026-10-14-756d221.jsonl) and [provenance](results/2026-10-14-756d221-metadata.json). It includes the first-batch correctness fixes. The scratch scalar-CDF optimization is not included.
 
 Release Rust cores on Linux/WSL, Intel Core Ultra 9 288V, one pinned CPU, Rust 1.90.0, delta=300, both precisions, seven batches per operation:
 
@@ -19,7 +19,7 @@ Release Rust cores on Linux/WSL, Intel Core Ultra 9 288V, one pinned CPU, Rust 1
 
 The independent original core plus numerically neutral compaction reduced 10M-input f64 reserved vector capacity from 120,000,000 to 1,776 bytes with identical centroid contents. Capacity is **not RSS savings**. Compact modern state is also larger than compact original state for many tiny/continuous digests.
 
-**Known unresolved limit:** modern f32 weight/mass accounting beyond this matrix remains open. The largest input here is 10M unit samples, below 2²⁴; these results do not prove exact mass conservation for larger or arbitrarily scaled/fractional f32 weights.
+**Source boundary:** this matrix predates the f64-weight and single-centroid mean fixes now in the review stack. The largest input here is 10M unit samples, below 2²⁴. New regression tests cover the corrected large-pile accounting, but these historical timings do not measure the new 16-byte f32 centroid. A fresh run is required before drawing performance conclusions about the corrected engine. Subnormal masses and overflowing totals remain separate open limits.
 
 ## Preserved historical evidence
 

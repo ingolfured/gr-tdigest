@@ -1,0 +1,277 @@
+{
+  "status": "PASS",
+  "seed": 202610140639,
+  "controls": {
+    "trials": 1,
+    "scales": [
+      1.0
+    ],
+    "precisions": [
+      "f32",
+      "f64"
+    ],
+    "max_size": 1000,
+    "values_per_trial": 12,
+    "integer_value_range": [
+      -5,
+      5
+    ],
+    "integer_weight_range": [
+      1,
+      9
+    ],
+    "merge_fan_in": 40,
+    "merge_trials": [
+      0,
+      5
+    ],
+    "merge_scales": [
+      1e-46,
+      0.1,
+      1.0,
+      1000000000.0
+    ],
+    "rank_absolute_tolerance": 5e-14,
+    "weight_relative_tolerance": 2e-14
+  },
+  "seconds": 0.07667290100107493,
+  "checks": {
+    "cdf": 204,
+    "quantile_rank": 300,
+    "integer_mass": 12,
+    "digests": 12
+  },
+  "ordinary_failure_count": 0,
+  "failure_details": [],
+  "known_extreme_probes": [
+    {
+      "label": "one_min_subnormal",
+      "precision": "f32",
+      "values": [
+        0.0
+      ],
+      "weights": [
+        5e-324
+      ],
+      "means": [
+        0.0
+      ],
+      "stored_weights": [
+        5e-324
+      ],
+      "cdf": [
+        0.0,
+        1.0,
+        1.0
+      ],
+      "quantiles": [
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0
+      ]
+    },
+    {
+      "label": "two_min_subnormal",
+      "precision": "f32",
+      "values": [
+        0.0,
+        1.0
+      ],
+      "weights": [
+        5e-324,
+        5e-324
+      ],
+      "means": [
+        0.0,
+        1.0
+      ],
+      "stored_weights": [
+        5e-324,
+        5e-324
+      ],
+      "cdf": [
+        0.0,
+        0.0,
+        0.5
+      ],
+      "quantiles": [
+        0.0,
+        0.0,
+        0.5,
+        0.5,
+        1.0,
+        1.0
+      ]
+    },
+    {
+      "label": "aggregate_overflow_distinct",
+      "precision": "f32",
+      "values": [
+        0.0,
+        1.0
+      ],
+      "weights": [
+        1e+308,
+        1e+308
+      ],
+      "means": [
+        0.0,
+        1.0
+      ],
+      "stored_weights": [
+        1e+308,
+        1e+308
+      ],
+      "cdf": [
+        0.0,
+        "NaN",
+        0.0
+      ],
+      "quantiles": [
+        0.0,
+        1.0,
+        1.0,
+        1.0,
+        1.0,
+        1.0
+      ]
+    },
+    {
+      "label": "aggregate_overflow_duplicate",
+      "precision": "f32",
+      "values": [
+        0.0,
+        0.0
+      ],
+      "weights": [
+        1e+308,
+        1e+308
+      ],
+      "error_type": "PanicException",
+      "error": "centroid weight must be finite and > 0"
+    },
+    {
+      "label": "one_min_subnormal",
+      "precision": "f64",
+      "values": [
+        0.0
+      ],
+      "weights": [
+        5e-324
+      ],
+      "means": [
+        0.0
+      ],
+      "stored_weights": [
+        5e-324
+      ],
+      "cdf": [
+        0.0,
+        1.0,
+        1.0
+      ],
+      "quantiles": [
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0
+      ]
+    },
+    {
+      "label": "two_min_subnormal",
+      "precision": "f64",
+      "values": [
+        0.0,
+        1.0
+      ],
+      "weights": [
+        5e-324,
+        5e-324
+      ],
+      "means": [
+        0.0,
+        1.0
+      ],
+      "stored_weights": [
+        5e-324,
+        5e-324
+      ],
+      "cdf": [
+        0.0,
+        0.0,
+        0.5
+      ],
+      "quantiles": [
+        0.0,
+        0.0,
+        0.5,
+        0.5,
+        1.0,
+        1.0
+      ]
+    },
+    {
+      "label": "aggregate_overflow_distinct",
+      "precision": "f64",
+      "values": [
+        0.0,
+        1.0
+      ],
+      "weights": [
+        1e+308,
+        1e+308
+      ],
+      "means": [
+        0.0,
+        1.0
+      ],
+      "stored_weights": [
+        1e+308,
+        1e+308
+      ],
+      "cdf": [
+        0.0,
+        "NaN",
+        0.0
+      ],
+      "quantiles": [
+        0.0,
+        1.0,
+        1.0,
+        1.0,
+        1.0,
+        1.0
+      ]
+    },
+    {
+      "label": "aggregate_overflow_duplicate",
+      "precision": "f64",
+      "values": [
+        0.0,
+        0.0
+      ],
+      "weights": [
+        1e+308,
+        1e+308
+      ],
+      "error_type": "PanicException",
+      "error": "centroid weight must be finite and > 0"
+    }
+  ],
+  "known_extreme_probes_are_part_of_gate": false,
+  "environment": {
+    "python": "3.12.12 (main, Oct 14 2025, 21:25:31) [Clang 20.1.4 ]",
+    "platform": "Linux-6.6.87.2-microsoft-standard-WSL2-x86_64-with-glibc2.44",
+    "package_version": "0.2.4",
+    "package_path": "/var/tmp/codex-tdigest-pr3-20261014/work/gr-tdigest-f64-weights/bindings/python/gr_tdigest/__init__.py",
+    "native_path": "/var/tmp/codex-tdigest-pr3-20261014/work/gr-tdigest-f64-weights/bindings/python/gr_tdigest/_gr_tdigest.abi3.so",
+    "native_sha256": "3c13ed03f9f8118c32c9d82ad0bd86ea6a63b246fda545668fed19cf550fc9cd",
+    "audit_script_sha256": "285b034fa19dbfb7752bc27cd23dc80ed4c51c510f30f7c68ad731783c2fc51d"
+  },
+  "source": null
+}
