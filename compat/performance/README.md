@@ -1,5 +1,15 @@
 # Linux performance and accuracy evidence
 
+The [controlled interleaved follow-up](RESULTS-interleaved-20261015.md) compares
+immutable `22867bd` and `c5dec35` with 32 counterbalanced processes. Exact states
+and complete modern wire bytes match. The earlier double-digit large-case
+slowdown did not reproduce consistently across blocks; original-control shifts
+also prevent calling the observed p50 movement a new modern speedup. Small
+sorted-case differences remain descriptive. This does not prove zero overhead
+or measure the newer transactional-scaling/packaging source. Raw results and
+[reproduction details](interleaved/README.md) are retained with their source pins.
+
+
 The compatibility interface (`tdigest_rs`) keeps the original arithmetic. The modern engine (`gr_tdigest`) is opt-in. The useful story is measured tradeoffs: compatibility, much smaller reserved result capacity, and workload-dependent modern speed/accuracy improvements. These measurements do **not** establish a global speed or accuracy lead.
 
 ## Current committed evidence

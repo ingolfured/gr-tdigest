@@ -5,6 +5,7 @@ All notable changes to this project are documented in this file.
 ## [Unreleased]
 
 ### Fixed
+- Record the controlled interleaved performance comparison with exact state/wire controls: the prior large-case slowdown was not consistent across blocks, and correlated original-control shifts prevent unsupported new speedup claims.
 - Record validated transactional scaling, cache-free release artifacts, an actual source-archive wheel rebuild, and real same-distribution upgrade/removal evidence; clarify the three-PR review story and remaining runtime/ownership limits.
 - Give the Python metadata README a unique filename, preserving its contents and avoiding the root Rust README collision when Maturin assembles a source distribution.
 - Exclude generated Python caches and bytecode from wheel/source distributions, and fail the isolated release-wheel gate if its ZIP entries contain __pycache__, .pyc or .pyo artifacts.

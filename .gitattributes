@@ -9,3 +9,5 @@ compat/compressed-state-audit/historical_initial_audit.py linguist-generated=tru
 compat/validation/*.json linguist-generated=true
 compat/package-ownership/recorded-52f6212/*.json linguist-generated=true
 compat/package-ownership/recorded-52f6212/temporary-project-name.patch linguist-generated=true whitespace=-blank-at-eol
+compat/package-ownership/recorded-52f6212/** linguist-generated=true
+compat/performance/interleaved/PROVENANCE.json linguist-generated=true

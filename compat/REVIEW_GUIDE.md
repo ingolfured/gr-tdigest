@@ -122,8 +122,12 @@ predates only the transactional scaling and packaging changes above. On this
 machine, ten-million-value uniform builds were about **3.6× faster for f64 and
 4.6× for f32** than the independent original core. Some tiny/sorted builds and
 sequential merges were slower. Every measured numerical/count/memory/wire field
-matched the earlier `22867bd` run; timing differences between those separate
-runs still require a controlled interleaved comparison.
+matched the earlier `22867bd` run. The [controlled interleaved follow-up](performance/RESULTS-interleaved-20261015.md)
+completed 32 processes with identical states and complete wire bytes in both
+arms. The earlier double-digit large-case slowdown did not reproduce consistently
+across blocks; shifts in the unchanged original control also prevent calling
+the observed p50 movement a new modern speedup. Small sorted-case differences
+remain descriptive. This does not prove zero overhead or benchmark `52f6212`.
 
 These are matched-delta measurements, not a demonstrated win at every storage or
 error budget. Retained capacity, construction peak memory and RSS are different
