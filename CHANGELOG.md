@@ -5,6 +5,8 @@ All notable changes to this project are documented in this file.
 ## [Unreleased]
 
 ### Fixed
+- Disclose verified co-installation/native-module shadowing and packaged bytecode in the release plan; retain the broader compressed-state audit with two confirmed ordering failures as explicit open evidence, not a passing gate.
+- Record the unchanged 30-case Linux release matrix at corrected commit 22867bd: all sampled numerical fields match 756d221, while F32 centroid memory grows from 12 to 16 bytes. Preserve earlier evidence, add portable comparison tooling and exact installed-wheel validation provenance, and collapse generated audit records in review.
 - Document the corrected mass/mean representation and saved-state migration contract; add a reproducible 800-digest weighted-point audit with an explicit failing baseline control and separately disclosed extreme-weight limits.
 - Validate every scaled centroid weight and both total-mass representations before committing weight scaling. Positive finite factors that underflow weights to zero or overflow weights/totals now return ordinary errors with unchanged state across Rust, Python, and Polars.
 - Keep the numerical-boundary regressions executable with an explicit floating-point comparator and a finite-sum reference for tiny-probability tail queries.

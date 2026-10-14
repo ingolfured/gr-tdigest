@@ -1,0 +1,43 @@
+{
+  "schema_version": 1,
+  "scope": "Linux wheel file-ownership and CPython import-selection inspection; no co-install/uninstall or native-code execution.",
+  "original_wheel": {
+    "distribution": "tdigest-rs",
+    "version": "0.1.0",
+    "filename": "tdigest_rs-0.1.0-cp37-abi3-manylinux_2_17_x86_64.manylinux2014_x86_64.whl",
+    "sha256": "62ee8d5a01226d020a2ab11a956292c38beab3f34d2d9fa7a8fca22c3e5d4bbf",
+    "url": "https://files.pythonhosted.org/packages/89/3b/faabc31e51eeae07efe1ad55d1e92daa495a6dddea99371a6896b644e93a/tdigest_rs-0.1.0-cp37-abi3-manylinux_2_17_x86_64.manylinux2014_x86_64.whl",
+    "native_path": "tdigest_rs/tdigest_rs.abi3.so"
+  },
+  "review_candidate_wheel": {
+    "distribution": "gr-tdigest",
+    "version": "0.2.4",
+    "filename": "gr_tdigest-0.2.4-cp312-abi3-linux_x86_64.whl",
+    "sha256": "602393e48c18218fcd18fd1539ecf746d05b0b9404da69ac73207e21b146f58c",
+    "build_identity": "Preserved release wheel from the f64-weight candidate before the single-centroid mean-preservation fix. Not the final release head.",
+    "shim_path": "tdigest_rs/tdigest_rs.py",
+    "native_path": "gr_tdigest/_gr_tdigest.abi3.so"
+  },
+  "later_reviewed_wheel": {
+    "filename": "gr_tdigest-0.2.4-cp312-abi3-linux_x86_64.whl",
+    "head": "22867bd55739a96a6fab3c8c48b27406ecb32197",
+    "sha256": "66cce5d5483ae05151bca7f7b55383f01578c66b0ad8bbdd4a1b2983583f3869",
+    "hash_provenance": "Provided by root from the preserved release gate; not rehashed during benchmark timing.",
+    "inspection": "Static ZIP central-directory and METADATA read confirms the same namespace overlap, shim/native filenames and runtime dependency metadata.",
+    "generated_caches": [
+      "gr_tdigest/__pycache__/__init__.cpython-312.pyc",
+      "tdigest_rs/__pycache__/__init__.cpython-312.pyc",
+      "tdigest_rs/__pycache__/tdigest_rs.cpython-312.pyc",
+      "tdigest_rs/__pycache__/lib.cpython-312.pyc"
+    ]
+  },
+  "overlapping_archive_paths": ["tdigest_rs/__init__.py", "tdigest_rs/lib.py"],
+  "import_resolution": {
+    "runtime": "CPython on WSL Linux; exact interpreter patch version was not recorded for this probe.",
+    "method": "Create an empty tdigest_rs.abi3.so and tdigest_rs.py in one temporary package directory, matching the observed wheel basenames. Call importlib.machinery.PathFinder.find_spec('tdigest_rs.tdigest_rs', [directory]); inspect the returned spec without executing it.",
+    "selected_file": "tdigest_rs.abi3.so",
+    "selected_loader": "ExtensionFileLoader",
+    "meaning": "When the two wheel contents coexist on one package path, the original extension shadows the replacement shim. This is an import-precedence check, not a complete pip deployment test."
+  },
+  "recommendation": "Publish the upstream replacement as the same tdigest-rs distribution, so a normal upgrade removes the previous distribution's native file. Do not install the private gr-tdigest compatibility wheel beside tdigest-rs. Keep one distribution owner per Python namespace and verify real upgrade/uninstall transitions before release."
+}

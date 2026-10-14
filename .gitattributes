@@ -2,3 +2,7 @@ bindings/python/tests/data/upstream_numerical_golden.json linguist-generated=tru
 compat/performance/results/* linguist-generated=true
 compat/performance/measured-core.patch linguist-generated=true
 bindings/python/tests/data/published_0_1_0_pickle_golden.json linguist-generated=true
+compat/weighted-point-audit/recorded_results/* linguist-generated=true
+compat/compressed-state-audit/recorded_public_result.json linguist-generated=true
+compat/compressed-state-audit/initial_configuration_report.json linguist-generated=true
+compat/compressed-state-audit/historical_initial_audit.py linguist-generated=true
