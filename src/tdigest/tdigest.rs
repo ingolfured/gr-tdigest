@@ -326,6 +326,29 @@ pub struct DigestStats {
 }
 
 impl<F: FloatLike + FloatCore> TDigest<F> {
+    /// Temporary query view for positive subnormal mass. Two exact power-of-two
+    /// scales make every weight normal and place the actual total in [1, 2).
+    /// Keeping the factors separate avoids an overflowing combined reciprocal.
+    /// The caller supplies the actual centroid total; stored state is untouched.
+    /// This cannot restore information already lost during compression.
+    pub(super) fn normalized_subnormal_mass_for_queries(&self, total_mass: f64) -> Self {
+        debug_assert!(total_mass > 0.0 && total_mass < f64::MIN_POSITIVE);
+        const FIRST_SCALE: f64 = 1.0 / f64::MIN_POSITIVE;
+        let first_total = total_mass * FIRST_SCALE;
+        // first_total is normal in [2^-52, 1), so the second exponent is 1..52.
+        let exponent = ((first_total.to_bits() >> 52) & 0x7ff) as i32 - 1023;
+        let second_scale = f64::from_bits(((1023 - exponent) as u64) << 52);
+        let mut normalized = self.clone();
+        for centroid in &mut normalized.centroids {
+            let first = rescaled_centroid(centroid, 1.0, FIRST_SCALE);
+            *centroid = rescaled_centroid(&first, 1.0, second_scale);
+        }
+        normalized.count = first_total * second_scale;
+        normalized.sum = (normalized.sum * FIRST_SCALE) * second_scale;
+        debug_assert!(normalized.count >= 1.0 && normalized.count < 2.0);
+        normalized
+    }
+
     #[inline]
     pub fn max(&self) -> f64 {
         self.max.into_inner().to_f64()

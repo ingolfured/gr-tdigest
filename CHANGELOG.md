@@ -5,6 +5,7 @@ All notable changes to this project are documented in this file.
 ## [Unreleased]
 
 ### Fixed
+- Evaluate CDF and quantiles for positive subnormal total mass through an exact power-of-two temporary query view, retaining stored state and ordinary-query arithmetic. Cover Atomic/Mixed tails and Python/Polars coherence; this cannot restore information lost during compression or resolve tiny components inside a normal total.
 - Bound finite multi-centroid weighted averages to their input mean interval, preventing rounding from producing duplicate or out-of-order compressed means; retain explicit overflow handling as separate work. Add Rust and Python/Polars regressions for adjacent means and large finite weights.
 - Disclose verified co-installation/native-module shadowing and packaged bytecode in the release plan; retain the broader compressed-state audit with two confirmed ordering failures as explicit open evidence, not a passing gate.
 - Record the unchanged 30-case Linux release matrix at corrected commit 22867bd: all sampled numerical fields match 756d221, while F32 centroid memory grows from 12 to 16 bytes. Preserve earlier evidence, add portable comparison tooling and exact installed-wheel validation provenance, and collapse generated audit records in review.

@@ -89,6 +89,18 @@ impl<F: FloatLike + FloatCore> TDigest<F> {
                 interpolate_value(mean, self.max(), 2.0 * q - 1.0)
             };
         }
+        // Keep the ordinary path free of an extra centroid scan. A malformed
+        // normal header hiding subnormal stored mass is outside this fallback.
+        if total_weight > 0.0 && total_weight < f64::MIN_POSITIVE {
+            let stored_mass: f64 = self.centroids().iter().map(|c| c.weight_f64()).sum();
+            if stored_mass > 0.0 && stored_mass < f64::MIN_POSITIVE {
+                // q*total and centroid half-weights would lose rank resolution.
+                // Use the same actual mass as CDF, without altering the digest.
+                return self
+                    .normalized_subnormal_mass_for_queries(stored_mass)
+                    .quantile(q);
+            }
+        }
         let last = self.centroids().last().unwrap();
         let first_center = first.weight_f64() / 2.0;
         let last_half = last.weight_f64() / 2.0;
