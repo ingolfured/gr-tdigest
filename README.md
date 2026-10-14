@@ -146,3 +146,14 @@ The unchanged upstream Python suite runs in `make test` and Linux CI, including 
 
 ## License
 - Apache-2.0
+
+
+### Original Rust crate
+
+`tdigest_core::TDigest<f32>` and `TDigest<f64>` retain the original G-Research
+API and arithmetic, including public `means` and `u32` `weights` vectors. The
+workspace package lives at `src/upstream`; Git dependencies select the package
+by its original name, while local path dependencies must point to that directory.
+The repository root remains the separate modern `gr-tdigest` package. Registry
+publication requires publishing the matching `tdigest_core` version first; this
+workspace layout does not itself publish either package.

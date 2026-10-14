@@ -228,6 +228,7 @@ test: rust-test java-test py-test compat-test
 
 rust-test:
 	$(CARGO) test -- --quiet
+	$(CARGO) test -p tdigest_core -- --quiet
 
 # Explicit path to bindings/python/tests (pytest discovers from pyproject too)
 py-test: build-python

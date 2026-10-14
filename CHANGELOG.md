@@ -5,6 +5,7 @@ All notable changes to this project are documented in this file.
 ## [Unreleased]
 
 ### Fixed
+- Preserve the original public Rust package as a lightweight shared-source tdigest_core workspace member, retaining its fields, methods, result types, and pinned arithmetic; add new Rust API and independent-output regressions.
 - Record the controlled interleaved performance comparison with exact state/wire controls: the prior large-case slowdown was not consistent across blocks, and correlated original-control shifts prevent unsupported new speedup claims.
 - Record validated transactional scaling, cache-free release artifacts, an actual source-archive wheel rebuild, and real same-distribution upgrade/removal evidence; clarify the three-PR review story and remaining runtime/ownership limits.
 - Give the Python metadata README a unique filename, preserving its contents and avoiding the root Rust README collision when Maturin assembles a source distribution.

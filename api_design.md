@@ -81,6 +81,16 @@ through `gr_tdigest`; matching delta alone does not make its answers identical. 
 property, cdf method, or wire-state format. Focused regression tests cover immutable merge/update, dtype, copy/pickle, and the original dictionary state.
 The unchanged 91-case upstream suite, 70 exact original-output cases, and pinned-source checksums are required by `make test` and installed-wheel CI.
 
+### 4.1.2 Original Rust interface
+
+The `tdigest_core` workspace package exposes the original root `TDigest<T>` for
+f32/f64 with public `means: Vec<T>` and `weights: Vec<u32>` fields. Its seven
+methods and `anyhow::Result` signatures retain the pinned original semantics,
+including permissive probes and inherited malformed-input behavior. The modern
+`gr-tdigest` API remains separate. New Rust checks cover both precisions and the
+same independently generated original-output fixture as the Python gate; the
+pinned upstream revision did not contain a Rust test suite.
+
 ### 4.2 Queries
 
 Quantile:
