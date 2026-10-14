@@ -64,6 +64,9 @@ on one machine cannot establish world-leading speed or accuracy.
   dependencies. Upstream `tdigest-rs` supported a wider Python range. Agree the
   package identity, runtime support matrix, and upgrade/uninstall behavior before
   replacing an installed distribution that owns the same import namespace.
+- These gates preserve the original Python contract. Direct compatibility with the
+  original public Rust crate API is not yet implemented or verified; confirm whether
+  any G-Research consumers need it before preparing the upstream replacement.
 - The release Linux wheel gate does not cover every platform or manylinux policy.
   Validate the actual release artifacts and supported environment matrix.
 - The modern f32 engine stores centroid weights in f32. Very large atomic piles
