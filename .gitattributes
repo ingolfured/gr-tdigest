@@ -1,3 +1,4 @@
 bindings/python/tests/data/upstream_numerical_golden.json linguist-generated=true
 compat/performance/results/* linguist-generated=true
 compat/performance/measured-core.patch linguist-generated=true
+bindings/python/tests/data/published_0_1_0_pickle_golden.json linguist-generated=true
