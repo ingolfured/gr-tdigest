@@ -5,6 +5,8 @@ All notable changes to this project are documented in this file.
 ## [Unreleased]
 
 ### Fixed
+- Preserve modern centroid mass in f64 even with f32 means, fixing lost repeated additions and reversed large-pile medians. Precision casts retain weight bits; Polars writes Float64 weights and still reads older Float32-weight structs. On Linux x86_64 the f32 centroid grows from 12 to 16 bytes; f64 stays 24 bytes. The original `tdigest_rs` path is unchanged.
+- Mark f32-mean TDIG v3 blobs whose weights need f64 precision with flag 0x08, making older readers reject instead of silently rounding them. Payload bytes retain the existing layout; explicit v1/v2 exports of these states require an explicit f64 cast.
 - Test an optimized Linux wheel outside the checkout, including both numerical import orders; repair current benchmark APIs and record reproducible release timing/accuracy evidence, review order, numerical change policy, and outstanding rollout limits.
 - Release unused result-vector capacity at the original Python boundary without changing arithmetic or centroid contents; keep numerical imports independent of Polars and preserve annotation introspection.
 - Keep weighted CDF tails monotone and bounded, preserve true extrema during updates, and retain every sample when protected edges overlap. Apply Polars configuration before compression and preserve identity-operation state and planned schemas.
@@ -76,6 +78,8 @@ All notable changes to this project are documented in this file.
 - Maven release now validates required publish credentials before running preflight publish tasks.
 
 ### Fixed
+- Preserve modern centroid mass in f64 even with f32 means, fixing lost repeated additions and reversed large-pile medians. Precision casts retain weight bits; Polars writes Float64 weights and still reads older Float32-weight structs. On Linux x86_64 the f32 centroid grows from 12 to 16 bytes; f64 stays 24 bytes. The original `tdigest_rs` path is unchanged.
+- Mark f32-mean TDIG v3 blobs whose weights need f64 precision with flag 0x08, making older readers reject instead of silently rounding them. Payload bytes retain the existing layout; explicit v1/v2 exports of these states require an explicit f64 cast.
 - Track `bindings/java/gradle/wrapper/gradle-wrapper.jar` so GitHub Actions can run Gradle wrapper (`org.gradle.wrapper.GradleWrapperMain` available in CI).
 - Python packaging metadata now uses a local `bindings/python/README.md`, fixing PyPI release sdist failures caused by `../../README.md` archive paths.
 

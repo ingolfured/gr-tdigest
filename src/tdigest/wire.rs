@@ -26,7 +26,7 @@
 // v3 header (64 bytes minimum, little-endian):
 //   0..4   : magic = b"TDIG"
 //   4      : version (3)
-//   5      : flags (bit0: checksum, bit1: delta extension, bit2: full-width pin extension)
+//   5      : flags (bit0: checksum, bit1: delta extension, bit2: full-width pin extension, bit3: f64 mass required for f32 means)
 //   6      : header_len (u8, >= 64)
 //   7      : payload_precision (1=f32, 2=f64)
 //   8      : scale_code
@@ -73,6 +73,9 @@ const V3_CHECKSUM_OFFSET: usize = 60;
 const V3_FLAG_CHECKSUM: u8 = 0x01;
 const V3_FLAG_DELTA: u8 = 0x02;
 const V3_FLAG_WIDE_PIN: u8 = 0x04;
+// No extra bytes: v2/v3 payload weights are already f64. This flag prevents
+// older readers from silently narrowing weights to the f32 mean precision.
+const V3_FLAG_WIDE_WEIGHT: u8 = 0x08;
 
 const PRECISION_CODE_F32: u8 = 1;
 const PRECISION_CODE_F64: u8 = 2;
@@ -136,6 +139,11 @@ impl WireVersion {
                     ))?;
             }
         }
+        if self != Self::V3 && requires_wide_weights(td) {
+            return Err(WireError::InvalidPayload(
+                "f32 means with weights requiring f64 precision need TDIG v3; cast to f64 before older-format export",
+            ));
+        }
         Ok(())
     }
 
@@ -157,6 +165,14 @@ impl WireVersion {
             other => Err(WireError::UnsupportedVersion(other)),
         }
     }
+}
+
+fn requires_wide_weights<F: FloatLike + FloatCore>(td: &TDigest<F>) -> bool {
+    Precision::of_type::<F>() == Precision::F32
+        && td
+            .centroids()
+            .iter()
+            .any(|centroid| centroid.weight_f64() as f32 as f64 != centroid.weight_f64())
 }
 
 #[derive(Debug)]
@@ -505,7 +521,8 @@ where
 /// # Panics
 /// Panics when the selected version cannot represent the digest's state:
 /// V1 requires positive integer weights and a u64 total; V1/V2 cannot store
-/// delta or edge pins above 255. Delta always requires K2Norm and policy Off.
+/// delta, edge pins above 255, or f32-mean digests whose weights need f64 precision.
+/// Delta always requires K2Norm and policy Off.
 /// Call [`WireVersion::validate_digest`] for a
 /// fallible check, or use [`encode_digest`] to select the latest format.
 pub fn encode_digest_with_version<F>(td: &TDigest<F>, version: WireVersion) -> Vec<u8>
@@ -620,6 +637,11 @@ where
         }
         | if wide_pin.is_some() {
             V3_FLAG_WIDE_PIN
+        } else {
+            0
+        }
+        | if requires_wide_weights(td) {
+            V3_FLAG_WIDE_WEIGHT
         } else {
             0
         };
@@ -790,7 +812,7 @@ fn parse_v3_header(bytes: &[u8], verify_checksum: bool) -> WireResult<DecodedV3H
     }
 
     let flags = bytes[5];
-    if (flags & !(V3_FLAG_CHECKSUM | V3_FLAG_DELTA | V3_FLAG_WIDE_PIN)) != 0 {
+    if (flags & !(V3_FLAG_CHECKSUM | V3_FLAG_DELTA | V3_FLAG_WIDE_PIN | V3_FLAG_WIDE_WEIGHT)) != 0 {
         return Err(WireError::InvalidFlags(flags));
     }
 
@@ -805,6 +827,11 @@ fn parse_v3_header(bytes: &[u8], verify_checksum: bool) -> WireResult<DecodedV3H
     }
 
     let width = width_from_precision_code(bytes[7])?;
+    if flags & V3_FLAG_WIDE_WEIGHT != 0 && !matches!(width, WireFloatWidth::F32) {
+        return Err(WireError::InvalidHeader(
+            "wide-weight flag requires f32 mean precision",
+        ));
+    }
 
     let delta = if flags & V3_FLAG_DELTA != 0 {
         if header_len < HEADER_LEN_V3_MIN + 8 {
@@ -937,11 +964,10 @@ fn decode_digest_v3(bytes: &[u8]) -> WireResult<WireDecodedDigest> {
     })
 }
 
-fn validate_decoded_weight<F: FloatLike>(weight: f64) -> WireResult<()> {
-    let stored = F::from_f64(weight).to_f64();
-    if !weight.is_finite() || weight <= 0.0 || !stored.is_finite() || stored <= 0.0 {
+fn validate_decoded_weight(weight: f64) -> WireResult<()> {
+    if !weight.is_finite() || weight <= 0.0 {
         return Err(WireError::InvalidPayload(
-            "invalid centroid weight for storage precision",
+            "centroid weight must be finite and positive",
         ));
     }
     Ok(())
@@ -983,7 +1009,7 @@ fn decode_payload_into_digest(
                     p += 8;
                     let w_u64 = u64::from_le_bytes(arr_w);
                     let w_f64 = w_u64 as f64;
-                    validate_decoded_weight::<f32>(w_f64)?;
+                    validate_decoded_weight(w_f64)?;
                     if w_u64 == 1 {
                         Centroid::<f32>::new_atomic_unit_f64(mean_f64)
                     } else {
@@ -991,10 +1017,10 @@ fn decode_payload_into_digest(
                     }
                 } else {
                     let w_f64 = read_f64(bytes, &mut p)?;
-                    validate_decoded_weight::<f32>(w_f64)?;
+                    validate_decoded_weight(w_f64)?;
                     let kind = read_u8(bytes, &mut p)?;
                     if code_is_atomic(kind)? {
-                        if (w_f64 - 1.0).abs() <= f64::EPSILON {
+                        if w_f64 == 1.0 {
                             Centroid::<f32>::new_atomic_unit_f64(mean_f64)
                         } else {
                             Centroid::<f32>::new_atomic_f64(mean_f64, w_f64)
@@ -1037,7 +1063,7 @@ fn decode_payload_into_digest(
                     p += 8;
                     let w_u64 = u64::from_le_bytes(arr_w);
                     let w_f64 = w_u64 as f64;
-                    validate_decoded_weight::<f64>(w_f64)?;
+                    validate_decoded_weight(w_f64)?;
                     if w_u64 == 1 {
                         Centroid::<f64>::new_atomic_unit_f64(mean_f64)
                     } else {
@@ -1045,10 +1071,10 @@ fn decode_payload_into_digest(
                     }
                 } else {
                     let w_f64 = read_f64(bytes, &mut p)?;
-                    validate_decoded_weight::<f64>(w_f64)?;
+                    validate_decoded_weight(w_f64)?;
                     let kind = read_u8(bytes, &mut p)?;
                     if code_is_atomic(kind)? {
-                        if (w_f64 - 1.0).abs() <= f64::EPSILON {
+                        if w_f64 == 1.0 {
                             Centroid::<f64>::new_atomic_unit_f64(mean_f64)
                         } else {
                             Centroid::<f64>::new_atomic_f64(mean_f64, w_f64)

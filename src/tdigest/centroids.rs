@@ -2,7 +2,7 @@
 //!
 //! This module defines a compact centroid type that stores:
 //! - `mean`   in generic `F` (`f32` or `f64`)
-//! - `weight` in generic `F`
+//! - `weight` in `f64`, independently of mean precision
 //! - a `Kind` flag: `Atomic` (all identical inputs at this mean) or `Mixed`.
 //!
 //! ## Semantics
@@ -32,28 +32,22 @@ pub enum Kind {
     Mixed,
 }
 
-/// A centroid stores the mean and total weight of a cluster (in `F`), and a kind flag.
+/// A centroid stores its mean in `F`, positive finite mass in `f64`, and a kind flag.
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub struct Centroid<F: FloatLike + FloatCore> {
     mean: F,
-    weight: F,
+    weight: f64,
     kind: Kind,
 }
 
 impl<F: FloatLike + FloatCore> Centroid<F> {
     #[inline]
-    fn checked_weight(weight: f64) -> F {
+    fn checked_weight(weight: f64) -> f64 {
         assert!(
             weight.is_finite() && weight > 0.0,
             "centroid weight must be finite and > 0"
         );
-        let w = F::from_f64(weight);
-        let w64 = w.to_f64();
-        assert!(
-            w64.is_finite() && w64 > 0.0,
-            "centroid weight overflow while converting to storage precision"
-        );
-        w
+        weight
     }
 
     /* ---------------------------------------------------------------------
@@ -65,7 +59,7 @@ impl<F: FloatLike + FloatCore> Centroid<F> {
     pub fn new_atomic_unit_f64(mean: f64) -> Self {
         Self {
             mean: F::from_f64(mean),
-            weight: F::from_f64(1.0),
+            weight: 1.0,
             kind: Kind::Atomic,
         }
     }
@@ -116,9 +110,13 @@ impl<F: FloatLike + FloatCore> Centroid<F> {
         self.mean
     }
 
+    /// Compatibility view of the mass in the mean's precision.
+    ///
+    /// This conversion may round, underflow, or overflow for `F = f32`.
+    /// Use [`Self::weight_f64`] for the authoritative stored mass.
     #[inline]
     pub fn weight(&self) -> F {
-        self.weight
+        F::from_f64(self.weight)
     }
 
     #[inline]
@@ -126,9 +124,10 @@ impl<F: FloatLike + FloatCore> Centroid<F> {
         self.mean.to_f64()
     }
 
+    /// The authoritative stored mass, independent of mean precision.
     #[inline]
     pub fn weight_f64(&self) -> f64 {
-        self.weight.to_f64()
+        self.weight
     }
 
     #[inline]
@@ -182,9 +181,17 @@ mod tests {
     use super::Centroid;
 
     #[test]
-    #[should_panic(expected = "centroid weight overflow while converting to storage precision")]
-    fn f32_centroid_weight_overflow_panics() {
-        let _ = Centroid::<f32>::new_atomic_f64(0.0, f64::MAX);
+    fn f32_means_retain_the_full_f64_weight_range() {
+        for weight in [f64::from_bits(1), 0.1, 16_777_217.0, f64::MAX] {
+            let centroid = Centroid::<f32>::new_atomic_f64(0.0, weight);
+            assert_eq!(centroid.weight_f64().to_bits(), weight.to_bits());
+        }
+    }
+
+    #[test]
+    #[should_panic(expected = "centroid weight must be finite and > 0")]
+    fn nonfinite_centroid_weight_is_rejected() {
+        let _ = Centroid::<f32>::new_atomic_f64(0.0, f64::INFINITY);
     }
 }
 
