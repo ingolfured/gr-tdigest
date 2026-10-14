@@ -5,6 +5,7 @@ All notable changes to this project are documented in this file.
 ## [Unreleased]
 
 ### Fixed
+- Give the Python metadata README a unique filename, preserving its contents and avoiding the root Rust README collision when Maturin assembles a source distribution.
 - Exclude generated Python caches and bytecode from wheel/source distributions, and fail the isolated release-wheel gate if its ZIP entries contain __pycache__, .pyc or .pyo artifacts.
 - Validate every scaled centroid weight and both total-mass representations before committing weight scaling. Positive finite factors that underflow weights to zero or overflow weights/totals now return ordinary errors with unchanged state across Rust, Python, and Polars.
 - Retain the unchanged 30-case release comparison and optimized-wheel validation for c5dec35 after finite-mean and subnormal-query fixes, with exact prior-run differences, passing boundary-audit provenance and explicit remaining release limits.
