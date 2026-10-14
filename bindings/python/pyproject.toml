@@ -22,6 +22,7 @@ classifiers = [
 # Runtime dependencies
 dependencies = [
   "polars>=1.34.0",
+  "numpy>=2.3.3",
 ]
 
 # Dev groups (PEP 735). uv understands these and can install with --group/--all-groups.
@@ -44,6 +45,7 @@ manifest-path = "../../Cargo.toml"
 features = ["python"]
 bindings = "pyo3"
 module-name = "gr_tdigest._gr_tdigest"
+python-packages = ["gr_tdigest", "tdigest_rs"]
 strip = true
 manylinux = "2_28"
 zig = true

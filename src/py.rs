@@ -20,8 +20,9 @@ fn parse_policy(kind: Option<&str>, pin_per_side: Option<usize>) -> Result<Singl
 
 /// Resolve `(scale, policy)` honoring delta-mode contract.
 ///
-/// When `delta` is set, gr-tdigest acts as a drop-in for old tdigest-rs: the
-/// only knob is `delta`, and all other settings track that contract:
+/// `delta` selects the compression family used by the old tdigest-rs library.
+/// The full legacy API is provided separately by the shipped `tdigest_rs` package.
+/// Compression-mode settings are:
 /// - `scale` defaults to `K2Norm` (canonical Dunning K2 from paper eq 8);
 /// - `singleton_policy` defaults to `Off` (no edge protection / pinning);
 /// - `pin_per_side` must be unset.
@@ -170,7 +171,8 @@ impl PyTDigest {
             return Err(PyValueError::new_err("max_size must be > 0"));
         }
 
-        let (sc, policy) = resolve_delta_mode_defaults(scale, singleton_policy, pin_per_side, delta)?;
+        let (sc, policy) =
+            resolve_delta_mode_defaults(scale, singleton_policy, pin_per_side, delta)?;
         let (_ndim, values_f64) = array_values(py, values)?;
 
         let config = DigestConfig {
@@ -207,7 +209,8 @@ impl PyTDigest {
             return Err(PyValueError::new_err("max_size must be > 0"));
         }
 
-        let (sc, policy) = resolve_delta_mode_defaults(scale, singleton_policy, pin_per_side, delta)?;
+        let (sc, policy) =
+            resolve_delta_mode_defaults(scale, singleton_policy, pin_per_side, delta)?;
         let (_ndim_m, means_f64) = array_values(py, means)?;
         let (_ndim_w, weights_f64) = array_values(py, weights)?;
         if means_f64.len() != weights_f64.len() {
@@ -336,6 +339,9 @@ impl PyTDigest {
     ) -> PyResult<Bound<'py, PyBytes>> {
         let bytes = if let Some(v) = version {
             let parsed = parse_wire_version(v)?;
+            parsed
+                .validate_delta(self.inner.config().delta)
+                .map_err(|e| PyValueError::new_err(e.to_string()))?;
             self.inner.to_bytes_with_version(parsed)
         } else {
             self.inner.to_bytes()
@@ -428,7 +434,127 @@ fn merge_all(digests: Bound<'_, PyAny>) -> PyResult<PyTDigest> {
 
 pub(crate) fn register(m: &Bound<'_, PyModule>) -> PyResult<()> {
     m.add_class::<PyTDigest>()?;
+    m.add_class::<PyLegacyTDigest>()?;
     m.add_function(wrap_pyfunction!(wire_precision_py, m)?)?;
     m.add_function(wrap_pyfunction!(merge_all, m)?)?;
     Ok(())
+}
+
+/// Native backend for the shipped tdigest_rs compatibility package.
+#[pyclass(name = "_LegacyTDigest")]
+struct PyLegacyTDigest {
+    inner: crate::tdigest::legacy::LegacyDigest,
+}
+
+#[pymethods]
+impl PyLegacyTDigest {
+    #[staticmethod]
+    fn from_weighted(
+        values: Vec<f64>,
+        weights: Vec<f64>,
+        delta: f64,
+        f32_mode: bool,
+    ) -> PyResult<Self> {
+        let precision = if f32_mode {
+            DigestPrecision::F32
+        } else {
+            DigestPrecision::F64
+        };
+        Ok(Self {
+            inner: crate::tdigest::legacy::LegacyDigest::from_weighted(
+                values, weights, delta, precision,
+            )
+            .map_err(map_frontend_err)?,
+        })
+    }
+
+    fn merge(&self, other: &Self, delta: f64) -> PyResult<Self> {
+        if self.inner.finite.precision() != other.inner.finite.precision() {
+            return Err(PyTypeError::new_err("self has a different type to other"));
+        }
+        Ok(Self {
+            inner: self
+                .inner
+                .merge(&other.inner, delta)
+                .map_err(map_frontend_err)?,
+        })
+    }
+
+    fn quantile(&self, q: f64) -> PyResult<f64> {
+        self.inner.quantile(q).map_err(map_frontend_err)
+    }
+    fn median(&self) -> PyResult<f64> {
+        self.quantile(0.5)
+    }
+    fn cdf(&self, x: f64) -> f64 {
+        self.inner.cdf(x)
+    }
+    fn trimmed_mean(&self, lower: f64, upper: f64) -> PyResult<f64> {
+        self.inner
+            .trimmed_mean(lower, upper)
+            .map_err(map_frontend_err)
+    }
+    #[getter]
+    fn means(&self) -> Vec<f64> {
+        self.inner.means()
+    }
+    #[getter]
+    fn weights(&self) -> Vec<f64> {
+        self.inner.weights()
+    }
+    #[getter]
+    fn delta(&self) -> f64 {
+        self.inner.delta()
+    }
+    fn inner_kind(&self) -> &'static str {
+        self.inner.finite.inner_kind()
+    }
+    fn __len__(&self) -> usize {
+        self.inner.len()
+    }
+    fn copy(&self) -> Self {
+        Self {
+            inner: self.inner.clone(),
+        }
+    }
+
+    fn state<'py>(&self, py: Python<'py>) -> (Bound<'py, PyBytes>, f64, f64) {
+        (
+            PyBytes::new(py, &self.inner.finite.to_bytes()),
+            self.inner.negative_infinity,
+            self.inner.positive_infinity,
+        )
+    }
+
+    #[staticmethod]
+    fn from_state(
+        bytes: Bound<'_, PyBytes>,
+        negative_infinity: f64,
+        positive_infinity: f64,
+    ) -> PyResult<Self> {
+        let finite = FrontendDigest::from_bytes(bytes.as_bytes()).map_err(map_frontend_err)?;
+        let cfg = finite.config();
+        if cfg.delta.is_none()
+            || cfg.scale != ScaleFamily::K2Norm
+            || cfg.policy != SingletonPolicy::Off
+        {
+            return Err(PyValueError::new_err("invalid legacy state configuration"));
+        }
+        for w in [negative_infinity, positive_infinity] {
+            if !w.is_finite() || w < 0.0 || w.fract() != 0.0 {
+                return Err(PyValueError::new_err("invalid legacy infinity weight"));
+            }
+        }
+        let inner = crate::tdigest::legacy::LegacyDigest {
+            finite,
+            negative_infinity,
+            positive_infinity,
+        };
+        if inner.count() > u32::MAX as f64 {
+            return Err(PyValueError::new_err(
+                "legacy total weight exceeds uint32 capacity",
+            ));
+        }
+        Ok(Self { inner })
+    }
 }

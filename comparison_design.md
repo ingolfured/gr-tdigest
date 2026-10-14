@@ -106,18 +106,15 @@ Key algorithmic difference in philosophy:
 
 ### 3.5 Legacy G-Research `tdigest-rs` compatibility
 
-Preserving the old Python API requires separate validation from the modern
-cross-surface contracts. The unchanged upstream suite currently reports
-70 passed and 21 failed cases against the real extension on Linux. The failures
-include a demonstrated weighted median defect, a quantile outside the upstream
-tolerance, and unresolved input/precision differences. Additional probes found
-API and serialization gaps. Standard CI passing does not establish that this
-library can replace the old API unchanged.
+The shipped `tdigest_rs` Python interface uses the shared Rust core with the old
+input/default/merge policy. All 91 unchanged upstream Python cases pass on Linux.
+CI runs them as part of `make test` and against a clean installed wheel; the
+modern API's strict validation/coherence tests remain separate requirements.
 
-See the [compatibility status](compat/gr_tdigest_vs_tdigest_rs.md) for the pinned
-source, reproduction commands, and failure inventory. Keep the old assertions
-intact while resolving the failures; do not infer compatibility from shared
-scale-function choices or dismiss accuracy failures as intentional differences.
+See [legacy compatibility](compat/gr_tdigest_vs_tdigest_rs.md) for the pinned
+source, reproduction commands, corrected defects, and serialization details.
+This establishes the tested API contract, not byte-identical output for every
+input or an accuracy guarantee beyond the tested workloads.
 
 ## 4. Which is best? (scenario-based)
 

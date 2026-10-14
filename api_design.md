@@ -63,6 +63,15 @@ Notes:
 - Any null value (where representable) is an error.
 - Adding an empty vector/list is a no-op success.
 
+### 4.1.1 Shipped legacy Python interface
+
+`tdigest_rs.TDigest` is an explicit compatibility interface over the Rust core.
+It defaults to delta 300 and infers float32/float64 precision from NumPy dtype.
+Only this interface filters NaNs and retains infinity endpoint masses; modern
+training remains strict. Its `merge` and `update` return new objects and honor
+the requested delta; mixed precision raises `TypeError`. The copied upstream
+Python tests are unchanged and required by `make test` and installed-wheel CI.
+
 ### 4.2 Queries
 
 Quantile:
@@ -85,7 +94,7 @@ Median:
 - Empty digest:
   - Rust/Python/Java: `NaN`
   - Polars: `None`
-- Non-empty digest returns finite value.
+- Non-empty modern digest returns `quantile(0.5)` using centroid weights, including fractional weights.
 
 Shape behavior:
 - Scalar probe in -> scalar out.
@@ -110,7 +119,11 @@ Canonical empty for `merge_all([])`:
 
 - TDIG written by one surface must decode on all surfaces.
 - `to_bytes` supports explicit version selection (`1|2|3`) where surfaced.
-- Wire precision (`f32`/`f64`) must round-trip.
+- Wire precision (`f32`/`f64`) and delta must round-trip in default TDIG v3.
+- Delta-mode digests require v3; wrappers reject explicit v1/v2 export rather than losing configuration.
+- V3 uses flag bit1 and an 8-byte header extension for delta; older readers reject the unknown flag.
+- Polars structs retain centroid atomic/mixed kind, scale, singleton policy, pins, and delta.
+  Older structs remain readable with their historical default configuration and kind inference.
 - Empty digest to/from bytes is valid.
 - Empty blob bytes (`b""`) are invalid TDIG and must error.
 - Null blobs (Polars) are errors.

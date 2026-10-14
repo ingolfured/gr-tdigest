@@ -1,105 +1,79 @@
-# gr-tdigest vs. tdigest-rs: compatibility status
+# Legacy tdigest-rs compatibility
 
-Preserving the old `tdigest-rs` Python API is a goal that still has unresolved
-failures. The strict harness runs the upstream assertions against the compiled
-`gr_tdigest` extension through an import-only `tdigest_rs` shim. It does not
-adapt numerical behavior or change the assertions.
+The wheel ships two Python interfaces over the same Rust t-digest core:
 
-## Reproduce the diagnostic baseline
+- `tdigest_rs.TDigest` preserves the original G-Research Python API: default
+  `delta=300`, float32/float64 dtype inference, NaN filtering, infinity endpoint
+  masses, uint32 weights, and return-new-digest `merge` and `update`.
+- `gr_tdigest.TDigest` retains the modern API: explicit precision/configuration,
+  strict finite training input, and in-place merge/add operations.
 
-After the normal development environment setup, run from the repository root:
+The legacy interface delegates compression, merging, and numerical queries to
+Rust. Its Python code converts arguments and NumPy arrays. The former test-only
+import shim has been removed; tests import the package that ships in the wheel.
+
+## Required validation
+
+The unchanged upstream Python suite contains **91 cases**. All 91 pass on Linux
+after the compatibility fixes. No upstream assertion, tolerance, or test case
+has been weakened, skipped, or marked as an expected failure.
 
 ```bash
-make legacy-strict-test
-make legacy-bench-smoke
+make build
+make test                 # Rust, Java, Python/coherence, and all 91 upstream cases
+make legacy-strict-test   # just the upstream cases, rebuilding the extension first
+make legacy-wheel-test    # build and install a wheel in a clean environment, then run all 91
 ```
 
-Both commands rebuild the Python extension first. `legacy-strict-test` is an
-alias for `compat-test` and propagates pytest failures as a nonzero exit status.
-It is currently an opt-in diagnostic, outside `make test` and CI. Green standard
-tests do not establish legacy compatibility.
+The Linux CI build-and-test job runs `make test` and `make legacy-wheel-test`;
+either suite failing fails the job. The installed-wheel check verifies that both
+the Python interface and native extension resolve inside the temporary virtual
+environment, with no source-checkout import shim.
 
-The copied tests and original benchmark are unchanged from G-Research
-`tdigest-rs` commit `8d9cf1fe82c5c9254e5dc9593f01717e317f4333`; see
-[`PROVENANCE.md`](tdigest-rs-upstream/PROVENANCE.md) for the source and checksums.
-The benchmark Make targets execute the separate custom runner in
-`tdigest-rs-strict-python/benchmarks/run.py`. `legacy-bench-smoke` uses a small
-workload; `compat-bench` uses that runner's larger defaults. Neither target runs
-the copied upstream benchmark, and a smoke pass is not an accuracy comparison.
+Source: G-Research `tdigest-rs` commit
+`8d9cf1fe82c5c9254e5dc9593f01717e317f4333`. The six Python test/support files and
+original benchmark remain byte-for-byte unchanged; see
+[`PROVENANCE.md`](tdigest-rs-upstream/PROVENANCE.md).
 
-## Verified baseline: 70 passed, 21 failed
+## Defects corrected
 
-Validation on 2026-10-14 used Linux under WSL, Python 3.12.12, Rust 1.90.0,
-Java 21, and Python dependencies from the committed `uv.lock`. The library
-implementation tested was PR #3 commit
-`dc330c0fb0c7661252065b97a47a69de58702913`; the subsequent harness/documentation
-correction does not change it. `make build`, `make test`, and
-`make legacy-bench-smoke` passed. The strict legacy suite collected 91 cases:
+- Median uses the shared weighted `quantile(0.5)` calculation. Means `[0, 10]`
+  with weights `[90, 10]` now return median `0`, including through Polars and Java.
+- Merge normalization preserves whether a centroid represents a distribution
+  or an exact point mass. Repeated merges no longer turn compressed centroids
+  into artificial point masses that distort quantile/CDF results.
+- Fractional atomic weights retain their mass and use weight-aware interpolation.
+- The legacy interface honors requested merge/update delta and leaves operands
+  unchanged. Copies and pickles preserve precision, delta, and infinity weights.
+- Default TDIG v3 serialization preserves delta. Explicit v1/v2 encoding of
+  delta-mode digests is rejected because those versions have no delta field.
+- Polars structs preserve centroid kind and compression configuration. Readers
+  still accept older structs, using their historical defaults and kind heuristic.
 
-| Failure group | Cases | Status |
-| --- | ---: | --- |
-| Median accuracy / equality | 13 | Defect and legacy API mismatch requiring fixes |
-| Quantile accuracy | 1 | Outside an existing upstream tolerance; investigate |
-| NaN / infinity input handling | 5 | Current strict contract differs from legacy behavior |
-| Input dtype / merge dtype handling | 2 | Current precision and validation rules differ from legacy behavior |
+## Compatibility details
 
-These are 21 failing test cases, not necessarily 21 independent defects. The
-failures have not been accepted as compatible behavior. Preserve the upstream
-assertions and tolerances while investigating; compatibility acceptance still
-requires the old suite to pass.
+`from_array` and `from_means_weights` on `tdigest_rs.TDigest` accept one-dimensional
+NumPy float32 or float64 arrays. Mixed-precision merges raise `TypeError`.
+Legacy weights are positive integers with a total bounded by uint32 capacity;
+invalid/overflowing totals raise errors. NaNs are discarded, while negative and
+positive infinities are retained as endpoint masses outside the strict finite
+core. Modern training rules are unchanged.
 
-## Median and quantile failures
+The legacy `to_dict`/`from_dict` representation retains its original `means` and
+`weights` keys and default-delta reconstruction behavior. Pickle uses a richer
+state to preserve the full configuration, and can also read the old dictionary
+pickle state. `update(buffer, delta, merge_delta)` applies the separate build and
+merge deltas, returning a new digest.
 
-Twelve Gaussian cases fail median accuracy checks, and
-`test_median_random_data` fails the old `median() == quantile(0.5)` contract.
-A deterministic weighted example also demonstrates a median defect:
+The earlier diagnostic baseline was 70 passed / 21 failed. Those failures were
+unresolved defects and API differences, not evidence that tolerances should be
+relaxed. Passing the suite establishes the tested legacy Python contract; it
+does not imply byte-identical centroids or results for every possible input.
 
-```python
-from gr_tdigest import TDigest
+## Benchmark scope
 
-d = TDigest.from_means_weights([0.0, 10.0], [90.0, 10.0], delta=300)
-print(d.median())       # 5.0 at the baseline
-print(d.quantile(0.5))  # 0.0 at the baseline
-```
-
-The digest retains those two means and weights. The represented population has
-90 zeros and 10 tens, whose median is 0. This discrepancy needs a regression
-test and a library fix; it is not justified by ordinary estimation error.
-
-`test_uniform[1.0--2.0-10000]` also fails: at `q=0.75`, the estimate is about
-0.274090 while NumPy gives 0.220019, outside the test's existing tolerance.
-This requires investigation rather than a blanket claim that all estimates
-remain within tolerance.
-
-## Input and precision differences requiring resolution
-
-The modern API rejects non-finite training values. The old tests expect NaN
-filtering and permit infinities in some inputs. Five cases fail:
-`test_only_nan_values`, `test_single_nan_value`, `test_only_inf_values`,
-`test_non_inf_extremas`, and `test_merge_with_infs`. Any compatibility solution
-must account for the modern cross-surface validation contract as well as the
-legacy API requirement.
-
-The backend currently defaults to f64 regardless of input array dtype, with f32
-selected through `precision="f32"`. Float16 input is accepted, and float32 and
-float64 arrays both produce f64 digests by default. Consequently,
-`test_raises_invalid_input_type` and `test_raises_merge_different_types` do not
-raise the `TypeError` expected by the old suite. These differences require an
-explicit compatibility decision and implementation; they are not resolved by
-describing them as intentional.
-
-## Coverage beyond the copied tests
-
-Additional runtime probes found issues that need follow-up regression tests:
-
-- `TDigest.update` is absent from the current Python class.
-- `merge` mutates and returns its receiver; compare this with the old API's
-  return-new-digest behavior.
-- Pickle, deepcopy, and byte-wire round-trips lose `delta`. A restored
-  `delta=20` digest fails to merge with its original because configuration
-  validation sees `delta=None` versus `delta=20`.
-
-Passing the copied suite is the required baseline, but these additional API
-and serialization checks are also needed before claiming a drop-in replacement.
-Library fixes and their regression tests belong in follow-up changes; this
-harness records the failures so they can be addressed reproducibly.
+`make legacy-bench-smoke` runs a small custom threaded construction/merge/query
+workload; `make compat-bench` uses the same runner's larger defaults. These targets
+rebuild the extension. The copied original benchmark is retained for reference
+and is not executed by these targets. A smoke result is not an accuracy or
+performance comparison against the original implementation.

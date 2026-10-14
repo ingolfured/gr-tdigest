@@ -5,18 +5,22 @@ All notable changes to this project are documented in this file.
 ## [Unreleased]
 
 ### Fixed
+- Correct median and fractional-weight interpolation in the shared core; preserve mixed centroid provenance across merges.
+- Preserve delta in TDIG v3 and reject lossy v1/v2 delta export. Preserve configuration and centroid kind in Polars structs, and support Float32 Polars median.
+- Ship `tdigest_rs` as a thin Python interface to Rust legacy policy: dtype inference, NaN/infinity handling, immutable merge/update with explicit delta, and configuration-preserving copy/pickle.
+- Require all 91 unchanged upstream Python tests in `make test` and Linux CI, including a clean installed-wheel run; add regressions for numerical, API, and cross-surface serialization defects.
 - Rebuild the Python extension before strict legacy tests and benchmark targets so they exercise the current Rust source.
-- Replace unsupported legacy compatibility claims with the verified 70-pass/21-failure baseline, a weighted median counterexample, and outstanding API/serialization gaps. Clarify that benchmark targets run a custom runner and that legacy compatibility remains unresolved.
+- Record the original 70-pass/21-failure diagnostic baseline and the defects fixed above. Clarify that benchmark targets run a custom runner.
 
 ### Changed
 - Compressor Stage 4 cap strategy now uses a second k-limit merge with binary-searched `d'` (same scale-family geometry as Stage 3) instead of always using equal-weight bucketization.
 - Added Stage 4 unit coverage for cap/weight/order invariants under the new second-pass k-limit cap behavior.
 - Updated `tdigest_design.md` to document the new Stage 4 cap flow and fallback behavior.
 - Renamed `DigestConfig.legacy_delta` (and `TDigest`/builder methods) to `delta`. The field is the user-facing alternative-to-`max_size` mode, not a legacy escape hatch.
-- Added `ScaleFamily::K2Norm`: the canonical n-aware Dunning K2 from the t-digest paper (eq 8). Pairs with existing `K2` (Dunning's no-norm Java variant). `delta`-mode now routes through `klimit_merge` with `K2Norm` and strict `Δk ≤ 1` tolerance, replacing the parallel `legacy_delta_merge`/`legacy_k2_*` helpers. `klimit_merge` now takes a `tol` parameter (use `KLIMIT_TOL` for tolerant, `0.0` for strict byte-equivalence with old tdigest-rs).
-- `delta`-mode now defaults all other knobs to the old tdigest-rs contract: passing `delta=X` (with no other args) implies `scale='k2norm'` and `singleton_policy='off'`. Explicit values that disagree (e.g. `delta=X, scale='k1'`) are rejected with a clear error instead of being silently overridden, so the digest the user gets matches the old library byte-for-byte.
+- Added `ScaleFamily::K2Norm`: the canonical n-aware Dunning K2 from the t-digest paper (eq 8). Pairs with existing `K2` (Dunning's no-norm Java variant). `delta`-mode now routes through `klimit_merge` with `K2Norm` and strict `Δk ≤ 1` tolerance, replacing the parallel `legacy_delta_merge`/`legacy_k2_*` helpers. `klimit_merge` now takes a `tol` parameter (use `KLIMIT_TOL` for the tolerant bound, `0.0` for the strict delta-mode bound).
+- `delta`-mode now defaults all other knobs to the old tdigest-rs contract: passing `delta=X` (with no other args) implies `scale='k2norm'` and `singleton_policy='off'`. Explicit values that disagree (e.g. `delta=X, scale='k1'`) are rejected with a clear error instead of being silently overridden, so the requested compression mode is honored consistently.
 - DRY: shared `validate_trimmed_mean_bounds` helper now used by both `trimmed_mean` (silent, returns NaN on invalid bounds) and `trimmed_mean_strict` (loud, returns `FrontendError::InvalidProbe`).
-- Reconciled defaults across surfaces. There are now exactly two: `DEFAULT_MAX_SIZE = 1000` (used when neither `max_size` nor `delta` is set; consistent across Rust `py.rs` PyO3 signature, Rust CLI `--max-size`, the Python shim's `from_array` etc., and the Polars `tdigest()` expression) and `DEFAULT_DELTA = 300.0` (matches old `tdigest-rs`'s `DEFAULT_DELTA`; exposed as a public Python constant so `delta=DEFAULT_DELTA` reproduces that library's out-of-the-box behavior). The historical intent was `1000` (commit `14b34ac` "Default arguments k2, 1000 and f64"); the Python shim's `200` default was drift introduced when the shim layer was created and now follows the rest.
+- Reconciled defaults across surfaces: `DEFAULT_MAX_SIZE = 1000` when neither `max_size` nor `delta` is set, and `DEFAULT_DELTA = 300.0`, matching the old library's compression constant. The shipped `tdigest_rs` package additionally preserves legacy input and mutation semantics. The historical modern default was `1000` (commit `14b34ac` "Default arguments k2, 1000 and f64"); the Python shim's `200` default was drift and now follows the rest.
 
 ## [0.2.4] - 2026-02-16
 

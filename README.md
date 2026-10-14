@@ -119,9 +119,11 @@ make test
 - Rust: stable (edition 2021)
 - Python: CPython 3.12 (built with maturin)
 - Polars: 1.x line (Python)
-- Legacy `tdigest-rs` compatibility is still under investigation. See the
-  [strict compatibility baseline](compat/gr_tdigest_vs_tdigest_rs.md) for known
-  failures and commands to reproduce them.
+- The wheel also ships the original Python interface as `tdigest_rs.TDigest`,
+  backed by the same Rust core. Its unchanged upstream suite runs in Linux CI,
+  including against an installed wheel. See [legacy compatibility](compat/gr_tdigest_vs_tdigest_rs.md).
+- `tdigest_rs` preserves legacy defaults and non-mutating merge/update behavior;
+  `gr_tdigest` keeps strict finite input and the modern in-place API.
 
 ## Changelog
 - See `CHANGELOG.md`.

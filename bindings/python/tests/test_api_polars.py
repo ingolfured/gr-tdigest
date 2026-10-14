@@ -89,7 +89,9 @@ class TestPolarsPluginSmoke:
 
         assert out.columns == ["cx", "qy"]
         assert out["cx"].is_sorted()
-        assert float(out["qy"][0]) == pytest.approx(1.6666666666666667, abs=1e-9)
+        # The two central observations are 1 and 3. Retaining the atomic pile
+        # at 3 across the struct codec must give the same median as the data.
+        assert float(out["qy"][0]) == pytest.approx(float(np.median(df["y"].to_numpy())), abs=1e-9)
 
     def test_scale_weights_and_values_smoke(self):
         d = pl.DataFrame({"x": [0.0, 1.0, 2.0, 3.0]}).select(

@@ -111,7 +111,7 @@ Note: core merge is permissive by design. Strict precision/config checks are enf
 
 `normalize_stream` does three jobs:
 1. Validate non-decreasing mean order (panic on decreasing mean).
-2. Coalesce adjacent equal-mean items into one atomic run (`new_singleton_f64(mean, combined_weight)`).
+2. Coalesce adjacent equal-mean items; the result is atomic only when every input was atomic. Mixed provenance and fractional weights are preserved.
 3. Accumulate:
 - `total_w`
 - `total_mw = sum(mean * weight)`
@@ -249,31 +249,28 @@ Performance:
 2. Empty digest -> `NaN`.
 3. Finite `q` is clamped to `[0,1]` in core.
 4. Convert to target weight index: `index = q * total_weight`.
-5. Edge clamps:
-- `index < 1` -> `min`
-- `index > total_weight - 1` -> `max`
+5. Edge handling:
+- `q=0` -> `min`; `q=1` -> `max`.
+- Outside the first/last centroid centers, retain atomic mass or interpolate toward data extrema.
+- All boundaries use actual weights, including totals below one.
 6. Find bracketing centroids using half-weight center-to-center spans.
 7. Interpolate with singleton-aware rules.
 
 Singleton-aware interpolation rules:
 
-Atomic pile snap (`weight > 1`):
-- If `index` is strictly inside pile half-width, return pile mean exactly.
-
-Unit singleton snap (`weight == 1`):
-- If probe is within `0.5` of centroid center, snap to centroid mean.
+Atomic pile snap (any positive weight):
+- If `index` is strictly inside the atomic mass, return its mean exactly.
 
 Otherwise interpolate with dead zones:
-- `dead_left = 0.5` when left is unit singleton else `0`.
-- `dead_right = 0.5` when right is unit singleton else `0`.
+- `dead_left = weight_left / 2` when left is atomic, else `0`.
+- `dead_right = weight_right / 2` when right is atomic, else `0`.
 - Interpolate in remaining span.
 
 This keeps quantile behavior symmetric with CDF atomic exclusions.
 
 `median()`:
 - Empty -> `NaN`.
-- Odd total count -> `quantile(0.5)`.
-- Even total count -> average means of bracketing centroids (dedicated even-count branch).
+- Non-empty -> `quantile(0.5)`; there is no even-count shortcut that ignores centroid weights.
 
 ### 5.3 Strictness split for quantile probes
 
@@ -325,6 +322,13 @@ Decode behavior:
 - v2 decodes centroid kind explicitly from payload and preserves atomic-vs-mixed identity.
 - v2/v3 preserve fractional centroid weights on wire.
 - v3 checksum is verified when present.
+- v3 flag bit1 stores an optional positive finite delta at header bytes 64..72;
+  the extension is covered by the checksum. Absent extension means max-size mode.
+- Explicit v1/v2 export cannot represent delta mode and is rejected. The existing
+  infallible Rust encoder asserts this precondition; language wrappers return errors.
+- Polars struct codecs carry scale, policy, pin count, optional delta, and atomic
+  flags. Older structs still decode with their original defaults and weight-based
+  kind inference. Single-digest serialization avoids recompression.
 
 ## 7. Frontend service role
 
@@ -341,8 +345,8 @@ Adapters (`src/py.rs`, `src/jni.rs`, `src/polars_expr.rs`) should remain thin ar
 ## 8. Known current-state gaps
 
 1. Legacy wire compatibility mode.
-- Decoder supports v1 and v2.
-- Re-encoding a v1 blob produces v2 output (format changes intentionally).
+- Decoder supports v1, v2, and v3.
+- Default re-encoding writes v3; old formats cannot store delta mode.
 
 2. Strict merge location.
 - Strict compatibility checks are frontend-layer behavior, not core merge behavior.
