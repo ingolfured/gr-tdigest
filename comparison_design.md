@@ -206,3 +206,12 @@ Primary references used for this comparison:
 - https://github.com/CamDavidsonPilon/tdigest
 - https://github.com/protivinsky/pytdigest
 - https://github.com/RedisBloom/t-digest-c
+
+## G-Research numerical compatibility
+
+`tdigest_rs.TDigest` retains the pinned original Rust calculations and Python
+wrapper so existing applications keep their API and numbers. The modern
+`gr_tdigest` engine is opt-in. Matching compression parameters or passing the
+91 approximate upstream tests does not establish exact output equivalence.
+The retained implementation and exact regression fixtures have explicit
+provenance; upstream quirks are preserved on this interface.
