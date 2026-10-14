@@ -85,6 +85,17 @@ Weighted add path:
 - Weighted values are converted to atomic centroids, then merged through the same digest merge/compression path.
 - Frontend surfaces route weighted add through `FrontendDigest::add_weighted_f64(...)`, so Python/JNI/Polars share the same validation and merge semantics.
 
+Weight scaling is transactional. `scale_weights` validates the positive finite
+factor, prepares centroid products locally, and rejects any nonpositive or
+nonfinite product before calling checked constructors. It also rejects a
+nonfinite accumulated product total or nonpositive/nonfinite scaled stored
+count. Only then does it replace centroids and scale count/sum. Errors use the
+existing `InvalidWeight` variant and preserve the original digest bytes. Empty
+digests remain no-ops after factor validation; valid positive subnormal products
+remain supported. Successful count and sum arithmetic retains its prior order.
+This validation is limited to weight scaling: aggregate input/merge validation,
+weighted-value product overflow, and the raw-sum overflow policy are separate.
+
 ### 3.2 Raw-value ingest (`merge_unsorted` / `merge_sorted`)
 
 `merge_unsorted`:

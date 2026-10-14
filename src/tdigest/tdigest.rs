@@ -685,19 +685,44 @@ impl<F: FloatLike + FloatCore> TDigest<F> {
     /// - digest `count` and `sum` are multiplied by `factor`
     /// - `min`/`max` are unchanged
     ///
-    /// This preserves quantile/cdf/median shape while re-weighting the digest.
+    /// This preserves quantile/cdf/median shape while re-weighting the digest,
+    /// subject to floating-point rounding. If a scaled centroid weight becomes
+    /// zero/nonfinite or either mass total becomes nonfinite, return an error without
+    /// changing the digest. This does not validate weighted-value sum overflow.
     pub fn scale_weights(&mut self, factor: f64) -> TdResult<&mut Self> {
         ensure_positive_finite_scale_factor(factor, "weight scale factor must be finite and > 0")?;
-        if self.centroids.is_empty() || self.count == 0.0 {
+        if self.centroids.is_empty() {
             return Ok(self);
         }
 
-        self.centroids = self
-            .centroids
-            .iter()
-            .map(|c| rescaled_centroid(c, 1.0, factor))
-            .collect();
-        self.count *= factor;
+        let mut scaled_centroids = Vec::with_capacity(self.centroids.len());
+        let mut scaled_mass = 0.0;
+        for centroid in &self.centroids {
+            let weight = centroid.weight_f64() * factor;
+            if !weight.is_finite() || weight <= 0.0 {
+                return Err(TdError::InvalidWeight {
+                    context: "scaled centroid weight must be finite and > 0",
+                });
+            }
+            scaled_mass += weight;
+            if !scaled_mass.is_finite() {
+                return Err(TdError::InvalidWeight {
+                    context: "scaled total weight must be finite and > 0",
+                });
+            }
+            // The product is validated before a checked centroid constructor.
+            scaled_centroids.push(rescaled_centroid(centroid, 1.0, factor));
+        }
+        let scaled_count = self.count * factor;
+        if !scaled_count.is_finite() || scaled_count <= 0.0 {
+            return Err(TdError::InvalidWeight {
+                context: "scaled total weight must be finite and > 0",
+            });
+        }
+
+        // Commit only after all products and both total representations pass.
+        self.centroids = scaled_centroids;
+        self.count = scaled_count;
         self.sum *= factor;
         Ok(self)
     }
