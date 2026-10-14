@@ -18,6 +18,7 @@ All notable changes to this project are documented in this file.
 - Preserve delta in TDIG v3 and configuration/kind in Polars structs; reject lossy v1/v2 delta export and support Float32 Polars median.
 - Add modern Python and cross-surface regressions, including backward-compatible Polars struct reading.
 - Preserve `tdigest_rs.TDigest` with unchanged upstream calculations and Python wrapper (embedded with namespace-only import changes to avoid an unpublished crate dependency): original f32 arithmetic, uint32 weights, merge/update, and copy/pickle behavior. Keep the new engine opt-in via `gr_tdigest`; matching delta and approximate upstream tests alone do not ensure unchanged results.
+- Add 70 exact original-output regressions and pin the numerical source/wrapper with checksums, running both API regressions and numerical cases against the installed wheel.
 - Require all 91 unchanged upstream Python cases in `make test` and Linux CI; verify copied-file checksums and repeat the suite in a clean installed wheel.
 - Preserve the original upstream benchmark as a reference and provide a separate custom benchmark smoke target.
 
