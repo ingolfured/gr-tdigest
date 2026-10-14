@@ -122,6 +122,8 @@ make test
 - Python: CPython 3.12 (built with maturin)
 - Polars: 1.x line (Python)
 
+The wheel also ships `tdigest_rs.TDigest`, backed by the shared Rust core. It preserves legacy dtype inference, NaN/infinity handling, and non-mutating merge/update. `gr_tdigest` retains its strict modern API.
+
 ## Changelog
 - See `CHANGELOG.md`.
 
