@@ -39,6 +39,7 @@ struct WeightedStats {
     w_sum: f64,
     mw_sum: f64,
     first_mean: f64,
+    last_mean: f64,
     first_atomic: bool,
     items: usize,
 }
@@ -50,6 +51,7 @@ impl WeightedStats {
             self.first_mean = centroid.mean_f64();
             self.first_atomic = centroid.is_atomic();
         }
+        self.last_mean = centroid.mean_f64();
         self.items += 1;
         self.w_sum += centroid.weight_f64();
         self.mw_sum += centroid.weight_f64() * centroid.mean_f64();
@@ -62,7 +64,15 @@ impl WeightedStats {
             // later merges produce duplicate or out-of-order means.
             self.first_mean
         } else if self.w_sum > 0.0 {
-            self.mw_sum / self.w_sum
+            let mean = self.mw_sum / self.w_sum;
+            // Weighted averaging can round beyond both input means by an ulp.
+            // Disjoint sorted clusters must retain disjoint mean intervals.
+            // Do not hide aggregate/weighted-sum overflow behind this bound.
+            if self.w_sum.is_finite() && self.mw_sum.is_finite() && mean.is_finite() {
+                mean.clamp(self.first_mean, self.last_mean)
+            } else {
+                mean
+            }
         } else {
             0.0
         }
@@ -542,6 +552,57 @@ fn weighted_collapse<F: FloatLike + FloatCore>(slice: &[Centroid<F>]) -> Centroi
 mod tests {
     use super::*;
     use crate::tdigest::{singleton_policy::SingletonPolicy, ScaleFamily, TDigest};
+
+    #[test]
+    fn finite_cluster_average_stays_inside_its_input_mean_interval() {
+        let left = 1.0000000000000009_f64;
+        let right = 1.000000000000001_f64;
+        let weights = [2e100, 3.0000000000000002e100];
+        let raw_mean = (left * weights[0] + right * weights[1]) / (weights[0] + weights[1]);
+        assert!(
+            raw_mean > right,
+            "fixture must exercise averaging overshoot"
+        );
+        for sign in [1.0, -1.0] {
+            let mut inputs = [
+                Centroid::<f64>::new_atomic_f64(left * sign, weights[0]),
+                Centroid::<f64>::new_atomic_f64(right * sign, weights[1]),
+            ];
+            inputs.sort_by(|a, b| a.mean_f64().total_cmp(&b.mean_f64()));
+            let mut stats = WeightedStats::default();
+            for centroid in &inputs {
+                stats.add(centroid);
+            }
+            assert!(stats.mean() >= inputs[0].mean_f64());
+            assert!(stats.mean() <= inputs[1].mean_f64());
+            assert_eq!(
+                stats.centroid::<f64>().weight_f64(),
+                weights.iter().sum::<f64>()
+            );
+            assert!(!stats.centroid::<f64>().is_atomic());
+        }
+    }
+
+    #[test]
+    fn cluster_interval_bound_does_not_hide_nonfinite_accumulators() {
+        for (mean, weight) in [(2.0, 1e308), (0.0, 1e308)] {
+            let mut stats = WeightedStats::default();
+            for _ in 0..2 {
+                stats.add(&Centroid::<f64>::new_atomic_f64(mean, weight));
+            }
+            assert!(!stats.w_sum.is_finite());
+            assert_eq!(stats.mean().is_nan(), (stats.mw_sum / stats.w_sum).is_nan());
+            if !stats.mean().is_nan() {
+                assert_eq!(stats.mean(), stats.mw_sum / stats.w_sum);
+            }
+        }
+        let mut weighted_sum_overflow = WeightedStats::default();
+        for _ in 0..2 {
+            weighted_sum_overflow.add(&Centroid::<f64>::new_atomic_f64(1e308, 2.0));
+        }
+        assert!(weighted_sum_overflow.w_sum.is_finite());
+        assert!(weighted_sum_overflow.mean().is_infinite());
+    }
 
     #[test]
     fn all_compressor_paths_preserve_single_input_mean_bits_and_kind() {

@@ -5,6 +5,7 @@ All notable changes to this project are documented in this file.
 ## [Unreleased]
 
 ### Fixed
+- Bound finite multi-centroid weighted averages to their input mean interval, preventing rounding from producing duplicate or out-of-order compressed means; retain explicit overflow handling as separate work. Add Rust and Python/Polars regressions for adjacent means and large finite weights.
 - Disclose verified co-installation/native-module shadowing and packaged bytecode in the release plan; retain the broader compressed-state audit with two confirmed ordering failures as explicit open evidence, not a passing gate.
 - Record the unchanged 30-case Linux release matrix at corrected commit 22867bd: all sampled numerical fields match 756d221, while F32 centroid memory grows from 12 to 16 bytes. Preserve earlier evidence, add portable comparison tooling and exact installed-wheel validation provenance, and collapse generated audit records in review.
 - Document the corrected mass/mean representation and saved-state migration contract; add a reproducible 800-digest weighted-point audit with an explicit failing baseline control and separately disclosed extreme-weight limits.
