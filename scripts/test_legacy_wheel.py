@@ -4,14 +4,31 @@ from __future__ import annotations
 
 import hashlib
 import os
-from pathlib import Path
+from pathlib import Path, PurePosixPath
 import re
 import shutil
 import subprocess
 import sys
 import tempfile
+from zipfile import ZipFile
 
 from check_upstream_sources import verify_sources
+
+
+def verify_wheel_contents(wheel: Path) -> None:
+    """Reject generated Python caches before installing the release artifact."""
+    with ZipFile(wheel) as archive:
+        unexpected = sorted(
+            name
+            for name in archive.namelist()
+            if "__pycache__" in PurePosixPath(name).parts
+            or PurePosixPath(name).suffix in {".pyc", ".pyo"}
+        )
+    if unexpected:
+        raise RuntimeError(
+            "wheel contains Python cache/bytecode files: " + ", ".join(unexpected)
+        )
+    print("Release wheel contains no Python cache/bytecode files.", flush=True)
 
 
 def main() -> None:
@@ -57,6 +74,7 @@ def main() -> None:
             cwd=project,
         )
         (wheel,) = wheels.glob("*.whl")
+        verify_wheel_contents(wheel)
         requirements = temporary / "requirements.txt"
         run(
             "uv",
