@@ -1,0 +1,16 @@
+{
+  "old_heads": {
+    "review/1-digest-correctness": "227e95b43fe4ee0381be5f484fd7c133b259da89",
+    "review/2-legacy-python-api": "4ceffd958058cf82fee95365169ecd58da559703",
+    "review/3-upstream-compatibility-gate": "75af30e1cb5273ac36912403a68736ef97e8558e"
+  },
+  "validated_source": "52f6212008111b62fa07374278b850868b9ea77e",
+  "restacked_heads": {
+    "review/1-digest-correctness": "6eb4203fe1c4ad8d337636d5aca549e0fec155b3",
+    "review/2-legacy-python-api": "911dc35493f1774fed1320f9da30d553b41f59b2",
+    "review/3-upstream-compatibility-gate": "993247b70cb3d1fa2968366ae27be302169ec4ef"
+  },
+  "tree_equivalence": "Every tracked file matches validated source exactly except CHANGELOG entry order.",
+  "source_is_preserved_on": "review/evidence-scaling-packaging-20261015",
+  "proof_command": "git diff --name-only 52f6212008111b62fa07374278b850868b9ea77e 993247b70cb3d1fa2968366ae27be302169ec4ef"
+}

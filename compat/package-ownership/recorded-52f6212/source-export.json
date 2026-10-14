@@ -1,0 +1,21 @@
+{
+  "source_commit": "52f6212008111b62fa07374278b850868b9ea77e",
+  "source_tree": "697959c6f4932082f4e5b6f6f1809ad6c39cfc5e",
+  "source_repository": "/var/tmp/codex-tdigest-pr3-20261014/work/gr-tdigest-f64-weights",
+  "source_archive": "/var/tmp/codex-tdigest-pr3-20261014/overnight/package-hygiene/same-distribution-probe/source.tar",
+  "source_archive_sha256": "1463db32365acb9c83be7c250e72960b163d878533670edc2a39124b0c1af365",
+  "source_export": "/var/tmp/codex-tdigest-pr3-20261014/overnight/package-hygiene/same-distribution-probe/same-name-source",
+  "prototype_label": "Local same-distribution packaging prototype; not production release",
+  "only_metadata_change": "[project].name: gr-tdigest -> tdigest-rs",
+  "metadata_diff": "--- a/bindings/python/pyproject.toml\n+++ b/bindings/python/pyproject.toml\n@@ -3,7 +3,7 @@\n build-backend = \"maturin\"\n \n [project]\n-name = \"gr-tdigest\"\n+name = \"tdigest-rs\"\n dynamic = [\"version\"]\n description = \"Rust TDigest with Python, Polars and JNI\"\n readme = \"PYTHON_README.md\"\n",
+  "original_pyproject_sha256": "c1f72f57f57c0bde18cd19b3f38a2296cb8db45a352e6509358c9c0ca3361c2d",
+  "prototype_pyproject_sha256": "43d627cb5804fcd8912bb2bbf99205a78cc9fb12be4e8cb38b41962b808a8334",
+  "cargo_package_unchanged": "gr-tdigest",
+  "native_module_unchanged": "gr_tdigest._gr_tdigest",
+  "cache_markers": {
+    "bindings/python/gr_tdigest/__pycache__/codex_upgrade_probe.pyc": "e7d3a59777c6069c9a9320404d1adb2ebf4264a87d9bc4a725a430765cdb71d6",
+    "bindings/python/tdigest_rs/codex_upgrade_probe.pyo": "e7d3a59777c6069c9a9320404d1adb2ebf4264a87d9bc4a725a430765cdb71d6",
+    "bindings/python/tdigest_rs/__pycache__/nested/codex_upgrade_probe.txt": "e7d3a59777c6069c9a9320404d1adb2ebf4264a87d9bc4a725a430765cdb71d6",
+    "codex_upgrade_root_probe.pyc": "e7d3a59777c6069c9a9320404d1adb2ebf4264a87d9bc4a725a430765cdb71d6"
+  }
+}

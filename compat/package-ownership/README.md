@@ -1,4 +1,45 @@
-# Package ownership evidence
+# Package ownership and real upgrade evidence
+
+A real same-distribution upgrade prototype passed on Linux/Python 3.12 at
+`52f6212`. A fresh immutable export changed only `[project].name` from
+`gr-tdigest` to `tdigest-rs`, leaving Rust/native/module identities unchanged.
+Maturin built the actual release wheel and sdist; wheel metadata was not repacked.
+This experiment does not change this repository's production distribution name.
+
+Using real pip, the probe installed the authentic published `tdigest-rs==0.1.0`,
+upgraded to the prototype without manual removal, uninstalled it, then reinstalled
+it. **All 32 old-restored states matched exactly**, and **208/208 compatibility
+tests passed after both upgrade and reinstall**, without skips or xfails.
+The old native extension was removed, the new shim selected the expected native
+hash, `tdigest-rs` was the only namespace owner, and uninstall removed all owned
+files/imports. Modern Python, wire and Polars smoke checks passed too.
+
+Dependencies were staged explicitly: old NumPy 1.26.4, then NumPy 2.3.4 and Polars
+1.34.0 for the candidate. pip ownership operations used `--no-deps`; this is not
+an unconstrained resolver test. The environment contained no independent
+`gr-tdigest` distribution, so co-installation remains unsupported. Python 3.10/3.11,
+the original platform matrix, rollback constraints and ownership of a bundled
+modern namespace remain release decisions.
+
+The private artifact packaging also improved: explicit excludes remove Python
+caches from wheels and sdists; the installed-wheel gate rejects them before
+installation. A uniquely named Python README fixes Maturin's duplicate root
+README path. Four injected cache markers were excluded from the real sdist.
+That unmodified, normalized source archive was then rebuilt into a release wheel
+and checked with the complete 208-case installed compatibility gate. This is
+actual source rebuild evidence, not merely a source-file listing.
+
+The [lifecycle result](recorded-52f6212/RESULT.json),
+[artifact hashes](recorded-52f6212/artifacts.json),
+[source export and exact name-only diff](recorded-52f6212/source-export.json),
+[pip/build commands](recorded-52f6212/commands.json),
+[standard sdist rebuild](recorded-52f6212/standard-sdist-rebuild.json), and
+[record manifest](recorded-52f6212/manifest.json) preserve attribution.
+The archived scripts retain the original WSL paths as experiment records; they
+are not a general release command. Historical inspection below explains why a
+same-distribution upgrade matters and remains valid for co-installation.
+
+# Historical ownership inspection
 
 The published `tdigest-rs==0.1.0` wheel and the preserved review `gr-tdigest==0.2.4` wheel both contain `tdigest_rs/__init__.py` and `tdigest_rs/lib.py`. Their distribution names differ, so installing the latter does not replace the former as an upgrade. Uninstalling either distribution can also remove shared files required by the other.
 

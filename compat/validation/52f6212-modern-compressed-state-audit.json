@@ -1,0 +1,50 @@
+{
+  "status": "PASS",
+  "seed": 202610140712,
+  "trials": 1,
+  "max_sizes": [
+    10,
+    20,
+    40,
+    100,
+    1000
+  ],
+  "surface": "public",
+  "seconds": 0.5932255930001702,
+  "checks": {
+    "expected_public_capacity_rejections": 6,
+    "cases_attempted": 1440,
+    "states": 3840,
+    "mass_checks": 7680,
+    "cdf_values": 180594,
+    "quantile_values": 503040,
+    "cases_completed": 1440
+  },
+  "failures": [],
+  "provenance": {
+    "script_sha256": "4d32e83fc011ca04baba0dc2291669c8a656b63d7d9b9406381c66e3f63c30fe",
+    "python": "3.12.12 (main, Oct 14 2025, 21:25:31) [Clang 20.1.4 ]",
+    "package": "/var/tmp/codex-tdigest-pr3-20261014/overnight/release-wheel-52f6212/modern-venv/lib/python3.12/site-packages/gr_tdigest/__init__.py",
+    "native_sha256": {
+      "/var/tmp/codex-tdigest-pr3-20261014/overnight/release-wheel-52f6212/modern-venv/lib/python3.12/site-packages/gr_tdigest/_gr_tdigest.abi3.so": "78a7473df6e7b20c703a57559b8ea9975848a3f55f745a7fcd1e721a598ece09"
+    },
+    "git_head": "52f6212008111b62fa07374278b850868b9ea77e",
+    "source_sha256": {
+      "src/tdigest/centroids.rs": "8b25d23223086bde557c5ba365e72892fc006f5c1e2be97be3f954dfd50ebe02",
+      "src/tdigest/compressor.rs": "242b56730504fe6bd921f7443ee9a5fe62a74753808236b36d61e835edfa426a",
+      "src/tdigest/tdigest.rs": "3f5b7aec088962341dde5fbf125aabcfff0ae7889bbe27979930c53951994f40",
+      "src/tdigest/cdf.rs": "55eeb11a1da871aee389d1256308fdc64a6c66d43d3f08d7f60e1729c80e65cc",
+      "src/tdigest/quantile.rs": "a99599dcc81c0623e3182ce2ede325cd7c34ac263985af217d6e7a865d9eb0e1"
+    },
+    "source_ref": "52f6212008111b62fa07374278b850868b9ea77e",
+    "source_ref_sha256": {
+      "src/tdigest/centroids.rs": "8b25d23223086bde557c5ba365e72892fc006f5c1e2be97be3f954dfd50ebe02",
+      "src/tdigest/compressor.rs": "242b56730504fe6bd921f7443ee9a5fe62a74753808236b36d61e835edfa426a",
+      "src/tdigest/tdigest.rs": "3f5b7aec088962341dde5fbf125aabcfff0ae7889bbe27979930c53951994f40",
+      "src/tdigest/cdf.rs": "55eeb11a1da871aee389d1256308fdc64a6c66d43d3f08d7f60e1729c80e65cc",
+      "src/tdigest/quantile.rs": "a99599dcc81c0623e3182ce2ede325cd7c34ac263985af217d6e7a865d9eb0e1"
+    },
+    "worktree_core_matches_source_ref": true
+  },
+  "scope": "Compressed-state invariants only. No exact-rank assertion after lossy compression. Weights have finite normal aggregate mass; subnormal-total and aggregate-overflow cases are separate."
+}

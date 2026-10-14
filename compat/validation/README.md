@@ -1,3 +1,35 @@
+# Validation of safe scaling and corrected packaging
+
+Clean source `52f6212008111b62fa07374278b850868b9ea77e` passed Linux `make build`,
+`make test` and `make lint`: **314 Python/coherence cases plus 91 untouched
+upstream cases**, 112 Rust tests and passing Java tests. Three pre-existing Rust
+tests remain ignored. The optimized installed wheel passed all **208 compatibility
+cases**, with no skips or xfails, and **70 modern API/regression cases**.
+
+The same artifact passed the 800-digest weighted-point audit (33,536 CDF/rank and
+304 integer-mass checks) and 1,440 compressed-state routes / 3,840 states.
+These are bounded checks, not a proof for every finite input.
+
+The new scaling change rejects invalid products/totals transactionally; it does
+not cover input/merge aggregate overflow or weighted-value sum overflow. The
+packaging changes exclude caches and remove a duplicate README archive path.
+Actual standard source-archive rebuilding and same-distribution upgrade/removal
+are documented in [package ownership](../package-ownership/README.md).
+
+See [canonical commands and results](52f6212-validation.json),
+[wheel provenance](52f6212-wheel-provenance.json),
+[installed modern checks](52f6212-modern-wheel-validation.json),
+[point audit](52f6212-modern-weighted-point-audit.json),
+[compressed audit](52f6212-modern-compressed-state-audit.json), and
+[restack equivalence](52f6212-restack-equivalence.json). All code, tests and build
+configuration matched the validated source exactly after restacking; only
+CHANGELOG ordering differed before adding these records and documentation.
+
+Environment remains WSL Linux x86-64, Python 3.12.12, NumPy 2.3.4, Polars 1.34.0,
+Rust 1.90.0 and JDK 21. No wider platform/Python support or public Rust source
+compatibility is claimed. Performance results at `c5dec35` predate this batch.
+Historical source-labelled validation follows unchanged.
+
 # Validation of the numerical boundary fixes
 
 Clean source `c5dec35059990b40fe6f036dc83590bf0cdf2a70` passed the canonical Linux

@@ -1,0 +1,25 @@
+{
+  "source_commit": "52f6212008111b62fa07374278b850868b9ea77e",
+  "sdist_sha256": "7460857acbf9ab925e0136ee65be43d1c9edb12efaebd75beda0f485fd196a9d",
+  "rewritten_pyproject_readme": "PYTHON_README.md",
+  "rewritten_pyproject_manifest_path": "Cargo.toml",
+  "python_readme_sha256": "65facacf73e268b42a62df660639d02d73d3584178d0156041006bfcbf5e4e04",
+  "both_readmes_match_source_bytes": true,
+  "required_source_members": [
+    "Cargo.toml",
+    "Cargo.lock",
+    "src/lib.rs",
+    "src/tdigest/tdigest.rs",
+    "src/upstream/lib.rs",
+    "src/upstream/core.rs",
+    "src/upstream/traits.rs",
+    "src/upstream/scale.rs",
+    "src/upstream_py.rs",
+    "bindings/python/gr_tdigest/__init__.py",
+    "bindings/python/tdigest_rs/__init__.py",
+    "bindings/python/tdigest_rs/lib.py",
+    "crates/testdata/Cargo.toml"
+  ],
+  "required_source_members_present": true,
+  "status": "passed"
+}

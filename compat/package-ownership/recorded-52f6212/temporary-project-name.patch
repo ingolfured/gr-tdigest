@@ -1,0 +1,11 @@
+--- a/bindings/python/pyproject.toml
++++ b/bindings/python/pyproject.toml
+@@ -3,7 +3,7 @@
+ build-backend = "maturin"
+ 
+ [project]
+-name = "gr-tdigest"
++name = "tdigest-rs"
+ dynamic = ["version"]
+ description = "Rust TDigest with Python, Polars and JNI"
+ readme = "PYTHON_README.md"

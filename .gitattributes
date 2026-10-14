@@ -7,3 +7,5 @@ compat/compressed-state-audit/recorded_public_result.json linguist-generated=tru
 compat/compressed-state-audit/initial_configuration_report.json linguist-generated=true
 compat/compressed-state-audit/historical_initial_audit.py linguist-generated=true
 compat/validation/*.json linguist-generated=true
+compat/package-ownership/recorded-52f6212/*.json linguist-generated=true
+compat/package-ownership/recorded-52f6212/temporary-project-name.patch linguist-generated=true whitespace=-blank-at-eol

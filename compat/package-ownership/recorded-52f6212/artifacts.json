@@ -1,0 +1,21 @@
+{
+  "source_commit": "52f6212008111b62fa07374278b850868b9ea77e",
+  "prototype": true,
+  "wheel": "/var/tmp/codex-tdigest-pr3-20261014/overnight/package-hygiene/same-distribution-probe/artifacts/tdigest_rs-0.2.4-cp312-abi3-linux_x86_64.whl",
+  "wheel_sha256": "4a71c05eb13ff9f2c3479bd4ac3c854510183e6c19d31921a40606cebb18f67f",
+  "native_path": "gr_tdigest/_gr_tdigest.abi3.so",
+  "native_sha256": "78a7473df6e7b20c703a57559b8ea9975848a3f55f745a7fcd1e721a598ece09",
+  "sdist": "/var/tmp/codex-tdigest-pr3-20261014/overnight/package-hygiene/same-distribution-probe/artifacts/tdigest_rs-0.2.4.tar.gz",
+  "sdist_sha256": "4b0335505aad2dab171c1cc50625e5aa678a9cdb14579ff2662ed30e69b017c6",
+  "metadata": {
+    "name": "tdigest-rs",
+    "version": "0.2.4",
+    "requires_python": ">=3.12, <3.13",
+    "requires_dist": [
+      "polars>=1.34.0",
+      "numpy>=2.3.3"
+    ]
+  },
+  "archive_hygiene": "Both actual artifacts exclude all injected cache entries and .pyc/.pyo paths.",
+  "build_kind": "Actual source export built by maturin; no wheel metadata repack."
+}

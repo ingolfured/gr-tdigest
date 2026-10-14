@@ -1,0 +1,24 @@
+{
+  "status": "PASS",
+  "scope": "Real pip same-distribution ownership/upgrade/removal probe with explicit staged dependency transition.",
+  "source_commit": "52f6212008111b62fa07374278b850868b9ea77e",
+  "prototype_wheel_sha256": "4a71c05eb13ff9f2c3479bd4ac3c854510183e6c19d31921a40606cebb18f67f",
+  "old_wheel_sha256": "62ee8d5a01226d020a2ab11a956292c38beab3f34d2d9fa7a8fca22c3e5d4bbf",
+  "pip_operations": "Install old -> upgrade without manual uninstall -> uninstall -> reinstall.",
+  "exact_old_restored_states": 32,
+  "compatibility_cases_after_upgrade": 208,
+  "compatibility_cases_after_reinstall": 208,
+  "skipped_or_xfailed": 0,
+  "old_native_removed": true,
+  "selected_new_native_hash_matches_artifact": true,
+  "single_namespace_owner": "tdigest-rs",
+  "uninstall_owned_files_removed": true,
+  "modern_smoke": "Python weighted median/wire and Polars plugin passed after upgrade and reinstall.",
+  "limitations": [
+    "Local packaging prototype, not production package identity policy.",
+    "Does not test unconstrained pip dependency resolution or original Python/platform support.",
+    "Clean initial environment has no independent gr-tdigest distribution; co-installation remains unsupported.",
+    "Old stage uses NumPy1.26.4; candidate stage uses NumPy2.3.4. Dependency transition is explicit.",
+    "No rollback claim. NumPy2 protocol5 -> NumPy1 namespace constraint remains separately documented."
+  ]
+}
