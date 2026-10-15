@@ -1,0 +1,475 @@
+......FFFFFFFFFFFFFF                                                     [100%]
+=================================== FAILURES ===================================
+___ test_high_delta_direct_update_and_merge_preserve_exact_piles[810.0-f32] ____
+
+precision = 'f32', delta = 810.0
+
+    @pytest.mark.parametrize("precision", ["f32", "f64"])
+    @pytest.mark.parametrize("delta", [300.0, 600.0, 800.0, 810.0, 1200.0, 2400.0])
+    def test_high_delta_direct_update_and_merge_preserve_exact_piles(precision, delta):
+        def make(values):
+            return td.TDigest.from_array(values, delta=delta, precision=precision)
+    
+        direct = make([0.0, 0.0, 100.0])
+        updated = make([0.0])
+        updated.add([0.0, 100.0])
+        merged = make([0.0, 0.0])
+        merged.merge(make([100.0]))
+        kway = td.TDigest.merge_all([make([0.0]), make([100.0]), make([0.0])])
+        for digest in [direct, updated, merged, kway]:
+>           assert_two_piles(digest)
+
+test_k2norm_domain.py:30: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+digest = <builtins.TDigest object at 0x75f7d3db22b0>
+
+    def assert_two_piles(digest):
+>       np.testing.assert_array_equal(digest.means, [0.0, 100.0])
+E       AssertionError: 
+E       Arrays are not equal
+E       
+E       (shapes (1,), (2,) mismatch)
+E        ACTUAL: array([33.333332])
+E        DESIRED: array([  0., 100.])
+
+test_k2norm_domain.py:11: AssertionError
+___ test_high_delta_direct_update_and_merge_preserve_exact_piles[810.0-f64] ____
+
+precision = 'f64', delta = 810.0
+
+    @pytest.mark.parametrize("precision", ["f32", "f64"])
+    @pytest.mark.parametrize("delta", [300.0, 600.0, 800.0, 810.0, 1200.0, 2400.0])
+    def test_high_delta_direct_update_and_merge_preserve_exact_piles(precision, delta):
+        def make(values):
+            return td.TDigest.from_array(values, delta=delta, precision=precision)
+    
+        direct = make([0.0, 0.0, 100.0])
+        updated = make([0.0])
+        updated.add([0.0, 100.0])
+        merged = make([0.0, 0.0])
+        merged.merge(make([100.0]))
+        kway = td.TDigest.merge_all([make([0.0]), make([100.0]), make([0.0])])
+        for digest in [direct, updated, merged, kway]:
+>           assert_two_piles(digest)
+
+test_k2norm_domain.py:30: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+digest = <builtins.TDigest object at 0x75f7d3db29b0>
+
+    def assert_two_piles(digest):
+>       np.testing.assert_array_equal(digest.means, [0.0, 100.0])
+E       AssertionError: 
+E       Arrays are not equal
+E       
+E       (shapes (1,), (2,) mismatch)
+E        ACTUAL: array([33.333333])
+E        DESIRED: array([  0., 100.])
+
+test_k2norm_domain.py:11: AssertionError
+___ test_high_delta_direct_update_and_merge_preserve_exact_piles[1200.0-f32] ___
+
+precision = 'f32', delta = 1200.0
+
+    @pytest.mark.parametrize("precision", ["f32", "f64"])
+    @pytest.mark.parametrize("delta", [300.0, 600.0, 800.0, 810.0, 1200.0, 2400.0])
+    def test_high_delta_direct_update_and_merge_preserve_exact_piles(precision, delta):
+        def make(values):
+            return td.TDigest.from_array(values, delta=delta, precision=precision)
+    
+        direct = make([0.0, 0.0, 100.0])
+        updated = make([0.0])
+        updated.add([0.0, 100.0])
+        merged = make([0.0, 0.0])
+        merged.merge(make([100.0]))
+        kway = td.TDigest.merge_all([make([0.0]), make([100.0]), make([0.0])])
+        for digest in [direct, updated, merged, kway]:
+>           assert_two_piles(digest)
+
+test_k2norm_domain.py:30: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+digest = <builtins.TDigest object at 0x75f7d3df8f30>
+
+    def assert_two_piles(digest):
+>       np.testing.assert_array_equal(digest.means, [0.0, 100.0])
+E       AssertionError: 
+E       Arrays are not equal
+E       
+E       (shapes (1,), (2,) mismatch)
+E        ACTUAL: array([33.333332])
+E        DESIRED: array([  0., 100.])
+
+test_k2norm_domain.py:11: AssertionError
+___ test_high_delta_direct_update_and_merge_preserve_exact_piles[1200.0-f64] ___
+
+precision = 'f64', delta = 1200.0
+
+    @pytest.mark.parametrize("precision", ["f32", "f64"])
+    @pytest.mark.parametrize("delta", [300.0, 600.0, 800.0, 810.0, 1200.0, 2400.0])
+    def test_high_delta_direct_update_and_merge_preserve_exact_piles(precision, delta):
+        def make(values):
+            return td.TDigest.from_array(values, delta=delta, precision=precision)
+    
+        direct = make([0.0, 0.0, 100.0])
+        updated = make([0.0])
+        updated.add([0.0, 100.0])
+        merged = make([0.0, 0.0])
+        merged.merge(make([100.0]))
+        kway = td.TDigest.merge_all([make([0.0]), make([100.0]), make([0.0])])
+        for digest in [direct, updated, merged, kway]:
+>           assert_two_piles(digest)
+
+test_k2norm_domain.py:30: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+digest = <builtins.TDigest object at 0x75f7d3db0e30>
+
+    def assert_two_piles(digest):
+>       np.testing.assert_array_equal(digest.means, [0.0, 100.0])
+E       AssertionError: 
+E       Arrays are not equal
+E       
+E       (shapes (1,), (2,) mismatch)
+E        ACTUAL: array([33.333333])
+E        DESIRED: array([  0., 100.])
+
+test_k2norm_domain.py:11: AssertionError
+___ test_high_delta_direct_update_and_merge_preserve_exact_piles[2400.0-f32] ___
+
+precision = 'f32', delta = 2400.0
+
+    @pytest.mark.parametrize("precision", ["f32", "f64"])
+    @pytest.mark.parametrize("delta", [300.0, 600.0, 800.0, 810.0, 1200.0, 2400.0])
+    def test_high_delta_direct_update_and_merge_preserve_exact_piles(precision, delta):
+        def make(values):
+            return td.TDigest.from_array(values, delta=delta, precision=precision)
+    
+        direct = make([0.0, 0.0, 100.0])
+        updated = make([0.0])
+        updated.add([0.0, 100.0])
+        merged = make([0.0, 0.0])
+        merged.merge(make([100.0]))
+        kway = td.TDigest.merge_all([make([0.0]), make([100.0]), make([0.0])])
+        for digest in [direct, updated, merged, kway]:
+>           assert_two_piles(digest)
+
+test_k2norm_domain.py:30: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+digest = <builtins.TDigest object at 0x75f7d3dfa030>
+
+    def assert_two_piles(digest):
+>       np.testing.assert_array_equal(digest.means, [0.0, 100.0])
+E       AssertionError: 
+E       Arrays are not equal
+E       
+E       (shapes (1,), (2,) mismatch)
+E        ACTUAL: array([33.333332])
+E        DESIRED: array([  0., 100.])
+
+test_k2norm_domain.py:11: AssertionError
+___ test_high_delta_direct_update_and_merge_preserve_exact_piles[2400.0-f64] ___
+
+precision = 'f64', delta = 2400.0
+
+    @pytest.mark.parametrize("precision", ["f32", "f64"])
+    @pytest.mark.parametrize("delta", [300.0, 600.0, 800.0, 810.0, 1200.0, 2400.0])
+    def test_high_delta_direct_update_and_merge_preserve_exact_piles(precision, delta):
+        def make(values):
+            return td.TDigest.from_array(values, delta=delta, precision=precision)
+    
+        direct = make([0.0, 0.0, 100.0])
+        updated = make([0.0])
+        updated.add([0.0, 100.0])
+        merged = make([0.0, 0.0])
+        merged.merge(make([100.0]))
+        kway = td.TDigest.merge_all([make([0.0]), make([100.0]), make([0.0])])
+        for digest in [direct, updated, merged, kway]:
+>           assert_two_piles(digest)
+
+test_k2norm_domain.py:30: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+digest = <builtins.TDigest object at 0x75f7d3dfa830>
+
+    def assert_two_piles(digest):
+>       np.testing.assert_array_equal(digest.means, [0.0, 100.0])
+E       AssertionError: 
+E       Arrays are not equal
+E       
+E       (shapes (1,), (2,) mismatch)
+E        ACTUAL: array([33.333333])
+E        DESIRED: array([  0., 100.])
+
+test_k2norm_domain.py:11: AssertionError
+___ test_polars_keeps_high_delta_when_mutating_serialized_state[update-f32] ____
+
+precision = 'f32', route = 'update'
+
+    @pytest.mark.parametrize("precision", ["f32", "f64"])
+    @pytest.mark.parametrize("route", ["update", "merge"])
+    def test_polars_keeps_high_delta_when_mutating_serialized_state(precision, route):
+        def make(values):
+            return td.TDigest.from_array(values, delta=1200, precision=precision)
+    
+        direct = make([0.0, 0.0, 100.0])
+        if route == "update":
+            frame = pl.DataFrame({"blob": [make([0.0]).to_bytes()]}).select(d=td.from_bytes("blob"))
+            result = frame.select(d=td.add_values("d", pl.lit([0.0, 100.0])))
+        else:
+            frame = pl.DataFrame({"blob": [make([0.0, 0.0]).to_bytes(), make([100.0]).to_bytes()]}).select(
+                d=td.from_bytes("blob")
+            )
+            result = frame.select(d=td.merge_tdigests("d"))
+        blob = result.select(td.to_bytes("d")).item()
+        assert blob == direct.to_bytes()
+>       assert_two_piles(td.TDigest.from_bytes(blob))
+
+test_k2norm_domain.py:50: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+digest = <builtins.TDigest object at 0x75f7d3dfab30>
+
+    def assert_two_piles(digest):
+>       np.testing.assert_array_equal(digest.means, [0.0, 100.0])
+E       AssertionError: 
+E       Arrays are not equal
+E       
+E       (shapes (1,), (2,) mismatch)
+E        ACTUAL: array([33.333332])
+E        DESIRED: array([  0., 100.])
+
+test_k2norm_domain.py:11: AssertionError
+___ test_polars_keeps_high_delta_when_mutating_serialized_state[update-f64] ____
+
+precision = 'f64', route = 'update'
+
+    @pytest.mark.parametrize("precision", ["f32", "f64"])
+    @pytest.mark.parametrize("route", ["update", "merge"])
+    def test_polars_keeps_high_delta_when_mutating_serialized_state(precision, route):
+        def make(values):
+            return td.TDigest.from_array(values, delta=1200, precision=precision)
+    
+        direct = make([0.0, 0.0, 100.0])
+        if route == "update":
+            frame = pl.DataFrame({"blob": [make([0.0]).to_bytes()]}).select(d=td.from_bytes("blob"))
+            result = frame.select(d=td.add_values("d", pl.lit([0.0, 100.0])))
+        else:
+            frame = pl.DataFrame({"blob": [make([0.0, 0.0]).to_bytes(), make([100.0]).to_bytes()]}).select(
+                d=td.from_bytes("blob")
+            )
+            result = frame.select(d=td.merge_tdigests("d"))
+        blob = result.select(td.to_bytes("d")).item()
+        assert blob == direct.to_bytes()
+>       assert_two_piles(td.TDigest.from_bytes(blob))
+
+test_k2norm_domain.py:50: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+digest = <builtins.TDigest object at 0x75f7d3da3c30>
+
+    def assert_two_piles(digest):
+>       np.testing.assert_array_equal(digest.means, [0.0, 100.0])
+E       AssertionError: 
+E       Arrays are not equal
+E       
+E       (shapes (1,), (2,) mismatch)
+E        ACTUAL: array([33.333333])
+E        DESIRED: array([  0., 100.])
+
+test_k2norm_domain.py:11: AssertionError
+____ test_polars_keeps_high_delta_when_mutating_serialized_state[merge-f32] ____
+
+precision = 'f32', route = 'merge'
+
+    @pytest.mark.parametrize("precision", ["f32", "f64"])
+    @pytest.mark.parametrize("route", ["update", "merge"])
+    def test_polars_keeps_high_delta_when_mutating_serialized_state(precision, route):
+        def make(values):
+            return td.TDigest.from_array(values, delta=1200, precision=precision)
+    
+        direct = make([0.0, 0.0, 100.0])
+        if route == "update":
+            frame = pl.DataFrame({"blob": [make([0.0]).to_bytes()]}).select(d=td.from_bytes("blob"))
+            result = frame.select(d=td.add_values("d", pl.lit([0.0, 100.0])))
+        else:
+            frame = pl.DataFrame({"blob": [make([0.0, 0.0]).to_bytes(), make([100.0]).to_bytes()]}).select(
+                d=td.from_bytes("blob")
+            )
+            result = frame.select(d=td.merge_tdigests("d"))
+        blob = result.select(td.to_bytes("d")).item()
+        assert blob == direct.to_bytes()
+>       assert_two_piles(td.TDigest.from_bytes(blob))
+
+test_k2norm_domain.py:50: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+digest = <builtins.TDigest object at 0x75f7f29751b0>
+
+    def assert_two_piles(digest):
+>       np.testing.assert_array_equal(digest.means, [0.0, 100.0])
+E       AssertionError: 
+E       Arrays are not equal
+E       
+E       (shapes (1,), (2,) mismatch)
+E        ACTUAL: array([33.333332])
+E        DESIRED: array([  0., 100.])
+
+test_k2norm_domain.py:11: AssertionError
+____ test_polars_keeps_high_delta_when_mutating_serialized_state[merge-f64] ____
+
+precision = 'f64', route = 'merge'
+
+    @pytest.mark.parametrize("precision", ["f32", "f64"])
+    @pytest.mark.parametrize("route", ["update", "merge"])
+    def test_polars_keeps_high_delta_when_mutating_serialized_state(precision, route):
+        def make(values):
+            return td.TDigest.from_array(values, delta=1200, precision=precision)
+    
+        direct = make([0.0, 0.0, 100.0])
+        if route == "update":
+            frame = pl.DataFrame({"blob": [make([0.0]).to_bytes()]}).select(d=td.from_bytes("blob"))
+            result = frame.select(d=td.add_values("d", pl.lit([0.0, 100.0])))
+        else:
+            frame = pl.DataFrame({"blob": [make([0.0, 0.0]).to_bytes(), make([100.0]).to_bytes()]}).select(
+                d=td.from_bytes("blob")
+            )
+            result = frame.select(d=td.merge_tdigests("d"))
+        blob = result.select(td.to_bytes("d")).item()
+        assert blob == direct.to_bytes()
+>       assert_two_piles(td.TDigest.from_bytes(blob))
+
+test_k2norm_domain.py:50: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+digest = <builtins.TDigest object at 0x75f7f2975630>
+
+    def assert_two_piles(digest):
+>       np.testing.assert_array_equal(digest.means, [0.0, 100.0])
+E       AssertionError: 
+E       Arrays are not equal
+E       
+E       (shapes (1,), (2,) mismatch)
+E        ACTUAL: array([33.333333])
+E        DESIRED: array([  0., 100.])
+
+test_k2norm_domain.py:11: AssertionError
+___ test_polars_explicit_k2norm_capacity_preserves_small_interiors[use-f32] ____
+
+precision = 'f32', policy = 'use'
+
+    @pytest.mark.parametrize("precision", ["f32", "f64"])
+    @pytest.mark.parametrize("policy", ["use", "edges"])
+    def test_polars_explicit_k2norm_capacity_preserves_small_interiors(precision, policy):
+        dtype = pl.Float32 if precision == "f32" else pl.Float64
+        values = [-100.0, 0.0, 100.0, 200.0]
+        options = {"max_size": 1200, "scale": "k2norm", "singleton_policy": policy, "precision": precision}
+        if policy == "edges":
+            options["pin_per_side"] = 1
+        result = pl.DataFrame({"x": pl.Series(values, dtype=dtype)}).select(d=td.tdigest("x", **options))
+        blob = result.select(td.to_bytes("d")).item()
+        expected = td.TDigest.from_array(values, **options)
+        assert blob == expected.to_bytes()
+>       np.testing.assert_array_equal(expected.means, values)
+E       AssertionError: 
+E       Arrays are not equal
+E       
+E       (shapes (3,), (4,) mismatch)
+E        ACTUAL: array([-100.,   50.,  200.])
+E        DESIRED: array([-100.,    0.,  100.,  200.])
+
+test_k2norm_domain.py:66: AssertionError
+___ test_polars_explicit_k2norm_capacity_preserves_small_interiors[use-f64] ____
+
+precision = 'f64', policy = 'use'
+
+    @pytest.mark.parametrize("precision", ["f32", "f64"])
+    @pytest.mark.parametrize("policy", ["use", "edges"])
+    def test_polars_explicit_k2norm_capacity_preserves_small_interiors(precision, policy):
+        dtype = pl.Float32 if precision == "f32" else pl.Float64
+        values = [-100.0, 0.0, 100.0, 200.0]
+        options = {"max_size": 1200, "scale": "k2norm", "singleton_policy": policy, "precision": precision}
+        if policy == "edges":
+            options["pin_per_side"] = 1
+        result = pl.DataFrame({"x": pl.Series(values, dtype=dtype)}).select(d=td.tdigest("x", **options))
+        blob = result.select(td.to_bytes("d")).item()
+        expected = td.TDigest.from_array(values, **options)
+        assert blob == expected.to_bytes()
+>       np.testing.assert_array_equal(expected.means, values)
+E       AssertionError: 
+E       Arrays are not equal
+E       
+E       (shapes (3,), (4,) mismatch)
+E        ACTUAL: array([-100.,   50.,  200.])
+E        DESIRED: array([-100.,    0.,  100.,  200.])
+
+test_k2norm_domain.py:66: AssertionError
+__ test_polars_explicit_k2norm_capacity_preserves_small_interiors[edges-f32] ___
+
+precision = 'f32', policy = 'edges'
+
+    @pytest.mark.parametrize("precision", ["f32", "f64"])
+    @pytest.mark.parametrize("policy", ["use", "edges"])
+    def test_polars_explicit_k2norm_capacity_preserves_small_interiors(precision, policy):
+        dtype = pl.Float32 if precision == "f32" else pl.Float64
+        values = [-100.0, 0.0, 100.0, 200.0]
+        options = {"max_size": 1200, "scale": "k2norm", "singleton_policy": policy, "precision": precision}
+        if policy == "edges":
+            options["pin_per_side"] = 1
+        result = pl.DataFrame({"x": pl.Series(values, dtype=dtype)}).select(d=td.tdigest("x", **options))
+        blob = result.select(td.to_bytes("d")).item()
+        expected = td.TDigest.from_array(values, **options)
+        assert blob == expected.to_bytes()
+>       np.testing.assert_array_equal(expected.means, values)
+E       AssertionError: 
+E       Arrays are not equal
+E       
+E       (shapes (3,), (4,) mismatch)
+E        ACTUAL: array([-100.,   50.,  200.])
+E        DESIRED: array([-100.,    0.,  100.,  200.])
+
+test_k2norm_domain.py:66: AssertionError
+__ test_polars_explicit_k2norm_capacity_preserves_small_interiors[edges-f64] ___
+
+precision = 'f64', policy = 'edges'
+
+    @pytest.mark.parametrize("precision", ["f32", "f64"])
+    @pytest.mark.parametrize("policy", ["use", "edges"])
+    def test_polars_explicit_k2norm_capacity_preserves_small_interiors(precision, policy):
+        dtype = pl.Float32 if precision == "f32" else pl.Float64
+        values = [-100.0, 0.0, 100.0, 200.0]
+        options = {"max_size": 1200, "scale": "k2norm", "singleton_policy": policy, "precision": precision}
+        if policy == "edges":
+            options["pin_per_side"] = 1
+        result = pl.DataFrame({"x": pl.Series(values, dtype=dtype)}).select(d=td.tdigest("x", **options))
+        blob = result.select(td.to_bytes("d")).item()
+        expected = td.TDigest.from_array(values, **options)
+        assert blob == expected.to_bytes()
+>       np.testing.assert_array_equal(expected.means, values)
+E       AssertionError: 
+E       Arrays are not equal
+E       
+E       (shapes (3,), (4,) mismatch)
+E        ACTUAL: array([-100.,   50.,  200.])
+E        DESIRED: array([-100.,    0.,  100.,  200.])
+
+test_k2norm_domain.py:66: AssertionError
+- generated xml file: /var/tmp/codex-tdigest-pr3-20261014/overnight/numerical-review/k2norm-domain/validation-66e56e4/negative-control.xml -
+=========================== short test summary info ============================
+FAILED ../../../../../../../../dev::test_high_delta_direct_update_and_merge_preserve_exact_piles[810.0-f32]
+FAILED ../../../../../../../../dev::test_high_delta_direct_update_and_merge_preserve_exact_piles[810.0-f64]
+FAILED ../../../../../../../../dev::test_high_delta_direct_update_and_merge_preserve_exact_piles[1200.0-f32]
+FAILED ../../../../../../../../dev::test_high_delta_direct_update_and_merge_preserve_exact_piles[1200.0-f64]
+FAILED ../../../../../../../../dev::test_high_delta_direct_update_and_merge_preserve_exact_piles[2400.0-f32]
+FAILED ../../../../../../../../dev::test_high_delta_direct_update_and_merge_preserve_exact_piles[2400.0-f64]
+FAILED ../../../../../../../../dev::test_polars_keeps_high_delta_when_mutating_serialized_state[update-f32]
+FAILED ../../../../../../../../dev::test_polars_keeps_high_delta_when_mutating_serialized_state[update-f64]
+FAILED ../../../../../../../../dev::test_polars_keeps_high_delta_when_mutating_serialized_state[merge-f32]
+FAILED ../../../../../../../../dev::test_polars_keeps_high_delta_when_mutating_serialized_state[merge-f64]
+FAILED ../../../../../../../../dev::test_polars_explicit_k2norm_capacity_preserves_small_interiors[use-f32]
+FAILED ../../../../../../../../dev::test_polars_explicit_k2norm_capacity_preserves_small_interiors[use-f64]
+FAILED ../../../../../../../../dev::test_polars_explicit_k2norm_capacity_preserves_small_interiors[edges-f32]
+FAILED ../../../../../../../../dev::test_polars_explicit_k2norm_capacity_preserves_small_interiors[edges-f64]
+14 failed, 6 passed in 0.23s

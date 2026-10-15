@@ -1,0 +1,1405 @@
+{
+  "note": "Comparison of stored JSON outputs, not an exhaustive bound over all inputs/probabilities. The raw artifact stores nine explicit quantile estimates per accuracy result plus aggregate metrics from a 1001-point grid.",
+  "changed_non_timing_fields": 125,
+  "original_recorded_output_changes": [],
+  "centroid_or_memory_changes": [],
+  "maximum_stored_query_change": {
+    "case": [
+      "alternating_extremes",
+      100000,
+      "f64"
+    ],
+    "field": "/merge40/modern_kway_accuracy/quantiles/2/estimate",
+    "prior": -999999999.9783512,
+    "committed": -999999999.9783514,
+    "absolute_difference": 1.1920928955078125e-07
+  },
+  "maximum_stored_median_change": {
+    "case": [
+      "alternating_extremes",
+      100000,
+      "f64"
+    ],
+    "field": "/modern_accuracy/median",
+    "prior": -108149682.06511188,
+    "committed": -108149682.06511185,
+    "absolute_difference": 2.9802322387695312e-08
+  },
+  "all_changes": [
+    {
+      "case": [
+        "uniform",
+        1000,
+        "f64"
+      ],
+      "field": "/merge40/modern_kway_accuracy/max_abs_type7_error",
+      "prior": 0.004327214883726338,
+      "committed": 0.0043272148837263935,
+      "absolute_difference": 5.551115123125783e-17
+    },
+    {
+      "case": [
+        "uniform",
+        1000,
+        "f64"
+      ],
+      "field": "/merge40/modern_kway_accuracy/median",
+      "prior": 0.5154886170733415,
+      "committed": 0.5154886170733414,
+      "absolute_difference": 1.1102230246251565e-16
+    },
+    {
+      "case": [
+        "uniform",
+        1000,
+        "f64"
+      ],
+      "field": "/merge40/modern_kway_accuracy/median_abs_type7_error",
+      "prior": 0.0034699022116071454,
+      "committed": 0.0034699022116072564,
+      "absolute_difference": 1.1102230246251565e-16
+    },
+    {
+      "case": [
+        "uniform",
+        1000,
+        "f64"
+      ],
+      "field": "/merge40/modern_kway_accuracy/quantiles/4/estimate",
+      "prior": 0.5154886170733415,
+      "committed": 0.5154886170733414,
+      "absolute_difference": 1.1102230246251565e-16
+    },
+    {
+      "case": [
+        "uniform",
+        1000,
+        "f64"
+      ],
+      "field": "/merge40/modern_sequential_accuracy/max_abs_type7_error",
+      "prior": 0.005431620773538093,
+      "committed": 0.0054316207735381206,
+      "absolute_difference": 2.7755575615628914e-17
+    },
+    {
+      "case": [
+        "uniform",
+        1000,
+        "f64"
+      ],
+      "field": "/modern_accuracy/max_abs_type7_error",
+      "prior": 0.004327214883726338,
+      "committed": 0.0043272148837263935,
+      "absolute_difference": 5.551115123125783e-17
+    },
+    {
+      "case": [
+        "uniform",
+        1000,
+        "f64"
+      ],
+      "field": "/modern_accuracy/median",
+      "prior": 0.5154886170733415,
+      "committed": 0.5154886170733414,
+      "absolute_difference": 1.1102230246251565e-16
+    },
+    {
+      "case": [
+        "uniform",
+        1000,
+        "f64"
+      ],
+      "field": "/modern_accuracy/median_abs_type7_error",
+      "prior": 0.0034699022116071454,
+      "committed": 0.0034699022116072564,
+      "absolute_difference": 1.1102230246251565e-16
+    },
+    {
+      "case": [
+        "uniform",
+        1000,
+        "f64"
+      ],
+      "field": "/modern_accuracy/quantiles/4/estimate",
+      "prior": 0.5154886170733415,
+      "committed": 0.5154886170733414,
+      "absolute_difference": 1.1102230246251565e-16
+    },
+    {
+      "case": [
+        "uniform",
+        100000,
+        "f64"
+      ],
+      "field": "/max_abs_modern_vs_original",
+      "prior": 1.6653345369377348e-15,
+      "committed": 1.7763568394002505e-15,
+      "absolute_difference": 1.1102230246251565e-16
+    },
+    {
+      "case": [
+        "uniform",
+        100000,
+        "f64"
+      ],
+      "field": "/merge40/modern_kway_accuracy/max_abs_type7_error",
+      "prior": 0.0007080235077378538,
+      "committed": 0.0007080235077377983,
+      "absolute_difference": 5.551115123125783e-17
+    },
+    {
+      "case": [
+        "uniform",
+        100000,
+        "f64"
+      ],
+      "field": "/merge40/modern_kway_accuracy/median",
+      "prior": 0.49933452325219707,
+      "committed": 0.4993345232521971,
+      "absolute_difference": 5.551115123125783e-17
+    },
+    {
+      "case": [
+        "uniform",
+        100000,
+        "f64"
+      ],
+      "field": "/merge40/modern_kway_accuracy/median_abs_type7_error",
+      "prior": 0.0004820026972486846,
+      "committed": 0.0004820026972487401,
+      "absolute_difference": 5.551115123125783e-17
+    },
+    {
+      "case": [
+        "uniform",
+        100000,
+        "f64"
+      ],
+      "field": "/merge40/modern_kway_accuracy/quantiles/1/estimate",
+      "prior": 0.0010017846893102382,
+      "committed": 0.0010017846893102384,
+      "absolute_difference": 2.168404344971009e-19
+    },
+    {
+      "case": [
+        "uniform",
+        100000,
+        "f64"
+      ],
+      "field": "/merge40/modern_kway_accuracy/quantiles/3/estimate",
+      "prior": 0.10032074919731247,
+      "committed": 0.10032074919731246,
+      "absolute_difference": 1.3877787807814457e-17
+    },
+    {
+      "case": [
+        "uniform",
+        100000,
+        "f64"
+      ],
+      "field": "/merge40/modern_kway_accuracy/quantiles/4/estimate",
+      "prior": 0.49933452325219707,
+      "committed": 0.4993345232521971,
+      "absolute_difference": 5.551115123125783e-17
+    },
+    {
+      "case": [
+        "uniform",
+        100000,
+        "f64"
+      ],
+      "field": "/merge40/modern_kway_accuracy/quantiles/6/estimate",
+      "prior": 0.9900134457313297,
+      "committed": 0.9900134457313298,
+      "absolute_difference": 1.1102230246251565e-16
+    },
+    {
+      "case": [
+        "uniform",
+        100000,
+        "f64"
+      ],
+      "field": "/merge40/modern_kway_accuracy/quantiles/7/estimate",
+      "prior": 0.9989112860654035,
+      "committed": 0.9989112860654034,
+      "absolute_difference": 1.1102230246251565e-16
+    },
+    {
+      "case": [
+        "uniform",
+        100000,
+        "f64"
+      ],
+      "field": "/merge40/modern_sequential_accuracy/median",
+      "prior": 0.49956405554995575,
+      "committed": 0.4995640555499558,
+      "absolute_difference": 5.551115123125783e-17
+    },
+    {
+      "case": [
+        "uniform",
+        100000,
+        "f64"
+      ],
+      "field": "/merge40/modern_sequential_accuracy/median_abs_type7_error",
+      "prior": 0.0007115349950073679,
+      "committed": 0.0007115349950074235,
+      "absolute_difference": 5.551115123125783e-17
+    },
+    {
+      "case": [
+        "uniform",
+        100000,
+        "f64"
+      ],
+      "field": "/merge40/modern_sequential_accuracy/quantiles/4/estimate",
+      "prior": 0.49956405554995575,
+      "committed": 0.4995640555499558,
+      "absolute_difference": 5.551115123125783e-17
+    },
+    {
+      "case": [
+        "uniform",
+        100000,
+        "f64"
+      ],
+      "field": "/merge40/modern_sequential_accuracy/quantiles/5/estimate",
+      "prior": 0.8992204290156922,
+      "committed": 0.8992204290156923,
+      "absolute_difference": 1.1102230246251565e-16
+    },
+    {
+      "case": [
+        "uniform",
+        100000,
+        "f64"
+      ],
+      "field": "/merge40/modern_sequential_accuracy/quantiles/6/estimate",
+      "prior": 0.9899882258360889,
+      "committed": 0.989988225836089,
+      "absolute_difference": 1.1102230246251565e-16
+    },
+    {
+      "case": [
+        "uniform",
+        100000,
+        "f64"
+      ],
+      "field": "/modern_accuracy/quantiles/1/estimate",
+      "prior": 0.001001755688713328,
+      "committed": 0.0010017556887133281,
+      "absolute_difference": 2.168404344971009e-19
+    },
+    {
+      "case": [
+        "uniform",
+        100000,
+        "f32"
+      ],
+      "field": "/merge40/modern_kway_accuracy/quantiles/3/estimate",
+      "prior": 0.10032074856485872,
+      "committed": 0.1003207485648587,
+      "absolute_difference": 1.3877787807814457e-17
+    },
+    {
+      "case": [
+        "uniform",
+        1000000,
+        "f64"
+      ],
+      "field": "/merge40/modern_kway_accuracy/max_abs_type7_error",
+      "prior": 0.0017104656262678652,
+      "committed": 0.0017104656262679208,
+      "absolute_difference": 5.551115123125783e-17
+    },
+    {
+      "case": [
+        "uniform",
+        1000000,
+        "f64"
+      ],
+      "field": "/merge40/modern_kway_accuracy/quantiles/3/estimate",
+      "prior": 0.09995652471004914,
+      "committed": 0.09995652471004915,
+      "absolute_difference": 1.3877787807814457e-17
+    },
+    {
+      "case": [
+        "uniform",
+        1000000,
+        "f64"
+      ],
+      "field": "/merge40/modern_kway_accuracy/quantiles/5/estimate",
+      "prior": 0.8996558899582565,
+      "committed": 0.8996558899582566,
+      "absolute_difference": 1.1102230246251565e-16
+    },
+    {
+      "case": [
+        "uniform",
+        1000000,
+        "f64"
+      ],
+      "field": "/merge40/modern_sequential_accuracy/quantiles/5/estimate",
+      "prior": 0.8991203798288792,
+      "committed": 0.899120379828879,
+      "absolute_difference": 1.1102230246251565e-16
+    },
+    {
+      "case": [
+        "uniform",
+        1000000,
+        "f64"
+      ],
+      "field": "/merge40/modern_sequential_accuracy/quantiles/7/estimate",
+      "prior": 0.9989982935223778,
+      "committed": 0.9989982935223777,
+      "absolute_difference": 1.1102230246251565e-16
+    },
+    {
+      "case": [
+        "uniform",
+        1000000,
+        "f64"
+      ],
+      "field": "/modern_accuracy/median",
+      "prior": 0.49983143970375693,
+      "committed": 0.49983143970375704,
+      "absolute_difference": 1.1102230246251565e-16
+    },
+    {
+      "case": [
+        "uniform",
+        1000000,
+        "f64"
+      ],
+      "field": "/modern_accuracy/median_abs_type7_error",
+      "prior": 5.985496653415634e-05,
+      "committed": 5.985496653404532e-05,
+      "absolute_difference": 1.1102230246251565e-16
+    },
+    {
+      "case": [
+        "uniform",
+        1000000,
+        "f64"
+      ],
+      "field": "/modern_accuracy/quantiles/4/estimate",
+      "prior": 0.49983143970375693,
+      "committed": 0.49983143970375704,
+      "absolute_difference": 1.1102230246251565e-16
+    },
+    {
+      "case": [
+        "uniform",
+        1000000,
+        "f64"
+      ],
+      "field": "/modern_accuracy/quantiles/5/estimate",
+      "prior": 0.8996163017526255,
+      "committed": 0.8996163017526256,
+      "absolute_difference": 1.1102230246251565e-16
+    },
+    {
+      "case": [
+        "uniform",
+        1000000,
+        "f64"
+      ],
+      "field": "/modern_accuracy/quantiles/6/estimate",
+      "prior": 0.989873517349419,
+      "committed": 0.9898735173494191,
+      "absolute_difference": 1.1102230246251565e-16
+    },
+    {
+      "case": [
+        "uniform",
+        1000000,
+        "f32"
+      ],
+      "field": "/merge40/modern_kway_accuracy/quantiles/2/estimate",
+      "prior": 0.00991994410272251,
+      "committed": 0.009919944102722508,
+      "absolute_difference": 1.734723475976807e-18
+    },
+    {
+      "case": [
+        "uniform",
+        10000000,
+        "f64"
+      ],
+      "field": "/merge40/modern_kway_accuracy/quantiles/3/estimate",
+      "prior": 0.09935954837383915,
+      "committed": 0.09935954837383916,
+      "absolute_difference": 1.3877787807814457e-17
+    },
+    {
+      "case": [
+        "uniform",
+        10000000,
+        "f64"
+      ],
+      "field": "/merge40/modern_kway_accuracy/quantiles/5/estimate",
+      "prior": 0.9003688196249745,
+      "committed": 0.9003688196249746,
+      "absolute_difference": 1.1102230246251565e-16
+    },
+    {
+      "case": [
+        "uniform",
+        10000000,
+        "f64"
+      ],
+      "field": "/merge40/modern_kway_accuracy/quantiles/6/estimate",
+      "prior": 0.9899581000011198,
+      "committed": 0.98995810000112,
+      "absolute_difference": 1.1102230246251565e-16
+    },
+    {
+      "case": [
+        "uniform",
+        10000000,
+        "f64"
+      ],
+      "field": "/merge40/modern_sequential_accuracy/max_abs_type7_error",
+      "prior": 0.012017880447244056,
+      "committed": 0.012017880447243945,
+      "absolute_difference": 1.1102230246251565e-16
+    },
+    {
+      "case": [
+        "uniform",
+        10000000,
+        "f64"
+      ],
+      "field": "/merge40/modern_sequential_accuracy/quantiles/2/estimate",
+      "prior": 0.010046970811754064,
+      "committed": 0.010046970811754066,
+      "absolute_difference": 1.734723475976807e-18
+    },
+    {
+      "case": [
+        "uniform",
+        10000000,
+        "f64"
+      ],
+      "field": "/modern_accuracy/median",
+      "prior": 0.4999309977798662,
+      "committed": 0.49993099777986616,
+      "absolute_difference": 5.551115123125783e-17
+    },
+    {
+      "case": [
+        "uniform",
+        10000000,
+        "f64"
+      ],
+      "field": "/modern_accuracy/median_abs_type7_error",
+      "prior": 1.633537259349005e-07,
+      "committed": 1.6335372587938934e-07,
+      "absolute_difference": 5.551115123125783e-17
+    },
+    {
+      "case": [
+        "uniform",
+        10000000,
+        "f64"
+      ],
+      "field": "/modern_accuracy/quantiles/3/estimate",
+      "prior": 0.10004861589435705,
+      "committed": 0.10004861589435707,
+      "absolute_difference": 1.3877787807814457e-17
+    },
+    {
+      "case": [
+        "uniform",
+        10000000,
+        "f64"
+      ],
+      "field": "/modern_accuracy/quantiles/4/estimate",
+      "prior": 0.4999309977798662,
+      "committed": 0.49993099777986616,
+      "absolute_difference": 5.551115123125783e-17
+    },
+    {
+      "case": [
+        "uniform",
+        10000000,
+        "f64"
+      ],
+      "field": "/modern_accuracy/quantiles/6/estimate",
+      "prior": 0.9899709104535299,
+      "committed": 0.9899709104535298,
+      "absolute_difference": 1.1102230246251565e-16
+    },
+    {
+      "case": [
+        "uniform",
+        10000000,
+        "f64"
+      ],
+      "field": "/modern_accuracy/quantiles/7/estimate",
+      "prior": 0.9989852152094274,
+      "committed": 0.9989852152094273,
+      "absolute_difference": 1.1102230246251565e-16
+    },
+    {
+      "case": [
+        "uniform",
+        10000000,
+        "f32"
+      ],
+      "field": "/modern_accuracy/median",
+      "prior": 0.49992808778089187,
+      "committed": 0.4999280877808918,
+      "absolute_difference": 5.551115123125783e-17
+    },
+    {
+      "case": [
+        "uniform",
+        10000000,
+        "f32"
+      ],
+      "field": "/modern_accuracy/median_abs_type7_error",
+      "prior": 2.741028846287019e-06,
+      "committed": 2.7410288463425303e-06,
+      "absolute_difference": 5.551115123125783e-17
+    },
+    {
+      "case": [
+        "uniform",
+        10000000,
+        "f32"
+      ],
+      "field": "/modern_accuracy/quantiles/4/estimate",
+      "prior": 0.49992808778089187,
+      "committed": 0.4999280877808918,
+      "absolute_difference": 5.551115123125783e-17
+    },
+    {
+      "case": [
+        "normal",
+        100000,
+        "f64"
+      ],
+      "field": "/merge40/modern_kway_accuracy/median",
+      "prior": -0.007755549159011585,
+      "committed": -0.007755549159011587,
+      "absolute_difference": 2.6020852139652106e-18
+    },
+    {
+      "case": [
+        "normal",
+        100000,
+        "f64"
+      ],
+      "field": "/merge40/modern_kway_accuracy/median_abs_type7_error",
+      "prior": 0.00018426934510771317,
+      "committed": 0.00018426934510771577,
+      "absolute_difference": 2.6020852139652106e-18
+    },
+    {
+      "case": [
+        "normal",
+        100000,
+        "f64"
+      ],
+      "field": "/merge40/modern_kway_accuracy/quantiles/4/estimate",
+      "prior": -0.007755549159011585,
+      "committed": -0.007755549159011587,
+      "absolute_difference": 2.6020852139652106e-18
+    },
+    {
+      "case": [
+        "normal",
+        100000,
+        "f64"
+      ],
+      "field": "/merge40/modern_sequential_accuracy/max_abs_type7_error",
+      "prior": 0.0046929804639558315,
+      "committed": 0.0046929804639559425,
+      "absolute_difference": 1.1102230246251565e-16
+    },
+    {
+      "case": [
+        "normal",
+        100000,
+        "f64"
+      ],
+      "field": "/merge40/modern_sequential_accuracy/median",
+      "prior": -0.007834647401127845,
+      "committed": -0.007834647401127846,
+      "absolute_difference": 1.734723475976807e-18
+    },
+    {
+      "case": [
+        "normal",
+        100000,
+        "f64"
+      ],
+      "field": "/merge40/modern_sequential_accuracy/median_abs_type7_error",
+      "prior": 0.00026336758722397303,
+      "committed": 0.00026336758722397477,
+      "absolute_difference": 1.734723475976807e-18
+    },
+    {
+      "case": [
+        "normal",
+        100000,
+        "f64"
+      ],
+      "field": "/merge40/modern_sequential_accuracy/quantiles/4/estimate",
+      "prior": -0.007834647401127845,
+      "committed": -0.007834647401127846,
+      "absolute_difference": 1.734723475976807e-18
+    },
+    {
+      "case": [
+        "normal",
+        100000,
+        "f64"
+      ],
+      "field": "/modern_accuracy/max_abs_type7_error",
+      "prior": 0.006465329102269823,
+      "committed": 0.0064653291022702675,
+      "absolute_difference": 4.440892098500626e-16
+    },
+    {
+      "case": [
+        "normal",
+        100000,
+        "f64"
+      ],
+      "field": "/modern_accuracy/median",
+      "prior": -0.007717438415771418,
+      "committed": -0.007717438415771417,
+      "absolute_difference": 8.673617379884035e-19
+    },
+    {
+      "case": [
+        "normal",
+        100000,
+        "f64"
+      ],
+      "field": "/modern_accuracy/median_abs_type7_error",
+      "prior": 0.00014615860186754665,
+      "committed": 0.00014615860186754578,
+      "absolute_difference": 8.673617379884035e-19
+    },
+    {
+      "case": [
+        "normal",
+        100000,
+        "f64"
+      ],
+      "field": "/modern_accuracy/quantiles/4/estimate",
+      "prior": -0.007717438415771418,
+      "committed": -0.007717438415771417,
+      "absolute_difference": 8.673617379884035e-19
+    },
+    {
+      "case": [
+        "normal",
+        100000,
+        "f64"
+      ],
+      "field": "/modern_accuracy/quantiles/6/estimate",
+      "prior": 2.3112703653836038,
+      "committed": 2.311270365383604,
+      "absolute_difference": 4.440892098500626e-16
+    },
+    {
+      "case": [
+        "normal",
+        100000,
+        "f32"
+      ],
+      "field": "/merge40/modern_kway_accuracy/median",
+      "prior": -0.007755548804442384,
+      "committed": -0.007755548804442385,
+      "absolute_difference": 8.673617379884035e-19
+    },
+    {
+      "case": [
+        "normal",
+        100000,
+        "f32"
+      ],
+      "field": "/merge40/modern_kway_accuracy/median_abs_type7_error",
+      "prior": 0.00018426880184839022,
+      "committed": 0.0001842688018483911,
+      "absolute_difference": 8.673617379884035e-19
+    },
+    {
+      "case": [
+        "normal",
+        100000,
+        "f32"
+      ],
+      "field": "/merge40/modern_kway_accuracy/quantiles/4/estimate",
+      "prior": -0.007755548804442384,
+      "committed": -0.007755548804442385,
+      "absolute_difference": 8.673617379884035e-19
+    },
+    {
+      "case": [
+        "normal",
+        100000,
+        "f32"
+      ],
+      "field": "/merge40/modern_sequential_accuracy/median",
+      "prior": -0.007834647946170907,
+      "committed": -0.007834647946170906,
+      "absolute_difference": 1.734723475976807e-18
+    },
+    {
+      "case": [
+        "normal",
+        100000,
+        "f32"
+      ],
+      "field": "/merge40/modern_sequential_accuracy/median_abs_type7_error",
+      "prior": 0.00026336794357691325,
+      "committed": 0.0002633679435769115,
+      "absolute_difference": 1.734723475976807e-18
+    },
+    {
+      "case": [
+        "normal",
+        100000,
+        "f32"
+      ],
+      "field": "/merge40/modern_sequential_accuracy/quantiles/4/estimate",
+      "prior": -0.007834647946170907,
+      "committed": -0.007834647946170906,
+      "absolute_difference": 1.734723475976807e-18
+    },
+    {
+      "case": [
+        "normal",
+        100000,
+        "f32"
+      ],
+      "field": "/modern_accuracy/median",
+      "prior": -0.007715831789917696,
+      "committed": -0.007715831789917695,
+      "absolute_difference": 8.673617379884035e-19
+    },
+    {
+      "case": [
+        "normal",
+        100000,
+        "f32"
+      ],
+      "field": "/modern_accuracy/median_abs_type7_error",
+      "prior": 0.0001445517873237016,
+      "committed": 0.00014455178732370073,
+      "absolute_difference": 8.673617379884035e-19
+    },
+    {
+      "case": [
+        "normal",
+        100000,
+        "f32"
+      ],
+      "field": "/modern_accuracy/quantiles/4/estimate",
+      "prior": -0.007715831789917696,
+      "committed": -0.007715831789917695,
+      "absolute_difference": 8.673617379884035e-19
+    },
+    {
+      "case": [
+        "lognormal",
+        100000,
+        "f64"
+      ],
+      "field": "/max_abs_modern_vs_original",
+      "prior": 9.094947017729282e-13,
+      "committed": 1.8189894035458565e-12,
+      "absolute_difference": 9.094947017729282e-13
+    },
+    {
+      "case": [
+        "lognormal",
+        100000,
+        "f64"
+      ],
+      "field": "/merge40/modern_kway_accuracy/max_abs_type7_error",
+      "prior": 119.55596972144849,
+      "committed": 119.55596972144667,
+      "absolute_difference": 1.8189894035458565e-12
+    },
+    {
+      "case": [
+        "lognormal",
+        100000,
+        "f64"
+      ],
+      "field": "/merge40/modern_kway_accuracy/median",
+      "prior": 0.9866858175923318,
+      "committed": 0.9866858175923316,
+      "absolute_difference": 1.1102230246251565e-16
+    },
+    {
+      "case": [
+        "lognormal",
+        100000,
+        "f64"
+      ],
+      "field": "/merge40/modern_kway_accuracy/median_abs_type7_error",
+      "prior": 0.009143639255634883,
+      "committed": 0.009143639255634772,
+      "absolute_difference": 1.1102230246251565e-16
+    },
+    {
+      "case": [
+        "lognormal",
+        100000,
+        "f64"
+      ],
+      "field": "/merge40/modern_kway_accuracy/quantiles/4/estimate",
+      "prior": 0.9866858175923318,
+      "committed": 0.9866858175923316,
+      "absolute_difference": 1.1102230246251565e-16
+    },
+    {
+      "case": [
+        "lognormal",
+        100000,
+        "f64"
+      ],
+      "field": "/merge40/modern_kway_accuracy/quantiles/5/estimate",
+      "prior": 46.016102840083065,
+      "committed": 46.01610284008307,
+      "absolute_difference": 7.105427357601002e-15
+    },
+    {
+      "case": [
+        "lognormal",
+        100000,
+        "f64"
+      ],
+      "field": "/merge40/modern_kway_accuracy/quantiles/7/estimate",
+      "prior": 11638.957186355383,
+      "committed": 11638.957186355381,
+      "absolute_difference": 1.8189894035458565e-12
+    },
+    {
+      "case": [
+        "lognormal",
+        100000,
+        "f64"
+      ],
+      "field": "/merge40/modern_sequential_accuracy/max_abs_type7_error",
+      "prior": 99.19731196088287,
+      "committed": 99.19731196088469,
+      "absolute_difference": 1.8189894035458565e-12
+    },
+    {
+      "case": [
+        "lognormal",
+        100000,
+        "f64"
+      ],
+      "field": "/merge40/modern_sequential_accuracy/median",
+      "prior": 0.9839222885181024,
+      "committed": 0.9839222885181025,
+      "absolute_difference": 1.1102230246251565e-16
+    },
+    {
+      "case": [
+        "lognormal",
+        100000,
+        "f64"
+      ],
+      "field": "/merge40/modern_sequential_accuracy/median_abs_type7_error",
+      "prior": 0.006380110181405496,
+      "committed": 0.006380110181405607,
+      "absolute_difference": 1.1102230246251565e-16
+    },
+    {
+      "case": [
+        "lognormal",
+        100000,
+        "f64"
+      ],
+      "field": "/merge40/modern_sequential_accuracy/quantiles/2/estimate",
+      "prior": 0.0009501694625425627,
+      "committed": 0.0009501694625425626,
+      "absolute_difference": 1.0842021724855044e-19
+    },
+    {
+      "case": [
+        "lognormal",
+        100000,
+        "f64"
+      ],
+      "field": "/merge40/modern_sequential_accuracy/quantiles/4/estimate",
+      "prior": 0.9839222885181024,
+      "committed": 0.9839222885181025,
+      "absolute_difference": 1.1102230246251565e-16
+    },
+    {
+      "case": [
+        "lognormal",
+        100000,
+        "f64"
+      ],
+      "field": "/merge40/modern_sequential_accuracy/quantiles/5/estimate",
+      "prior": 45.8702503490424,
+      "committed": 45.870250349042394,
+      "absolute_difference": 7.105427357601002e-15
+    },
+    {
+      "case": [
+        "lognormal",
+        100000,
+        "f64"
+      ],
+      "field": "/merge40/modern_sequential_accuracy/quantiles/6/estimate",
+      "prior": 1022.086957563096,
+      "committed": 1022.0869575630959,
+      "absolute_difference": 1.1368683772161603e-13
+    },
+    {
+      "case": [
+        "lognormal",
+        100000,
+        "f64"
+      ],
+      "field": "/merge40/modern_sequential_accuracy/quantiles/7/estimate",
+      "prior": 11618.598528594817,
+      "committed": 11618.598528594819,
+      "absolute_difference": 1.8189894035458565e-12
+    },
+    {
+      "case": [
+        "lognormal",
+        100000,
+        "f64"
+      ],
+      "field": "/modern_accuracy/max_abs_type7_error",
+      "prior": 162.22377000706547,
+      "committed": 162.2237700070673,
+      "absolute_difference": 1.8189894035458565e-12
+    },
+    {
+      "case": [
+        "lognormal",
+        100000,
+        "f64"
+      ],
+      "field": "/modern_accuracy/quantiles/2/estimate",
+      "prior": 0.0009500276000442826,
+      "committed": 0.0009500276000442825,
+      "absolute_difference": 1.0842021724855044e-19
+    },
+    {
+      "case": [
+        "lognormal",
+        100000,
+        "f64"
+      ],
+      "field": "/modern_accuracy/quantiles/7/estimate",
+      "prior": 11681.624986641,
+      "committed": 11681.624986641002,
+      "absolute_difference": 1.8189894035458565e-12
+    },
+    {
+      "case": [
+        "lognormal",
+        100000,
+        "f32"
+      ],
+      "field": "/merge40/modern_kway_accuracy/max_abs_type7_error",
+      "prior": 119.55594807182206,
+      "committed": 119.55594807182024,
+      "absolute_difference": 1.8189894035458565e-12
+    },
+    {
+      "case": [
+        "lognormal",
+        100000,
+        "f32"
+      ],
+      "field": "/merge40/modern_kway_accuracy/quantiles/7/estimate",
+      "prior": 11638.957370923914,
+      "committed": 11638.957370923912,
+      "absolute_difference": 1.8189894035458565e-12
+    },
+    {
+      "case": [
+        "lognormal",
+        100000,
+        "f32"
+      ],
+      "field": "/modern_accuracy/quantiles/3/estimate",
+      "prior": 0.02139289752230387,
+      "committed": 0.021392897522303868,
+      "absolute_difference": 3.469446951953614e-18
+    },
+    {
+      "case": [
+        "alternating_extremes",
+        100000,
+        "f64"
+      ],
+      "field": "/merge40/modern_kway_accuracy/mean_rank_error",
+      "prior": 0.0011752247752247775,
+      "committed": 0.001175224775224778,
+      "absolute_difference": 4.336808689942018e-19
+    },
+    {
+      "case": [
+        "alternating_extremes",
+        100000,
+        "f64"
+      ],
+      "field": "/merge40/modern_kway_accuracy/median",
+      "prior": -71312979.40216653,
+      "committed": -71312979.40216655,
+      "absolute_difference": 1.4901161193847656e-08
+    },
+    {
+      "case": [
+        "alternating_extremes",
+        100000,
+        "f64"
+      ],
+      "field": "/merge40/modern_kway_accuracy/median_abs_type7_error",
+      "prior": 71312979.90217172,
+      "committed": 71312979.90217173,
+      "absolute_difference": 1.4901161193847656e-08
+    },
+    {
+      "case": [
+        "alternating_extremes",
+        100000,
+        "f64"
+      ],
+      "field": "/merge40/modern_kway_accuracy/quantiles/2/estimate",
+      "prior": -999999999.9783512,
+      "committed": -999999999.9783514,
+      "absolute_difference": 1.1920928955078125e-07
+    },
+    {
+      "case": [
+        "alternating_extremes",
+        100000,
+        "f64"
+      ],
+      "field": "/merge40/modern_kway_accuracy/quantiles/4/estimate",
+      "prior": -71312979.40216653,
+      "committed": -71312979.40216655,
+      "absolute_difference": 1.4901161193847656e-08
+    },
+    {
+      "case": [
+        "alternating_extremes",
+        100000,
+        "f64"
+      ],
+      "field": "/merge40/modern_sequential_accuracy/max_abs_type7_error",
+      "prior": 943023657.7103084,
+      "committed": 943023657.7103086,
+      "absolute_difference": 1.1920928955078125e-07
+    },
+    {
+      "case": [
+        "alternating_extremes",
+        100000,
+        "f64"
+      ],
+      "field": "/merge40/modern_sequential_accuracy/median",
+      "prior": -61362997.47005393,
+      "committed": -61362997.47005391,
+      "absolute_difference": 2.2351741790771484e-08
+    },
+    {
+      "case": [
+        "alternating_extremes",
+        100000,
+        "f64"
+      ],
+      "field": "/merge40/modern_sequential_accuracy/median_abs_type7_error",
+      "prior": 61362997.97005912,
+      "committed": 61362997.9700591,
+      "absolute_difference": 2.2351741790771484e-08
+    },
+    {
+      "case": [
+        "alternating_extremes",
+        100000,
+        "f64"
+      ],
+      "field": "/merge40/modern_sequential_accuracy/quantiles/2/estimate",
+      "prior": -999999999.9783695,
+      "committed": -999999999.9783694,
+      "absolute_difference": 1.1920928955078125e-07
+    },
+    {
+      "case": [
+        "alternating_extremes",
+        100000,
+        "f64"
+      ],
+      "field": "/merge40/modern_sequential_accuracy/quantiles/4/estimate",
+      "prior": -61362997.47005393,
+      "committed": -61362997.47005391,
+      "absolute_difference": 2.2351741790771484e-08
+    },
+    {
+      "case": [
+        "alternating_extremes",
+        100000,
+        "f64"
+      ],
+      "field": "/merge40/modern_sequential_accuracy/quantiles/5/estimate",
+      "prior": 1000000000.7974637,
+      "committed": 1000000000.7974635,
+      "absolute_difference": 1.1920928955078125e-07
+    },
+    {
+      "case": [
+        "alternating_extremes",
+        100000,
+        "f64"
+      ],
+      "field": "/merge40/modern_sequential_accuracy/quantiles/6/estimate",
+      "prior": 1000000000.9794706,
+      "committed": 1000000000.9794707,
+      "absolute_difference": 1.1920928955078125e-07
+    },
+    {
+      "case": [
+        "alternating_extremes",
+        100000,
+        "f64"
+      ],
+      "field": "/modern_accuracy/max_abs_type7_error",
+      "prior": 1074533735.3925931,
+      "committed": 1074533735.392593,
+      "absolute_difference": 2.384185791015625e-07
+    },
+    {
+      "case": [
+        "alternating_extremes",
+        100000,
+        "f64"
+      ],
+      "field": "/modern_accuracy/mean_rank_error",
+      "prior": 0.0016718781218781256,
+      "committed": 0.0016718681318681355,
+      "absolute_difference": 9.990009990036228e-09
+    },
+    {
+      "case": [
+        "alternating_extremes",
+        100000,
+        "f64"
+      ],
+      "field": "/modern_accuracy/median",
+      "prior": -108149682.06511188,
+      "committed": -108149682.06511185,
+      "absolute_difference": 2.9802322387695312e-08
+    },
+    {
+      "case": [
+        "alternating_extremes",
+        100000,
+        "f64"
+      ],
+      "field": "/modern_accuracy/median_abs_type7_error",
+      "prior": 108149682.56511706,
+      "committed": 108149682.56511703,
+      "absolute_difference": 2.9802322387695312e-08
+    },
+    {
+      "case": [
+        "alternating_extremes",
+        100000,
+        "f64"
+      ],
+      "field": "/modern_accuracy/quantiles/3/estimate",
+      "prior": -999999999.7997693,
+      "committed": -999999999.7997692,
+      "absolute_difference": 1.1920928955078125e-07
+    },
+    {
+      "case": [
+        "alternating_extremes",
+        100000,
+        "f64"
+      ],
+      "field": "/modern_accuracy/quantiles/4/estimate",
+      "prior": -108149682.06511188,
+      "committed": -108149682.06511185,
+      "absolute_difference": 2.9802322387695312e-08
+    },
+    {
+      "case": [
+        "alternating_extremes",
+        100000,
+        "f64"
+      ],
+      "field": "/modern_accuracy/quantiles/5/estimate",
+      "prior": 1000000000.7979094,
+      "committed": 1000000000.7979093,
+      "absolute_difference": 1.1920928955078125e-07
+    },
+    {
+      "case": [
+        "alternating_extremes",
+        100000,
+        "f64"
+      ],
+      "field": "/modern_accuracy/quantiles/7/estimate",
+      "prior": 1000000000.9981093,
+      "committed": 1000000000.9981095,
+      "absolute_difference": 1.1920928955078125e-07
+    },
+    {
+      "case": [
+        "sorted",
+        100000,
+        "f64"
+      ],
+      "field": "/max_abs_modern_vs_original",
+      "prior": 7.105427357601002e-15,
+      "committed": 7.216449660063518e-15,
+      "absolute_difference": 1.1102230246251565e-16
+    },
+    {
+      "case": [
+        "sorted",
+        100000,
+        "f64"
+      ],
+      "field": "/modern_accuracy/max_abs_type7_error",
+      "prior": 4.990000000000289e-06,
+      "committed": 4.9900000000000725e-06,
+      "absolute_difference": 2.168404344971009e-19
+    },
+    {
+      "case": [
+        "sorted",
+        100000,
+        "f64"
+      ],
+      "field": "/modern_accuracy/quantiles/1/estimate",
+      "prior": 0.0009949999999999998,
+      "committed": 0.000995,
+      "absolute_difference": 2.168404344971009e-19
+    },
+    {
+      "case": [
+        "sorted",
+        100000,
+        "f64"
+      ],
+      "field": "/modern_accuracy/quantiles/5/estimate",
+      "prior": 0.899995,
+      "committed": 0.8999949999999999,
+      "absolute_difference": 1.1102230246251565e-16
+    },
+    {
+      "case": [
+        "sorted",
+        100000,
+        "f64"
+      ],
+      "field": "/modern_accuracy/quantiles/7/estimate",
+      "prior": 0.998995,
+      "committed": 0.9989950000000001,
+      "absolute_difference": 1.1102230246251565e-16
+    },
+    {
+      "case": [
+        "reverse",
+        100000,
+        "f64"
+      ],
+      "field": "/max_abs_modern_vs_original",
+      "prior": 5.440092820663267e-15,
+      "committed": 5.329070518200751e-15,
+      "absolute_difference": 1.1102230246251565e-16
+    },
+    {
+      "case": [
+        "reverse",
+        100000,
+        "f64"
+      ],
+      "field": "/merge40/modern_kway_accuracy/quantiles/5/estimate",
+      "prior": 0.9000049999999999,
+      "committed": 0.9000049999999998,
+      "absolute_difference": 1.1102230246251565e-16
+    },
+    {
+      "case": [
+        "reverse",
+        100000,
+        "f64"
+      ],
+      "field": "/modern_accuracy/quantiles/5/estimate",
+      "prior": 0.900005,
+      "committed": 0.9000049999999999,
+      "absolute_difference": 1.1102230246251565e-16
+    },
+    {
+      "case": [
+        "weighted_ramp",
+        99837,
+        "f64"
+      ],
+      "field": "/modern_accuracy/max_abs_type7_error",
+      "prior": 1.3808924609396627,
+      "committed": 1.3808924609397195,
+      "absolute_difference": 5.684341886080802e-14
+    },
+    {
+      "case": [
+        "weighted_ramp",
+        99837,
+        "f64"
+      ],
+      "field": "/modern_accuracy/quantiles/3/estimate",
+      "prior": 101.52979579119729,
+      "committed": 101.5297957911973,
+      "absolute_difference": 1.4210854715202004e-14
+    },
+    {
+      "case": [
+        "weighted_ramp",
+        99837,
+        "f64"
+      ],
+      "field": "/modern_accuracy/quantiles/5/estimate",
+      "prior": 900.1334536139796,
+      "committed": 900.1334536139797,
+      "absolute_difference": 1.1368683772161603e-13
+    },
+    {
+      "case": [
+        "weighted_ramp",
+        99837,
+        "f32"
+      ],
+      "field": "/modern_accuracy/max_abs_type7_error",
+      "prior": 1.3808942376398363,
+      "committed": 1.3808942376397795,
+      "absolute_difference": 5.684341886080802e-14
+    },
+    {
+      "case": [
+        "weighted_ramp",
+        99837,
+        "f32"
+      ],
+      "field": "/modern_accuracy/quantiles/3/estimate",
+      "prior": 101.5297982448573,
+      "committed": 101.52979824485732,
+      "absolute_difference": 1.4210854715202004e-14
+    }
+  ]
+}

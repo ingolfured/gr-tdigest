@@ -1,0 +1,25 @@
+policy,policy_kind,cap_bytes,rank_threshold_fraction,core,precision,status,delta,heldout_states,policy_violation_states,max_logical_bytes,max_rank_error_fraction,max_p50_rank_error_fraction,max_cdf_error_fraction
+1024 B,storage,1024,,original,f64,selected,50,360,0,780,0.29864,0.09375,
+2048 B,storage,2048,,original,f64,selected,100,360,0,1452,0.14599000000000006,0.017000000000000015,
+4096 B,storage,4096,,original,f64,selected,300,360,0,3804,0.05454000000000003,0.017000000000000015,
+1024 B,storage,1024,,original,f32,selected,100,360,0,984,0.14599002765655522,0.017000000000000015,
+2048 B,storage,2048,,original,f32,selected,200,360,0,1776,0.07189000381469729,0.017000000000000015,
+4096 B,storage,4096,,original,f32,selected,300,360,0,2552,0.05453999618530275,0.017000000000000015,
+1024 B,storage,1024,,modern,f64,selected,25,648,0,896,0.43583000000000005,0.19530999999999998,0.43544576861772716
+2048 B,storage,2048,,modern,f64,selected,50,648,0,1520,0.30037,0.060960000000000014,0.3004286295947766
+4096 B,storage,4096,,modern,f64,selected,150,648,0,4016,0.10392999999999997,0.008000000000000007,0.10388195121605337
+1024 B,storage,1024,,modern,f32,selected,25,648,0,624,0.4125399970793724,0.19528999999999996,0.4106264038939188
+2048 B,storage,2048,,modern,f32,selected,100,648,0,1920,0.1615900133514404,0.01417999999999997,0.1616817434848577
+4096 B,storage,4096,,modern,f32,selected,200,648,0,3504,0.07086999284744266,0.008000000000000007,0.07042053559831818
+0.5 pp,rank,,0.005,original,f64,unavailable_within_grid,,0,,,,,
+1 pp,rank,,0.01,original,f64,unavailable_within_grid,,0,,,,,
+2 pp,rank,,0.02,original,f64,selected,1200,360,0,13248,0.015500000000000014,0.0024100000000000232,
+0.5 pp,rank,,0.005,original,f32,unavailable_within_grid,,0,,,,,
+1 pp,rank,,0.01,original,f32,unavailable_within_grid,,0,,,,,
+2 pp,rank,,0.02,original,f32,selected,1200,360,0,8848,0.015500009059906006,0.0024100000000000232,
+0.5 pp,rank,,0.005,modern,f64,unavailable_within_grid,,0,,,,,
+1 pp,rank,,0.01,modern,f64,unavailable_within_grid,,0,,,,,
+2 pp,rank,,0.02,modern,f64,selected,1200,648,0,26504,0.0116,0.0020000000000000018,0.011927766233267578
+0.5 pp,rank,,0.005,modern,f32,unavailable_within_grid,,0,,,,,
+1 pp,rank,,0.01,modern,f32,unavailable_within_grid,,0,,,,,
+2 pp,rank,,0.02,modern,f32,selected,1200,648,0,17760,0.010599990463256825,0.0020000000000000018,0.010415960437155702

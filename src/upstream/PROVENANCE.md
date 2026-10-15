@@ -2,13 +2,15 @@
 
 From G-Research/tdigest-rs commit
 `8d9cf1fe82c5c9254e5dc9593f01717e317f4333` (Apache-2.0).
-The numerical calculations are unchanged. To compile inside the existing crate
-without depending on an unpublished package, only three namespace imports are
-adapted: `use crate::{` to `use self::{` in lib.rs; `use crate::{` to
+The numerical calculations are unchanged. Three historical namespace imports
+remain adapted: `use crate::{` to `use self::{` in lib.rs; `use crate::{` to
 `use super::{` in core.rs; `use crate::traits::FloatConst;` to
-`use super::traits::FloatConst;` in scale.rs. The trait definitions, license,
-and public Python wrapper are byte-for-byte unchanged. The original dependency
-constraints are in the main Cargo.toml under the optional Python feature.
+`use super::traits::FloatConst;` in scale.rs. These resolve identically when this
+directory is built as the standalone `tdigest_core` crate. The trait definitions,
+license, and public Python wrapper are byte-for-byte unchanged. The original
+dependency constraints are in this directory's Cargo.toml; the Python feature
+depends on this shared-source crate. Dependency versions remain part of the
+numerical provenance and must pass the independent exact-output fixtures.
 `src/upstream_py.rs` adapts only PyO3/NumPy syntax and module registration.
 
 `tdigest_rs.TDigest` must preserve the existing API and numerical behavior.

@@ -119,8 +119,9 @@ make test
 - Weighted medians use centroid mass. TDIG v3 and Polars round-trips retain compression configuration and centroid kind.
 - Delta-mode export requires TDIG v3; older formats cannot retain delta.
 - Rust: stable (edition 2021)
-- Python: CPython 3.12 (built with maturin)
-- Polars: 1.x line (Python)
+- Python: CPython 3.10–3.12 (ABI3 wheels built with maturin); development tools default to 3.12
+- NumPy: 1.26.4 or the 2.x line; tested combinations are recorded in `scripts/test_python_support.py`
+- Polars: optional; install `gr-tdigest[polars]` for the tested 1.34.0 integration
 
 Existing G-Research applications keep `from tdigest_rs import TDigest` and
 `TDigest.from_array(values, delta=300)`. This interface uses the unmodified
@@ -128,6 +129,8 @@ original numerical implementation and Python wrapper, including float32
 arithmetic, uint32 weights, and the original copy/pickle behavior. The new engine
 is opt-in through `from gr_tdigest import TDigest`; using `delta` there does not
 promise the same numbers. See [source provenance](src/upstream/PROVENANCE.md).
+
+The unchanged upstream Python suite runs in `make test` and Linux CI. `make python-support-test` builds one release Linux wheel and tests it outside the checkout on Python 3.10, 3.11 and 3.12 with both NumPy lines. See [legacy compatibility](compat/gr_tdigest_vs_tdigest_rs.md).
 
 ## Changelog
 - See `CHANGELOG.md`.
@@ -144,3 +147,14 @@ promise the same numbers. See [source provenance](src/upstream/PROVENANCE.md).
 
 ## License
 - Apache-2.0
+
+
+### Original Rust crate
+
+`tdigest_core::TDigest<f32>` and `TDigest<f64>` retain the original G-Research
+API and arithmetic, including public `means` and `u32` `weights` vectors. The
+workspace package lives at `src/upstream`; Git dependencies select the package
+by its original name, while local path dependencies must point to that directory.
+The repository root remains the separate modern `gr-tdigest` package. Registry
+publication requires publishing the matching `tdigest_core` version first; this
+workspace layout does not itself publish either package.

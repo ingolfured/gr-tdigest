@@ -6,14 +6,16 @@ build-backend = "maturin"
 name = "gr-tdigest"
 dynamic = ["version"]
 description = "Rust TDigest with Python, Polars and JNI"
-readme = "README.md"
+readme = "PYTHON_README.md"
 license = { text = "Apache-2.0" }
-requires-python = ">=3.12,<3.13"
+requires-python = ">=3.10,<3.13"
 authors = [{ name = "Ingolfur Edvardsson", email = "ingo.edvardsson@gresearch.co.uk" }]
 classifiers = [
   "Programming Language :: Python :: 3",
+  "Programming Language :: Python :: 3.10",
+  "Programming Language :: Python :: 3.11",
+  "Programming Language :: Python :: 3.12",
   "Programming Language :: Python :: Implementation :: CPython",
-  "Programming Language :: Python :: Implementation :: PyPy",
   "Programming Language :: Rust",
   "License :: OSI Approved :: Apache Software License",
   "Operating System :: OS Independent",
@@ -21,18 +23,23 @@ classifiers = [
 
 # Runtime dependencies
 dependencies = [
-  "polars>=1.34.0",
-  "numpy>=2.3.3",
+  "numpy>=1.26.4,<3",
 ]
+
+[project.optional-dependencies]
+polars = ["polars==1.34.0"]
 
 # Dev groups (PEP 735). uv understands these and can install with --group/--all-groups.
 [dependency-groups]
 dev = [
+  "polars==1.34.0",
+  "tomli>=2; python_version < '3.11'",
   "pytest>=8.4.2",
   "ruff>=0.13.3",
   "pre-commit>=4.3.0",
-  "maturin[patchelf,zig]>=1.9.5",
-  "numpy>=2.3.3",
+  "maturin[patchelf,zig]>=1.9.5,<2.0",
+  "numpy>=1.26.4,<3",
+  "scipy>=1.15.3",
   "mypy>=1.18.2",
 ]
 
@@ -45,6 +52,8 @@ features = ["python"]
 bindings = "pyo3"
 module-name = "gr_tdigest._gr_tdigest"
 python-packages = ["gr_tdigest", "tdigest_rs"]
+# Unqualified exclusion patterns apply to both wheels and source distributions.
+exclude = ["**/__pycache__/**", "**/*.pyc", "**/*.pyo"]
 strip = true
 manylinux = "2_28"
 zig = true
@@ -54,7 +63,7 @@ zig = true
 # ------------------------------------------------------------
 [tool.ruff]
 line-length = 120
-target-version = "py312"
+target-version = "py310"
 # Keep the byte-for-byte upstream wrapper out of automatic formatting.
 extend-exclude = ["tdigest_rs/lib.py","target","dist","build",".venv",".maturin",".pytest_cache",".ruff_cache"]
 
@@ -70,7 +79,7 @@ pythonpath = ["."]
 # Mypy
 # ------------------------------------------------------------
 [tool.mypy]
-python_version = "3.12"
+python_version = "3.10"
 exclude = "(^target/|^build/|^dist/|^\\.venv/|^out/)"
 ignore_missing_imports = true
 warn_unused_ignores = true

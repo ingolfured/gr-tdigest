@@ -29,6 +29,9 @@ jobs:
         with:
           python-version: "3.12"
 
+      - name: Setup uv
+        uses: astral-sh/setup-uv@v5
+
       - name: Setup Rust
         uses: dtolnay/rust-toolchain@stable
 
@@ -72,13 +75,24 @@ jobs:
           python -m pip install "maturin[patchelf,zig]>=1.9.5,<2.0" twine
           mkdir -p dist
           cd bindings/python
-          maturin build -r -F python --compatibility manylinux_2_28 --zig -o ../../dist
+          maturin build --locked -r -F python --compatibility manylinux_2_28 --zig -o ../../dist
+          LOCK_BEFORE="$(sha256sum ../../Cargo.lock)"
           maturin sdist -o ../../dist
+          test "${LOCK_BEFORE}" = "$(sha256sum ../../Cargo.lock)"
 
       - name: Preflight check distributions
         run: |
           set -euo pipefail
           python -m twine check dist/*
+
+      - name: Validate the release wheel on supported runtimes
+        run: |
+          set -euo pipefail
+          wheels=(dist/*.whl)
+          sources=(dist/*.tar.gz)
+          test "${#wheels[@]}" -eq 1
+          test "${#sources[@]}" -eq 1
+          python scripts/test_python_support.py --wheel "${wheels[0]}" --sdist "${sources[0]}"
 
       - name: Upload distributions
         uses: actions/upload-artifact@v4

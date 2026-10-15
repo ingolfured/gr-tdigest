@@ -1,0 +1,242 @@
+{
+  "started_utc": "2026-10-14T23:36:37.889964+00:00",
+  "crate_sha256": "5573b63df9172f5419a79c6657c767083e0338a79362d160a94a8f2036276af8",
+  "crate_members": [
+    "tdigest_core-0.2.0/.cargo_vcs_info.json",
+    "tdigest_core-0.2.0/CORE_README.md",
+    "tdigest_core-0.2.0/Cargo.lock",
+    "tdigest_core-0.2.0/Cargo.toml",
+    "tdigest_core-0.2.0/Cargo.toml.orig",
+    "tdigest_core-0.2.0/LICENSE",
+    "tdigest_core-0.2.0/PROVENANCE.md",
+    "tdigest_core-0.2.0/core.rs",
+    "tdigest_core-0.2.0/lib.rs",
+    "tdigest_core-0.2.0/scale.rs",
+    "tdigest_core-0.2.0/tests/public_api.rs",
+    "tdigest_core-0.2.0/traits.rs"
+  ],
+  "package_source_identity_verified": true,
+  "steps": [
+    {
+      "label": "unpacked-core-debug",
+      "command": [
+        "/usr/sbin/cargo",
+        "test",
+        "--locked",
+        "--offline"
+      ],
+      "cwd": "/var/tmp/codex-tdigest-pr3-20261014/overnight/numerical-review/original-rust-api-option/validation/unpacked/tdigest_core-0.2.0",
+      "exit_code": 0,
+      "elapsed_seconds": 2.2086010620005254
+    },
+    {
+      "label": "unpacked-core-release",
+      "command": [
+        "/usr/sbin/cargo",
+        "test",
+        "--locked",
+        "--offline",
+        "--release"
+      ],
+      "cwd": "/var/tmp/codex-tdigest-pr3-20261014/overnight/numerical-review/original-rust-api-option/validation/unpacked/tdigest_core-0.2.0",
+      "exit_code": 0,
+      "elapsed_seconds": 3.7726780060002056
+    },
+    {
+      "label": "workspace-path-resolve",
+      "command": [
+        "/usr/sbin/cargo",
+        "metadata",
+        "--offline",
+        "--format-version",
+        "1"
+      ],
+      "cwd": "/var/tmp/codex-tdigest-pr3-20261014/overnight/numerical-review/original-rust-api-option/validation/consumer-workspace-path",
+      "exit_code": 0,
+      "elapsed_seconds": 0.0184388419984316
+    },
+    {
+      "label": "workspace-path-test-debug",
+      "command": [
+        "/usr/sbin/cargo",
+        "test",
+        "--locked",
+        "--offline"
+      ],
+      "cwd": "/var/tmp/codex-tdigest-pr3-20261014/overnight/numerical-review/original-rust-api-option/validation/consumer-workspace-path",
+      "exit_code": 0,
+      "elapsed_seconds": 0.6486255810013972
+    },
+    {
+      "label": "workspace-path-test-release",
+      "command": [
+        "/usr/sbin/cargo",
+        "test",
+        "--locked",
+        "--offline",
+        "--release"
+      ],
+      "cwd": "/var/tmp/codex-tdigest-pr3-20261014/overnight/numerical-review/original-rust-api-option/validation/consumer-workspace-path",
+      "exit_code": 0,
+      "elapsed_seconds": 0.9360181109987025
+    },
+    {
+      "label": "workspace-path-run",
+      "command": [
+        "/usr/sbin/cargo",
+        "run",
+        "--locked",
+        "--offline",
+        "--release"
+      ],
+      "cwd": "/var/tmp/codex-tdigest-pr3-20261014/overnight/numerical-review/original-rust-api-option/validation/consumer-workspace-path",
+      "exit_code": 0,
+      "elapsed_seconds": 0.018684981998376315
+    },
+    {
+      "label": "packaged-path-resolve",
+      "command": [
+        "/usr/sbin/cargo",
+        "metadata",
+        "--offline",
+        "--format-version",
+        "1"
+      ],
+      "cwd": "/var/tmp/codex-tdigest-pr3-20261014/overnight/numerical-review/original-rust-api-option/validation/consumer-packaged-path",
+      "exit_code": 0,
+      "elapsed_seconds": 0.015607025001372676
+    },
+    {
+      "label": "packaged-path-test-debug",
+      "command": [
+        "/usr/sbin/cargo",
+        "test",
+        "--locked",
+        "--offline"
+      ],
+      "cwd": "/var/tmp/codex-tdigest-pr3-20261014/overnight/numerical-review/original-rust-api-option/validation/consumer-packaged-path",
+      "exit_code": 0,
+      "elapsed_seconds": 0.6617173720005667
+    },
+    {
+      "label": "packaged-path-test-release",
+      "command": [
+        "/usr/sbin/cargo",
+        "test",
+        "--locked",
+        "--offline",
+        "--release"
+      ],
+      "cwd": "/var/tmp/codex-tdigest-pr3-20261014/overnight/numerical-review/original-rust-api-option/validation/consumer-packaged-path",
+      "exit_code": 0,
+      "elapsed_seconds": 1.0332549539998581
+    },
+    {
+      "label": "packaged-path-run",
+      "command": [
+        "/usr/sbin/cargo",
+        "run",
+        "--locked",
+        "--offline",
+        "--release"
+      ],
+      "cwd": "/var/tmp/codex-tdigest-pr3-20261014/overnight/numerical-review/original-rust-api-option/validation/consumer-packaged-path",
+      "exit_code": 0,
+      "elapsed_seconds": 0.020125491999351652
+    }
+  ],
+  "workspace-path_dependency_versions": [
+    [
+      "anyhow",
+      "1.0.100"
+    ],
+    [
+      "autocfg",
+      "1.5.0"
+    ],
+    [
+      "either",
+      "1.15.0"
+    ],
+    [
+      "itertools",
+      "0.14.0"
+    ],
+    [
+      "num",
+      "0.4.3"
+    ],
+    [
+      "num-bigint",
+      "0.4.6"
+    ],
+    [
+      "num-complex",
+      "0.4.6"
+    ],
+    [
+      "num-integer",
+      "0.1.46"
+    ],
+    [
+      "num-iter",
+      "0.1.46"
+    ],
+    [
+      "num-rational",
+      "0.4.2"
+    ],
+    [
+      "num-traits",
+      "0.2.19"
+    ]
+  ],
+  "packaged-path_dependency_versions": [
+    [
+      "anyhow",
+      "1.0.100"
+    ],
+    [
+      "autocfg",
+      "1.5.0"
+    ],
+    [
+      "either",
+      "1.15.0"
+    ],
+    [
+      "itertools",
+      "0.14.0"
+    ],
+    [
+      "num",
+      "0.4.3"
+    ],
+    [
+      "num-bigint",
+      "0.4.6"
+    ],
+    [
+      "num-complex",
+      "0.4.6"
+    ],
+    [
+      "num-integer",
+      "0.1.46"
+    ],
+    [
+      "num-iter",
+      "0.1.46"
+    ],
+    [
+      "num-rational",
+      "0.4.2"
+    ],
+    [
+      "num-traits",
+      "0.2.19"
+    ]
+  ],
+  "success": true,
+  "finished_utc": "2026-10-14T23:36:47.229719+00:00"
+}

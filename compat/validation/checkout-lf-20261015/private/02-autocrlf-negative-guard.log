@@ -1,0 +1,7 @@
+Traceback (most recent call last):
+  File "<string>", line 1, in <module>
+  File "/var/tmp/codex-tdigest-pr3-20261014/overnight/lf-checkout-fix/control-1/private/negative-autocrlf/scripts/test_legacy_wheel.py", line 35, in verify_upstream_snapshot
+    verify_sources(root)
+  File "/var/tmp/codex-tdigest-pr3-20261014/overnight/lf-checkout-fix/control-1/private/negative-autocrlf/scripts/check_upstream_sources.py", line 33, in verify_sources
+    raise RuntimeError(f"original upstream implementation changed: {relative}")
+RuntimeError: original upstream implementation changed: src/upstream/LICENSE

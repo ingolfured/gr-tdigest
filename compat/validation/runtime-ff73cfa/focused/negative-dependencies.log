@@ -1,0 +1,10 @@
+Using Python 3.12.12 environment at: /var/tmp/codex-tdigest-pr3-20261014/overnight/release-wheel-3d0182a/numerical-audits-only/venv
+Resolved 7 packages in 5ms
+Installed 7 packages in 16ms
+ + iniconfig==2.3.1
+ + packaging==26.3
+ + pluggy==1.6.0
+ + polars==1.34.0
+ + polars-runtime-32==1.34.0
+ + pygments==2.21.0
+ + pytest==8.4.2

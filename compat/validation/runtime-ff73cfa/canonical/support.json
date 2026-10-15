@@ -1,0 +1,18 @@
+{
+  "source_commit": "ff73cfab31d6368d203c1a361b8efaaea29d735b",
+  "phase": "support",
+  "command": [
+    "uv",
+    "run",
+    "--project",
+    "bindings/python",
+    "--no-sync",
+    "python",
+    "scripts/test_python_support.py",
+    "--output-dir",
+    "/var/tmp/codex-tdigest-pr3-20261014/overnight/runtime-support-ff73cfa"
+  ],
+  "exit_code": 0,
+  "elapsed_seconds": 370.95389771461487,
+  "completed_utc": "2026-10-15T00:34:34Z"
+}

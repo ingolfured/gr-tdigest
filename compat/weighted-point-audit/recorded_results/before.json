@@ -1,0 +1,20 @@
+{
+  "seed": 202610140639,
+  "checks": {
+    "cdf": 13487,
+    "quantile_rank": 19847,
+    "digests": 795,
+    "failures_atomic_mean_drift": 57,
+    "failures_cdf": 61,
+    "failures_quantile_rank": 121,
+    "failures_merge_exception": 4,
+    "integer_mass": 304,
+    "failures_mass": 13,
+    "failures_sequential_exception": 1
+  },
+  "seconds": 0.7115151340003649,
+  "compressor_sha256": "9c97603c66a72e3dfa60dbe839d4bb0e93e1a0023b4e67779f7d3fe53cbb73a5",
+  "reference_audit_script_sha256": "43c569079cb728b1f35047d43bf3564e60ef285b9d0509ab3e45927b2b56621d",
+  "status": "FAIL",
+  "note": "Historical capture from the original scratch harness. The portable gate retains the same default cases/reference but adds exit status, controls and provenance."
+}

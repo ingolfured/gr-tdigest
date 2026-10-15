@@ -1,0 +1,28 @@
+
+[1m==> Format Rust[0m
+
+[1m==> Rust: clippy --fix (may modify files)[0m
+    Checking gr-tdigest v0.2.4 (/var/tmp/codex-tdigest-pr3-20261014/work/gr-tdigest-f64-weights)
+    Finished `dev` profile [unoptimized + debuginfo] target(s) in 1.50s
+
+[1m==> Python: ruff check --fix + ruff format[0m
+All checks passed!
+10 files left unchanged
+
+[1m==> Python: installed-artifact gate scripts[0m
+All checks passed!
+3 files already formatted
+
+[1m==> Python: mypy (auto-install types if missing)[0m
+/var/tmp/codex-tdigest-pr3-20261014/work/gr-tdigest-f64-weights/.venv/bin/python3: No module named pip
+Installing missing stub packages:
+/var/tmp/codex-tdigest-pr3-20261014/work/gr-tdigest-f64-weights/.venv/bin/python3 -m pip install types-pytz
+
+
+Success: no issues found in 1 source file
+
+[1m==> Rust docs: deny warnings[0m
+    Checking gr-tdigest v0.2.4 (/var/tmp/codex-tdigest-pr3-20261014/work/gr-tdigest-f64-weights)
+ Documenting gr-tdigest v0.2.4 (/var/tmp/codex-tdigest-pr3-20261014/work/gr-tdigest-f64-weights)
+    Finished `dev` profile [unoptimized + debuginfo] target(s) in 2.06s
+   Generated /var/tmp/codex-tdigest-pr3-20261014/work/gr-tdigest-f64-weights/target/doc/gr_tdigest/index.html and 1 other file

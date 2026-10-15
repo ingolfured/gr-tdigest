@@ -1,0 +1,17 @@
+{
+  "source_versions": {
+    "baseline": "22867bd55739a96a6fab3c8c48b27406ecb32197",
+    "candidate": "c5dec35059990b40fe6f036dc83590bf0cdf2a70"
+  },
+  "original_pin": "8d9cf1fe82c5c9254e5dc9593f01717e317f4333",
+  "metadata": "../results/2026-10-15-interleaved-metadata.json",
+  "raw_results": "../results/2026-10-15-interleaved-raw.jsonl",
+  "analysis": "../results/2026-10-15-interleaved-analysis.json",
+  "recorded_sha256": {
+    "README.md": "c5b0378d38bdb82a2527ffde01393d6f13cd5730d52f29463f67e25209634f36",
+    "focused_interleaved_tail.rs": "70da01f271fee52e9b22db090ecb3535cdb16ff14565b812fc1b43fb1a9b642a",
+    "focused_interleaved.py": "6f2e6049844dfc28db462652baa0fe2f5cdeb8a321831ce738aea796e2a3d3f0",
+    "analyze_interleaved.py": "f9ab32cd87f126292172dc790975b9bbd0d8aef2097c7ab537c4fdd89bb0e1aa"
+  },
+  "note": "Strict analysis was executed against the complete local run including hashed binaries and source exports. Those large local artifacts are not included in Git."
+}

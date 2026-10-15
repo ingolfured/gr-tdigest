@@ -1,0 +1,3162 @@
+{
+  "status": "complete",
+  "started_utc": "2026-10-15T01:23:46.892398+00:00",
+  "phase": "smoke",
+  "binary_sha256": "08f53223917f2257016a3cce31eb4ff36d5e5413d48847e56116a5d5c3e888c5",
+  "selection_sha256": "300203022d0dfbaee3e0a5bcf947bee6f804687b927238cd2e1b0576f16bb562",
+  "planned_runs": [
+    {
+      "kind": "normal",
+      "precision": "f32",
+      "seed": 86028121,
+      "original_delta": 100,
+      "modern_delta": 25,
+      "policies": [
+        {
+          "policy": "storage",
+          "threshold": 1024
+        }
+      ],
+      "pair_index": 0,
+      "core": "original",
+      "block": 1,
+      "n": 32,
+      "smoke": true
+    },
+    {
+      "kind": "normal",
+      "precision": "f32",
+      "seed": 86028121,
+      "original_delta": 100,
+      "modern_delta": 25,
+      "policies": [
+        {
+          "policy": "storage",
+          "threshold": 1024
+        }
+      ],
+      "pair_index": 0,
+      "core": "modern",
+      "block": 1,
+      "n": 32,
+      "smoke": true
+    },
+    {
+      "kind": "normal",
+      "precision": "f64",
+      "seed": 86028121,
+      "original_delta": 50,
+      "modern_delta": 25,
+      "policies": [
+        {
+          "policy": "storage",
+          "threshold": 1024
+        }
+      ],
+      "pair_index": 1,
+      "core": "original",
+      "block": 1,
+      "n": 32,
+      "smoke": true
+    },
+    {
+      "kind": "normal",
+      "precision": "f64",
+      "seed": 86028121,
+      "original_delta": 50,
+      "modern_delta": 25,
+      "policies": [
+        {
+          "policy": "storage",
+          "threshold": 1024
+        }
+      ],
+      "pair_index": 1,
+      "core": "modern",
+      "block": 1,
+      "n": 32,
+      "smoke": true
+    },
+    {
+      "kind": "ties",
+      "precision": "f32",
+      "seed": 86028121,
+      "original_delta": 100,
+      "modern_delta": 25,
+      "policies": [
+        {
+          "policy": "storage",
+          "threshold": 1024
+        }
+      ],
+      "pair_index": 2,
+      "core": "original",
+      "block": 1,
+      "n": 32,
+      "smoke": true
+    },
+    {
+      "kind": "ties",
+      "precision": "f32",
+      "seed": 86028121,
+      "original_delta": 100,
+      "modern_delta": 25,
+      "policies": [
+        {
+          "policy": "storage",
+          "threshold": 1024
+        }
+      ],
+      "pair_index": 2,
+      "core": "modern",
+      "block": 1,
+      "n": 32,
+      "smoke": true
+    },
+    {
+      "kind": "ties",
+      "precision": "f64",
+      "seed": 86028121,
+      "original_delta": 50,
+      "modern_delta": 25,
+      "policies": [
+        {
+          "policy": "storage",
+          "threshold": 1024
+        }
+      ],
+      "pair_index": 3,
+      "core": "original",
+      "block": 1,
+      "n": 32,
+      "smoke": true
+    },
+    {
+      "kind": "ties",
+      "precision": "f64",
+      "seed": 86028121,
+      "original_delta": 50,
+      "modern_delta": 25,
+      "policies": [
+        {
+          "policy": "storage",
+          "threshold": 1024
+        }
+      ],
+      "pair_index": 3,
+      "core": "modern",
+      "block": 1,
+      "n": 32,
+      "smoke": true
+    },
+    {
+      "kind": "separated_modes",
+      "precision": "f32",
+      "seed": 86028121,
+      "original_delta": 100,
+      "modern_delta": 25,
+      "policies": [
+        {
+          "policy": "storage",
+          "threshold": 1024
+        }
+      ],
+      "pair_index": 4,
+      "core": "original",
+      "block": 1,
+      "n": 32,
+      "smoke": true
+    },
+    {
+      "kind": "separated_modes",
+      "precision": "f32",
+      "seed": 86028121,
+      "original_delta": 100,
+      "modern_delta": 25,
+      "policies": [
+        {
+          "policy": "storage",
+          "threshold": 1024
+        }
+      ],
+      "pair_index": 4,
+      "core": "modern",
+      "block": 1,
+      "n": 32,
+      "smoke": true
+    },
+    {
+      "kind": "separated_modes",
+      "precision": "f64",
+      "seed": 86028121,
+      "original_delta": 50,
+      "modern_delta": 25,
+      "policies": [
+        {
+          "policy": "storage",
+          "threshold": 1024
+        }
+      ],
+      "pair_index": 5,
+      "core": "original",
+      "block": 1,
+      "n": 32,
+      "smoke": true
+    },
+    {
+      "kind": "separated_modes",
+      "precision": "f64",
+      "seed": 86028121,
+      "original_delta": 50,
+      "modern_delta": 25,
+      "policies": [
+        {
+          "policy": "storage",
+          "threshold": 1024
+        }
+      ],
+      "pair_index": 5,
+      "core": "modern",
+      "block": 1,
+      "n": 32,
+      "smoke": true
+    },
+    {
+      "kind": "normal",
+      "precision": "f32",
+      "seed": 86028121,
+      "original_delta": 300,
+      "modern_delta": 200,
+      "policies": [
+        {
+          "policy": "storage",
+          "threshold": 4096
+        }
+      ],
+      "pair_index": 6,
+      "core": "original",
+      "block": 1,
+      "n": 32,
+      "smoke": true
+    },
+    {
+      "kind": "normal",
+      "precision": "f32",
+      "seed": 86028121,
+      "original_delta": 300,
+      "modern_delta": 200,
+      "policies": [
+        {
+          "policy": "storage",
+          "threshold": 4096
+        }
+      ],
+      "pair_index": 6,
+      "core": "modern",
+      "block": 1,
+      "n": 32,
+      "smoke": true
+    },
+    {
+      "kind": "normal",
+      "precision": "f64",
+      "seed": 86028121,
+      "original_delta": 300,
+      "modern_delta": 150,
+      "policies": [
+        {
+          "policy": "storage",
+          "threshold": 4096
+        }
+      ],
+      "pair_index": 7,
+      "core": "original",
+      "block": 1,
+      "n": 32,
+      "smoke": true
+    },
+    {
+      "kind": "normal",
+      "precision": "f64",
+      "seed": 86028121,
+      "original_delta": 300,
+      "modern_delta": 150,
+      "policies": [
+        {
+          "policy": "storage",
+          "threshold": 4096
+        }
+      ],
+      "pair_index": 7,
+      "core": "modern",
+      "block": 1,
+      "n": 32,
+      "smoke": true
+    },
+    {
+      "kind": "ties",
+      "precision": "f32",
+      "seed": 86028121,
+      "original_delta": 300,
+      "modern_delta": 200,
+      "policies": [
+        {
+          "policy": "storage",
+          "threshold": 4096
+        }
+      ],
+      "pair_index": 8,
+      "core": "original",
+      "block": 1,
+      "n": 32,
+      "smoke": true
+    },
+    {
+      "kind": "ties",
+      "precision": "f32",
+      "seed": 86028121,
+      "original_delta": 300,
+      "modern_delta": 200,
+      "policies": [
+        {
+          "policy": "storage",
+          "threshold": 4096
+        }
+      ],
+      "pair_index": 8,
+      "core": "modern",
+      "block": 1,
+      "n": 32,
+      "smoke": true
+    },
+    {
+      "kind": "ties",
+      "precision": "f64",
+      "seed": 86028121,
+      "original_delta": 300,
+      "modern_delta": 150,
+      "policies": [
+        {
+          "policy": "storage",
+          "threshold": 4096
+        }
+      ],
+      "pair_index": 9,
+      "core": "original",
+      "block": 1,
+      "n": 32,
+      "smoke": true
+    },
+    {
+      "kind": "ties",
+      "precision": "f64",
+      "seed": 86028121,
+      "original_delta": 300,
+      "modern_delta": 150,
+      "policies": [
+        {
+          "policy": "storage",
+          "threshold": 4096
+        }
+      ],
+      "pair_index": 9,
+      "core": "modern",
+      "block": 1,
+      "n": 32,
+      "smoke": true
+    },
+    {
+      "kind": "separated_modes",
+      "precision": "f32",
+      "seed": 86028121,
+      "original_delta": 300,
+      "modern_delta": 200,
+      "policies": [
+        {
+          "policy": "storage",
+          "threshold": 4096
+        }
+      ],
+      "pair_index": 10,
+      "core": "original",
+      "block": 1,
+      "n": 32,
+      "smoke": true
+    },
+    {
+      "kind": "separated_modes",
+      "precision": "f32",
+      "seed": 86028121,
+      "original_delta": 300,
+      "modern_delta": 200,
+      "policies": [
+        {
+          "policy": "storage",
+          "threshold": 4096
+        }
+      ],
+      "pair_index": 10,
+      "core": "modern",
+      "block": 1,
+      "n": 32,
+      "smoke": true
+    },
+    {
+      "kind": "separated_modes",
+      "precision": "f64",
+      "seed": 86028121,
+      "original_delta": 300,
+      "modern_delta": 150,
+      "policies": [
+        {
+          "policy": "storage",
+          "threshold": 4096
+        }
+      ],
+      "pair_index": 11,
+      "core": "original",
+      "block": 1,
+      "n": 32,
+      "smoke": true
+    },
+    {
+      "kind": "separated_modes",
+      "precision": "f64",
+      "seed": 86028121,
+      "original_delta": 300,
+      "modern_delta": 150,
+      "policies": [
+        {
+          "policy": "storage",
+          "threshold": 4096
+        }
+      ],
+      "pair_index": 11,
+      "core": "modern",
+      "block": 1,
+      "n": 32,
+      "smoke": true
+    },
+    {
+      "kind": "normal",
+      "precision": "f32",
+      "seed": 86028121,
+      "original_delta": 1200,
+      "modern_delta": 1200,
+      "policies": [
+        {
+          "policy": "rank",
+          "threshold": 0.02
+        }
+      ],
+      "pair_index": 12,
+      "core": "original",
+      "block": 1,
+      "n": 32,
+      "smoke": true
+    },
+    {
+      "kind": "normal",
+      "precision": "f32",
+      "seed": 86028121,
+      "original_delta": 1200,
+      "modern_delta": 1200,
+      "policies": [
+        {
+          "policy": "rank",
+          "threshold": 0.02
+        }
+      ],
+      "pair_index": 12,
+      "core": "modern",
+      "block": 1,
+      "n": 32,
+      "smoke": true
+    },
+    {
+      "kind": "normal",
+      "precision": "f64",
+      "seed": 86028121,
+      "original_delta": 1200,
+      "modern_delta": 1200,
+      "policies": [
+        {
+          "policy": "rank",
+          "threshold": 0.02
+        }
+      ],
+      "pair_index": 13,
+      "core": "original",
+      "block": 1,
+      "n": 32,
+      "smoke": true
+    },
+    {
+      "kind": "normal",
+      "precision": "f64",
+      "seed": 86028121,
+      "original_delta": 1200,
+      "modern_delta": 1200,
+      "policies": [
+        {
+          "policy": "rank",
+          "threshold": 0.02
+        }
+      ],
+      "pair_index": 13,
+      "core": "modern",
+      "block": 1,
+      "n": 32,
+      "smoke": true
+    },
+    {
+      "kind": "ties",
+      "precision": "f32",
+      "seed": 86028121,
+      "original_delta": 1200,
+      "modern_delta": 1200,
+      "policies": [
+        {
+          "policy": "rank",
+          "threshold": 0.02
+        }
+      ],
+      "pair_index": 14,
+      "core": "original",
+      "block": 1,
+      "n": 32,
+      "smoke": true
+    },
+    {
+      "kind": "ties",
+      "precision": "f32",
+      "seed": 86028121,
+      "original_delta": 1200,
+      "modern_delta": 1200,
+      "policies": [
+        {
+          "policy": "rank",
+          "threshold": 0.02
+        }
+      ],
+      "pair_index": 14,
+      "core": "modern",
+      "block": 1,
+      "n": 32,
+      "smoke": true
+    },
+    {
+      "kind": "ties",
+      "precision": "f64",
+      "seed": 86028121,
+      "original_delta": 1200,
+      "modern_delta": 1200,
+      "policies": [
+        {
+          "policy": "rank",
+          "threshold": 0.02
+        }
+      ],
+      "pair_index": 15,
+      "core": "original",
+      "block": 1,
+      "n": 32,
+      "smoke": true
+    },
+    {
+      "kind": "ties",
+      "precision": "f64",
+      "seed": 86028121,
+      "original_delta": 1200,
+      "modern_delta": 1200,
+      "policies": [
+        {
+          "policy": "rank",
+          "threshold": 0.02
+        }
+      ],
+      "pair_index": 15,
+      "core": "modern",
+      "block": 1,
+      "n": 32,
+      "smoke": true
+    },
+    {
+      "kind": "separated_modes",
+      "precision": "f32",
+      "seed": 86028121,
+      "original_delta": 1200,
+      "modern_delta": 1200,
+      "policies": [
+        {
+          "policy": "rank",
+          "threshold": 0.02
+        }
+      ],
+      "pair_index": 16,
+      "core": "original",
+      "block": 1,
+      "n": 32,
+      "smoke": true
+    },
+    {
+      "kind": "separated_modes",
+      "precision": "f32",
+      "seed": 86028121,
+      "original_delta": 1200,
+      "modern_delta": 1200,
+      "policies": [
+        {
+          "policy": "rank",
+          "threshold": 0.02
+        }
+      ],
+      "pair_index": 16,
+      "core": "modern",
+      "block": 1,
+      "n": 32,
+      "smoke": true
+    },
+    {
+      "kind": "separated_modes",
+      "precision": "f64",
+      "seed": 86028121,
+      "original_delta": 1200,
+      "modern_delta": 1200,
+      "policies": [
+        {
+          "policy": "rank",
+          "threshold": 0.02
+        }
+      ],
+      "pair_index": 17,
+      "core": "original",
+      "block": 1,
+      "n": 32,
+      "smoke": true
+    },
+    {
+      "kind": "separated_modes",
+      "precision": "f64",
+      "seed": 86028121,
+      "original_delta": 1200,
+      "modern_delta": 1200,
+      "policies": [
+        {
+          "policy": "rank",
+          "threshold": 0.02
+        }
+      ],
+      "pair_index": 17,
+      "core": "modern",
+      "block": 1,
+      "n": 32,
+      "smoke": true
+    }
+  ],
+  "completed_runs": [
+    {
+      "case": {
+        "kind": "normal",
+        "precision": "f32",
+        "seed": 86028121,
+        "original_delta": 100,
+        "modern_delta": 25,
+        "policies": [
+          {
+            "policy": "storage",
+            "threshold": 1024
+          }
+        ],
+        "pair_index": 0,
+        "core": "original",
+        "block": 1,
+        "n": 32,
+        "smoke": true
+      },
+      "stdout": "000-b1-p0-original.json",
+      "stderr": "000-b1-p0-original.log",
+      "command": [
+        "/var/tmp/codex-tdigest-pr3-20261014/overnight/matched-budget-timing-ff73cfa/timing",
+        "original",
+        "normal",
+        "f32",
+        "32",
+        "86028121",
+        "100",
+        "25",
+        "1",
+        "true"
+      ],
+      "execution": {
+        "seconds": 0.007108268000592943,
+        "bytes": 225300,
+        "exit_code": 0
+      },
+      "policy_evaluations": [
+        {
+          "policy": "storage",
+          "threshold": 1024,
+          "core": "original",
+          "route": "direct",
+          "observed": 304,
+          "excess": 0,
+          "violation": false,
+          "nonfinite_rank_observation": false
+        },
+        {
+          "policy": "storage",
+          "threshold": 1024,
+          "core": "original",
+          "route": "balanced_iid/forward/sequential",
+          "observed": 304,
+          "excess": 0,
+          "violation": false,
+          "nonfinite_rank_observation": false
+        }
+      ]
+    },
+    {
+      "case": {
+        "kind": "normal",
+        "precision": "f32",
+        "seed": 86028121,
+        "original_delta": 100,
+        "modern_delta": 25,
+        "policies": [
+          {
+            "policy": "storage",
+            "threshold": 1024
+          }
+        ],
+        "pair_index": 0,
+        "core": "modern",
+        "block": 1,
+        "n": 32,
+        "smoke": true
+      },
+      "stdout": "001-b1-p0-modern.json",
+      "stderr": "001-b1-p0-modern.log",
+      "command": [
+        "/var/tmp/codex-tdigest-pr3-20261014/overnight/matched-budget-timing-ff73cfa/timing",
+        "modern",
+        "normal",
+        "f32",
+        "32",
+        "86028121",
+        "100",
+        "25",
+        "1",
+        "true"
+      ],
+      "execution": {
+        "seconds": 0.008471766999718966,
+        "bytes": 416146,
+        "exit_code": 0
+      },
+      "policy_evaluations": [
+        {
+          "policy": "storage",
+          "threshold": 1024,
+          "core": "modern",
+          "route": "direct",
+          "observed": 272,
+          "excess": 0,
+          "violation": false,
+          "nonfinite_rank_observation": false
+        },
+        {
+          "policy": "storage",
+          "threshold": 1024,
+          "core": "modern",
+          "route": "balanced_iid/forward/sequential",
+          "observed": 288,
+          "excess": 0,
+          "violation": false,
+          "nonfinite_rank_observation": false
+        },
+        {
+          "policy": "storage",
+          "threshold": 1024,
+          "core": "modern",
+          "route": "balanced_iid/forward/kway",
+          "observed": 272,
+          "excess": 0,
+          "violation": false,
+          "nonfinite_rank_observation": false
+        }
+      ]
+    },
+    {
+      "case": {
+        "kind": "normal",
+        "precision": "f64",
+        "seed": 86028121,
+        "original_delta": 50,
+        "modern_delta": 25,
+        "policies": [
+          {
+            "policy": "storage",
+            "threshold": 1024
+          }
+        ],
+        "pair_index": 1,
+        "core": "original",
+        "block": 1,
+        "n": 32,
+        "smoke": true
+      },
+      "stdout": "002-b1-p1-original.json",
+      "stderr": "002-b1-p1-original.log",
+      "command": [
+        "/var/tmp/codex-tdigest-pr3-20261014/overnight/matched-budget-timing-ff73cfa/timing",
+        "original",
+        "normal",
+        "f64",
+        "32",
+        "86028121",
+        "50",
+        "25",
+        "1",
+        "true"
+      ],
+      "execution": {
+        "seconds": 0.005427916003100108,
+        "bytes": 196377,
+        "exit_code": 0
+      },
+      "policy_evaluations": [
+        {
+          "policy": "storage",
+          "threshold": 1024,
+          "core": "original",
+          "route": "direct",
+          "observed": 276,
+          "excess": 0,
+          "violation": false,
+          "nonfinite_rank_observation": false
+        },
+        {
+          "policy": "storage",
+          "threshold": 1024,
+          "core": "original",
+          "route": "balanced_iid/forward/sequential",
+          "observed": 288,
+          "excess": 0,
+          "violation": false,
+          "nonfinite_rank_observation": false
+        }
+      ]
+    },
+    {
+      "case": {
+        "kind": "normal",
+        "precision": "f64",
+        "seed": 86028121,
+        "original_delta": 50,
+        "modern_delta": 25,
+        "policies": [
+          {
+            "policy": "storage",
+            "threshold": 1024
+          }
+        ],
+        "pair_index": 1,
+        "core": "modern",
+        "block": 1,
+        "n": 32,
+        "smoke": true
+      },
+      "stdout": "003-b1-p1-modern.json",
+      "stderr": "003-b1-p1-modern.log",
+      "command": [
+        "/var/tmp/codex-tdigest-pr3-20261014/overnight/matched-budget-timing-ff73cfa/timing",
+        "modern",
+        "normal",
+        "f64",
+        "32",
+        "86028121",
+        "50",
+        "25",
+        "1",
+        "true"
+      ],
+      "execution": {
+        "seconds": 0.00871661299970583,
+        "bytes": 376587,
+        "exit_code": 0
+      },
+      "policy_evaluations": [
+        {
+          "policy": "storage",
+          "threshold": 1024,
+          "core": "modern",
+          "route": "direct",
+          "observed": 368,
+          "excess": 0,
+          "violation": false,
+          "nonfinite_rank_observation": false
+        },
+        {
+          "policy": "storage",
+          "threshold": 1024,
+          "core": "modern",
+          "route": "balanced_iid/forward/sequential",
+          "observed": 392,
+          "excess": 0,
+          "violation": false,
+          "nonfinite_rank_observation": false
+        },
+        {
+          "policy": "storage",
+          "threshold": 1024,
+          "core": "modern",
+          "route": "balanced_iid/forward/kway",
+          "observed": 368,
+          "excess": 0,
+          "violation": false,
+          "nonfinite_rank_observation": false
+        }
+      ]
+    },
+    {
+      "case": {
+        "kind": "ties",
+        "precision": "f32",
+        "seed": 86028121,
+        "original_delta": 100,
+        "modern_delta": 25,
+        "policies": [
+          {
+            "policy": "storage",
+            "threshold": 1024
+          }
+        ],
+        "pair_index": 2,
+        "core": "original",
+        "block": 1,
+        "n": 32,
+        "smoke": true
+      },
+      "stdout": "004-b1-p2-original.json",
+      "stderr": "004-b1-p2-original.log",
+      "command": [
+        "/var/tmp/codex-tdigest-pr3-20261014/overnight/matched-budget-timing-ff73cfa/timing",
+        "original",
+        "ties",
+        "f32",
+        "32",
+        "86028121",
+        "100",
+        "25",
+        "1",
+        "true"
+      ],
+      "execution": {
+        "seconds": 0.00488276699979906,
+        "bytes": 131306,
+        "exit_code": 0
+      },
+      "policy_evaluations": [
+        {
+          "policy": "storage",
+          "threshold": 1024,
+          "core": "original",
+          "route": "direct",
+          "observed": 304,
+          "excess": 0,
+          "violation": false,
+          "nonfinite_rank_observation": false
+        },
+        {
+          "policy": "storage",
+          "threshold": 1024,
+          "core": "original",
+          "route": "balanced_iid/forward/sequential",
+          "observed": 304,
+          "excess": 0,
+          "violation": false,
+          "nonfinite_rank_observation": false
+        }
+      ]
+    },
+    {
+      "case": {
+        "kind": "ties",
+        "precision": "f32",
+        "seed": 86028121,
+        "original_delta": 100,
+        "modern_delta": 25,
+        "policies": [
+          {
+            "policy": "storage",
+            "threshold": 1024
+          }
+        ],
+        "pair_index": 2,
+        "core": "modern",
+        "block": 1,
+        "n": 32,
+        "smoke": true
+      },
+      "stdout": "005-b1-p2-modern.json",
+      "stderr": "005-b1-p2-modern.log",
+      "command": [
+        "/var/tmp/codex-tdigest-pr3-20261014/overnight/matched-budget-timing-ff73cfa/timing",
+        "modern",
+        "ties",
+        "f32",
+        "32",
+        "86028121",
+        "100",
+        "25",
+        "1",
+        "true"
+      ],
+      "execution": {
+        "seconds": 0.006640589999733493,
+        "bytes": 217531,
+        "exit_code": 0
+      },
+      "policy_evaluations": [
+        {
+          "policy": "storage",
+          "threshold": 1024,
+          "core": "modern",
+          "route": "direct",
+          "observed": 224,
+          "excess": 0,
+          "violation": false,
+          "nonfinite_rank_observation": false
+        },
+        {
+          "policy": "storage",
+          "threshold": 1024,
+          "core": "modern",
+          "route": "balanced_iid/forward/sequential",
+          "observed": 224,
+          "excess": 0,
+          "violation": false,
+          "nonfinite_rank_observation": false
+        },
+        {
+          "policy": "storage",
+          "threshold": 1024,
+          "core": "modern",
+          "route": "balanced_iid/forward/kway",
+          "observed": 224,
+          "excess": 0,
+          "violation": false,
+          "nonfinite_rank_observation": false
+        }
+      ]
+    },
+    {
+      "case": {
+        "kind": "ties",
+        "precision": "f64",
+        "seed": 86028121,
+        "original_delta": 50,
+        "modern_delta": 25,
+        "policies": [
+          {
+            "policy": "storage",
+            "threshold": 1024
+          }
+        ],
+        "pair_index": 3,
+        "core": "original",
+        "block": 1,
+        "n": 32,
+        "smoke": true
+      },
+      "stdout": "006-b1-p3-original.json",
+      "stderr": "006-b1-p3-original.log",
+      "command": [
+        "/var/tmp/codex-tdigest-pr3-20261014/overnight/matched-budget-timing-ff73cfa/timing",
+        "original",
+        "ties",
+        "f64",
+        "32",
+        "86028121",
+        "50",
+        "25",
+        "1",
+        "true"
+      ],
+      "execution": {
+        "seconds": 0.005214869001065381,
+        "bytes": 130210,
+        "exit_code": 0
+      },
+      "policy_evaluations": [
+        {
+          "policy": "storage",
+          "threshold": 1024,
+          "core": "original",
+          "route": "direct",
+          "observed": 276,
+          "excess": 0,
+          "violation": false,
+          "nonfinite_rank_observation": false
+        },
+        {
+          "policy": "storage",
+          "threshold": 1024,
+          "core": "original",
+          "route": "balanced_iid/forward/sequential",
+          "observed": 312,
+          "excess": 0,
+          "violation": false,
+          "nonfinite_rank_observation": false
+        }
+      ]
+    },
+    {
+      "case": {
+        "kind": "ties",
+        "precision": "f64",
+        "seed": 86028121,
+        "original_delta": 50,
+        "modern_delta": 25,
+        "policies": [
+          {
+            "policy": "storage",
+            "threshold": 1024
+          }
+        ],
+        "pair_index": 3,
+        "core": "modern",
+        "block": 1,
+        "n": 32,
+        "smoke": true
+      },
+      "stdout": "007-b1-p3-modern.json",
+      "stderr": "007-b1-p3-modern.log",
+      "command": [
+        "/var/tmp/codex-tdigest-pr3-20261014/overnight/matched-budget-timing-ff73cfa/timing",
+        "modern",
+        "ties",
+        "f64",
+        "32",
+        "86028121",
+        "50",
+        "25",
+        "1",
+        "true"
+      ],
+      "execution": {
+        "seconds": 0.006611213000724092,
+        "bytes": 173889,
+        "exit_code": 0
+      },
+      "policy_evaluations": [
+        {
+          "policy": "storage",
+          "threshold": 1024,
+          "core": "modern",
+          "route": "direct",
+          "observed": 296,
+          "excess": 0,
+          "violation": false,
+          "nonfinite_rank_observation": false
+        },
+        {
+          "policy": "storage",
+          "threshold": 1024,
+          "core": "modern",
+          "route": "balanced_iid/forward/sequential",
+          "observed": 296,
+          "excess": 0,
+          "violation": false,
+          "nonfinite_rank_observation": false
+        },
+        {
+          "policy": "storage",
+          "threshold": 1024,
+          "core": "modern",
+          "route": "balanced_iid/forward/kway",
+          "observed": 296,
+          "excess": 0,
+          "violation": false,
+          "nonfinite_rank_observation": false
+        }
+      ]
+    },
+    {
+      "case": {
+        "kind": "separated_modes",
+        "precision": "f32",
+        "seed": 86028121,
+        "original_delta": 100,
+        "modern_delta": 25,
+        "policies": [
+          {
+            "policy": "storage",
+            "threshold": 1024
+          }
+        ],
+        "pair_index": 4,
+        "core": "original",
+        "block": 1,
+        "n": 32,
+        "smoke": true
+      },
+      "stdout": "008-b1-p4-original.json",
+      "stderr": "008-b1-p4-original.log",
+      "command": [
+        "/var/tmp/codex-tdigest-pr3-20261014/overnight/matched-budget-timing-ff73cfa/timing",
+        "original",
+        "separated_modes",
+        "f32",
+        "32",
+        "86028121",
+        "100",
+        "25",
+        "1",
+        "true"
+      ],
+      "execution": {
+        "seconds": 0.0056188700000348035,
+        "bytes": 225911,
+        "exit_code": 0
+      },
+      "policy_evaluations": [
+        {
+          "policy": "storage",
+          "threshold": 1024,
+          "core": "original",
+          "route": "direct",
+          "observed": 304,
+          "excess": 0,
+          "violation": false,
+          "nonfinite_rank_observation": false
+        },
+        {
+          "policy": "storage",
+          "threshold": 1024,
+          "core": "original",
+          "route": "balanced_iid/forward/sequential",
+          "observed": 304,
+          "excess": 0,
+          "violation": false,
+          "nonfinite_rank_observation": false
+        }
+      ]
+    },
+    {
+      "case": {
+        "kind": "separated_modes",
+        "precision": "f32",
+        "seed": 86028121,
+        "original_delta": 100,
+        "modern_delta": 25,
+        "policies": [
+          {
+            "policy": "storage",
+            "threshold": 1024
+          }
+        ],
+        "pair_index": 4,
+        "core": "modern",
+        "block": 1,
+        "n": 32,
+        "smoke": true
+      },
+      "stdout": "009-b1-p4-modern.json",
+      "stderr": "009-b1-p4-modern.log",
+      "command": [
+        "/var/tmp/codex-tdigest-pr3-20261014/overnight/matched-budget-timing-ff73cfa/timing",
+        "modern",
+        "separated_modes",
+        "f32",
+        "32",
+        "86028121",
+        "100",
+        "25",
+        "1",
+        "true"
+      ],
+      "execution": {
+        "seconds": 0.007968448000610806,
+        "bytes": 411097,
+        "exit_code": 0
+      },
+      "policy_evaluations": [
+        {
+          "policy": "storage",
+          "threshold": 1024,
+          "core": "modern",
+          "route": "direct",
+          "observed": 272,
+          "excess": 0,
+          "violation": false,
+          "nonfinite_rank_observation": false
+        },
+        {
+          "policy": "storage",
+          "threshold": 1024,
+          "core": "modern",
+          "route": "balanced_iid/forward/sequential",
+          "observed": 304,
+          "excess": 0,
+          "violation": false,
+          "nonfinite_rank_observation": false
+        },
+        {
+          "policy": "storage",
+          "threshold": 1024,
+          "core": "modern",
+          "route": "balanced_iid/forward/kway",
+          "observed": 272,
+          "excess": 0,
+          "violation": false,
+          "nonfinite_rank_observation": false
+        }
+      ]
+    },
+    {
+      "case": {
+        "kind": "separated_modes",
+        "precision": "f64",
+        "seed": 86028121,
+        "original_delta": 50,
+        "modern_delta": 25,
+        "policies": [
+          {
+            "policy": "storage",
+            "threshold": 1024
+          }
+        ],
+        "pair_index": 5,
+        "core": "original",
+        "block": 1,
+        "n": 32,
+        "smoke": true
+      },
+      "stdout": "010-b1-p5-original.json",
+      "stderr": "010-b1-p5-original.log",
+      "command": [
+        "/var/tmp/codex-tdigest-pr3-20261014/overnight/matched-budget-timing-ff73cfa/timing",
+        "original",
+        "separated_modes",
+        "f64",
+        "32",
+        "86028121",
+        "50",
+        "25",
+        "1",
+        "true"
+      ],
+      "execution": {
+        "seconds": 0.005072036001365632,
+        "bytes": 195783,
+        "exit_code": 0
+      },
+      "policy_evaluations": [
+        {
+          "policy": "storage",
+          "threshold": 1024,
+          "core": "original",
+          "route": "direct",
+          "observed": 276,
+          "excess": 0,
+          "violation": false,
+          "nonfinite_rank_observation": false
+        },
+        {
+          "policy": "storage",
+          "threshold": 1024,
+          "core": "original",
+          "route": "balanced_iid/forward/sequential",
+          "observed": 300,
+          "excess": 0,
+          "violation": false,
+          "nonfinite_rank_observation": false
+        }
+      ]
+    },
+    {
+      "case": {
+        "kind": "separated_modes",
+        "precision": "f64",
+        "seed": 86028121,
+        "original_delta": 50,
+        "modern_delta": 25,
+        "policies": [
+          {
+            "policy": "storage",
+            "threshold": 1024
+          }
+        ],
+        "pair_index": 5,
+        "core": "modern",
+        "block": 1,
+        "n": 32,
+        "smoke": true
+      },
+      "stdout": "011-b1-p5-modern.json",
+      "stderr": "011-b1-p5-modern.log",
+      "command": [
+        "/var/tmp/codex-tdigest-pr3-20261014/overnight/matched-budget-timing-ff73cfa/timing",
+        "modern",
+        "separated_modes",
+        "f64",
+        "32",
+        "86028121",
+        "50",
+        "25",
+        "1",
+        "true"
+      ],
+      "execution": {
+        "seconds": 0.008267877001344459,
+        "bytes": 368271,
+        "exit_code": 0
+      },
+      "policy_evaluations": [
+        {
+          "policy": "storage",
+          "threshold": 1024,
+          "core": "modern",
+          "route": "direct",
+          "observed": 368,
+          "excess": 0,
+          "violation": false,
+          "nonfinite_rank_observation": false
+        },
+        {
+          "policy": "storage",
+          "threshold": 1024,
+          "core": "modern",
+          "route": "balanced_iid/forward/sequential",
+          "observed": 416,
+          "excess": 0,
+          "violation": false,
+          "nonfinite_rank_observation": false
+        },
+        {
+          "policy": "storage",
+          "threshold": 1024,
+          "core": "modern",
+          "route": "balanced_iid/forward/kway",
+          "observed": 368,
+          "excess": 0,
+          "violation": false,
+          "nonfinite_rank_observation": false
+        }
+      ]
+    },
+    {
+      "case": {
+        "kind": "normal",
+        "precision": "f32",
+        "seed": 86028121,
+        "original_delta": 300,
+        "modern_delta": 200,
+        "policies": [
+          {
+            "policy": "storage",
+            "threshold": 4096
+          }
+        ],
+        "pair_index": 6,
+        "core": "original",
+        "block": 1,
+        "n": 32,
+        "smoke": true
+      },
+      "stdout": "012-b1-p6-original.json",
+      "stderr": "012-b1-p6-original.log",
+      "command": [
+        "/var/tmp/codex-tdigest-pr3-20261014/overnight/matched-budget-timing-ff73cfa/timing",
+        "original",
+        "normal",
+        "f32",
+        "32",
+        "86028121",
+        "300",
+        "200",
+        "1",
+        "true"
+      ],
+      "execution": {
+        "seconds": 0.006119854999269592,
+        "bytes": 225299,
+        "exit_code": 0
+      },
+      "policy_evaluations": [
+        {
+          "policy": "storage",
+          "threshold": 4096,
+          "core": "original",
+          "route": "direct",
+          "observed": 304,
+          "excess": 0,
+          "violation": false,
+          "nonfinite_rank_observation": false
+        },
+        {
+          "policy": "storage",
+          "threshold": 4096,
+          "core": "original",
+          "route": "balanced_iid/forward/sequential",
+          "observed": 304,
+          "excess": 0,
+          "violation": false,
+          "nonfinite_rank_observation": false
+        }
+      ]
+    },
+    {
+      "case": {
+        "kind": "normal",
+        "precision": "f32",
+        "seed": 86028121,
+        "original_delta": 300,
+        "modern_delta": 200,
+        "policies": [
+          {
+            "policy": "storage",
+            "threshold": 4096
+          }
+        ],
+        "pair_index": 6,
+        "core": "modern",
+        "block": 1,
+        "n": 32,
+        "smoke": true
+      },
+      "stdout": "013-b1-p6-modern.json",
+      "stderr": "013-b1-p6-modern.log",
+      "command": [
+        "/var/tmp/codex-tdigest-pr3-20261014/overnight/matched-budget-timing-ff73cfa/timing",
+        "modern",
+        "normal",
+        "f32",
+        "32",
+        "86028121",
+        "300",
+        "200",
+        "1",
+        "true"
+      ],
+      "execution": {
+        "seconds": 0.009369510000396986,
+        "bytes": 349716,
+        "exit_code": 0
+      },
+      "policy_evaluations": [
+        {
+          "policy": "storage",
+          "threshold": 4096,
+          "core": "modern",
+          "route": "direct",
+          "observed": 608,
+          "excess": 0,
+          "violation": false,
+          "nonfinite_rank_observation": false
+        },
+        {
+          "policy": "storage",
+          "threshold": 4096,
+          "core": "modern",
+          "route": "balanced_iid/forward/sequential",
+          "observed": 608,
+          "excess": 0,
+          "violation": false,
+          "nonfinite_rank_observation": false
+        },
+        {
+          "policy": "storage",
+          "threshold": 4096,
+          "core": "modern",
+          "route": "balanced_iid/forward/kway",
+          "observed": 608,
+          "excess": 0,
+          "violation": false,
+          "nonfinite_rank_observation": false
+        }
+      ]
+    },
+    {
+      "case": {
+        "kind": "normal",
+        "precision": "f64",
+        "seed": 86028121,
+        "original_delta": 300,
+        "modern_delta": 150,
+        "policies": [
+          {
+            "policy": "storage",
+            "threshold": 4096
+          }
+        ],
+        "pair_index": 7,
+        "core": "original",
+        "block": 1,
+        "n": 32,
+        "smoke": true
+      },
+      "stdout": "014-b1-p7-original.json",
+      "stderr": "014-b1-p7-original.log",
+      "command": [
+        "/var/tmp/codex-tdigest-pr3-20261014/overnight/matched-budget-timing-ff73cfa/timing",
+        "original",
+        "normal",
+        "f64",
+        "32",
+        "86028121",
+        "300",
+        "150",
+        "1",
+        "true"
+      ],
+      "execution": {
+        "seconds": 0.005102875999000389,
+        "bytes": 197960,
+        "exit_code": 0
+      },
+      "policy_evaluations": [
+        {
+          "policy": "storage",
+          "threshold": 4096,
+          "core": "original",
+          "route": "direct",
+          "observed": 432,
+          "excess": 0,
+          "violation": false,
+          "nonfinite_rank_observation": false
+        },
+        {
+          "policy": "storage",
+          "threshold": 4096,
+          "core": "original",
+          "route": "balanced_iid/forward/sequential",
+          "observed": 432,
+          "excess": 0,
+          "violation": false,
+          "nonfinite_rank_observation": false
+        }
+      ]
+    },
+    {
+      "case": {
+        "kind": "normal",
+        "precision": "f64",
+        "seed": 86028121,
+        "original_delta": 300,
+        "modern_delta": 150,
+        "policies": [
+          {
+            "policy": "storage",
+            "threshold": 4096
+          }
+        ],
+        "pair_index": 7,
+        "core": "modern",
+        "block": 1,
+        "n": 32,
+        "smoke": true
+      },
+      "stdout": "015-b1-p7-modern.json",
+      "stderr": "015-b1-p7-modern.log",
+      "command": [
+        "/var/tmp/codex-tdigest-pr3-20261014/overnight/matched-budget-timing-ff73cfa/timing",
+        "modern",
+        "normal",
+        "f64",
+        "32",
+        "86028121",
+        "300",
+        "150",
+        "1",
+        "true"
+      ],
+      "execution": {
+        "seconds": 0.008142459999362472,
+        "bytes": 312785,
+        "exit_code": 0
+      },
+      "policy_evaluations": [
+        {
+          "policy": "storage",
+          "threshold": 4096,
+          "core": "modern",
+          "route": "direct",
+          "observed": 872,
+          "excess": 0,
+          "violation": false,
+          "nonfinite_rank_observation": false
+        },
+        {
+          "policy": "storage",
+          "threshold": 4096,
+          "core": "modern",
+          "route": "balanced_iid/forward/sequential",
+          "observed": 872,
+          "excess": 0,
+          "violation": false,
+          "nonfinite_rank_observation": false
+        },
+        {
+          "policy": "storage",
+          "threshold": 4096,
+          "core": "modern",
+          "route": "balanced_iid/forward/kway",
+          "observed": 872,
+          "excess": 0,
+          "violation": false,
+          "nonfinite_rank_observation": false
+        }
+      ]
+    },
+    {
+      "case": {
+        "kind": "ties",
+        "precision": "f32",
+        "seed": 86028121,
+        "original_delta": 300,
+        "modern_delta": 200,
+        "policies": [
+          {
+            "policy": "storage",
+            "threshold": 4096
+          }
+        ],
+        "pair_index": 8,
+        "core": "original",
+        "block": 1,
+        "n": 32,
+        "smoke": true
+      },
+      "stdout": "016-b1-p8-original.json",
+      "stderr": "016-b1-p8-original.log",
+      "command": [
+        "/var/tmp/codex-tdigest-pr3-20261014/overnight/matched-budget-timing-ff73cfa/timing",
+        "original",
+        "ties",
+        "f32",
+        "32",
+        "86028121",
+        "300",
+        "200",
+        "1",
+        "true"
+      ],
+      "execution": {
+        "seconds": 0.005383465999329928,
+        "bytes": 131302,
+        "exit_code": 0
+      },
+      "policy_evaluations": [
+        {
+          "policy": "storage",
+          "threshold": 4096,
+          "core": "original",
+          "route": "direct",
+          "observed": 304,
+          "excess": 0,
+          "violation": false,
+          "nonfinite_rank_observation": false
+        },
+        {
+          "policy": "storage",
+          "threshold": 4096,
+          "core": "original",
+          "route": "balanced_iid/forward/sequential",
+          "observed": 304,
+          "excess": 0,
+          "violation": false,
+          "nonfinite_rank_observation": false
+        }
+      ]
+    },
+    {
+      "case": {
+        "kind": "ties",
+        "precision": "f32",
+        "seed": 86028121,
+        "original_delta": 300,
+        "modern_delta": 200,
+        "policies": [
+          {
+            "policy": "storage",
+            "threshold": 4096
+          }
+        ],
+        "pair_index": 8,
+        "core": "modern",
+        "block": 1,
+        "n": 32,
+        "smoke": true
+      },
+      "stdout": "017-b1-p8-modern.json",
+      "stderr": "017-b1-p8-modern.log",
+      "command": [
+        "/var/tmp/codex-tdigest-pr3-20261014/overnight/matched-budget-timing-ff73cfa/timing",
+        "modern",
+        "ties",
+        "f32",
+        "32",
+        "86028121",
+        "300",
+        "200",
+        "1",
+        "true"
+      ],
+      "execution": {
+        "seconds": 0.006889311000122689,
+        "bytes": 188354,
+        "exit_code": 0
+      },
+      "policy_evaluations": [
+        {
+          "policy": "storage",
+          "threshold": 4096,
+          "core": "modern",
+          "route": "direct",
+          "observed": 256,
+          "excess": 0,
+          "violation": false,
+          "nonfinite_rank_observation": false
+        },
+        {
+          "policy": "storage",
+          "threshold": 4096,
+          "core": "modern",
+          "route": "balanced_iid/forward/sequential",
+          "observed": 256,
+          "excess": 0,
+          "violation": false,
+          "nonfinite_rank_observation": false
+        },
+        {
+          "policy": "storage",
+          "threshold": 4096,
+          "core": "modern",
+          "route": "balanced_iid/forward/kway",
+          "observed": 256,
+          "excess": 0,
+          "violation": false,
+          "nonfinite_rank_observation": false
+        }
+      ]
+    },
+    {
+      "case": {
+        "kind": "ties",
+        "precision": "f64",
+        "seed": 86028121,
+        "original_delta": 300,
+        "modern_delta": 150,
+        "policies": [
+          {
+            "policy": "storage",
+            "threshold": 4096
+          }
+        ],
+        "pair_index": 9,
+        "core": "original",
+        "block": 1,
+        "n": 32,
+        "smoke": true
+      },
+      "stdout": "018-b1-p9-original.json",
+      "stderr": "018-b1-p9-original.log",
+      "command": [
+        "/var/tmp/codex-tdigest-pr3-20261014/overnight/matched-budget-timing-ff73cfa/timing",
+        "original",
+        "ties",
+        "f64",
+        "32",
+        "86028121",
+        "300",
+        "150",
+        "1",
+        "true"
+      ],
+      "execution": {
+        "seconds": 0.004715588998806197,
+        "bytes": 101756,
+        "exit_code": 0
+      },
+      "policy_evaluations": [
+        {
+          "policy": "storage",
+          "threshold": 4096,
+          "core": "original",
+          "route": "direct",
+          "observed": 432,
+          "excess": 0,
+          "violation": false,
+          "nonfinite_rank_observation": false
+        },
+        {
+          "policy": "storage",
+          "threshold": 4096,
+          "core": "original",
+          "route": "balanced_iid/forward/sequential",
+          "observed": 432,
+          "excess": 0,
+          "violation": false,
+          "nonfinite_rank_observation": false
+        }
+      ]
+    },
+    {
+      "case": {
+        "kind": "ties",
+        "precision": "f64",
+        "seed": 86028121,
+        "original_delta": 300,
+        "modern_delta": 150,
+        "policies": [
+          {
+            "policy": "storage",
+            "threshold": 4096
+          }
+        ],
+        "pair_index": 9,
+        "core": "modern",
+        "block": 1,
+        "n": 32,
+        "smoke": true
+      },
+      "stdout": "019-b1-p9-modern.json",
+      "stderr": "019-b1-p9-modern.log",
+      "command": [
+        "/var/tmp/codex-tdigest-pr3-20261014/overnight/matched-budget-timing-ff73cfa/timing",
+        "modern",
+        "ties",
+        "f64",
+        "32",
+        "86028121",
+        "300",
+        "150",
+        "1",
+        "true"
+      ],
+      "execution": {
+        "seconds": 0.006647176000114996,
+        "bytes": 145629,
+        "exit_code": 0
+      },
+      "policy_evaluations": [
+        {
+          "policy": "storage",
+          "threshold": 4096,
+          "core": "modern",
+          "route": "direct",
+          "observed": 344,
+          "excess": 0,
+          "violation": false,
+          "nonfinite_rank_observation": false
+        },
+        {
+          "policy": "storage",
+          "threshold": 4096,
+          "core": "modern",
+          "route": "balanced_iid/forward/sequential",
+          "observed": 344,
+          "excess": 0,
+          "violation": false,
+          "nonfinite_rank_observation": false
+        },
+        {
+          "policy": "storage",
+          "threshold": 4096,
+          "core": "modern",
+          "route": "balanced_iid/forward/kway",
+          "observed": 344,
+          "excess": 0,
+          "violation": false,
+          "nonfinite_rank_observation": false
+        }
+      ]
+    },
+    {
+      "case": {
+        "kind": "separated_modes",
+        "precision": "f32",
+        "seed": 86028121,
+        "original_delta": 300,
+        "modern_delta": 200,
+        "policies": [
+          {
+            "policy": "storage",
+            "threshold": 4096
+          }
+        ],
+        "pair_index": 10,
+        "core": "original",
+        "block": 1,
+        "n": 32,
+        "smoke": true
+      },
+      "stdout": "020-b1-p10-original.json",
+      "stderr": "020-b1-p10-original.log",
+      "command": [
+        "/var/tmp/codex-tdigest-pr3-20261014/overnight/matched-budget-timing-ff73cfa/timing",
+        "original",
+        "separated_modes",
+        "f32",
+        "32",
+        "86028121",
+        "300",
+        "200",
+        "1",
+        "true"
+      ],
+      "execution": {
+        "seconds": 0.005608273000689223,
+        "bytes": 225911,
+        "exit_code": 0
+      },
+      "policy_evaluations": [
+        {
+          "policy": "storage",
+          "threshold": 4096,
+          "core": "original",
+          "route": "direct",
+          "observed": 304,
+          "excess": 0,
+          "violation": false,
+          "nonfinite_rank_observation": false
+        },
+        {
+          "policy": "storage",
+          "threshold": 4096,
+          "core": "original",
+          "route": "balanced_iid/forward/sequential",
+          "observed": 304,
+          "excess": 0,
+          "violation": false,
+          "nonfinite_rank_observation": false
+        }
+      ]
+    },
+    {
+      "case": {
+        "kind": "separated_modes",
+        "precision": "f32",
+        "seed": 86028121,
+        "original_delta": 300,
+        "modern_delta": 200,
+        "policies": [
+          {
+            "policy": "storage",
+            "threshold": 4096
+          }
+        ],
+        "pair_index": 10,
+        "core": "modern",
+        "block": 1,
+        "n": 32,
+        "smoke": true
+      },
+      "stdout": "021-b1-p10-modern.json",
+      "stderr": "021-b1-p10-modern.log",
+      "command": [
+        "/var/tmp/codex-tdigest-pr3-20261014/overnight/matched-budget-timing-ff73cfa/timing",
+        "modern",
+        "separated_modes",
+        "f32",
+        "32",
+        "86028121",
+        "300",
+        "200",
+        "1",
+        "true"
+      ],
+      "execution": {
+        "seconds": 0.008527900998160476,
+        "bytes": 349608,
+        "exit_code": 0
+      },
+      "policy_evaluations": [
+        {
+          "policy": "storage",
+          "threshold": 4096,
+          "core": "modern",
+          "route": "direct",
+          "observed": 608,
+          "excess": 0,
+          "violation": false,
+          "nonfinite_rank_observation": false
+        },
+        {
+          "policy": "storage",
+          "threshold": 4096,
+          "core": "modern",
+          "route": "balanced_iid/forward/sequential",
+          "observed": 608,
+          "excess": 0,
+          "violation": false,
+          "nonfinite_rank_observation": false
+        },
+        {
+          "policy": "storage",
+          "threshold": 4096,
+          "core": "modern",
+          "route": "balanced_iid/forward/kway",
+          "observed": 608,
+          "excess": 0,
+          "violation": false,
+          "nonfinite_rank_observation": false
+        }
+      ]
+    },
+    {
+      "case": {
+        "kind": "separated_modes",
+        "precision": "f64",
+        "seed": 86028121,
+        "original_delta": 300,
+        "modern_delta": 150,
+        "policies": [
+          {
+            "policy": "storage",
+            "threshold": 4096
+          }
+        ],
+        "pair_index": 11,
+        "core": "original",
+        "block": 1,
+        "n": 32,
+        "smoke": true
+      },
+      "stdout": "022-b1-p11-original.json",
+      "stderr": "022-b1-p11-original.log",
+      "command": [
+        "/var/tmp/codex-tdigest-pr3-20261014/overnight/matched-budget-timing-ff73cfa/timing",
+        "original",
+        "separated_modes",
+        "f64",
+        "32",
+        "86028121",
+        "300",
+        "150",
+        "1",
+        "true"
+      ],
+      "execution": {
+        "seconds": 0.005242475999693852,
+        "bytes": 198544,
+        "exit_code": 0
+      },
+      "policy_evaluations": [
+        {
+          "policy": "storage",
+          "threshold": 4096,
+          "core": "original",
+          "route": "direct",
+          "observed": 432,
+          "excess": 0,
+          "violation": false,
+          "nonfinite_rank_observation": false
+        },
+        {
+          "policy": "storage",
+          "threshold": 4096,
+          "core": "original",
+          "route": "balanced_iid/forward/sequential",
+          "observed": 432,
+          "excess": 0,
+          "violation": false,
+          "nonfinite_rank_observation": false
+        }
+      ]
+    },
+    {
+      "case": {
+        "kind": "separated_modes",
+        "precision": "f64",
+        "seed": 86028121,
+        "original_delta": 300,
+        "modern_delta": 150,
+        "policies": [
+          {
+            "policy": "storage",
+            "threshold": 4096
+          }
+        ],
+        "pair_index": 11,
+        "core": "modern",
+        "block": 1,
+        "n": 32,
+        "smoke": true
+      },
+      "stdout": "023-b1-p11-modern.json",
+      "stderr": "023-b1-p11-modern.log",
+      "command": [
+        "/var/tmp/codex-tdigest-pr3-20261014/overnight/matched-budget-timing-ff73cfa/timing",
+        "modern",
+        "separated_modes",
+        "f64",
+        "32",
+        "86028121",
+        "300",
+        "150",
+        "1",
+        "true"
+      ],
+      "execution": {
+        "seconds": 0.008238417001848575,
+        "bytes": 312151,
+        "exit_code": 0
+      },
+      "policy_evaluations": [
+        {
+          "policy": "storage",
+          "threshold": 4096,
+          "core": "modern",
+          "route": "direct",
+          "observed": 872,
+          "excess": 0,
+          "violation": false,
+          "nonfinite_rank_observation": false
+        },
+        {
+          "policy": "storage",
+          "threshold": 4096,
+          "core": "modern",
+          "route": "balanced_iid/forward/sequential",
+          "observed": 872,
+          "excess": 0,
+          "violation": false,
+          "nonfinite_rank_observation": false
+        },
+        {
+          "policy": "storage",
+          "threshold": 4096,
+          "core": "modern",
+          "route": "balanced_iid/forward/kway",
+          "observed": 872,
+          "excess": 0,
+          "violation": false,
+          "nonfinite_rank_observation": false
+        }
+      ]
+    },
+    {
+      "case": {
+        "kind": "normal",
+        "precision": "f32",
+        "seed": 86028121,
+        "original_delta": 1200,
+        "modern_delta": 1200,
+        "policies": [
+          {
+            "policy": "rank",
+            "threshold": 0.02
+          }
+        ],
+        "pair_index": 12,
+        "core": "original",
+        "block": 1,
+        "n": 32,
+        "smoke": true
+      },
+      "stdout": "024-b1-p12-original.json",
+      "stderr": "024-b1-p12-original.log",
+      "command": [
+        "/var/tmp/codex-tdigest-pr3-20261014/overnight/matched-budget-timing-ff73cfa/timing",
+        "original",
+        "normal",
+        "f32",
+        "32",
+        "86028121",
+        "1200",
+        "1200",
+        "1",
+        "true"
+      ],
+      "execution": {
+        "seconds": 0.0053264540001691785,
+        "bytes": 225308,
+        "exit_code": 0
+      },
+      "policy_evaluations": [
+        {
+          "policy": "rank",
+          "threshold": 0.02,
+          "core": "original",
+          "route": "direct",
+          "observed": 0.015500009059906006,
+          "excess": 0,
+          "violation": false,
+          "nonfinite_rank_observation": false
+        },
+        {
+          "policy": "rank",
+          "threshold": 0.02,
+          "core": "original",
+          "route": "balanced_iid/forward/sequential",
+          "observed": 0.015500009059906006,
+          "excess": 0,
+          "violation": false,
+          "nonfinite_rank_observation": false
+        }
+      ]
+    },
+    {
+      "case": {
+        "kind": "normal",
+        "precision": "f32",
+        "seed": 86028121,
+        "original_delta": 1200,
+        "modern_delta": 1200,
+        "policies": [
+          {
+            "policy": "rank",
+            "threshold": 0.02
+          }
+        ],
+        "pair_index": 12,
+        "core": "modern",
+        "block": 1,
+        "n": 32,
+        "smoke": true
+      },
+      "stdout": "025-b1-p12-modern.json",
+      "stderr": "025-b1-p12-modern.log",
+      "command": [
+        "/var/tmp/codex-tdigest-pr3-20261014/overnight/matched-budget-timing-ff73cfa/timing",
+        "modern",
+        "normal",
+        "f32",
+        "32",
+        "86028121",
+        "1200",
+        "1200",
+        "1",
+        "true"
+      ],
+      "execution": {
+        "seconds": 0.008575028001359897,
+        "bytes": 349780,
+        "exit_code": 0
+      },
+      "policy_evaluations": [
+        {
+          "policy": "rank",
+          "threshold": 0.02,
+          "core": "modern",
+          "route": "direct",
+          "observed": 0.0,
+          "excess": 0,
+          "violation": false,
+          "nonfinite_rank_observation": false
+        },
+        {
+          "policy": "rank",
+          "threshold": 0.02,
+          "core": "modern",
+          "route": "balanced_iid/forward/sequential",
+          "observed": 0.0,
+          "excess": 0,
+          "violation": false,
+          "nonfinite_rank_observation": false
+        },
+        {
+          "policy": "rank",
+          "threshold": 0.02,
+          "core": "modern",
+          "route": "balanced_iid/forward/kway",
+          "observed": 0.0,
+          "excess": 0,
+          "violation": false,
+          "nonfinite_rank_observation": false
+        }
+      ]
+    },
+    {
+      "case": {
+        "kind": "normal",
+        "precision": "f64",
+        "seed": 86028121,
+        "original_delta": 1200,
+        "modern_delta": 1200,
+        "policies": [
+          {
+            "policy": "rank",
+            "threshold": 0.02
+          }
+        ],
+        "pair_index": 13,
+        "core": "original",
+        "block": 1,
+        "n": 32,
+        "smoke": true
+      },
+      "stdout": "026-b1-p13-original.json",
+      "stderr": "026-b1-p13-original.log",
+      "command": [
+        "/var/tmp/codex-tdigest-pr3-20261014/overnight/matched-budget-timing-ff73cfa/timing",
+        "original",
+        "normal",
+        "f64",
+        "32",
+        "86028121",
+        "1200",
+        "1200",
+        "1",
+        "true"
+      ],
+      "execution": {
+        "seconds": 0.0053299329993024,
+        "bytes": 197965,
+        "exit_code": 0
+      },
+      "policy_evaluations": [
+        {
+          "policy": "rank",
+          "threshold": 0.02,
+          "core": "original",
+          "route": "direct",
+          "observed": 0.015500000000000014,
+          "excess": 0,
+          "violation": false,
+          "nonfinite_rank_observation": false
+        },
+        {
+          "policy": "rank",
+          "threshold": 0.02,
+          "core": "original",
+          "route": "balanced_iid/forward/sequential",
+          "observed": 0.015500000000000014,
+          "excess": 0,
+          "violation": false,
+          "nonfinite_rank_observation": false
+        }
+      ]
+    },
+    {
+      "case": {
+        "kind": "normal",
+        "precision": "f64",
+        "seed": 86028121,
+        "original_delta": 1200,
+        "modern_delta": 1200,
+        "policies": [
+          {
+            "policy": "rank",
+            "threshold": 0.02
+          }
+        ],
+        "pair_index": 13,
+        "core": "modern",
+        "block": 1,
+        "n": 32,
+        "smoke": true
+      },
+      "stdout": "027-b1-p13-modern.json",
+      "stderr": "027-b1-p13-modern.log",
+      "command": [
+        "/var/tmp/codex-tdigest-pr3-20261014/overnight/matched-budget-timing-ff73cfa/timing",
+        "modern",
+        "normal",
+        "f64",
+        "32",
+        "86028121",
+        "1200",
+        "1200",
+        "1",
+        "true"
+      ],
+      "execution": {
+        "seconds": 0.008112733998132171,
+        "bytes": 312834,
+        "exit_code": 0
+      },
+      "policy_evaluations": [
+        {
+          "policy": "rank",
+          "threshold": 0.02,
+          "core": "modern",
+          "route": "direct",
+          "observed": 0.0,
+          "excess": 0,
+          "violation": false,
+          "nonfinite_rank_observation": false
+        },
+        {
+          "policy": "rank",
+          "threshold": 0.02,
+          "core": "modern",
+          "route": "balanced_iid/forward/sequential",
+          "observed": 0.0,
+          "excess": 0,
+          "violation": false,
+          "nonfinite_rank_observation": false
+        },
+        {
+          "policy": "rank",
+          "threshold": 0.02,
+          "core": "modern",
+          "route": "balanced_iid/forward/kway",
+          "observed": 0.0,
+          "excess": 0,
+          "violation": false,
+          "nonfinite_rank_observation": false
+        }
+      ]
+    },
+    {
+      "case": {
+        "kind": "ties",
+        "precision": "f32",
+        "seed": 86028121,
+        "original_delta": 1200,
+        "modern_delta": 1200,
+        "policies": [
+          {
+            "policy": "rank",
+            "threshold": 0.02
+          }
+        ],
+        "pair_index": 14,
+        "core": "original",
+        "block": 1,
+        "n": 32,
+        "smoke": true
+      },
+      "stdout": "028-b1-p14-original.json",
+      "stderr": "028-b1-p14-original.log",
+      "command": [
+        "/var/tmp/codex-tdigest-pr3-20261014/overnight/matched-budget-timing-ff73cfa/timing",
+        "original",
+        "ties",
+        "f32",
+        "32",
+        "86028121",
+        "1200",
+        "1200",
+        "1",
+        "true"
+      ],
+      "execution": {
+        "seconds": 0.005165681002836209,
+        "bytes": 131310,
+        "exit_code": 0
+      },
+      "policy_evaluations": [
+        {
+          "policy": "rank",
+          "threshold": 0.02,
+          "core": "original",
+          "route": "direct",
+          "observed": 0.015500009059906006,
+          "excess": 0,
+          "violation": false,
+          "nonfinite_rank_observation": false
+        },
+        {
+          "policy": "rank",
+          "threshold": 0.02,
+          "core": "original",
+          "route": "balanced_iid/forward/sequential",
+          "observed": 0.015500009059906006,
+          "excess": 0,
+          "violation": false,
+          "nonfinite_rank_observation": false
+        }
+      ]
+    },
+    {
+      "case": {
+        "kind": "ties",
+        "precision": "f32",
+        "seed": 86028121,
+        "original_delta": 1200,
+        "modern_delta": 1200,
+        "policies": [
+          {
+            "policy": "rank",
+            "threshold": 0.02
+          }
+        ],
+        "pair_index": 14,
+        "core": "modern",
+        "block": 1,
+        "n": 32,
+        "smoke": true
+      },
+      "stdout": "029-b1-p14-modern.json",
+      "stderr": "029-b1-p14-modern.log",
+      "command": [
+        "/var/tmp/codex-tdigest-pr3-20261014/overnight/matched-budget-timing-ff73cfa/timing",
+        "modern",
+        "ties",
+        "f32",
+        "32",
+        "86028121",
+        "1200",
+        "1200",
+        "1",
+        "true"
+      ],
+      "execution": {
+        "seconds": 0.006387327000993537,
+        "bytes": 188443,
+        "exit_code": 0
+      },
+      "policy_evaluations": [
+        {
+          "policy": "rank",
+          "threshold": 0.02,
+          "core": "modern",
+          "route": "direct",
+          "observed": 0.0,
+          "excess": 0,
+          "violation": false,
+          "nonfinite_rank_observation": false
+        },
+        {
+          "policy": "rank",
+          "threshold": 0.02,
+          "core": "modern",
+          "route": "balanced_iid/forward/sequential",
+          "observed": 0.0,
+          "excess": 0,
+          "violation": false,
+          "nonfinite_rank_observation": false
+        },
+        {
+          "policy": "rank",
+          "threshold": 0.02,
+          "core": "modern",
+          "route": "balanced_iid/forward/kway",
+          "observed": 0.0,
+          "excess": 0,
+          "violation": false,
+          "nonfinite_rank_observation": false
+        }
+      ]
+    },
+    {
+      "case": {
+        "kind": "ties",
+        "precision": "f64",
+        "seed": 86028121,
+        "original_delta": 1200,
+        "modern_delta": 1200,
+        "policies": [
+          {
+            "policy": "rank",
+            "threshold": 0.02
+          }
+        ],
+        "pair_index": 15,
+        "core": "original",
+        "block": 1,
+        "n": 32,
+        "smoke": true
+      },
+      "stdout": "030-b1-p15-original.json",
+      "stderr": "030-b1-p15-original.log",
+      "command": [
+        "/var/tmp/codex-tdigest-pr3-20261014/overnight/matched-budget-timing-ff73cfa/timing",
+        "original",
+        "ties",
+        "f64",
+        "32",
+        "86028121",
+        "1200",
+        "1200",
+        "1",
+        "true"
+      ],
+      "execution": {
+        "seconds": 0.004554015999019612,
+        "bytes": 101758,
+        "exit_code": 0
+      },
+      "policy_evaluations": [
+        {
+          "policy": "rank",
+          "threshold": 0.02,
+          "core": "original",
+          "route": "direct",
+          "observed": 0.015500000000000014,
+          "excess": 0,
+          "violation": false,
+          "nonfinite_rank_observation": false
+        },
+        {
+          "policy": "rank",
+          "threshold": 0.02,
+          "core": "original",
+          "route": "balanced_iid/forward/sequential",
+          "observed": 0.015500000000000014,
+          "excess": 0,
+          "violation": false,
+          "nonfinite_rank_observation": false
+        }
+      ]
+    },
+    {
+      "case": {
+        "kind": "ties",
+        "precision": "f64",
+        "seed": 86028121,
+        "original_delta": 1200,
+        "modern_delta": 1200,
+        "policies": [
+          {
+            "policy": "rank",
+            "threshold": 0.02
+          }
+        ],
+        "pair_index": 15,
+        "core": "modern",
+        "block": 1,
+        "n": 32,
+        "smoke": true
+      },
+      "stdout": "031-b1-p15-modern.json",
+      "stderr": "031-b1-p15-modern.log",
+      "command": [
+        "/var/tmp/codex-tdigest-pr3-20261014/overnight/matched-budget-timing-ff73cfa/timing",
+        "modern",
+        "ties",
+        "f64",
+        "32",
+        "86028121",
+        "1200",
+        "1200",
+        "1",
+        "true"
+      ],
+      "execution": {
+        "seconds": 0.006318814997939626,
+        "bytes": 145648,
+        "exit_code": 0
+      },
+      "policy_evaluations": [
+        {
+          "policy": "rank",
+          "threshold": 0.02,
+          "core": "modern",
+          "route": "direct",
+          "observed": 0.0,
+          "excess": 0,
+          "violation": false,
+          "nonfinite_rank_observation": false
+        },
+        {
+          "policy": "rank",
+          "threshold": 0.02,
+          "core": "modern",
+          "route": "balanced_iid/forward/sequential",
+          "observed": 0.0,
+          "excess": 0,
+          "violation": false,
+          "nonfinite_rank_observation": false
+        },
+        {
+          "policy": "rank",
+          "threshold": 0.02,
+          "core": "modern",
+          "route": "balanced_iid/forward/kway",
+          "observed": 0.0,
+          "excess": 0,
+          "violation": false,
+          "nonfinite_rank_observation": false
+        }
+      ]
+    },
+    {
+      "case": {
+        "kind": "separated_modes",
+        "precision": "f32",
+        "seed": 86028121,
+        "original_delta": 1200,
+        "modern_delta": 1200,
+        "policies": [
+          {
+            "policy": "rank",
+            "threshold": 0.02
+          }
+        ],
+        "pair_index": 16,
+        "core": "original",
+        "block": 1,
+        "n": 32,
+        "smoke": true
+      },
+      "stdout": "032-b1-p16-original.json",
+      "stderr": "032-b1-p16-original.log",
+      "command": [
+        "/var/tmp/codex-tdigest-pr3-20261014/overnight/matched-budget-timing-ff73cfa/timing",
+        "original",
+        "separated_modes",
+        "f32",
+        "32",
+        "86028121",
+        "1200",
+        "1200",
+        "1",
+        "true"
+      ],
+      "execution": {
+        "seconds": 0.005259253000986064,
+        "bytes": 225921,
+        "exit_code": 0
+      },
+      "policy_evaluations": [
+        {
+          "policy": "rank",
+          "threshold": 0.02,
+          "core": "original",
+          "route": "direct",
+          "observed": 0.015500009059906006,
+          "excess": 0,
+          "violation": false,
+          "nonfinite_rank_observation": false
+        },
+        {
+          "policy": "rank",
+          "threshold": 0.02,
+          "core": "original",
+          "route": "balanced_iid/forward/sequential",
+          "observed": 0.015500009059906006,
+          "excess": 0,
+          "violation": false,
+          "nonfinite_rank_observation": false
+        }
+      ]
+    },
+    {
+      "case": {
+        "kind": "separated_modes",
+        "precision": "f32",
+        "seed": 86028121,
+        "original_delta": 1200,
+        "modern_delta": 1200,
+        "policies": [
+          {
+            "policy": "rank",
+            "threshold": 0.02
+          }
+        ],
+        "pair_index": 16,
+        "core": "modern",
+        "block": 1,
+        "n": 32,
+        "smoke": true
+      },
+      "stdout": "033-b1-p16-modern.json",
+      "stderr": "033-b1-p16-modern.log",
+      "command": [
+        "/var/tmp/codex-tdigest-pr3-20261014/overnight/matched-budget-timing-ff73cfa/timing",
+        "modern",
+        "separated_modes",
+        "f32",
+        "32",
+        "86028121",
+        "1200",
+        "1200",
+        "1",
+        "true"
+      ],
+      "execution": {
+        "seconds": 0.008202646000427194,
+        "bytes": 349694,
+        "exit_code": 0
+      },
+      "policy_evaluations": [
+        {
+          "policy": "rank",
+          "threshold": 0.02,
+          "core": "modern",
+          "route": "direct",
+          "observed": 0.0,
+          "excess": 0,
+          "violation": false,
+          "nonfinite_rank_observation": false
+        },
+        {
+          "policy": "rank",
+          "threshold": 0.02,
+          "core": "modern",
+          "route": "balanced_iid/forward/sequential",
+          "observed": 0.0,
+          "excess": 0,
+          "violation": false,
+          "nonfinite_rank_observation": false
+        },
+        {
+          "policy": "rank",
+          "threshold": 0.02,
+          "core": "modern",
+          "route": "balanced_iid/forward/kway",
+          "observed": 0.0,
+          "excess": 0,
+          "violation": false,
+          "nonfinite_rank_observation": false
+        }
+      ]
+    },
+    {
+      "case": {
+        "kind": "separated_modes",
+        "precision": "f64",
+        "seed": 86028121,
+        "original_delta": 1200,
+        "modern_delta": 1200,
+        "policies": [
+          {
+            "policy": "rank",
+            "threshold": 0.02
+          }
+        ],
+        "pair_index": 17,
+        "core": "original",
+        "block": 1,
+        "n": 32,
+        "smoke": true
+      },
+      "stdout": "034-b1-p17-original.json",
+      "stderr": "034-b1-p17-original.log",
+      "command": [
+        "/var/tmp/codex-tdigest-pr3-20261014/overnight/matched-budget-timing-ff73cfa/timing",
+        "original",
+        "separated_modes",
+        "f64",
+        "32",
+        "86028121",
+        "1200",
+        "1200",
+        "1",
+        "true"
+      ],
+      "execution": {
+        "seconds": 0.005421346999355592,
+        "bytes": 198549,
+        "exit_code": 0
+      },
+      "policy_evaluations": [
+        {
+          "policy": "rank",
+          "threshold": 0.02,
+          "core": "original",
+          "route": "direct",
+          "observed": 0.015500000000000014,
+          "excess": 0,
+          "violation": false,
+          "nonfinite_rank_observation": false
+        },
+        {
+          "policy": "rank",
+          "threshold": 0.02,
+          "core": "original",
+          "route": "balanced_iid/forward/sequential",
+          "observed": 0.015500000000000014,
+          "excess": 0,
+          "violation": false,
+          "nonfinite_rank_observation": false
+        }
+      ]
+    },
+    {
+      "case": {
+        "kind": "separated_modes",
+        "precision": "f64",
+        "seed": 86028121,
+        "original_delta": 1200,
+        "modern_delta": 1200,
+        "policies": [
+          {
+            "policy": "rank",
+            "threshold": 0.02
+          }
+        ],
+        "pair_index": 17,
+        "core": "modern",
+        "block": 1,
+        "n": 32,
+        "smoke": true
+      },
+      "stdout": "035-b1-p17-modern.json",
+      "stderr": "035-b1-p17-modern.log",
+      "command": [
+        "/var/tmp/codex-tdigest-pr3-20261014/overnight/matched-budget-timing-ff73cfa/timing",
+        "modern",
+        "separated_modes",
+        "f64",
+        "32",
+        "86028121",
+        "1200",
+        "1200",
+        "1",
+        "true"
+      ],
+      "execution": {
+        "seconds": 0.008417150998866418,
+        "bytes": 312225,
+        "exit_code": 0
+      },
+      "policy_evaluations": [
+        {
+          "policy": "rank",
+          "threshold": 0.02,
+          "core": "modern",
+          "route": "direct",
+          "observed": 0.0,
+          "excess": 0,
+          "violation": false,
+          "nonfinite_rank_observation": false
+        },
+        {
+          "policy": "rank",
+          "threshold": 0.02,
+          "core": "modern",
+          "route": "balanced_iid/forward/sequential",
+          "observed": 0.0,
+          "excess": 0,
+          "violation": false,
+          "nonfinite_rank_observation": false
+        },
+        {
+          "policy": "rank",
+          "threshold": 0.02,
+          "core": "modern",
+          "route": "balanced_iid/forward/kway",
+          "observed": 0.0,
+          "excess": 0,
+          "violation": false,
+          "nonfinite_rank_observation": false
+        }
+      ]
+    }
+  ],
+  "raw_sha256": {
+    "000-b1-p0-original.json": "eaa56d3a04e16b9d6295d8577278dca726da955c580cb215b362bba8113477b1",
+    "000-b1-p0-original.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "001-b1-p0-modern.json": "b42214f5ca9dd4e004c2fffa5596a9d3b48072ec7f7b0b240a2ea55448cf79c1",
+    "001-b1-p0-modern.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "002-b1-p1-original.json": "151fe5cb645c7db241ea759ad2c90c8e30b995b554fee0710ca278b5af3fbffc",
+    "002-b1-p1-original.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "003-b1-p1-modern.json": "2cb6ae1f550011b35dd882dfb577feda1a6178d9e71d4a148163e6497fed1326",
+    "003-b1-p1-modern.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "004-b1-p2-original.json": "dff9e76ad7bf1665f1822b233d0a69fbf071e97d0f6a47e63dc0c77485e7cba3",
+    "004-b1-p2-original.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "005-b1-p2-modern.json": "ae7ccbd911c79867c2fa43f2c8308179615403d947ee415d732f706e39f249c6",
+    "005-b1-p2-modern.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "006-b1-p3-original.json": "b9b86d29ae62f950acb74e4655cdf28d29fa78bc98c762b607521d015f21a1e4",
+    "006-b1-p3-original.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "007-b1-p3-modern.json": "af46804d07ea15754094412b4a8ac8b7d7446d08f51bad39d4818e34e5ac4586",
+    "007-b1-p3-modern.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "008-b1-p4-original.json": "f5601d28cccd38c088a5d3a4c93c628fbc685d48183c8f464d8c125caee7e4ac",
+    "008-b1-p4-original.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "009-b1-p4-modern.json": "ae869783ae809346d2aa324bb4f083a7a7f8480948a50da0802ddc13aeef628b",
+    "009-b1-p4-modern.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "010-b1-p5-original.json": "036c04aca205d865e2442622aefcb891f60e99bf31ed8bed77747c837eddf347",
+    "010-b1-p5-original.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "011-b1-p5-modern.json": "67a2746956d01ef0a2ce1e92a690d443887bc1f0f8b34f1760bae2e99c8e39fd",
+    "011-b1-p5-modern.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "012-b1-p6-original.json": "ca625a9e08f1ad66702b352756f701c515ab5b19cb199103aa193260af7dd6ba",
+    "012-b1-p6-original.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "013-b1-p6-modern.json": "196fcf0b672c7d8a666a63d442f35889d3ae8e63a45c4540b9ae8859000d2973",
+    "013-b1-p6-modern.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "014-b1-p7-original.json": "15b6930663061314e813b77e54d36b56a3f95cdd7763047d1ac324015bdc561c",
+    "014-b1-p7-original.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "015-b1-p7-modern.json": "b6c0e2c77c64f9be0875fbe808e632c33b62e0e3285237593b16567790ea4ca9",
+    "015-b1-p7-modern.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "016-b1-p8-original.json": "3fbdd9c3d0a35d63b5bc47e564c15a8102915bbadf062e0e22a3137879bbbccf",
+    "016-b1-p8-original.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "017-b1-p8-modern.json": "fe587a0316d63c077ab6beddc11396de96f8f139f722790ba06844bb98257099",
+    "017-b1-p8-modern.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "018-b1-p9-original.json": "2f32078f4a771afd600e45bb43e7af873a3a5653a93a450849b123cbe97be1a4",
+    "018-b1-p9-original.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "019-b1-p9-modern.json": "95658fb3a74c7c1e5f07168c2fc54c7ed6b2436c95ee63edd46f5f335b6a645a",
+    "019-b1-p9-modern.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "020-b1-p10-original.json": "c316850045269f19fbe36ba464a1137aa02ea10b4df2d8ac5aaba8ce22b495cc",
+    "020-b1-p10-original.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "021-b1-p10-modern.json": "f66ae86c2922f49ad0026839828d3412e38ac6179af77fcb76c5fcf623d28f90",
+    "021-b1-p10-modern.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "022-b1-p11-original.json": "c62f5157991fb8fa5db387222137eebd56cfd0570fc4cd50a60ffc8335e86ae3",
+    "022-b1-p11-original.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "023-b1-p11-modern.json": "cf00a5a9f13aa70d4eeffdfd81b153358c13d997f2ba0688d07d87529eae1c4f",
+    "023-b1-p11-modern.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "024-b1-p12-original.json": "68a426dc6e25742030a8880d1480c598e57250c4e7f30a27752d8904185ebc7e",
+    "024-b1-p12-original.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "025-b1-p12-modern.json": "530c9f17135ef99d3206918c868db3c19735120539490abd7ea25ffaa83cc857",
+    "025-b1-p12-modern.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "026-b1-p13-original.json": "38f1d033574fdca52f05f50c59c131ff7838264f95e5d52f960abdd5479f115d",
+    "026-b1-p13-original.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "027-b1-p13-modern.json": "e60670a029c4d724d90d5895e52f1a6e5d008bb82b4935f82bd88f52dd4c662e",
+    "027-b1-p13-modern.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "028-b1-p14-original.json": "c4cde57d2a816198153c711104092dd4cfdf39abfa161291029f865b2e3e920b",
+    "028-b1-p14-original.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "029-b1-p14-modern.json": "d538e193e014ed3807dfe84ebe8d528d7148b6de2c7c109eff8a6206b8298c6a",
+    "029-b1-p14-modern.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "030-b1-p15-original.json": "4f515a6a81839bd6df4a2fec4753a30cdd3c7d2b8e0a68aaeb2b82b8c294fab1",
+    "030-b1-p15-original.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "031-b1-p15-modern.json": "58f065a74b2e67d347c8baeb072fea1fb0a9bf63a4856c7357f2ef45e7cce877",
+    "031-b1-p15-modern.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "032-b1-p16-original.json": "cb40bdc8fdb670d6fe44bf7acec281546fa6e7f4a40ba560484a5eefdddc61cf",
+    "032-b1-p16-original.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "033-b1-p16-modern.json": "f8677bec4b0f63016ab4067293d7d39ecfc85760f1e540c06b1ecb407b80f140",
+    "033-b1-p16-modern.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "034-b1-p17-original.json": "350b188150b2503a02a34ccc5ea4aaadcf0a9db9e28b3b6261632c11615c64ae",
+    "034-b1-p17-original.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "035-b1-p17-modern.json": "5e79c2b1a7d5a3b3af6e03b81af8e158529e13ab67fb3d7970338e5ee39cb605",
+    "035-b1-p17-modern.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  "failures": [],
+  "skipped": [],
+  "affinity": [
+    0
+  ],
+  "cpuinfo": "processor\t: 0\nvendor_id\t: GenuineIntel\ncpu family\t: 6\nmodel\t\t: 189\nmodel name\t: Intel(R) Core(TM) Ultra 9 288V\nstepping\t: 1\nmicrocode\t: 0xffffffff\ncpu MHz\t\t: 3302.399\ncache size\t: 12288 KB\nphysical id\t: 0\nsiblings\t: 8\ncore id\t\t: 0\ncpu cores\t: 8\napicid\t\t: 0\ninitial apicid\t: 0\nfpu\t\t: yes\nfpu_exception\t: yes\ncpuid level\t: 28\nwp\t\t: yes\nflags\t\t: fpu vme de pse tsc msr pae mce cx8 apic sep mtrr pge mca cmov pat pse36 clflush mmx fxsr sse sse2 ss ht syscall nx pdpe1gb rdtscp lm constant_tsc rep_good nopl xtopology tsc_reliable nonstop_tsc cpuid tsc_known_freq pni pclmulqdq vmx ssse3 fma cx16 pcid sse4_1 sse4_2 x2apic movbe popcnt tsc_deadline_timer aes xsave avx f16c rdrand hypervisor lahf_lm abm 3dnowprefetch ssbd ibrs ibpb stibp ibrs_enhanced tpr_shadow ept vpid ept_ad fsgsbase tsc_adjust bmi1 avx2 smep bmi2 erms invpcid rdseed adx smap clflushopt clwb sha_ni xsaveopt xsavec xgetbv1 xsaves avx_vnni vnmi umip waitpkg gfni vaes vpclmulqdq rdpid movdiri movdir64b fsrm md_clear serialize flush_l1d arch_capabilities\nvmx flags\t: vnmi invvpid ept_x_only ept_ad ept_1gb tsc_offset vtpr ept vpid unrestricted_guest ept_mode_based_exec tsc_scaling usr_wait_pause\nbugs\t\t: spectre_v1 spectre_v2 spec_store_bypass swapgs retbleed eibrs_pbrsb\nbogomips\t: 6604.79\nclflush size\t: 64\ncache_alignment\t: 64\naddress sizes\t: 42 bits physical, 48 bits virtual\npower management:",
+  "start_load": [
+    0.59326171875,
+    1.39208984375,
+    1.62451171875
+  ],
+  "bytes": 8546858,
+  "current_run": {
+    "case": {
+      "kind": "separated_modes",
+      "precision": "f64",
+      "seed": 86028121,
+      "original_delta": 1200,
+      "modern_delta": 1200,
+      "policies": [
+        {
+          "policy": "rank",
+          "threshold": 0.02
+        }
+      ],
+      "pair_index": 17,
+      "core": "modern",
+      "block": 1,
+      "n": 32,
+      "smoke": true
+    },
+    "command": [
+      "/var/tmp/codex-tdigest-pr3-20261014/overnight/matched-budget-timing-ff73cfa/timing",
+      "modern",
+      "separated_modes",
+      "f64",
+      "32",
+      "86028121",
+      "1200",
+      "1200",
+      "1",
+      "true"
+    ],
+    "stdout": "035-b1-p17-modern.json",
+    "stderr": "035-b1-p17-modern.log"
+  },
+  "seconds": 1.5615852159971837,
+  "end_load": [
+    0.6259765625,
+    1.38525390625,
+    1.62109375
+  ],
+  "finished_utc": "2026-10-15T01:23:48.454138+00:00"
+}

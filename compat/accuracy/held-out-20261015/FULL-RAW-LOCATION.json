@@ -1,0 +1,8 @@
+{
+  "run_directory": "/var/tmp/codex-tdigest-pr3-20261014/overnight/held-out-accuracy/held-out-20261015",
+  "corrected_smoke_directory": "/var/tmp/codex-tdigest-pr3-20261014/overnight/held-out-accuracy/smoke-v2-20261015",
+  "failed_smoke_directory": "/var/tmp/codex-tdigest-pr3-20261014/overnight/held-out-accuracy/smoke-20261015",
+  "compressed_case_bytes": 154172740,
+  "included_in_compact_package": false,
+  "metadata_raw_hash_index": "results/metadata.json:compressed_case_sha256"
+}

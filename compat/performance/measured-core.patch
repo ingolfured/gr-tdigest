@@ -1,0 +1,94 @@
+--- a/src/tdigest/quantile.rs
++++ b/src/tdigest/quantile.rs
+@@ -39,7 +39,7 @@
+     /// - `q` is clamped to `[0, 1]` (when finite).
+     /// - **Empty digest** → **`NaN`**.
+     /// - **NaN `q`** → **`NaN`**.
+-    /// - For single-centroid digests, returns that mean.
++    /// - A single atomic centroid is constant; a mixed centroid retains its tails.
+     pub fn quantile(&self, q: f64) -> f64 {
+         // NaN probe propagates
+         if q.is_nan() {
+@@ -49,10 +49,6 @@
+         if self.centroids().is_empty() {
+             return f64::NAN;
+         }
+-        if self.centroids().len() == 1 {
+-            return self.centroids()[0].mean_f64();
+-        }
+-
+         // Only clamp after guarding NaN
+         let q = q.clamp(0.0, 1.0);
+         let (target_index, total_weight) = self.quantile_to_weight_index(q);
+@@ -64,6 +60,20 @@
+             return self.max();
+         }
+         let first = &self.centroids()[0];
++        if self.centroids().len() == 1 {
++            let mean = first.mean_f64();
++            if first.is_atomic() {
++                return mean;
++            }
++            // One mixed cluster still represents a range, with its center at
++            // q=0.5. Use probabilities directly so rounded f32 mass cannot
++            // create a gap between the two half-weight branches.
++            return if q <= 0.5 {
++                self.min() + (mean - self.min()) * (2.0 * q)
++            } else {
++                self.max() - (self.max() - mean) * (2.0 * (1.0 - q))
++            };
++        }
+         let last = self.centroids().last().unwrap();
+         let first_center = first.weight_f64() / 2.0;
+         let last_half = last.weight_f64() / 2.0;
+--- a/src/tdigest/cdf.rs
++++ b/src/tdigest/cdf.rs
+@@ -139,11 +139,10 @@
+                 let w0 = cents[0].weight_f64();
+                 let gap = m0 - min_v;
+                 if gap > 0.0 {
+-                    if val == min_v {
+-                        return 0.5 / count_f64;
+-                    }
+-                    // Guarded ramp from min → mean[0] with half-weight at edge centroid.
+-                    return (1.0 + (val - min_v) / gap * (w0 / 2.0 - 1.0)) / count_f64;
++                    // A mixed edge carries half its mass between the data minimum
++                    // and its mean. No unit sample can be assumed for weighted data:
++                    // fixed masses here break monotonicity after scaling weights.
++                    return ((val - min_v) / gap) * (0.5 * (w0 / count_f64));
+                 } else {
+                     // Degenerate (all equal); idx==0 implies val<=min.
+                     return 0.0;
+@@ -159,11 +158,8 @@
+                 let wn = cents[n - 1].weight_f64();
+                 let gap = max_v - mn;
+                 if gap > 0.0 {
+-                    if val == max_v {
+-                        return 1.0 - 0.5 / count_f64;
+-                    }
+-                    // Guarded ramp from mean[last] → max with half-weight at edge centroid.
+-                    let dq = (1.0 + (max_v - val) / gap * (wn / 2.0 - 1.0)) / count_f64;
++                    // Symmetric half-mass ramp, independent of the weight units.
++                    let dq = ((max_v - val) / gap) * (0.5 * (wn / count_f64));
+                     return 1.0 - dq;
+                 } else {
+                     return 1.0;
+--- a/src/tdigest/compressor.rs
++++ b/src/tdigest/compressor.rs
+@@ -107,11 +107,13 @@
+         return norm.out;
+     }
+ 
+-    // Update digest-level metadata derived from normalized stream.
++    // Centroid mass and weighted sums can be recomputed, but centroid means
++    // do not retain the true extrema of mixed clusters. Keep the data bounds
++    // carried by the add/merge result shell; use the stream for an unset bound.
+     result.set_count(norm.total_w);
+     result.set_sum(norm.total_mw);
+-    result.set_min(norm.min);
+-    result.set_max(norm.max);
++    result.set_min(result.min().min(norm.min));
++    result.set_max(result.max().max(norm.max));
+ 
+     // -- 2) Slice -------------------------------------------------------------
+     let policy = policy_from(result.singleton_policy(), max_size);

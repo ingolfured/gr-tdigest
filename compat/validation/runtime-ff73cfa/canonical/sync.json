@@ -1,0 +1,17 @@
+{
+  "source_commit": "ff73cfab31d6368d203c1a361b8efaaea29d735b",
+  "phase": "sync",
+  "command": [
+    "uv",
+    "sync",
+    "--locked",
+    "--python",
+    "3.12",
+    "--all-groups",
+    "--project",
+    "bindings/python"
+  ],
+  "exit_code": 0,
+  "elapsed_seconds": 0.015952587127685547,
+  "completed_utc": "2026-10-15T00:27:24Z"
+}

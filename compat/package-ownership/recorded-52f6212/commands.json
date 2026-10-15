@@ -1,0 +1,484 @@
+[
+  {
+    "phase": "bootstrap-pip",
+    "command": [
+      "/var/tmp/codex-tdigest-pr3-20261014/overnight/package-hygiene/same-distribution-probe/venv/bin/python",
+      "-I",
+      "-m",
+      "ensurepip",
+      "--upgrade"
+    ],
+    "cwd": "/var/tmp/codex-tdigest-pr3-20261014/overnight/package-hygiene/same-distribution-probe",
+    "exit_code": 0,
+    "seconds": 0.8779262139996717,
+    "log": "/var/tmp/codex-tdigest-pr3-20261014/overnight/package-hygiene/same-distribution-probe/logs/001-bootstrap-pip.log"
+  },
+  {
+    "phase": "pip-version",
+    "command": [
+      "/var/tmp/codex-tdigest-pr3-20261014/overnight/package-hygiene/same-distribution-probe/venv/bin/python",
+      "-I",
+      "-m",
+      "pip",
+      "--version"
+    ],
+    "cwd": "/var/tmp/codex-tdigest-pr3-20261014/overnight/package-hygiene/same-distribution-probe",
+    "exit_code": 0,
+    "seconds": 0.16376713999852655,
+    "log": "/var/tmp/codex-tdigest-pr3-20261014/overnight/package-hygiene/same-distribution-probe/logs/002-pip-version.log"
+  },
+  {
+    "phase": "old-dependencies",
+    "command": [
+      "/home/ingo/.local/bin/uv",
+      "pip",
+      "install",
+      "--offline",
+      "--python",
+      "/var/tmp/codex-tdigest-pr3-20261014/overnight/package-hygiene/same-distribution-probe/venv/bin/python",
+      "numpy==1.26.4",
+      "pytest==8.4.2"
+    ],
+    "cwd": "/var/tmp/codex-tdigest-pr3-20261014/overnight/package-hygiene/same-distribution-probe",
+    "exit_code": 0,
+    "seconds": 0.08879062900086865,
+    "log": "/var/tmp/codex-tdigest-pr3-20261014/overnight/package-hygiene/same-distribution-probe/logs/003-old-dependencies.log"
+  },
+  {
+    "phase": "resolve-source",
+    "command": [
+      "git",
+      "-C",
+      "/var/tmp/codex-tdigest-pr3-20261014/work/gr-tdigest-f64-weights",
+      "rev-parse",
+      "52f6212008111b62fa07374278b850868b9ea77e^{commit}"
+    ],
+    "cwd": "/var/tmp/codex-tdigest-pr3-20261014/overnight/package-hygiene/same-distribution-probe",
+    "exit_code": 0,
+    "seconds": 0.0018283629997313255,
+    "log": "/var/tmp/codex-tdigest-pr3-20261014/overnight/package-hygiene/same-distribution-probe/logs/004-resolve-source.log"
+  },
+  {
+    "phase": "source-tree",
+    "command": [
+      "git",
+      "-C",
+      "/var/tmp/codex-tdigest-pr3-20261014/work/gr-tdigest-f64-weights",
+      "rev-parse",
+      "52f6212008111b62fa07374278b850868b9ea77e^{tree}"
+    ],
+    "cwd": "/var/tmp/codex-tdigest-pr3-20261014/overnight/package-hygiene/same-distribution-probe",
+    "exit_code": 0,
+    "seconds": 0.0014759820005565416,
+    "log": "/var/tmp/codex-tdigest-pr3-20261014/overnight/package-hygiene/same-distribution-probe/logs/005-source-tree.log"
+  },
+  {
+    "phase": "archive-source",
+    "command": [
+      "git",
+      "-C",
+      "/var/tmp/codex-tdigest-pr3-20261014/work/gr-tdigest-f64-weights",
+      "archive",
+      "--format=tar",
+      "--output",
+      "/var/tmp/codex-tdigest-pr3-20261014/overnight/package-hygiene/same-distribution-probe/source.tar",
+      "52f6212008111b62fa07374278b850868b9ea77e"
+    ],
+    "cwd": "/var/tmp/codex-tdigest-pr3-20261014/overnight/package-hygiene/same-distribution-probe",
+    "exit_code": 0,
+    "seconds": 0.009958188000382506,
+    "log": "/var/tmp/codex-tdigest-pr3-20261014/overnight/package-hygiene/same-distribution-probe/logs/006-archive-source.log"
+  },
+  {
+    "phase": "maturin-version",
+    "command": [
+      "/var/tmp/codex-tdigest-pr3-20261014/work/gr-tdigest-f64-weights/.venv/bin/maturin",
+      "--version"
+    ],
+    "cwd": "/var/tmp/codex-tdigest-pr3-20261014/overnight/package-hygiene/same-distribution-probe",
+    "exit_code": 0,
+    "seconds": 0.001741137000863091,
+    "log": "/var/tmp/codex-tdigest-pr3-20261014/overnight/package-hygiene/same-distribution-probe/logs/007-maturin-version.log"
+  },
+  {
+    "phase": "rust-version",
+    "command": [
+      "rustc",
+      "-Vv"
+    ],
+    "cwd": "/var/tmp/codex-tdigest-pr3-20261014/overnight/package-hygiene/same-distribution-probe",
+    "exit_code": 0,
+    "seconds": 0.03554870299922186,
+    "log": "/var/tmp/codex-tdigest-pr3-20261014/overnight/package-hygiene/same-distribution-probe/logs/008-rust-version.log"
+  },
+  {
+    "phase": "cargo-version",
+    "command": [
+      "cargo",
+      "-V"
+    ],
+    "cwd": "/var/tmp/codex-tdigest-pr3-20261014/overnight/package-hygiene/same-distribution-probe",
+    "exit_code": 0,
+    "seconds": 0.13122517000010703,
+    "log": "/var/tmp/codex-tdigest-pr3-20261014/overnight/package-hygiene/same-distribution-probe/logs/009-cargo-version.log"
+  },
+  {
+    "phase": "source-pin-check",
+    "command": [
+      "/var/tmp/codex-tdigest-pr3-20261014/overnight/package-hygiene/same-distribution-probe/venv/bin/python",
+      "/var/tmp/codex-tdigest-pr3-20261014/overnight/package-hygiene/same-distribution-probe/same-name-source/scripts/check_upstream_sources.py"
+    ],
+    "cwd": "/var/tmp/codex-tdigest-pr3-20261014/overnight/package-hygiene/same-distribution-probe",
+    "exit_code": 0,
+    "seconds": 0.016587717000220437,
+    "log": "/var/tmp/codex-tdigest-pr3-20261014/overnight/package-hygiene/same-distribution-probe/logs/010-source-pin-check.log"
+  },
+  {
+    "phase": "build-prototype-wheel",
+    "command": [
+      "/var/tmp/codex-tdigest-pr3-20261014/work/gr-tdigest-f64-weights/.venv/bin/maturin",
+      "build",
+      "--release",
+      "-F",
+      "python",
+      "--compatibility",
+      "linux",
+      "--interpreter",
+      "/var/tmp/codex-tdigest-pr3-20261014/overnight/package-hygiene/same-distribution-probe/venv/bin/python",
+      "-o",
+      "/var/tmp/codex-tdigest-pr3-20261014/overnight/package-hygiene/same-distribution-probe/artifacts"
+    ],
+    "cwd": "/var/tmp/codex-tdigest-pr3-20261014/overnight/package-hygiene/same-distribution-probe/same-name-source/bindings/python",
+    "exit_code": 0,
+    "seconds": 199.83990031800022,
+    "log": "/var/tmp/codex-tdigest-pr3-20261014/overnight/package-hygiene/same-distribution-probe/logs/011-build-prototype-wheel.log"
+  },
+  {
+    "phase": "build-prototype-sdist",
+    "command": [
+      "/var/tmp/codex-tdigest-pr3-20261014/work/gr-tdigest-f64-weights/.venv/bin/maturin",
+      "sdist",
+      "-o",
+      "/var/tmp/codex-tdigest-pr3-20261014/overnight/package-hygiene/same-distribution-probe/artifacts"
+    ],
+    "cwd": "/var/tmp/codex-tdigest-pr3-20261014/overnight/package-hygiene/same-distribution-probe/same-name-source/bindings/python",
+    "exit_code": 0,
+    "seconds": 0.6261063849997299,
+    "log": "/var/tmp/codex-tdigest-pr3-20261014/overnight/package-hygiene/same-distribution-probe/logs/012-build-prototype-sdist.log"
+  },
+  {
+    "phase": "preflight-installed",
+    "command": [
+      "/var/tmp/codex-tdigest-pr3-20261014/overnight/package-hygiene/same-distribution-probe/venv/bin/python",
+      "-I",
+      "-m",
+      "pip",
+      "list",
+      "--format=json"
+    ],
+    "cwd": "/var/tmp/codex-tdigest-pr3-20261014/overnight/package-hygiene/same-distribution-probe",
+    "exit_code": 0,
+    "seconds": 0.13165628800015838,
+    "log": "/var/tmp/codex-tdigest-pr3-20261014/overnight/package-hygiene/same-distribution-probe/logs/013-preflight-installed.log"
+  },
+  {
+    "phase": "require-clean-package-namespace",
+    "command": [
+      "/var/tmp/codex-tdigest-pr3-20261014/overnight/package-hygiene/same-distribution-probe/venv/bin/python",
+      "-I",
+      "-c",
+      "import importlib.util; assert importlib.util.find_spec(\"tdigest_rs\") is None; assert importlib.util.find_spec(\"gr_tdigest\") is None"
+    ],
+    "cwd": "/var/tmp/codex-tdigest-pr3-20261014/overnight/package-hygiene/same-distribution-probe",
+    "exit_code": 0,
+    "seconds": 0.009073313000044436,
+    "log": "/var/tmp/codex-tdigest-pr3-20261014/overnight/package-hygiene/same-distribution-probe/logs/014-require-clean-package-namespace.log"
+  },
+  {
+    "phase": "install-authentic-original",
+    "command": [
+      "/var/tmp/codex-tdigest-pr3-20261014/overnight/package-hygiene/same-distribution-probe/venv/bin/python",
+      "-I",
+      "-m",
+      "pip",
+      "install",
+      "--no-index",
+      "--no-deps",
+      "/var/tmp/codex-tdigest-pr3-20261014/overnight/compatibility/published-pickle/tdigest_rs-0.1.0-cp37-abi3-manylinux_2_17_x86_64.manylinux2014_x86_64.whl"
+    ],
+    "cwd": "/var/tmp/codex-tdigest-pr3-20261014/overnight/package-hygiene/same-distribution-probe",
+    "exit_code": 0,
+    "seconds": 0.34675875999892014,
+    "log": "/var/tmp/codex-tdigest-pr3-20261014/overnight/package-hygiene/same-distribution-probe/logs/015-install-authentic-original.log"
+  },
+  {
+    "phase": "old-pip-check",
+    "command": [
+      "/var/tmp/codex-tdigest-pr3-20261014/overnight/package-hygiene/same-distribution-probe/venv/bin/python",
+      "-I",
+      "-m",
+      "pip",
+      "check"
+    ],
+    "cwd": "/var/tmp/codex-tdigest-pr3-20261014/overnight/package-hygiene/same-distribution-probe",
+    "exit_code": 0,
+    "seconds": 0.15638842299995304,
+    "log": "/var/tmp/codex-tdigest-pr3-20261014/overnight/package-hygiene/same-distribution-probe/logs/016-old-pip-check.log"
+  },
+  {
+    "phase": "inspect-old",
+    "command": [
+      "/var/tmp/codex-tdigest-pr3-20261014/overnight/package-hygiene/same-distribution-probe/venv/bin/python",
+      "-I",
+      "/var/tmp/codex-tdigest-pr3-20261014/overnight/package-hygiene/same-distribution-probe/checks/probe_installed.py",
+      "old",
+      "--output",
+      "/var/tmp/codex-tdigest-pr3-20261014/overnight/package-hygiene/same-distribution-probe/old.json",
+      "--fixture",
+      "/var/tmp/codex-tdigest-pr3-20261014/overnight/package-hygiene/same-distribution-probe/checks/parity/data/published_0_1_0_pickle_golden.json",
+      "--expected-version",
+      "0.1.0",
+      "--expected-native-sha256",
+      "e54bc0b860bbab8baff415e85796cbcdced013941bb763ed59958ccee6828866"
+    ],
+    "cwd": "/var/tmp/codex-tdigest-pr3-20261014/overnight/package-hygiene/same-distribution-probe/checks",
+    "exit_code": 0,
+    "seconds": 0.33682148099978804,
+    "log": "/var/tmp/codex-tdigest-pr3-20261014/overnight/package-hygiene/same-distribution-probe/logs/017-inspect-old.log"
+  },
+  {
+    "phase": "old-dependency-freeze",
+    "command": [
+      "/var/tmp/codex-tdigest-pr3-20261014/overnight/package-hygiene/same-distribution-probe/venv/bin/python",
+      "-I",
+      "-m",
+      "pip",
+      "freeze",
+      "--all"
+    ],
+    "cwd": "/var/tmp/codex-tdigest-pr3-20261014/overnight/package-hygiene/same-distribution-probe",
+    "exit_code": 0,
+    "seconds": 0.1403446759995859,
+    "log": "/var/tmp/codex-tdigest-pr3-20261014/overnight/package-hygiene/same-distribution-probe/logs/018-old-dependency-freeze.log"
+  },
+  {
+    "phase": "explicit-dependency-transition",
+    "command": [
+      "/home/ingo/.local/bin/uv",
+      "pip",
+      "install",
+      "--offline",
+      "--python",
+      "/var/tmp/codex-tdigest-pr3-20261014/overnight/package-hygiene/same-distribution-probe/venv/bin/python",
+      "numpy==2.3.4",
+      "polars==1.34.0",
+      "scipy==1.17.1",
+      "pytest==8.4.2"
+    ],
+    "cwd": "/var/tmp/codex-tdigest-pr3-20261014/overnight/package-hygiene/same-distribution-probe",
+    "exit_code": 0,
+    "seconds": 0.05689665600039007,
+    "log": "/var/tmp/codex-tdigest-pr3-20261014/overnight/package-hygiene/same-distribution-probe/logs/019-explicit-dependency-transition.log"
+  },
+  {
+    "phase": "upgrade-same-distribution",
+    "command": [
+      "/var/tmp/codex-tdigest-pr3-20261014/overnight/package-hygiene/same-distribution-probe/venv/bin/python",
+      "-I",
+      "-m",
+      "pip",
+      "install",
+      "--no-index",
+      "--no-deps",
+      "--upgrade",
+      "/var/tmp/codex-tdigest-pr3-20261014/overnight/package-hygiene/same-distribution-probe/artifacts/tdigest_rs-0.2.4-cp312-abi3-linux_x86_64.whl"
+    ],
+    "cwd": "/var/tmp/codex-tdigest-pr3-20261014/overnight/package-hygiene/same-distribution-probe",
+    "exit_code": 0,
+    "seconds": 0.3510529149989452,
+    "log": "/var/tmp/codex-tdigest-pr3-20261014/overnight/package-hygiene/same-distribution-probe/logs/020-upgrade-same-distribution.log"
+  },
+  {
+    "phase": "upgraded-pip-check",
+    "command": [
+      "/var/tmp/codex-tdigest-pr3-20261014/overnight/package-hygiene/same-distribution-probe/venv/bin/python",
+      "-I",
+      "-m",
+      "pip",
+      "check"
+    ],
+    "cwd": "/var/tmp/codex-tdigest-pr3-20261014/overnight/package-hygiene/same-distribution-probe",
+    "exit_code": 0,
+    "seconds": 0.14802633599902038,
+    "log": "/var/tmp/codex-tdigest-pr3-20261014/overnight/package-hygiene/same-distribution-probe/logs/021-upgraded-pip-check.log"
+  },
+  {
+    "phase": "upgraded-dependency-freeze",
+    "command": [
+      "/var/tmp/codex-tdigest-pr3-20261014/overnight/package-hygiene/same-distribution-probe/venv/bin/python",
+      "-I",
+      "-m",
+      "pip",
+      "freeze",
+      "--all"
+    ],
+    "cwd": "/var/tmp/codex-tdigest-pr3-20261014/overnight/package-hygiene/same-distribution-probe",
+    "exit_code": 0,
+    "seconds": 0.14415307999843208,
+    "log": "/var/tmp/codex-tdigest-pr3-20261014/overnight/package-hygiene/same-distribution-probe/logs/022-upgraded-dependency-freeze.log"
+  },
+  {
+    "phase": "inspect-upgraded",
+    "command": [
+      "/var/tmp/codex-tdigest-pr3-20261014/overnight/package-hygiene/same-distribution-probe/venv/bin/python",
+      "-I",
+      "/var/tmp/codex-tdigest-pr3-20261014/overnight/package-hygiene/same-distribution-probe/checks/probe_installed.py",
+      "upgraded",
+      "--output",
+      "/var/tmp/codex-tdigest-pr3-20261014/overnight/package-hygiene/same-distribution-probe/upgraded.json",
+      "--fixture",
+      "/var/tmp/codex-tdigest-pr3-20261014/overnight/package-hygiene/same-distribution-probe/checks/parity/data/published_0_1_0_pickle_golden.json",
+      "--expected-version",
+      "0.2.4",
+      "--expected-native-sha256",
+      "78a7473df6e7b20c703a57559b8ea9975848a3f55f745a7fcd1e721a598ece09",
+      "--baseline",
+      "/var/tmp/codex-tdigest-pr3-20261014/overnight/package-hygiene/same-distribution-probe/old.json"
+    ],
+    "cwd": "/var/tmp/codex-tdigest-pr3-20261014/overnight/package-hygiene/same-distribution-probe/checks",
+    "exit_code": 0,
+    "seconds": 0.46985463199962396,
+    "log": "/var/tmp/codex-tdigest-pr3-20261014/overnight/package-hygiene/same-distribution-probe/logs/023-inspect-upgraded.log"
+  },
+  {
+    "phase": "upgraded-208-compatibility",
+    "command": [
+      "/var/tmp/codex-tdigest-pr3-20261014/overnight/package-hygiene/same-distribution-probe/venv/bin/python",
+      "-I",
+      "-m",
+      "pytest",
+      "-q",
+      "-c",
+      "/dev/null",
+      "-p",
+      "no:cacheprovider",
+      "--junitxml",
+      "/var/tmp/codex-tdigest-pr3-20261014/overnight/package-hygiene/same-distribution-probe/upgraded-compatibility.xml",
+      "/var/tmp/codex-tdigest-pr3-20261014/overnight/package-hygiene/same-distribution-probe/checks/tests",
+      "/var/tmp/codex-tdigest-pr3-20261014/overnight/package-hygiene/same-distribution-probe/checks/parity"
+    ],
+    "cwd": "/var/tmp/codex-tdigest-pr3-20261014/overnight/package-hygiene/same-distribution-probe/checks",
+    "exit_code": 0,
+    "seconds": 2.1188845390006463,
+    "log": "/var/tmp/codex-tdigest-pr3-20261014/overnight/package-hygiene/same-distribution-probe/logs/024-upgraded-208-compatibility.log"
+  },
+  {
+    "phase": "uninstall-prototype",
+    "command": [
+      "/var/tmp/codex-tdigest-pr3-20261014/overnight/package-hygiene/same-distribution-probe/venv/bin/python",
+      "-I",
+      "-m",
+      "pip",
+      "uninstall",
+      "-y",
+      "tdigest-rs"
+    ],
+    "cwd": "/var/tmp/codex-tdigest-pr3-20261014/overnight/package-hygiene/same-distribution-probe",
+    "exit_code": 0,
+    "seconds": 0.23450064700045914,
+    "log": "/var/tmp/codex-tdigest-pr3-20261014/overnight/package-hygiene/same-distribution-probe/logs/025-uninstall-prototype.log"
+  },
+  {
+    "phase": "inspect-uninstalled",
+    "command": [
+      "/var/tmp/codex-tdigest-pr3-20261014/overnight/package-hygiene/same-distribution-probe/venv/bin/python",
+      "-I",
+      "/var/tmp/codex-tdigest-pr3-20261014/overnight/package-hygiene/same-distribution-probe/checks/probe_installed.py",
+      "uninstalled",
+      "--output",
+      "/var/tmp/codex-tdigest-pr3-20261014/overnight/package-hygiene/same-distribution-probe/uninstalled.json",
+      "--previous-record",
+      "/var/tmp/codex-tdigest-pr3-20261014/overnight/package-hygiene/same-distribution-probe/upgraded.json"
+    ],
+    "cwd": "/var/tmp/codex-tdigest-pr3-20261014/overnight/package-hygiene/same-distribution-probe/checks",
+    "exit_code": 0,
+    "seconds": 0.04861715100014408,
+    "log": "/var/tmp/codex-tdigest-pr3-20261014/overnight/package-hygiene/same-distribution-probe/logs/026-inspect-uninstalled.log"
+  },
+  {
+    "phase": "reinstall-prototype",
+    "command": [
+      "/var/tmp/codex-tdigest-pr3-20261014/overnight/package-hygiene/same-distribution-probe/venv/bin/python",
+      "-I",
+      "-m",
+      "pip",
+      "install",
+      "--no-index",
+      "--no-deps",
+      "/var/tmp/codex-tdigest-pr3-20261014/overnight/package-hygiene/same-distribution-probe/artifacts/tdigest_rs-0.2.4-cp312-abi3-linux_x86_64.whl"
+    ],
+    "cwd": "/var/tmp/codex-tdigest-pr3-20261014/overnight/package-hygiene/same-distribution-probe",
+    "exit_code": 0,
+    "seconds": 0.43295214700083307,
+    "log": "/var/tmp/codex-tdigest-pr3-20261014/overnight/package-hygiene/same-distribution-probe/logs/027-reinstall-prototype.log"
+  },
+  {
+    "phase": "reinstalled-pip-check",
+    "command": [
+      "/var/tmp/codex-tdigest-pr3-20261014/overnight/package-hygiene/same-distribution-probe/venv/bin/python",
+      "-I",
+      "-m",
+      "pip",
+      "check"
+    ],
+    "cwd": "/var/tmp/codex-tdigest-pr3-20261014/overnight/package-hygiene/same-distribution-probe",
+    "exit_code": 0,
+    "seconds": 0.16651599400029227,
+    "log": "/var/tmp/codex-tdigest-pr3-20261014/overnight/package-hygiene/same-distribution-probe/logs/028-reinstalled-pip-check.log"
+  },
+  {
+    "phase": "inspect-reinstalled",
+    "command": [
+      "/var/tmp/codex-tdigest-pr3-20261014/overnight/package-hygiene/same-distribution-probe/venv/bin/python",
+      "-I",
+      "/var/tmp/codex-tdigest-pr3-20261014/overnight/package-hygiene/same-distribution-probe/checks/probe_installed.py",
+      "reinstalled",
+      "--output",
+      "/var/tmp/codex-tdigest-pr3-20261014/overnight/package-hygiene/same-distribution-probe/reinstalled.json",
+      "--fixture",
+      "/var/tmp/codex-tdigest-pr3-20261014/overnight/package-hygiene/same-distribution-probe/checks/parity/data/published_0_1_0_pickle_golden.json",
+      "--expected-version",
+      "0.2.4",
+      "--expected-native-sha256",
+      "78a7473df6e7b20c703a57559b8ea9975848a3f55f745a7fcd1e721a598ece09",
+      "--baseline",
+      "/var/tmp/codex-tdigest-pr3-20261014/overnight/package-hygiene/same-distribution-probe/old.json"
+    ],
+    "cwd": "/var/tmp/codex-tdigest-pr3-20261014/overnight/package-hygiene/same-distribution-probe/checks",
+    "exit_code": 0,
+    "seconds": 0.23663732199929655,
+    "log": "/var/tmp/codex-tdigest-pr3-20261014/overnight/package-hygiene/same-distribution-probe/logs/029-inspect-reinstalled.log"
+  },
+  {
+    "phase": "reinstalled-208-compatibility",
+    "command": [
+      "/var/tmp/codex-tdigest-pr3-20261014/overnight/package-hygiene/same-distribution-probe/venv/bin/python",
+      "-I",
+      "-m",
+      "pytest",
+      "-q",
+      "-c",
+      "/dev/null",
+      "-p",
+      "no:cacheprovider",
+      "--junitxml",
+      "/var/tmp/codex-tdigest-pr3-20261014/overnight/package-hygiene/same-distribution-probe/reinstalled-compatibility.xml",
+      "/var/tmp/codex-tdigest-pr3-20261014/overnight/package-hygiene/same-distribution-probe/checks/tests",
+      "/var/tmp/codex-tdigest-pr3-20261014/overnight/package-hygiene/same-distribution-probe/checks/parity"
+    ],
+    "cwd": "/var/tmp/codex-tdigest-pr3-20261014/overnight/package-hygiene/same-distribution-probe/checks",
+    "exit_code": 0,
+    "seconds": 1.2939599380006257,
+    "log": "/var/tmp/codex-tdigest-pr3-20261014/overnight/package-hygiene/same-distribution-probe/logs/030-reinstalled-208-compatibility.log"
+  }
+]

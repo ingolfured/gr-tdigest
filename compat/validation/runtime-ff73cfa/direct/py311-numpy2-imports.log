@@ -1,0 +1,21 @@
+{
+  "python": "3.11.14 (main, Oct 14 2025, 21:26:53) [Clang 20.1.4 ]",
+  "executable": "/tmp/tdigest-support-cells-3s6nqtam/py311-numpy2/bin/python",
+  "dependencies": {
+    "numpy": "2.3.4",
+    "scipy": "1.17.1",
+    "pytest": "8.4.2",
+    "pip": "24.0",
+    "polars": "1.34.0"
+  },
+  "native_sha256": "0bae335c3943b6220727e0e50b659faa79c7df9f138fdfbe7644a42a01d1f2ac",
+  "imports": {
+    "tdigest_rs": "/tmp/tdigest-support-cells-3s6nqtam/py311-numpy2/lib/python3.11/site-packages/tdigest_rs/__init__.py",
+    "tdigest_rs.lib": "/tmp/tdigest-support-cells-3s6nqtam/py311-numpy2/lib/python3.11/site-packages/tdigest_rs/lib.py",
+    "tdigest_rs.tdigest_rs": "/tmp/tdigest-support-cells-3s6nqtam/py311-numpy2/lib/python3.11/site-packages/tdigest_rs/tdigest_rs.py",
+    "gr_tdigest": "/tmp/tdigest-support-cells-3s6nqtam/py311-numpy2/lib/python3.11/site-packages/gr_tdigest/__init__.py",
+    "gr_tdigest._gr_tdigest": "/tmp/tdigest-support-cells-3s6nqtam/py311-numpy2/lib/python3.11/site-packages/gr_tdigest/_gr_tdigest.abi3.so"
+  },
+  "distribution": "gr-tdigest",
+  "version": "0.2.4"
+}

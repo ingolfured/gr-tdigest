@@ -1,0 +1,314 @@
+[
+  {
+    "source": "52f6212008111b62fa07374278b850868b9ea77e",
+    "native": "/var/tmp/codex-tdigest-pr3-20261014/overnight/package-hygiene/standard-sdist-wheel-52f6212/venv/lib/python3.12/site-packages/gr_tdigest/_gr_tdigest.abi3.so",
+    "native_sha256": "78a7473df6e7b20c703a57559b8ea9975848a3f55f745a7fcd1e721a598ece09",
+    "python": "/var/tmp/codex-tdigest-pr3-20261014/overnight/package-hygiene/standard-sdist-wheel-52f6212/venv/bin/python",
+    "n": 1000,
+    "precision": "float64",
+    "input_fnv1a64": "edea3ad3bb2543a8",
+    "unique_means": 1000,
+    "negative_count": 483,
+    "centroids": 128,
+    "median": 8.814346314338946,
+    "worst_cdf": [
+      9.97346979929067,
+      0.5163133520229706,
+      0.483,
+      0.03331335202297059
+    ],
+    "worst_bracket": [
+      {
+        "i": 62,
+        "mean": -9.98124618549327,
+        "weight": 23.0,
+        "kind": 1,
+        "start_rank": 0.458,
+        "center_rank": 0.4695,
+        "end_rank": 0.481,
+        "input_min": -9.983317947893593,
+        "input_max": -9.977017168165377
+      },
+      {
+        "i": 63,
+        "mean": 8.316970644198497,
+        "weight": 24.0,
+        "kind": 1,
+        "start_rank": 0.481,
+        "center_rank": 0.493,
+        "end_rank": 0.505,
+        "input_min": -9.974917753724554,
+        "input_max": 9.982945423392653
+      },
+      {
+        "i": 64,
+        "mean": 9.986731822527151,
+        "weight": 23.0,
+        "kind": 1,
+        "start_rank": 0.505,
+        "center_rank": 0.5165,
+        "end_rank": 0.528,
+        "input_min": 9.983771265131445,
+        "input_max": 9.988807671087253
+      },
+      {
+        "i": 65,
+        "mean": 9.989835321530796,
+        "weight": 23.0,
+        "kind": 1,
+        "start_rank": 0.528,
+        "center_rank": 0.5395,
+        "end_rank": 0.551,
+        "input_min": 9.988808979978348,
+        "input_max": 9.9909198839607
+      }
+    ],
+    "cross_gap_centroids": [
+      {
+        "i": 63,
+        "mean": 8.316970644198497,
+        "weight": 24.0,
+        "kind": 1,
+        "start_rank": 0.481,
+        "center_rank": 0.493,
+        "end_rank": 0.505,
+        "input_min": -9.974917753724554,
+        "input_max": 9.982945423392653
+      }
+    ]
+  },
+  {
+    "source": "52f6212008111b62fa07374278b850868b9ea77e",
+    "native": "/var/tmp/codex-tdigest-pr3-20261014/overnight/package-hygiene/standard-sdist-wheel-52f6212/venv/lib/python3.12/site-packages/gr_tdigest/_gr_tdigest.abi3.so",
+    "native_sha256": "78a7473df6e7b20c703a57559b8ea9975848a3f55f745a7fcd1e721a598ece09",
+    "python": "/var/tmp/codex-tdigest-pr3-20261014/overnight/package-hygiene/standard-sdist-wheel-52f6212/venv/bin/python",
+    "n": 1000,
+    "precision": "float32",
+    "input_fnv1a64": "0f38da0a5bf4c575",
+    "unique_means": 995,
+    "negative_count": 483,
+    "centroids": 128,
+    "median": 7.945057786029318,
+    "worst_cdf": [
+      9.973468780517578,
+      0.5134172486238457,
+      0.483,
+      0.03041724862384576
+    ],
+    "worst_bracket": [
+      {
+        "i": 62,
+        "mean": -9.981765747070312,
+        "weight": 23.0,
+        "kind": 1,
+        "start_rank": 0.456,
+        "center_rank": 0.4675,
+        "end_rank": 0.479,
+        "input_min": -9.983530044555664,
+        "input_max": -9.97836971282959
+      },
+      {
+        "i": 63,
+        "mean": 6.508853912353516,
+        "weight": 23.0,
+        "kind": 1,
+        "start_rank": 0.479,
+        "center_rank": 0.4905,
+        "end_rank": 0.502,
+        "input_min": -9.977931022644043,
+        "input_max": 9.98275089263916
+      },
+      {
+        "i": 64,
+        "mean": 9.985979080200195,
+        "weight": 23.0,
+        "kind": 1,
+        "start_rank": 0.502,
+        "center_rank": 0.5135,
+        "end_rank": 0.525,
+        "input_min": 9.982817649841309,
+        "input_max": 9.988480567932129
+      },
+      {
+        "i": 65,
+        "mean": 9.9895601272583,
+        "weight": 23.0,
+        "kind": 1,
+        "start_rank": 0.525,
+        "center_rank": 0.5365,
+        "end_rank": 0.548,
+        "input_min": 9.988515853881836,
+        "input_max": 9.99050235748291
+      }
+    ],
+    "cross_gap_centroids": [
+      {
+        "i": 63,
+        "mean": 6.508853912353516,
+        "weight": 23.0,
+        "kind": 1,
+        "start_rank": 0.479,
+        "center_rank": 0.4905,
+        "end_rank": 0.502,
+        "input_min": -9.977931022644043,
+        "input_max": 9.98275089263916
+      }
+    ]
+  },
+  {
+    "source": "52f6212008111b62fa07374278b850868b9ea77e",
+    "native": "/var/tmp/codex-tdigest-pr3-20261014/overnight/package-hygiene/standard-sdist-wheel-52f6212/venv/lib/python3.12/site-packages/gr_tdigest/_gr_tdigest.abi3.so",
+    "native_sha256": "78a7473df6e7b20c703a57559b8ea9975848a3f55f745a7fcd1e721a598ece09",
+    "python": "/var/tmp/codex-tdigest-pr3-20261014/overnight/package-hygiene/standard-sdist-wheel-52f6212/venv/bin/python",
+    "n": 100000,
+    "precision": "float64",
+    "input_fnv1a64": "63f1cf343c6483fe",
+    "unique_means": 100000,
+    "negative_count": 49891,
+    "centroids": 142,
+    "median": -0.5661056623436691,
+    "worst_cdf": [
+      -9.974794947863154,
+      0.455049430967327,
+      0.49609,
+      0.041040569032673
+    ],
+    "worst_bracket": [
+      {
+        "i": 68,
+        "mean": -9.990245123845995,
+        "weight": 3824.0,
+        "kind": 1,
+        "start_rank": 0.39724,
+        "center_rank": 0.41636,
+        "end_rank": 0.43548,
+        "input_min": -9.991781128356871,
+        "input_max": -9.98852835749687
+      },
+      {
+        "i": 69,
+        "mean": -9.98629047295379,
+        "weight": 3902.0,
+        "kind": 1,
+        "start_rank": 0.43548,
+        "center_rank": 0.45499,
+        "end_rank": 0.4745,
+        "input_min": -9.988526851187611,
+        "input_max": -9.98341949040711
+      },
+      {
+        "i": 70,
+        "mean": -2.4088066176401104,
+        "weight": 3933.0,
+        "kind": 1,
+        "start_rank": 0.4745,
+        "center_rank": 0.494165,
+        "end_rank": 0.51383,
+        "input_min": -9.98341933502928,
+        "input_max": 9.981025912213317
+      },
+      {
+        "i": 71,
+        "mean": 9.984817888034069,
+        "weight": 3916.0,
+        "kind": 1,
+        "start_rank": 0.51383,
+        "center_rank": 0.53341,
+        "end_rank": 0.55299,
+        "input_min": 9.981027909498332,
+        "input_max": 9.987537910013307
+      }
+    ],
+    "cross_gap_centroids": [
+      {
+        "i": 70,
+        "mean": -2.4088066176401104,
+        "weight": 3933.0,
+        "kind": 1,
+        "start_rank": 0.4745,
+        "center_rank": 0.494165,
+        "end_rank": 0.51383,
+        "input_min": -9.98341933502928,
+        "input_max": 9.981025912213317
+      }
+    ]
+  },
+  {
+    "source": "52f6212008111b62fa07374278b850868b9ea77e",
+    "native": "/var/tmp/codex-tdigest-pr3-20261014/overnight/package-hygiene/standard-sdist-wheel-52f6212/venv/lib/python3.12/site-packages/gr_tdigest/_gr_tdigest.abi3.so",
+    "native_sha256": "78a7473df6e7b20c703a57559b8ea9975848a3f55f745a7fcd1e721a598ece09",
+    "python": "/var/tmp/codex-tdigest-pr3-20261014/overnight/package-hygiene/standard-sdist-wheel-52f6212/venv/bin/python",
+    "n": 100000,
+    "precision": "float32",
+    "input_fnv1a64": "b748db965b52966d",
+    "unique_means": 56987,
+    "negative_count": 49891,
+    "centroids": 149,
+    "median": 0.7547161229247568,
+    "worst_cdf": [
+      9.970972061157227,
+      0.5525535257868059,
+      0.49999,
+      0.052563525786805954
+    ],
+    "worst_bracket": [
+      {
+        "i": 73,
+        "mean": -9.981526374816895,
+        "weight": 3740.0,
+        "kind": 1,
+        "start_rank": 0.46078,
+        "center_rank": 0.47948,
+        "end_rank": 0.49818,
+        "input_min": -9.98566722869873,
+        "input_max": -9.97038459777832
+      },
+      {
+        "i": 74,
+        "mean": 9.591711044311523,
+        "weight": 3742.0,
+        "kind": 1,
+        "start_rank": 0.49818,
+        "center_rank": 0.51689,
+        "end_rank": 0.5356,
+        "input_min": -9.970376968383789,
+        "input_max": 9.985334396362305
+      },
+      {
+        "i": 75,
+        "mean": 9.987577438354492,
+        "weight": 3703.0,
+        "kind": 1,
+        "start_rank": 0.5356,
+        "center_rank": 0.554115,
+        "end_rank": 0.57263,
+        "input_min": 9.985336303710938,
+        "input_max": 9.989480972290039
+      },
+      {
+        "i": 76,
+        "mean": 9.99090576171875,
+        "weight": 3619.0,
+        "kind": 1,
+        "start_rank": 0.57263,
+        "center_rank": 0.590725,
+        "end_rank": 0.60882,
+        "input_min": 9.989483833312988,
+        "input_max": 9.992193222045898
+      }
+    ],
+    "cross_gap_centroids": [
+      {
+        "i": 74,
+        "mean": 9.591711044311523,
+        "weight": 3742.0,
+        "kind": 1,
+        "start_rank": 0.49818,
+        "center_rank": 0.51689,
+        "end_rank": 0.5356,
+        "input_min": -9.970376968383789,
+        "input_max": 9.985334396362305
+      }
+    ]
+  }
+]

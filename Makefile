@@ -50,6 +50,13 @@ PY_DIR          := bindings/python
 PY_PKG_DIR      := $(PY_DIR)/gr_tdigest
 PY_TESTS_DIR    := $(PY_DIR)/tests
 
+# Upstream tdigest-rs review compatibility snapshot
+COMPAT_PY_DIR     := compat/tdigest-rs-upstream/bindings/python
+COMPAT_TESTS_DIR  := $(COMPAT_PY_DIR)/tests
+COMPAT_BENCH      := $(COMPAT_PY_DIR)/benchmarks/run.py
+COMPAT_RUNNER_DIR := compat/tdigest-rs-strict-python
+STRICT_COMPAT_BENCH := $(COMPAT_RUNNER_DIR)/benchmarks/run.py
+
 # Java layout (wrapper-only — no system Gradle fallback)
 JAVA_SRC        := bindings/java
 JAVA_BUILD_REL  := build
@@ -134,7 +141,7 @@ JAVA_WRAPPER_CHECK:
 # ==============================================================================
 .PHONY: help setup clean \
         build build-rust build-python build-java \
-        test rust-test py-test java-test \
+        test rust-test py-test java-test compat-test legacy-strict-test compat-bench legacy-bench-smoke \
         lint setup-hooks \
         smoke-rust-cli smoke-wheel  \
         release-rust release-wheel release-jar release \
@@ -156,9 +163,9 @@ setup:
 	$(UV) --version
 	$(call banner,Create repo .venv and install Python deps (all groups))
 	$(UV_ENV) $(UV) python install 3.12 || true
-	@(cd "$(PY_DIR)" && $(UV_ENV) $(UV) sync --all-groups)
+	@(cd "$(PY_DIR)" && $(UV_ENV) $(UV) sync --locked --python 3.12 --all-groups)
 	$(call banner,Quick Python import smoke)
-	$(UV_ENV) $(UV) run python -c "import polars as pl, sys; print('python', sys.version.split()[0], '| polars', pl.__version__, '| env ok')"
+	$(UV_ENV) $(UV) run --project "$(PY_DIR)" --no-sync python -c "import polars as pl, sys; print('python', sys.version.split()[0], '| polars', pl.__version__, '| env ok')"
 	$(MAKE) setup-hooks
 
 setup-hooks:
@@ -172,7 +179,7 @@ setup-hooks:
 	fi
 	@if ! "$(PWD)/.venv/bin/python" -m pre_commit --version >/dev/null 2>&1; then \
 	  echo "pre_commit module missing in .venv; syncing Python deps from $(PY_DIR)"; \
-	  (cd "$(PY_DIR)" && $(UV_ENV) $(UV) sync --all-groups); \
+	  (cd "$(PY_DIR)" && $(UV_ENV) $(UV) sync --locked --python 3.12 --all-groups); \
 	fi
 	PRE_COMMIT_HOME="$(PWD)/.pre-commit-cache" UV_CACHE_DIR="$(PWD)/.uv-cache" "$(PWD)/.venv/bin/python" -m pre_commit install
 	@HOOK=".git/hooks/pre-commit"; \
@@ -214,13 +221,14 @@ build-java: JAVA_WRAPPER_CHECK
 # ==============================================================================
 # Tests
 # ==============================================================================
-.PHONY: test rust-test py-test java-test
+.PHONY: test rust-test py-test java-test compat-test legacy-strict-test compat-bench legacy-bench-smoke legacy-wheel-test python-support-test
 
-test: rust-test java-test py-test
+test: rust-test java-test py-test compat-test
 	@echo "✅ all unit tests passed"
 
 rust-test:
 	$(CARGO) test -- --quiet
+	$(CARGO) test -p tdigest_core -- --quiet
 
 # Explicit path to bindings/python/tests (pytest discovers from pyproject too)
 py-test: build-python
@@ -228,6 +236,24 @@ py-test: build-python
 
 java-test: JAVA_WRAPPER_CHECK
 	@GRADLE_USER_HOME="$(GRADLE_USER_HOME)" "$(GRADLE)" --no-daemon --console=plain -p "$(JAVA_SRC)" test
+
+compat-test: build-python
+	@$(UV_ENV) $(UV) run --project "$(PY_DIR)" --no-sync python scripts/check_upstream_sources.py
+	@(cd "$(COMPAT_PY_DIR)" && $(UV_ENV) $(UV) run --project "$(abspath $(PY_DIR))" --no-sync python -m pytest -q tests)
+
+legacy-strict-test: compat-test
+
+legacy-wheel-test:
+	@$(UV_ENV) $(UV) run --project "$(PY_DIR)" --no-sync python scripts/test_legacy_wheel.py
+
+python-support-test:
+	@$(UV_ENV) $(UV) run --project "$(PY_DIR)" --no-sync python scripts/test_python_support.py
+
+compat-bench: build-python
+	@$(UV_ENV) $(UV) run --project "$(PY_DIR)" --no-sync python "$(STRICT_COMPAT_BENCH)"
+
+legacy-bench-smoke: build-python
+	@$(UV_ENV) $(UV) run --project "$(PY_DIR)" --no-sync python "$(STRICT_COMPAT_BENCH)" --n 256 --n-arrays 16 --iterations 1 --delta 100 --workers 2
 
 # ==============================================================================
 # Lint (autofix where possible) + docs must be warning-free
@@ -240,11 +266,15 @@ lint:
 	$(CARGO) clippy --fix --allow-dirty --allow-staged
 
 	$(call banner,Python: ruff check --fix + ruff format)
-	@(cd "$(PY_DIR)" && $(UV_ENV) $(UV) run ruff check --fix .)
-	@(cd "$(PY_DIR)" && $(UV_ENV) $(UV) run ruff format .)
+	@(cd "$(PY_DIR)" && $(UV_ENV) $(UV) run --no-sync ruff check --fix .)
+	@(cd "$(PY_DIR)" && $(UV_ENV) $(UV) run --no-sync ruff format .)
+
+	$(call banner,Python: installed-artifact gate scripts)
+	$(UV_ENV) $(UV) run --project "$(PY_DIR)" --no-sync ruff check --config "$(PY_DIR)/pyproject.toml" scripts/test_legacy_wheel.py scripts/test_python_support.py scripts/check_python_sdist.py
+	$(UV_ENV) $(UV) run --project "$(PY_DIR)" --no-sync ruff format --check --config "$(PY_DIR)/pyproject.toml" scripts/test_legacy_wheel.py scripts/test_python_support.py scripts/check_python_sdist.py
 
 	$(call banner,Python: mypy (auto-install types if missing))
-	@(cd "$(PY_DIR)" && $(UV_ENV) $(UV) run python -m mypy gr_tdigest --install-types --non-interactive)
+	@(cd "$(PY_DIR)" && $(UV_ENV) $(UV) run --no-sync python -m mypy gr_tdigest --install-types --non-interactive)
 
 	$(call banner,Rust docs: deny warnings)
 	@set -euo pipefail; \
@@ -290,8 +320,8 @@ smoke-wheel:
 	TMP="$$(mktemp -d)"; \
 	$(UV) venv --python 3.12 --seed "$$TMP"; \
 	$(UV) pip install --python "$$TMP/bin/python" --upgrade pip; \
-	$(UV) pip install --python "$$TMP/bin/python" 'polars>=1.34.0,<2.0.0' numpy; \
-	$(UV) pip install --python "$$TMP/bin/python" --no-index --find-links "$$(dirname "$$LATEST")" gr-tdigest; \
+	$(UV) pip install --python "$$TMP/bin/python" 'polars==1.34.0' 'numpy>=1.26.4,<3'; \
+	$(UV) pip install --python "$$TMP/bin/python" --no-index "$${LATEST}[polars]"; \
 	"$$TMP/bin/python" -c "import gr_tdigest as td; d=td.TDigest.from_array([0.0,1.0,2.0,3.0], max_size=100, scale='k2'); print('p50=', d.quantile(0.5)); print('cdf=', td.cdf); print('ok')"; \
 	rm -rf "$$TMP"; \
 	echo "✅ smoke-wheel ok (file=$$LATEST)"
@@ -308,7 +338,7 @@ release-rust:
 release-wheel:
 	$(call banner,Release: Python PROD wheel (manylinux_2_28 + zig) + smoke)
 	mkdir -p "$(DIST)"
-	@(cd "$(PY_DIR)" && $(UV_ENV) $(UV) run maturin build -r -F python --compatibility manylinux_2_28 --zig -o "$(abspath $(DIST))")
+	@(cd "$(PY_DIR)" && $(UV_ENV) $(UV) run --no-sync maturin build --locked -r -F python --compatibility manylinux_2_28 --zig -o "$(abspath $(DIST))")
 	@printf "$(STYLE_OK)✓ wheel(s) in $(DIST)$(STYLE_RESET)\n"
 	$(MAKE) -f $(CURDIR)/Makefile smoke-wheel
 
@@ -348,7 +378,7 @@ publish-check:
 publish-pypi: release-wheel
 	$(call banner,Publish: PyPI)
 	mkdir -p "$(DIST)"
-	$(UV_ENV) $(UV) run --project "$(PY_DIR)" maturin sdist -o "$(abspath $(DIST))"
+	@(cd "$(PY_DIR)" && $(UV_ENV) $(UV) run --no-sync maturin sdist -o "$(abspath $(DIST))")
 	@set -eu; \
 	if [ "$(PUBLISH_DRY_RUN)" = "1" ]; then \
 	  echo "DRY RUN: skipping PyPI upload"; \
@@ -395,8 +425,10 @@ help:
 	@printf "  %-22s %s\n" "build-rust"     "Build Rust lib+CLI (dev)"
 	@printf "  %-22s %s\n" "build-python"   "Build Python extension (maturin develop, dev)"
 	@printf "  %-22s %s\n" "build-java"     "Build Java JAR with Gradle (clean+jar)"
-	@printf "  %-22s %s\n" "test"           "Run tests: rust + java + python"
+	@printf "  %-22s %s\n" "test"           "Run tests: rust + java + python + unchanged legacy suite"
 	@printf "  %-22s %s\n" "java-test"      "Run Java/JNI tests via Gradle"
+	@printf "  %-22s %s\n" "legacy-strict-test" "Run unchanged upstream Python tests against shipped tdigest_rs"
+	@printf "  %-22s %s\n" "legacy-bench-smoke" "Run a small manual legacy benchmark smoke"
 	@printf "  %-22s %s\n" "lint"           "Autofix (ruff/clippy/format) + mypy + rustdoc (deny warnings)"
 	@printf "  %-22s %s\n" "clean"          "Remove ALL build artifacts (Rust/Gradle/Python)"
 	@printf "\n$(STYLE_BOLD)Releases (release profile)$(STYLE_RESET)\n"

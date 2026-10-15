@@ -104,23 +104,32 @@ Key algorithmic difference in philosophy:
 - DataSketches emphasizes guaranteed-rank-error families (KLL/REQ) when guarantees are required.
 - `gr-tdigest` emphasizes t-digest tail quality + practical interoperability contracts.
 
-## 4. Which is best? (scenario-based)
+### 3.5 G-Research `tdigest-rs` compatibility
 
-There is no single globally best sketch/library. Best choice is workload-driven:
+`tdigest_rs.TDigest` retains the pinned original calculations and Python wrapper.
+Existing applications keep their import, API, dtype, weights, and numerical
+behavior; the modern `gr_tdigest` engine requires an explicit choice. The 91
+unchanged upstream tests and 70 exact-output cases run on Linux, including from
+an installed wheel. Source hashes protect the original numerical implementation.
+See [compatibility](compat/gr_tdigest_vs_tdigest_rs.md) for scope and provenance.
 
-1. Best for strict, provable rank-error contracts:
+## 4. Architectural fit to evaluate
+
+These are design motivations to evaluate against a workload, not measured rankings:
+
+1. For strict, provable rank-error contracts:
 - DataSketches KLL/REQ.
 
-2. Best for canonical t-digest reference behavior and ongoing algorithm lineage:
+2. For canonical t-digest reference behavior and ongoing algorithm lineage:
 - tdunning/t-digest.
 
-3. Best for Elasticsearch-native production percentile integration:
+3. For Elasticsearch-native production percentile integration:
 - Elasticsearch fork (`org.elasticsearch.tdigest` / `TDigestState`).
 
-4. Best for Polars-only plugin adoption with minimal surface area:
+4. For Polars-only plugin adoption with minimal surface area:
 - Appian `polars-tdigest`.
 
-5. Best for cross-language API coherence with strict validation and wire interoperability in one project:
+5. For cross-language API coherence with strict validation and wire interoperability in one project:
 - `gr-tdigest`.
 
 ## 5. Feature-gap assessment for `gr-tdigest`
@@ -215,3 +224,28 @@ wrapper so existing applications keep their API and numbers. The modern
 91 approximate upstream tests does not establish exact output equivalence.
 The retained implementation and exact regression fixtures have explicit
 provenance; upstream quirks are preserved on this interface.
+
+## Measured comparison at frozen budgets (15 October 2026)
+
+The [corrected-source accuracy study](compat/accuracy/matched-budgets-ff73cfa/RESULTS.md)
+compares modern `ff73cfa` K2Norm/Off with independent original `8d9cf1`;
+`tdigest_rs` still selects the original engine. It measures three fresh seeds
+after training selected parameters, across eight distributions, both precisions
+and multiple merge routes. The [separate native timing follow-up](compat/performance/matched-budgets-ff73cfa/RESULTS.md)
+uses those frozen settings, a fresh seed, one-million-value inputs and two
+counterbalanced blocks. See every cell and any policy violations before drawing
+conclusions; these are not comparisons against the other libraries listed here.
+
+At a 1 KiB cap, modern worst queried-rank error reaches 43.583 percentage points.
+At 4 KiB, worst median rank error improves while worst all-query rank error can
+worsen. At the separately selected 2-point rank policy, modern maximum logical
+storage is roughly twice the original's; rank accuracy does not bound value
+error across gaps. This evidence supports explicit workload choices, not an
+unqualified accuracy, speed or memory ranking. Logical payload, retained
+capacity, peak allocation and RSS must not be conflated. The tighter 0.5/1-point
+policies were unavailable within the tested parameter grid, not proved impossible.
+
+The scenario discussion above describes architectural fit, not a measured
+world ranking. This study covers one independent original implementation on
+one machine; it cannot establish superiority over tdunning, DataSketches,
+Elasticsearch, Appian or other quantile libraries.

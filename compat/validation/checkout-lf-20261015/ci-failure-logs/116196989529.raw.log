@@ -1,0 +1,884 @@
+﻿2026-10-15T01:26:48.7764626Z Current runner version: '2.337.0'
+2026-10-15T01:26:48.7791116Z ##[group]Runner Image Provisioner
+2026-10-15T01:26:48.7792576Z Hosted Compute Agent
+2026-10-15T01:26:48.7793184Z Version: 20260901.588
+2026-10-15T01:26:48.7793839Z Commit: f88ec8081b781fac6c440065ac7ff9e710ce3d0b
+2026-10-15T01:26:48.7794587Z Build Date: 2026-09-01T19:56:44Z
+2026-10-15T01:26:48.7795315Z Worker ID: {92a2d73b-82b5-4d6c-8748-e0b15167aba5}
+2026-10-15T01:26:48.7796026Z Azure Region: southcentralus
+2026-10-15T01:26:48.7796598Z ##[endgroup]
+2026-10-15T01:26:48.7798085Z ##[group]Operating System
+2026-10-15T01:26:48.7798763Z Microsoft Windows Server 2025
+2026-10-15T01:26:48.7799368Z 10.0.26100
+2026-10-15T01:26:48.7799906Z Datacenter
+2026-10-15T01:26:48.7800423Z ##[endgroup]
+2026-10-15T01:26:48.7800935Z ##[group]Runner Image
+2026-10-15T01:26:48.7801510Z Image: windows-2025-vs2026
+2026-10-15T01:26:48.7802106Z Version: 20260925.250.1
+2026-10-15T01:26:48.7803970Z Included Software: https://github.com/actions/runner-images/blob/win25-vs2026/20260925.250/images/windows/Windows2025-VS2026-Readme.md
+2026-10-15T01:26:48.7805694Z Image Release: https://github.com/actions/runner-images/releases/tag/win25-vs2026%2F20260925.250
+2026-10-15T01:26:48.7806715Z ##[endgroup]
+2026-10-15T01:26:48.7807798Z ##[group]GITHUB_TOKEN Permissions
+2026-10-15T01:26:48.7809709Z Contents: read
+2026-10-15T01:26:48.7810347Z Metadata: read
+2026-10-15T01:26:48.7810966Z ##[endgroup]
+2026-10-15T01:26:48.7813485Z Secret source: Actions
+2026-10-15T01:26:48.7814604Z Cache mode: write
+2026-10-15T01:26:48.7815385Z Prepare workflow directory
+2026-10-15T01:26:48.8479461Z Prepare all required actions
+2026-10-15T01:26:48.8550891Z Getting action download info
+2026-10-15T01:26:49.0959926Z Download action repository 'actions/checkout@93cb6efe18208431cddfb8368fd83d5badbf9bfd' (SHA:93cb6efe18208431cddfb8368fd83d5badbf9bfd)
+2026-10-15T01:26:49.2325626Z Download action repository 'actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405' (SHA:a309ff8b426b58ec0e2a45f0f869d46889d02405)
+2026-10-15T01:26:49.5046196Z Uses: ingolfured/tdigest-rs/.github/workflows/python.yml@refs/heads/overwrite_snapshot_v1_0_0 (bc1f93e15c216b14b532bb005a2a2e2e662a08f8)
+2026-10-15T01:26:49.5051302Z Complete job name: python / Test (3.12, windows-latest)
+2026-10-15T01:26:49.6482571Z ##[group]Run actions/checkout@93cb6efe18208431cddfb8368fd83d5badbf9bfd
+2026-10-15T01:26:49.6483855Z with:
+2026-10-15T01:26:49.6484294Z   repository: ingolfured/tdigest-rs
+2026-10-15T01:26:49.6488409Z   token: ***
+2026-10-15T01:26:49.6488811Z   ssh-strict: true
+2026-10-15T01:26:49.6489210Z   ssh-user: git
+2026-10-15T01:26:49.6489619Z   persist-credentials: true
+2026-10-15T01:26:49.6490079Z   clean: true
+2026-10-15T01:26:49.6490498Z   sparse-checkout-cone-mode: true
+2026-10-15T01:26:49.6491000Z   fetch-depth: 1
+2026-10-15T01:26:49.6491401Z   fetch-tags: false
+2026-10-15T01:26:49.6491813Z   show-progress: true
+2026-10-15T01:26:49.6492230Z   lfs: false
+2026-10-15T01:26:49.6492624Z   submodules: false
+2026-10-15T01:26:49.6493069Z   set-safe-directory: true
+2026-10-15T01:26:49.6493712Z env:
+2026-10-15T01:26:49.6494094Z   CARGO_TERM_COLOR: always
+2026-10-15T01:26:49.6494558Z   DEFAULT_PYTHON_VERSION: 3.12
+2026-10-15T01:26:49.6495050Z   PIP_DISABLE_PIP_VERSION_CHECK: 1
+2026-10-15T01:26:49.6495676Z   UV_PROJECT_ENVIRONMENT: D:\a\tdigest-rs\tdigest-rs/.venv
+2026-10-15T01:26:49.6496808Z ##[endgroup]
+2026-10-15T01:26:49.8002691Z Syncing repository: ingolfured/tdigest-rs
+2026-10-15T01:26:49.8006387Z ##[group]Getting Git version info
+2026-10-15T01:26:49.8007850Z Working directory is 'D:\a\tdigest-rs\tdigest-rs'
+2026-10-15T01:26:49.9136826Z [command]"C:\Program Files\Git\bin\git.exe" version
+2026-10-15T01:26:50.2994767Z git version 2.55.0.windows.5
+2026-10-15T01:26:50.3041793Z ##[endgroup]
+2026-10-15T01:26:50.3061169Z Temporarily overriding HOME='D:\a\_temp\f3d6cca5-5785-492f-b456-645c120378b3' before making global git config changes
+2026-10-15T01:26:50.3062903Z Adding repository directory to the temporary git global config as a safe directory
+2026-10-15T01:26:50.3072466Z [command]"C:\Program Files\Git\bin\git.exe" config --global --add safe.directory D:\a\tdigest-rs\tdigest-rs
+2026-10-15T01:26:50.3689367Z Deleting the contents of 'D:\a\tdigest-rs\tdigest-rs'
+2026-10-15T01:26:50.3695431Z ##[group]Initializing the repository
+2026-10-15T01:26:50.3704695Z [command]"C:\Program Files\Git\bin\git.exe" init D:\a\tdigest-rs\tdigest-rs
+2026-10-15T01:26:50.4572613Z Initialized empty Git repository in D:/a/tdigest-rs/tdigest-rs/.git/
+2026-10-15T01:26:50.4624055Z [command]"C:\Program Files\Git\bin\git.exe" remote add origin https://github.com/ingolfured/tdigest-rs
+2026-10-15T01:26:50.5291170Z ##[endgroup]
+2026-10-15T01:26:50.5293168Z ##[group]Disabling automatic garbage collection
+2026-10-15T01:26:50.5301307Z [command]"C:\Program Files\Git\bin\git.exe" config --local gc.auto 0
+2026-10-15T01:26:50.5602089Z ##[endgroup]
+2026-10-15T01:26:50.5603200Z ##[group]Setting up auth
+2026-10-15T01:26:50.5614676Z [command]"C:\Program Files\Git\bin\git.exe" config --local --name-only --get-regexp core\.sshCommand
+2026-10-15T01:26:50.5911848Z [command]"C:\Program Files\Git\bin\git.exe" submodule foreach --recursive "sh -c \"git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :\""
+2026-10-15T01:26:52.0896740Z [command]"C:\Program Files\Git\bin\git.exe" config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+2026-10-15T01:26:52.1193739Z [command]"C:\Program Files\Git\bin\git.exe" submodule foreach --recursive "sh -c \"git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :\""
+2026-10-15T01:26:52.6607912Z [command]"C:\Program Files\Git\bin\git.exe" config --local --name-only --get-regexp ^includeIf\.gitdir:
+2026-10-15T01:26:52.6902448Z [command]"C:\Program Files\Git\bin\git.exe" submodule foreach --recursive "git config --local --show-origin --name-only --get-regexp remote.origin.url"
+2026-10-15T01:26:53.2412503Z [command]"C:\Program Files\Git\bin\git.exe" config --local http.https://github.com/.extraheader "AUTHORIZATION: basic ***"
+2026-10-15T01:26:53.2773988Z ##[endgroup]
+2026-10-15T01:26:53.2777471Z ##[group]Fetching the repository
+2026-10-15T01:26:53.2788614Z [command]"C:\Program Files\Git\bin\git.exe" -c protocol.version=2 fetch --no-tags --prune --no-recurse-submodules --depth=1 origin +bc1f93e15c216b14b532bb005a2a2e2e662a08f8:refs/remotes/origin/overwrite_snapshot_v1_0_0
+2026-10-15T01:26:54.4463546Z From https://github.com/ingolfured/tdigest-rs
+2026-10-15T01:26:54.4464221Z  * [new ref]         bc1f93e15c216b14b532bb005a2a2e2e662a08f8 -> origin/overwrite_snapshot_v1_0_0
+2026-10-15T01:26:54.4507704Z ##[endgroup]
+2026-10-15T01:26:54.4508321Z ##[group]Determining the checkout info
+2026-10-15T01:26:54.4510300Z ##[endgroup]
+2026-10-15T01:26:54.4519197Z [command]"C:\Program Files\Git\bin\git.exe" sparse-checkout disable
+2026-10-15T01:26:54.4973157Z [command]"C:\Program Files\Git\bin\git.exe" config --local --unset-all extensions.worktreeConfig
+2026-10-15T01:26:54.5272675Z ##[group]Checking out the ref
+2026-10-15T01:26:54.5282125Z [command]"C:\Program Files\Git\bin\git.exe" checkout --progress --force -B overwrite_snapshot_v1_0_0 refs/remotes/origin/overwrite_snapshot_v1_0_0
+2026-10-15T01:26:54.6849204Z Switched to a new branch 'overwrite_snapshot_v1_0_0'
+2026-10-15T01:26:54.6919199Z branch 'overwrite_snapshot_v1_0_0' set up to track 'origin/overwrite_snapshot_v1_0_0'.
+2026-10-15T01:26:54.6968584Z ##[endgroup]
+2026-10-15T01:26:54.7390810Z [command]"C:\Program Files\Git\bin\git.exe" log -1 --format=%H
+2026-10-15T01:26:54.7670146Z bc1f93e15c216b14b532bb005a2a2e2e662a08f8
+2026-10-15T01:26:54.8152611Z ##[group]Run actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405
+2026-10-15T01:26:54.8153130Z with:
+2026-10-15T01:26:54.8153324Z   python-version: 3.12
+2026-10-15T01:26:54.8153533Z   check-latest: true
+2026-10-15T01:26:54.8157090Z   token: ***
+2026-10-15T01:26:54.8157301Z   update-environment: true
+2026-10-15T01:26:54.8157526Z   allow-prereleases: false
+2026-10-15T01:26:54.8157735Z   freethreaded: false
+2026-10-15T01:26:54.8157922Z env:
+2026-10-15T01:26:54.8158084Z   CARGO_TERM_COLOR: always
+2026-10-15T01:26:54.8158297Z   DEFAULT_PYTHON_VERSION: 3.12
+2026-10-15T01:26:54.8158524Z   PIP_DISABLE_PIP_VERSION_CHECK: 1
+2026-10-15T01:26:54.8158813Z   UV_PROJECT_ENVIRONMENT: D:\a\tdigest-rs\tdigest-rs/.venv
+2026-10-15T01:26:54.8159107Z ##[endgroup]
+2026-10-15T01:26:54.9987833Z ##[group]Installed versions
+2026-10-15T01:26:55.8465056Z Resolved as '3.12.10'
+2026-10-15T01:26:55.8465954Z Successfully set up CPython (3.12.10)
+2026-10-15T01:26:55.8466609Z ##[endgroup]
+2026-10-15T01:26:55.8936050Z ##[group]Run python -m pip install uv==0.9.5
+2026-10-15T01:26:55.8936551Z [36;1mpython -m pip install uv==0.9.5[0m
+2026-10-15T01:26:55.8937055Z [36;1muv sync --locked --no-install-project --project bindings/python --group dev --python 3.12[0m
+2026-10-15T01:26:55.9565374Z shell: C:\Program Files\PowerShell\7\pwsh.EXE -command ". '{0}'"
+2026-10-15T01:26:55.9565802Z env:
+2026-10-15T01:26:55.9566019Z   CARGO_TERM_COLOR: always
+2026-10-15T01:26:55.9566272Z   DEFAULT_PYTHON_VERSION: 3.12
+2026-10-15T01:26:55.9566539Z   PIP_DISABLE_PIP_VERSION_CHECK: 1
+2026-10-15T01:26:55.9566872Z   UV_PROJECT_ENVIRONMENT: D:\a\tdigest-rs\tdigest-rs/.venv
+2026-10-15T01:26:55.9567318Z   pythonLocation: C:\hostedtoolcache\windows\Python\3.12.10\x64
+2026-10-15T01:26:55.9567903Z   PKG_CONFIG_PATH: C:\hostedtoolcache\windows\Python\3.12.10\x64/lib/pkgconfig
+2026-10-15T01:26:55.9568412Z   Python_ROOT_DIR: C:\hostedtoolcache\windows\Python\3.12.10\x64
+2026-10-15T01:26:55.9568927Z   Python2_ROOT_DIR: C:\hostedtoolcache\windows\Python\3.12.10\x64
+2026-10-15T01:26:55.9569814Z   Python3_ROOT_DIR: C:\hostedtoolcache\windows\Python\3.12.10\x64
+2026-10-15T01:26:55.9570183Z ##[endgroup]
+2026-10-15T01:27:01.5780704Z Collecting uv==0.9.5
+2026-10-15T01:27:01.8218045Z   Downloading uv-0.9.5-py3-none-win_amd64.whl.metadata (12 kB)
+2026-10-15T01:27:01.8798457Z Downloading uv-0.9.5-py3-none-win_amd64.whl (21.4 MB)
+2026-10-15T01:27:02.7587092Z    ---------------------------------------- 21.4/21.4 MB 26.5 MB/s  0:00:00
+2026-10-15T01:27:03.0841348Z Installing collected packages: uv
+2026-10-15T01:27:03.3980778Z Successfully installed uv-0.9.5
+2026-10-15T01:27:03.8593366Z Using CPython 3.12.10 interpreter at: C:\hostedtoolcache\windows\Python\3.12.10\x64\python3.exe
+2026-10-15T01:27:03.8594394Z Creating virtual environment at: .venv
+2026-10-15T01:27:03.8866852Z Resolved 32 packages in 2ms
+2026-10-15T01:27:03.9866489Z Downloading maturin (7.8MiB)
+2026-10-15T01:27:03.9872468Z Downloading virtualenv (5.7MiB)
+2026-10-15T01:27:03.9885802Z Downloading numpy (12.2MiB)
+2026-10-15T01:27:03.9892275Z Downloading pygments (1.2MiB)
+2026-10-15T01:27:03.9899047Z Downloading polars-runtime-32 (38.2MiB)
+2026-10-15T01:27:03.9907228Z Downloading ruff (12.9MiB)
+2026-10-15T01:27:03.9913952Z Downloading scipy (34.9MiB)
+2026-10-15T01:27:03.9921005Z Downloading mypy (9.4MiB)
+2026-10-15T01:27:04.8787597Z  Downloading virtualenv
+2026-10-15T01:27:05.0828824Z  Downloading pygments
+2026-10-15T01:27:05.1222289Z  Downloading maturin
+2026-10-15T01:27:08.7565860Z  Downloading ruff
+2026-10-15T01:27:09.3527826Z  Downloading numpy
+2026-10-15T01:27:10.5507168Z  Downloading polars-runtime-32
+2026-10-15T01:27:11.4355320Z  Downloading mypy
+2026-10-15T01:27:11.6138020Z  Downloading scipy
+2026-10-15T01:27:11.6166377Z Prepared 25 packages in 7.72s
+2026-10-15T01:27:11.6217346Z warning: Failed to hardlink files; falling back to full copy. This may lead to degraded performance.
+2026-10-15T01:27:11.6222267Z          If the cache and target directories are on different filesystems, hardlinking may not be supported.
+2026-10-15T01:27:11.6240274Z          If this is intentional, set `export UV_LINK_MODE=copy` or use `--link-mode=copy` to suppress this warning.
+2026-10-15T01:27:12.6849341Z Installed 25 packages in 1.06s
+2026-10-15T01:27:12.6851954Z  + cfgv==3.4.0
+2026-10-15T01:27:12.6853175Z  + colorama==0.4.6
+2026-10-15T01:27:12.6855053Z  + distlib==0.4.0
+2026-10-15T01:27:12.6857162Z  + filelock==3.20.0
+2026-10-15T01:27:12.6859229Z  + identify==2.6.15
+2026-10-15T01:27:12.6861344Z  + iniconfig==2.3.0
+2026-10-15T01:27:12.6863668Z  + maturin==1.9.6
+2026-10-15T01:27:12.6865489Z  + mypy==1.18.2
+2026-10-15T01:27:12.6867542Z  + mypy-extensions==1.1.0
+2026-10-15T01:27:12.6869540Z  + nodeenv==1.9.1
+2026-10-15T01:27:12.6871706Z  + numpy==2.3.4
+2026-10-15T01:27:12.6873314Z  + packaging==25.0
+2026-10-15T01:27:12.6875362Z  + pathspec==0.12.1
+2026-10-15T01:27:12.6877359Z  + platformdirs==4.5.0
+2026-10-15T01:27:12.6879355Z  + pluggy==1.6.0
+2026-10-15T01:27:12.6884581Z  + polars==1.34.0
+2026-10-15T01:27:12.6885569Z  + polars-runtime-32==1.34.0
+2026-10-15T01:27:12.6887057Z  + pre-commit==4.3.0
+2026-10-15T01:27:12.6887631Z  + pygments==2.19.2
+2026-10-15T01:27:12.6889161Z  + pytest==8.4.2
+2026-10-15T01:27:12.6891425Z  + pyyaml==6.0.3
+2026-10-15T01:27:12.6893473Z  + ruff==0.14.2
+2026-10-15T01:27:12.6895456Z  + scipy==1.17.1
+2026-10-15T01:27:12.6897454Z  + typing-extensions==4.15.0
+2026-10-15T01:27:12.6899310Z  + virtualenv==20.35.4
+2026-10-15T01:27:12.8450586Z ##[group]Run uv run --no-sync maturin develop --release --locked
+2026-10-15T01:27:12.8451135Z [36;1muv run --no-sync maturin develop --release --locked[0m
+2026-10-15T01:27:12.8537184Z shell: C:\Program Files\PowerShell\7\pwsh.EXE -command ". '{0}'"
+2026-10-15T01:27:12.8537734Z env:
+2026-10-15T01:27:12.8538015Z   CARGO_TERM_COLOR: always
+2026-10-15T01:27:12.8538382Z   DEFAULT_PYTHON_VERSION: 3.12
+2026-10-15T01:27:12.8538779Z   PIP_DISABLE_PIP_VERSION_CHECK: 1
+2026-10-15T01:27:12.8539276Z   UV_PROJECT_ENVIRONMENT: D:\a\tdigest-rs\tdigest-rs/.venv
+2026-10-15T01:27:12.8539955Z   pythonLocation: C:\hostedtoolcache\windows\Python\3.12.10\x64
+2026-10-15T01:27:12.8540773Z   PKG_CONFIG_PATH: C:\hostedtoolcache\windows\Python\3.12.10\x64/lib/pkgconfig
+2026-10-15T01:27:12.8541563Z   Python_ROOT_DIR: C:\hostedtoolcache\windows\Python\3.12.10\x64
+2026-10-15T01:27:12.8542275Z   Python2_ROOT_DIR: C:\hostedtoolcache\windows\Python\3.12.10\x64
+2026-10-15T01:27:12.8543021Z   Python3_ROOT_DIR: C:\hostedtoolcache\windows\Python\3.12.10\x64
+2026-10-15T01:27:12.8543563Z ##[endgroup]
+2026-10-15T01:27:52.6021932Z [1m[32m    Updating[0m crates.io index
+2026-10-15T01:27:54.9983330Z [1m[32m Downloading[0m crates ...
+2026-10-15T01:27:55.3506971Z [1m[32m  Downloaded[0m futures-macro v0.3.31
+2026-10-15T01:27:55.3641437Z [1m[32m  Downloaded[0m generic-array v0.14.7
+2026-10-15T01:27:55.3815153Z [1m[32m  Downloaded[0m percent-encoding v2.3.2
+2026-10-15T01:27:55.3978951Z [1m[32m  Downloaded[0m phf_shared v0.12.1
+2026-10-15T01:27:55.4183248Z [1m[32m  Downloaded[0m pkg-config v0.3.32
+2026-10-15T01:27:55.4408823Z [1m[32m  Downloaded[0m psm v0.1.27
+2026-10-15T01:27:55.5197690Z [1m[32m  Downloaded[0m ref-cast-impl v1.0.25
+2026-10-15T01:27:55.5400504Z [1m[32m  Downloaded[0m slotmap v1.0.7
+2026-10-15T01:27:55.5631181Z [1m[32m  Downloaded[0m smallvec v1.15.1
+2026-10-15T01:27:55.5885201Z [1m[32m  Downloaded[0m tokio-rustls v0.26.4
+2026-10-15T01:27:55.6094514Z [1m[32m  Downloaded[0m wasm-bindgen-shared v0.2.104
+2026-10-15T01:27:55.6238665Z [1m[32m  Downloaded[0m wasm-streams v0.4.2
+2026-10-15T01:27:55.6756198Z [1m[32m  Downloaded[0m wasm-bindgen v0.2.104
+2026-10-15T01:27:55.6951645Z [1m[32m  Downloaded[0m windows-link v0.2.1
+2026-10-15T01:27:55.7060027Z [1m[32m  Downloaded[0m zstd-safe v7.2.4
+2026-10-15T01:27:55.7208639Z [1m[32m  Downloaded[0m zstd v0.13.3
+2026-10-15T01:27:55.7503838Z [1m[32m  Downloaded[0m zerovec-derive v0.11.1
+2026-10-15T01:27:55.7693406Z [1m[32m  Downloaded[0m zerofrom-derive v0.1.6
+2026-10-15T01:27:55.7794920Z [1m[32m  Downloaded[0m windows-targets v0.52.6
+2026-10-15T01:27:55.7872080Z [1m[32m  Downloaded[0m typenum v1.19.0
+2026-10-15T01:27:55.8076641Z [1m[32m  Downloaded[0m windows-implement v0.60.2
+2026-10-15T01:27:55.8216910Z [1m[32m  Downloaded[0m url v2.5.7
+2026-10-15T01:27:55.8455663Z [1m[32m  Downloaded[0m unicode-width v0.2.2
+2026-10-15T01:27:55.8627448Z [1m[32m  Downloaded[0m tower-http v0.6.6
+2026-10-15T01:27:55.9446958Z [1m[32m  Downloaded[0m tower v0.5.2
+2026-10-15T01:27:56.0394729Z [1m[32m  Downloaded[0m web-sys v0.3.81
+2026-10-15T01:27:57.5228146Z [1m[32m  Downloaded[0m syn v2.0.106
+2026-10-15T01:27:57.6065529Z [1m[32m  Downloaded[0m zerocopy v0.8.27
+2026-10-15T01:27:57.8786475Z [1m[32m  Downloaded[0m zlib-rs v0.5.2
+2026-10-15T01:27:57.9211896Z [1m[32m  Downloaded[0m windows_x86_64_msvc v0.52.6
+2026-10-15T01:27:57.9417351Z [1m[32m  Downloaded[0m windows_i686_gnu v0.53.1
+2026-10-15T01:27:57.9745862Z [1m[32m  Downloaded[0m windows_aarch64_msvc v0.52.6
+2026-10-15T01:27:57.9938097Z [1m[32m  Downloaded[0m wasip2 v1.0.1+wasi-0.2.4
+2026-10-15T01:27:58.0365735Z [1m[32m  Downloaded[0m unicode-segmentation v1.12.0
+2026-10-15T01:27:58.0578438Z [1m[32m  Downloaded[0m tracing v0.1.41
+2026-10-15T01:27:58.0985103Z [1m[32m  Downloaded[0m windows_i686_msvc v0.52.6
+2026-10-15T01:27:58.1227279Z [1m[32m  Downloaded[0m zstd-sys v2.0.16+zstd.1.5.7
+2026-10-15T01:27:58.2276106Z [1m[32m  Downloaded[0m zerotrie v0.2.2
+2026-10-15T01:27:58.7440621Z [1m[32m  Downloaded[0m zerovec v0.11.4
+2026-10-15T01:27:58.7900853Z [1m[32m  Downloaded[0m ring v0.17.14
+2026-10-15T01:27:59.0973105Z [1m[32m  Downloaded[0m zerocopy-derive v0.8.27
+2026-10-15T01:27:59.1675678Z [1m[32m  Downloaded[0m linux-raw-sys v0.11.0
+2026-10-15T01:27:59.4441298Z [1m[32m  Downloaded[0m yoke-derive v0.8.0
+2026-10-15T01:27:59.4540657Z [1m[32m  Downloaded[0m wit-bindgen v0.46.0
+2026-10-15T01:27:59.4824545Z [1m[32m  Downloaded[0m windows-targets v0.53.5
+2026-10-15T01:27:59.4923779Z [1m[32m  Downloaded[0m windows-strings v0.5.1
+2026-10-15T01:27:59.5082853Z [1m[32m  Downloaded[0m windows-result v0.4.1
+2026-10-15T01:27:59.5207088Z [1m[32m  Downloaded[0m windows-interface v0.59.3
+2026-10-15T01:27:59.5282754Z [1m[32m  Downloaded[0m winapi-util v0.1.11
+2026-10-15T01:27:59.5439197Z [1m[32m  Downloaded[0m web-time v1.1.0
+2026-10-15T01:27:59.5557759Z [1m[32m  Downloaded[0m tokio-util v0.7.16
+2026-10-15T01:27:59.6196410Z [1m[32m  Downloaded[0m pyo3 v0.25.1
+2026-10-15T01:28:00.1677779Z [1m[32m  Downloaded[0m zeroize v1.8.2
+2026-10-15T01:28:00.1781513Z [1m[32m  Downloaded[0m zerofrom v0.1.6
+2026-10-15T01:28:00.1863763Z [1m[32m  Downloaded[0m writeable v0.6.1
+2026-10-15T01:28:00.2061698Z [1m[32m  Downloaded[0m unicode-ident v1.0.19
+2026-10-15T01:28:00.2281484Z [1m[32m  Downloaded[0m tokio v1.47.1
+2026-10-15T01:28:00.5897071Z [1m[32m  Downloaded[0m regex-automata v0.4.11
+2026-10-15T01:28:00.6853616Z [1m[32m  Downloaded[0m windows-sys v0.52.0
+2026-10-15T01:28:00.9720112Z [1m[32m  Downloaded[0m yoke v0.8.0
+2026-10-15T01:28:00.9890519Z [1m[32m  Downloaded[0m xxhash-rust v0.8.15
+2026-10-15T01:28:01.3640479Z [1m[32m  Downloaded[0m windows_x86_64_gnullvm v0.52.6
+2026-10-15T01:28:01.3807071Z [1m[32m  Downloaded[0m windows_aarch64_gnullvm v0.52.6
+2026-10-15T01:28:01.3982521Z [1m[32m  Downloaded[0m utf8_iter v1.0.4
+2026-10-15T01:28:01.4070171Z [1m[32m  Downloaded[0m serde-pickle v1.2.0
+2026-10-15T01:28:01.4439659Z [1m[32m  Downloaded[0m windows_i686_gnullvm v0.52.6
+2026-10-15T01:28:01.4607805Z [1m[32m  Downloaded[0m rustix v1.1.2
+2026-10-15T01:28:01.6869741Z [1m[32m  Downloaded[0m windows_x86_64_msvc v0.53.1
+2026-10-15T01:28:01.7088196Z [1m[32m  Downloaded[0m windows_i686_gnullvm v0.53.1
+2026-10-15T01:28:01.7300139Z [1m[32m  Downloaded[0m windows_i686_gnu v0.52.6
+2026-10-15T01:28:01.7580530Z [1m[32m  Downloaded[0m windows-core v0.62.2
+2026-10-15T01:28:01.7878720Z [1m[32m  Downloaded[0m try-lock v0.2.5
+2026-10-15T01:28:01.7988649Z [1m[32m  Downloaded[0m tracing-core v0.1.34
+2026-10-15T01:28:01.8242659Z [1m[32m  Downloaded[0m tower-service v0.3.3
+2026-10-15T01:28:01.8317012Z [1m[32m  Downloaded[0m skiplist v0.6.0
+2026-10-15T01:28:01.8758442Z [1m[32m  Downloaded[0m simd-json v0.15.1
+2026-10-15T01:28:01.9594650Z [1m[32m  Downloaded[0m reqwest v0.12.23
+2026-10-15T01:28:02.0090520Z [1m[32m  Downloaded[0m regex v1.11.3
+2026-10-15T01:28:02.0655858Z [1m[32m  Downloaded[0m quick-xml v0.38.3
+2026-10-15T01:28:02.1030005Z [1m[32m  Downloaded[0m libc v0.2.176
+2026-10-15T01:28:02.2797563Z [1m[32m  Downloaded[0m windows_aarch64_gnullvm v0.53.1
+2026-10-15T01:28:02.2996630Z [1m[32m  Downloaded[0m windows_x86_64_gnullvm v0.53.1
+2026-10-15T01:28:02.3194371Z [1m[32m  Downloaded[0m uuid v1.18.1
+2026-10-15T01:28:02.3427016Z [1m[32m  Downloaded[0m untrusted v0.9.0
+2026-10-15T01:28:02.3564168Z [1m[32m  Downloaded[0m windows_x86_64_gnu v0.52.6
+2026-10-15T01:28:02.3850937Z [1m[32m  Downloaded[0m windows_aarch64_msvc v0.53.1
+2026-10-15T01:28:02.4083485Z [1m[32m  Downloaded[0m unindent v0.2.4
+2026-10-15T01:28:02.4161677Z [1m[32m  Downloaded[0m tracing-attributes v0.1.30
+2026-10-15T01:28:02.9921669Z [1m[32m  Downloaded[0m windows_x86_64_gnu v0.53.1
+2026-10-15T01:28:03.0343401Z [1m[32m  Downloaded[0m windows_i686_msvc v0.53.1
+2026-10-15T01:28:03.0568208Z [1m[32m  Downloaded[0m winapi v0.3.9
+2026-10-15T01:28:03.3395409Z [1m[32m  Downloaded[0m serde_json v1.0.145
+2026-10-15T01:28:03.4052974Z [1m[32m  Downloaded[0m serde v1.0.228
+2026-10-15T01:28:03.4327965Z [1m[32m  Downloaded[0m security-framework v3.5.1
+2026-10-15T01:28:03.4672365Z [1m[32m  Downloaded[0m rustls-webpki v0.103.7
+2026-10-15T01:28:03.4897087Z [1m[32m  Downloaded[0m pyo3-macros-backend v0.25.1
+2026-10-15T01:28:03.5120301Z [1m[32m  Downloaded[0m polars-lazy v0.51.0
+2026-10-15T01:28:03.5459475Z [1m[32m  Downloaded[0m memchr v2.7.6
+2026-10-15T01:28:03.5925986Z [1m[32m  Downloaded[0m wasm-bindgen-macro-support v0.2.104
+2026-10-15T01:28:03.6001851Z [1m[32m  Downloaded[0m wasm-bindgen-futures v0.4.54
+2026-10-15T01:28:03.6124621Z [1m[32m  Downloaded[0m wasm-bindgen-backend v0.2.104
+2026-10-15T01:28:03.6219962Z [1m[32m  Downloaded[0m wasi v0.14.7+wasi-0.2.4
+2026-10-15T01:28:03.6412132Z [1m[32m  Downloaded[0m wasi v0.11.1+wasi-snapshot-preview1
+2026-10-15T01:28:03.6555560Z [1m[32m  Downloaded[0m want v0.3.1
+2026-10-15T01:28:03.6659787Z [1m[32m  Downloaded[0m walkdir v2.5.0
+2026-10-15T01:28:03.6809163Z [1m[32m  Downloaded[0m wait-timeout v0.2.1
+2026-10-15T01:28:03.7300709Z [1m[32m  Downloaded[0m virtue v0.0.18
+2026-10-15T01:28:03.7531211Z [1m[32m  Downloaded[0m version_check v0.9.5
+2026-10-15T01:28:03.7638362Z [1m[32m  Downloaded[0m value-trait v0.11.0
+2026-10-15T01:28:03.7831412Z [1m[32m  Downloaded[0m utf8parse v0.2.2
+2026-10-15T01:28:03.7915095Z [1m[32m  Downloaded[0m unty v0.0.4
+2026-10-15T01:28:03.8031981Z [1m[32m  Downloaded[0m tower-layer v0.3.3
+2026-10-15T01:28:03.8428480Z [1m[32m  Downloaded[0m target-lexicon v0.13.3
+2026-10-15T01:28:04.0810633Z [1m[32m  Downloaded[0m rustls v0.23.32
+2026-10-15T01:28:04.1849619Z [1m[32m  Downloaded[0m rand_distr v0.5.1
+2026-10-15T01:28:04.2164601Z [1m[32m  Downloaded[0m polars-plan v0.51.0
+2026-10-15T01:28:04.3968710Z [1m[32m  Downloaded[0m polars-io v0.51.0
+2026-10-15T01:28:04.4732600Z [1m[32m  Downloaded[0m object_store v0.12.4
+2026-10-15T01:28:04.5335977Z [1m[32m  Downloaded[0m libm v0.2.15
+2026-10-15T01:28:04.6497654Z [1m[32m  Downloaded[0m wasm-bindgen-macro v0.2.104
+2026-10-15T01:28:04.6578689Z [1m[32m  Downloaded[0m tinyvec_macros v0.1.1
+2026-10-15T01:28:04.6654603Z [1m[32m  Downloaded[0m tinyvec v1.10.0
+2026-10-15T01:28:04.6887372Z [1m[32m  Downloaded[0m tinystr v0.8.1
+2026-10-15T01:28:04.7073248Z [1m[32m  Downloaded[0m thiserror-impl v2.0.17
+2026-10-15T01:28:04.7216759Z [1m[32m  Downloaded[0m thiserror-impl v1.0.69
+2026-10-15T01:28:04.7341104Z [1m[32m  Downloaded[0m thiserror v2.0.17
+2026-10-15T01:28:04.8102726Z [1m[32m  Downloaded[0m thiserror v1.0.69
+2026-10-15T01:28:04.8732061Z [1m[32m  Downloaded[0m tempfile v3.23.0
+2026-10-15T01:28:04.8950676Z [1m[32m  Downloaded[0m sync_wrapper v1.0.2
+2026-10-15T01:28:04.9019627Z [1m[32m  Downloaded[0m subtle v2.6.1
+2026-10-15T01:28:04.9117203Z [1m[32m  Downloaded[0m strum_macros v0.27.2
+2026-10-15T01:28:04.9377745Z [1m[32m  Downloaded[0m strsim v0.11.1
+2026-10-15T01:28:04.9499601Z [1m[32m  Downloaded[0m strength_reduce v0.2.4
+2026-10-15T01:28:04.9616944Z [1m[32m  Downloaded[0m streaming-iterator v0.1.9
+2026-10-15T01:28:04.9739023Z [1m[32m  Downloaded[0m streaming-decompression v0.1.2
+2026-10-15T01:28:04.9827962Z [1m[32m  Downloaded[0m static_assertions v1.1.0
+2026-10-15T01:28:04.9971730Z [1m[32m  Downloaded[0m stacker v0.1.22
+2026-10-15T01:28:05.0152532Z [1m[32m  Downloaded[0m socket2 v0.6.0
+2026-10-15T01:28:05.0263949Z [1m[32m  Downloaded[0m rayon v1.11.0
+2026-10-15T01:28:05.1143585Z [1m[32m  Downloaded[0m raw-cpuid v11.6.0
+2026-10-15T01:28:05.1368396Z [1m[32m  Downloaded[0m rand v0.8.5
+2026-10-15T01:28:05.1646755Z [1m[32m  Downloaded[0m quinn-proto v0.11.13
+2026-10-15T01:28:05.6151590Z [1m[32m  Downloaded[0m polars-utils v0.51.0
+2026-10-15T01:28:05.6621740Z [1m[32m  Downloaded[0m polars-parquet v0.51.0
+2026-10-15T01:28:05.7882624Z [1m[32m  Downloaded[0m numpy v0.25.0
+2026-10-15T01:28:05.8202929Z [1m[32m  Downloaded[0m num-bigint v0.4.6
+2026-10-15T01:28:05.8636928Z [1m[32m  Downloaded[0m lz4-sys v1.11.1+lz4-1.10.0
+2026-10-15T01:28:06.7737101Z [1m[32m  Downloaded[0m gimli v0.32.3
+2026-10-15T01:28:06.8141891Z [1m[32m  Downloaded[0m tokio-macros v2.5.0
+2026-10-15T01:28:06.8219250Z [1m[32m  Downloaded[0m tinytemplate v1.2.1
+2026-10-15T01:28:06.8373671Z [1m[32m  Downloaded[0m termtree v0.5.1
+2026-10-15T01:28:06.8460447Z [1m[32m  Downloaded[0m synstructure v0.13.2
+2026-10-15T01:28:06.8552283Z [1m[32m  Downloaded[0m stable_deref_trait v1.2.0
+2026-10-15T01:28:06.8644018Z [1m[32m  Downloaded[0m windows-sys v0.60.2
+2026-10-15T01:28:07.1736560Z [1m[32m  Downloaded[0m winapi-i686-pc-windows-gnu v0.4.0
+2026-10-15T01:28:08.7510846Z [1m[32m  Downloaded[0m serde_stacker v0.1.14
+2026-10-15T01:28:08.7630454Z [1m[32m  Downloaded[0m serde_derive v1.0.228
+2026-10-15T01:28:08.7902740Z [1m[32m  Downloaded[0m serde_core v1.0.228
+2026-10-15T01:28:08.8121908Z [1m[32m  Downloaded[0m scopeguard v1.2.0
+2026-10-15T01:28:08.8219638Z [1m[32m  Downloaded[0m schannel v0.1.28
+2026-10-15T01:28:08.8461730Z [1m[32m  Downloaded[0m same-file v1.0.6
+2026-10-15T01:28:08.8577056Z [1m[32m  Downloaded[0m rmp-serde v1.3.0
+2026-10-15T01:28:08.8718258Z [1m[32m  Downloaded[0m rmp v0.8.14
+2026-10-15T01:28:08.9132738Z [1m[32m  Downloaded[0m regex-syntax v0.8.6
+2026-10-15T01:28:08.9489034Z [1m[32m  Downloaded[0m rayon-core v1.13.0
+2026-10-15T01:28:08.9817906Z [1m[32m  Downloaded[0m rand v0.9.2
+2026-10-15T01:28:09.0130635Z [1m[32m  Downloaded[0m quinn v0.11.9
+2026-10-15T01:28:09.0396137Z [1m[32m  Downloaded[0m pyo3-polars v0.24.0
+2026-10-15T01:28:09.0601359Z [1m[32m  Downloaded[0m windows-sys v0.59.0
+2026-10-15T01:28:09.3487169Z [1m[32m  Downloaded[0m portable-atomic v1.11.1
+2026-10-15T01:28:09.3994846Z [1m[32m  Downloaded[0m windows-sys v0.61.2
+2026-10-15T01:28:10.0243031Z [1m[32m  Downloaded[0m polars-stream v0.51.0
+2026-10-15T01:28:10.1291450Z [1m[32m  Downloaded[0m polars-arrow-format v0.2.1
+2026-10-15T01:28:10.1429698Z [1m[32m  Downloaded[0m polars-arrow v0.51.0
+2026-10-15T01:28:10.3559221Z [1m[32m  Downloaded[0m itertools v0.14.0
+2026-10-15T01:28:10.4155548Z [1m[32m  Downloaded[0m itertools v0.10.5
+2026-10-15T01:28:10.4790660Z [1m[32m  Downloaded[0m idna v1.1.0
+2026-10-15T01:28:10.4980031Z [1m[32m  Downloaded[0m icu_normalizer_data v2.0.0
+2026-10-15T01:28:10.5116266Z [1m[32m  Downloaded[0m http v1.3.1
+2026-10-15T01:28:10.5422122Z [1m[32m  Downloaded[0m hashbrown v0.16.0
+2026-10-15T01:28:10.5744373Z [1m[32m  Downloaded[0m slab v0.4.11
+2026-10-15T01:28:10.5844779Z [1m[32m  Downloaded[0m simdutf8 v0.1.5
+2026-10-15T01:28:10.6047108Z [1m[32m  Downloaded[0m signal-hook-registry v1.4.6
+2026-10-15T01:28:10.6134393Z [1m[32m  Downloaded[0m signal-hook v0.3.18
+2026-10-15T01:28:10.6429424Z [1m[32m  Downloaded[0m sha2 v0.10.9
+2026-10-15T01:28:10.6686464Z [1m[32m  Downloaded[0m serde_urlencoded v0.7.1
+2026-10-15T01:28:10.6839195Z [1m[32m  Downloaded[0m ryu v1.0.20
+2026-10-15T01:28:10.7151964Z [1m[32m  Downloaded[0m rustversion v1.0.22
+2026-10-15T01:28:10.7460781Z [1m[32m  Downloaded[0m rustls-pki-types v1.12.0
+2026-10-15T01:28:11.1488589Z [1m[32m  Downloaded[0m rustls-native-certs v0.8.1
+2026-10-15T01:28:11.1709356Z [1m[32m  Downloaded[0m rustc-hash v2.1.1
+2026-10-15T01:28:11.1821438Z [1m[32m  Downloaded[0m rustc-demangle v0.1.26
+2026-10-15T01:28:11.1960371Z [1m[32m  Downloaded[0m ref-cast v1.0.25
+2026-10-15T01:28:11.2274405Z [1m[32m  Downloaded[0m redox_syscall v0.5.18
+2026-10-15T01:28:11.2542426Z [1m[32m  Downloaded[0m recursive v0.1.1
+2026-10-15T01:28:11.2644609Z [1m[32m  Downloaded[0m rawpointer v0.2.1
+2026-10-15T01:28:11.2725863Z [1m[32m  Downloaded[0m rand_core v0.6.4
+2026-10-15T01:28:11.2833736Z [1m[32m  Downloaded[0m rand_chacha v0.9.0
+2026-10-15T01:28:11.2927854Z [1m[32m  Downloaded[0m r-efi v5.3.0
+2026-10-15T01:28:11.3483357Z [1m[32m  Downloaded[0m quote v1.0.41
+2026-10-15T01:28:11.3729996Z [1m[32m  Downloaded[0m quinn-udp v0.5.14
+2026-10-15T01:28:11.3857670Z [1m[32m  Downloaded[0m winapi-x86_64-pc-windows-gnu v0.4.0
+2026-10-15T01:28:12.7918656Z [1m[32m  Downloaded[0m pyo3-polars-derive v0.18.0
+2026-10-15T01:28:12.8007049Z [1m[32m  Downloaded[0m pyo3-macros v0.25.1
+2026-10-15T01:28:12.8079704Z [1m[32m  Downloaded[0m pyo3-build-config v0.25.1
+2026-10-15T01:28:12.8170850Z [1m[32m  Downloaded[0m proc-macro2 v1.0.101
+2026-10-15T01:28:12.8449633Z [1m[32m  Downloaded[0m predicates-tree v1.0.12
+2026-10-15T01:28:12.8528734Z [1m[32m  Downloaded[0m ppv-lite86 v0.2.21
+2026-10-15T01:28:12.8649014Z [1m[32m  Downloaded[0m potential_utf v0.1.3
+2026-10-15T01:28:12.8743254Z [1m[32m  Downloaded[0m polars-schema v0.51.0
+2026-10-15T01:28:12.8830635Z [1m[32m  Downloaded[0m polars-parquet-format v0.1.0
+2026-10-15T01:28:12.9054906Z [1m[32m  Downloaded[0m polars-json v0.51.0
+2026-10-15T01:28:12.9187113Z [1m[32m  Downloaded[0m polars-error v0.51.0
+2026-10-15T01:28:12.9279424Z [1m[32m  Downloaded[0m polars-dtype v0.51.0
+2026-10-15T01:28:12.9366846Z [1m[32m  Downloaded[0m pin-utils v0.1.0
+2026-10-15T01:28:12.9468835Z [1m[32m  Downloaded[0m parking v2.2.1
+2026-10-15T01:28:12.9590261Z [1m[32m  Downloaded[0m once_cell v1.21.3
+2026-10-15T01:28:12.9808542Z [1m[32m  Downloaded[0m normalize-line-endings v0.3.0
+2026-10-15T01:28:12.9887761Z [1m[32m  Downloaded[0m is_terminal_polyfill v1.70.2
+2026-10-15T01:28:12.9957026Z [1m[32m  Downloaded[0m iana-time-zone-haiku v0.1.2
+2026-10-15T01:28:13.0043972Z [1m[32m  Downloaded[0m futures-sink v0.3.31
+2026-10-15T01:28:13.0109458Z [1m[32m  Downloaded[0m futures-io v0.3.31
+2026-10-15T01:28:13.0174340Z [1m[32m  Downloaded[0m chrono-tz v0.10.4
+2026-10-15T01:28:13.0538531Z [1m[32m  Downloaded[0m bstr v1.12.0
+2026-10-15T01:28:13.1065046Z [1m[32m  Downloaded[0m siphasher v1.0.1
+2026-10-15T01:28:13.1161451Z [1m[32m  Downloaded[0m simd-adler32 v0.3.7
+2026-10-15T01:28:13.1361154Z [1m[32m  Downloaded[0m shlex v1.3.0
+2026-10-15T01:28:13.1456587Z [1m[32m  Downloaded[0m security-framework-sys v2.15.0
+2026-10-15T01:28:13.1654816Z [1m[32m  Downloaded[0m rand_core v0.9.3
+2026-10-15T01:28:13.1757912Z [1m[32m  Downloaded[0m portable-atomic-util v0.2.4
+2026-10-15T01:28:13.1860761Z [1m[32m  Downloaded[0m polars-time v0.51.0
+2026-10-15T01:28:13.2217523Z [1m[32m  Downloaded[0m polars-row v0.51.0
+2026-10-15T01:28:13.2389909Z [1m[32m  Downloaded[0m polars-ops v0.51.0
+2026-10-15T01:28:13.3344370Z [1m[32m  Downloaded[0m polars-mem-engine v0.51.0
+2026-10-15T01:28:13.3592894Z [1m[32m  Downloaded[0m polars-ffi v0.51.0
+2026-10-15T01:28:13.3655029Z [1m[32m  Downloaded[0m polars-compute v0.51.0
+2026-10-15T01:28:13.4376990Z [1m[32m  Downloaded[0m polars v0.51.0
+2026-10-15T01:28:13.5689298Z [1m[32m  Downloaded[0m plotters-backend v0.3.7
+2026-10-15T01:28:13.5812283Z [1m[32m  Downloaded[0m plotters v0.3.7
+2026-10-15T01:28:13.6671167Z [1m[32m  Downloaded[0m planus v1.1.1
+2026-10-15T01:28:13.6943544Z [1m[32m  Downloaded[0m phf v0.12.1
+2026-10-15T01:28:13.7053653Z [1m[32m  Downloaded[0m paste v1.0.15
+2026-10-15T01:28:13.7388776Z [1m[32m  Downloaded[0m parking_lot_core v0.9.12
+2026-10-15T01:28:13.7581490Z [1m[32m  Downloaded[0m openssl-probe v0.1.6
+2026-10-15T01:28:13.7784028Z [1m[32m  Downloaded[0m oorandom v11.1.5
+2026-10-15T01:28:13.7848415Z [1m[32m  Downloaded[0m num-traits v0.2.19
+2026-10-15T01:28:13.8082139Z [1m[32m  Downloaded[0m num-integer v0.1.46
+2026-10-15T01:28:13.8212960Z [1m[32m  Downloaded[0m num v0.4.3
+2026-10-15T01:28:14.2563091Z [1m[32m  Downloaded[0m ndarray v0.16.1
+2026-10-15T01:28:14.3785851Z [1m[32m  Downloaded[0m memmap2 v0.9.8
+2026-10-15T01:28:14.3910866Z [1m[32m  Downloaded[0m lz4 v1.28.1
+2026-10-15T01:28:14.4043465Z [1m[32m  Downloaded[0m log v0.4.28
+2026-10-15T01:28:14.4240722Z [1m[32m  Downloaded[0m lock_api v0.4.14
+2026-10-15T01:28:14.4329111Z [1m[32m  Downloaded[0m litemap v0.8.0
+2026-10-15T01:28:14.4522019Z [1m[32m  Downloaded[0m jemallocator v0.5.4
+2026-10-15T01:28:14.4664602Z [1m[32m  Downloaded[0m jemalloc-ctl v0.5.4
+2026-10-15T01:28:14.4807036Z [1m[32m  Downloaded[0m ipnet v2.11.0
+2026-10-15T01:28:14.4940284Z [1m[32m  Downloaded[0m io-uring v0.7.10
+2026-10-15T01:28:14.5195728Z [1m[32m  Downloaded[0m indexmap v2.11.4
+2026-10-15T01:28:14.5575029Z [1m[32m  Downloaded[0m icu_provider v2.0.0
+2026-10-15T01:28:14.5788449Z [1m[32m  Downloaded[0m icu_locale_core v2.0.0
+2026-10-15T01:28:14.6565017Z [1m[32m  Downloaded[0m hyper-rustls v0.27.7
+2026-10-15T01:28:14.6779204Z [1m[32m  Downloaded[0m hyper v1.7.0
+2026-10-15T01:28:14.7308296Z [1m[32m  Downloaded[0m http-body-util v0.1.3
+2026-10-15T01:28:14.7489479Z [1m[32m  Downloaded[0m home v0.5.11
+2026-10-15T01:28:14.7569045Z [1m[32m  Downloaded[0m globwalk v0.9.1
+2026-10-15T01:28:14.7672186Z [1m[32m  Downloaded[0m getrandom v0.2.16
+2026-10-15T01:28:14.7914382Z [1m[32m  Downloaded[0m futures-task v0.3.31
+2026-10-15T01:28:14.8023891Z [1m[32m  Downloaded[0m futures-executor v0.3.31
+2026-10-15T01:28:14.8147118Z [1m[32m  Downloaded[0m crossterm v0.29.0
+2026-10-15T01:28:14.8794572Z [1m[32m  Downloaded[0m crc32fast v1.5.0
+2026-10-15T01:28:15.1401270Z [1m[32m  Downloaded[0m clap_builder v4.5.48
+2026-10-15T01:28:15.4492374Z [1m[32m  Downloaded[0m chrono v0.4.42
+2026-10-15T01:28:15.4928585Z [1m[32m  Downloaded[0m cc v1.2.40
+2026-10-15T01:28:15.5145182Z [1m[32m  Downloaded[0m blake3 v1.8.2
+2026-10-15T01:28:15.5754900Z [1m[32m  Downloaded[0m aho-corasick v1.1.3
+2026-10-15T01:28:15.6149537Z [1m[32m  Downloaded[0m recursive-proc-macro-impl v0.1.1
+2026-10-15T01:28:15.6221519Z [1m[32m  Downloaded[0m pyo3-ffi v0.25.1
+2026-10-15T01:28:15.7010541Z [1m[32m  Downloaded[0m predicates v3.1.3
+2026-10-15T01:28:15.7241382Z [1m[32m  Downloaded[0m polars-expr v0.51.0
+2026-10-15T01:28:15.7670589Z [1m[32m  Downloaded[0m polars-core v0.51.0
+2026-10-15T01:28:15.9321865Z [1m[32m  Downloaded[0m plotters-svg v0.3.7
+2026-10-15T01:28:15.9387295Z [1m[32m  Downloaded[0m num-iter v0.1.46
+2026-10-15T01:28:15.9471342Z [1m[32m  Downloaded[0m miniz_oxide v0.8.9
+2026-10-15T01:28:15.9646254Z [1m[32m  Downloaded[0m lru-slab v0.1.2
+2026-10-15T01:28:15.9718178Z [1m[32m  Downloaded[0m jobserver v0.1.34
+2026-10-15T01:28:15.9915647Z [1m[32m  Downloaded[0m jemalloc-sys v0.5.4+5.3.0-patched
+2026-10-15T01:28:16.3411649Z [1m[32m  Downloaded[0m is-terminal v0.4.16
+2026-10-15T01:28:16.3479059Z [1m[32m  Downloaded[0m ignore v0.4.24
+2026-10-15T01:28:16.3709469Z [1m[32m  Downloaded[0m iana-time-zone v0.1.64
+2026-10-15T01:28:16.3934986Z [1m[32m  Downloaded[0m httparse v1.10.1
+2026-10-15T01:28:16.4125585Z [1m[32m  Downloaded[0m heck v0.5.0
+2026-10-15T01:28:16.4263622Z [1m[32m  Downloaded[0m halfbrown v0.3.0
+2026-10-15T01:28:16.4440793Z [1m[32m  Downloaded[0m glob v0.3.3
+2026-10-15T01:28:16.4557572Z [1m[32m  Downloaded[0m futures v0.3.31
+2026-10-15T01:28:16.5013642Z [1m[32m  Downloaded[0m flate2 v1.1.4
+2026-10-15T01:28:16.5477524Z [1m[32m  Downloaded[0m event-listener v5.4.1
+2026-10-15T01:28:16.5610367Z [1m[32m  Downloaded[0m displaydoc v0.2.5
+2026-10-15T01:28:16.5896648Z [1m[32m  Downloaded[0m crossbeam-epoch v0.9.18
+2026-10-15T01:28:16.6094291Z [1m[32m  Downloaded[0m crossbeam-channel v0.5.15
+2026-10-15T01:28:16.6427019Z [1m[32m  Downloaded[0m criterion-plot v0.5.0
+2026-10-15T01:28:16.6583267Z [1m[32m  Downloaded[0m criterion v0.5.1
+2026-10-15T01:28:16.8519575Z [1m[32m  Downloaded[0m compact_str v0.9.0
+2026-10-15T01:28:17.2491752Z [1m[32m  Downloaded[0m comfy-table v7.2.1
+2026-10-15T01:28:17.3139560Z [1m[32m  Downloaded[0m clap v4.5.48
+2026-10-15T01:28:17.4137875Z [1m[32m  Downloaded[0m castaway v0.2.4
+2026-10-15T01:28:17.4266401Z [1m[32m  Downloaded[0m bytes v1.10.1
+2026-10-15T01:28:17.4637586Z [1m[32m  Downloaded[0m byteorder v1.5.0
+2026-10-15T01:28:17.4754859Z [1m[32m  Downloaded[0m bytemuck_derive v1.10.2
+2026-10-15T01:28:17.4850840Z [1m[32m  Downloaded[0m bytemuck v1.24.0
+2026-10-15T01:28:17.5180427Z [1m[32m  Downloaded[0m bumpalo v3.19.0
+2026-10-15T01:28:17.5349733Z [1m[32m  Downloaded[0m boxcar v0.2.14
+2026-10-15T01:28:17.5476120Z [1m[32m  Downloaded[0m bitflags v2.9.4
+2026-10-15T01:28:17.5888561Z [1m[32m  Downloaded[0m bincode v2.0.1
+2026-10-15T01:28:17.6380107Z [1m[32m  Downloaded[0m backtrace v0.3.76
+2026-10-15T01:28:17.6930798Z [1m[32m  Downloaded[0m autocfg v1.5.0
+2026-10-15T01:28:17.7116073Z [1m[32m  Downloaded[0m async-channel v2.5.0
+2026-10-15T01:28:17.7215931Z [1m[32m  Downloaded[0m assert_fs v1.1.3
+2026-10-15T01:28:17.7339933Z [1m[32m  Downloaded[0m anstyle-parse v0.2.7
+2026-10-15T01:28:17.7469341Z [1m[32m  Downloaded[0m allocator-api2 v0.2.21
+2026-10-15T01:28:17.7671465Z [1m[32m  Downloaded[0m predicates-core v1.0.9
+2026-10-15T01:28:17.7756637Z [1m[32m  Downloaded[0m pin-project-lite v0.2.16
+2026-10-15T01:28:17.8542578Z [1m[32m  Downloaded[0m object v0.37.3
+2026-10-15T01:28:17.9390892Z [1m[32m  Downloaded[0m iri-string v0.7.8
+2026-10-15T01:28:18.0473165Z [1m[32m  Downloaded[0m icu_properties_data v2.0.1
+2026-10-15T01:28:18.4814389Z [1m[32m  Downloaded[0m icu_properties v2.0.1
+2026-10-15T01:28:18.4964307Z [1m[32m  Downloaded[0m icu_collections v2.0.0
+2026-10-15T01:28:18.5581902Z [1m[32m  Downloaded[0m hyper-util v0.1.17
+2026-10-15T01:28:18.6008306Z [1m[32m  Downloaded[0m hashbrown v0.15.5
+2026-10-15T01:28:18.6324103Z [1m[32m  Downloaded[0m half v2.6.0
+2026-10-15T01:28:18.6515206Z [1m[32m  Downloaded[0m h2 v0.4.12
+2026-10-15T01:28:18.7020838Z [1m[32m  Downloaded[0m futures-util v0.3.31
+2026-10-15T01:28:18.8327227Z [1m[32m  Downloaded[0m foldhash v0.1.5
+2026-10-15T01:28:18.8421170Z [1m[32m  Downloaded[0m float-cmp v0.10.0
+2026-10-15T01:28:18.8518488Z [1m[32m  Downloaded[0m find-msvc-tools v0.1.3
+2026-10-15T01:28:18.8663851Z [1m[32m  Downloaded[0m fast-float2 v0.2.3
+2026-10-15T01:28:18.8909059Z [1m[32m  Downloaded[0m event-listener-strategy v0.5.4
+2026-10-15T01:28:18.8996931Z [1m[32m  Downloaded[0m either v1.15.0
+2026-10-15T01:28:18.9179116Z [1m[32m  Downloaded[0m document-features v0.2.11
+2026-10-15T01:28:18.9304413Z [1m[32m  Downloaded[0m debug_unsafe v0.1.3
+2026-10-15T01:28:18.9383313Z [1m[32m  Downloaded[0m crossbeam-deque v0.8.6
+2026-10-15T01:28:18.9486603Z [1m[32m  Downloaded[0m cpufeatures v0.2.17
+2026-10-15T01:28:18.9607840Z [1m[32m  Downloaded[0m core-foundation v0.10.1
+2026-10-15T01:28:18.9792340Z [1m[32m  Downloaded[0m clap_derive v4.5.47
+2026-10-15T01:28:18.9959430Z [1m[32m  Downloaded[0m ciborium v0.2.2
+2026-10-15T01:28:19.0168212Z [1m[32m  Downloaded[0m cfg_aliases v0.2.1
+2026-10-15T01:28:19.0249672Z [1m[32m  Downloaded[0m block-buffer v0.10.4
+2026-10-15T01:28:19.0334439Z [1m[32m  Downloaded[0m bincode_derive v2.0.1
+2026-10-15T01:28:19.0437581Z [1m[32m  Downloaded[0m base64 v0.22.1
+2026-10-15T01:28:19.0756700Z [1m[32m  Downloaded[0m atomic-waker v1.1.2
+2026-10-15T01:28:19.0850754Z [1m[32m  Downloaded[0m async-trait v0.1.89
+2026-10-15T01:28:19.1238801Z [1m[32m  Downloaded[0m async-stream v0.3.6
+2026-10-15T01:28:19.1468835Z [1m[32m  Downloaded[0m argminmax v0.6.3
+2026-10-15T01:28:19.1809495Z [1m[32m  Downloaded[0m anstyle-query v1.1.4
+2026-10-15T01:28:19.1902115Z [1m[32m  Downloaded[0m mio v1.0.4
+2026-10-15T01:28:19.2394540Z [1m[32m  Downloaded[0m matrixmultiply v0.3.10
+2026-10-15T01:28:19.2710612Z [1m[32m  Downloaded[0m litrs v0.4.2
+2026-10-15T01:28:19.2953793Z [1m[32m  Downloaded[0m js-sys v0.3.81
+2026-10-15T01:28:19.3042643Z [1m[32m  Downloaded[0m icu_normalizer v2.0.0
+2026-10-15T01:28:19.3320573Z [1m[32m  Downloaded[0m humantime v2.3.0
+2026-10-15T01:28:19.3445302Z [1m[32m  Downloaded[0m hermit-abi v0.5.2
+2026-10-15T01:28:19.3529330Z [1m[32m  Downloaded[0m getrandom v0.3.3
+2026-10-15T01:28:19.3869584Z [1m[32m  Downloaded[0m form_urlencoded v1.2.2
+2026-10-15T01:28:19.3942153Z [1m[32m  Downloaded[0m fastrand v2.3.0
+2026-10-15T01:28:19.4053041Z [1m[32m  Downloaded[0m ethnum v1.5.2
+2026-10-15T01:28:19.4421571Z [1m[32m  Downloaded[0m errno v0.3.14
+2026-10-15T01:28:19.4557218Z [1m[32m  Downloaded[0m doc-comment v0.3.4
+2026-10-15T01:28:19.4653315Z [1m[32m  Downloaded[0m ctor v0.2.9
+2026-10-15T01:28:19.9858567Z [1m[32m  Downloaded[0m crypto-common v0.1.6
+2026-10-15T01:28:19.9931364Z [1m[32m  Downloaded[0m crunchy v0.2.4
+2026-10-15T01:28:20.0018053Z [1m[32m  Downloaded[0m crossbeam-utils v0.8.21
+2026-10-15T01:28:20.0341607Z [1m[32m  Downloaded[0m core-foundation-sys v0.8.7
+2026-10-15T01:28:20.0658777Z [1m[32m  Downloaded[0m clap_lex v0.7.5
+2026-10-15T01:28:20.0737854Z [1m[32m  Downloaded[0m bytesize v1.3.3
+2026-10-15T01:28:20.0832081Z [1m[32m  Downloaded[0m atoi_simd v0.16.1
+2026-10-15T01:28:20.0976304Z [1m[32m  Downloaded[0m async-stream-impl v0.3.6
+2026-10-15T01:28:20.1034161Z [1m[32m  Downloaded[0m assert_cmd v2.0.17
+2026-10-15T01:28:20.1181761Z [1m[32m  Downloaded[0m arrayvec v0.7.6
+2026-10-15T01:28:20.1346435Z [1m[32m  Downloaded[0m anyhow v1.0.100
+2026-10-15T01:28:20.1718228Z [1m[32m  Downloaded[0m ahash v0.8.12
+2026-10-15T01:28:20.1935322Z [1m[32m  Downloaded[0m addr2line v0.25.1
+2026-10-15T01:28:20.2113953Z [1m[32m  Downloaded[0m parking_lot v0.12.5
+2026-10-15T01:28:20.2322301Z [1m[32m  Downloaded[0m ordered-float v5.1.0
+2026-10-15T01:28:20.2430483Z [1m[32m  Downloaded[0m num-rational v0.4.2
+2026-10-15T01:28:20.2521126Z [1m[32m  Downloaded[0m num-complex v0.4.6
+2026-10-15T01:28:20.2635369Z [1m[32m  Downloaded[0m libz-rs-sys v0.5.2
+2026-10-15T01:28:20.2722674Z [1m[32m  Downloaded[0m indoc v2.0.6
+2026-10-15T01:28:20.3043120Z [1m[32m  Downloaded[0m globset v0.4.18
+2026-10-15T01:28:20.3157242Z [1m[32m  Downloaded[0m futures-channel v0.3.31
+2026-10-15T01:28:20.3314827Z [1m[32m  Downloaded[0m fs4 v0.13.1
+2026-10-15T01:28:20.3769342Z [1m[32m  Downloaded[0m dyn-clone v1.0.20
+2026-10-15T01:28:20.3906654Z [1m[32m  Downloaded[0m digest v0.10.7
+2026-10-15T01:28:20.4068915Z [1m[32m  Downloaded[0m difflib v0.4.0
+2026-10-15T01:28:20.4150666Z [1m[32m  Downloaded[0m crossbeam-queue v0.3.12
+2026-10-15T01:28:20.4245636Z [1m[32m  Downloaded[0m constant_time_eq v0.3.1
+2026-10-15T01:28:20.4359058Z [1m[32m  Downloaded[0m concurrent-queue v2.5.0
+2026-10-15T01:28:20.4486473Z [1m[32m  Downloaded[0m ciborium-ll v0.2.2
+2026-10-15T01:28:20.4571862Z [1m[32m  Downloaded[0m ciborium-io v0.2.2
+2026-10-15T01:28:20.4641421Z [1m[32m  Downloaded[0m cast v0.3.0
+2026-10-15T01:28:20.4740537Z [1m[32m  Downloaded[0m arrayref v0.3.9
+2026-10-15T01:28:20.4848738Z [1m[32m  Downloaded[0m anstyle v1.0.13
+2026-10-15T01:28:20.4958504Z [1m[32m  Downloaded[0m anstream v0.6.21
+2026-10-15T01:28:20.5184996Z [1m[32m  Downloaded[0m anes v0.1.6
+2026-10-15T01:28:20.5463801Z [1m[32m  Downloaded[0m android_system_properties v0.1.5
+2026-10-15T01:28:20.5563190Z [1m[32m  Downloaded[0m once_cell_polyfill v1.70.2
+2026-10-15T01:28:20.5662404Z [1m[32m  Downloaded[0m now v0.1.3
+2026-10-15T01:28:20.5761763Z [1m[32m  Downloaded[0m memoffset v0.9.1
+2026-10-15T01:28:20.5866587Z [1m[32m  Downloaded[0m itoa v1.0.15
+2026-10-15T01:28:20.5983132Z [1m[32m  Downloaded[0m iter-read v1.1.0
+2026-10-15T01:28:20.6091206Z [1m[32m  Downloaded[0m idna_adapter v1.2.1
+2026-10-15T01:28:20.6167277Z [1m[32m  Downloaded[0m http-body v1.0.1
+2026-10-15T01:28:20.6261824Z [1m[32m  Downloaded[0m fnv v1.0.7
+2026-10-15T01:28:20.6334871Z [1m[32m  Downloaded[0m fallible-streaming-iterator v0.1.9
+2026-10-15T01:28:20.6409472Z [1m[32m  Downloaded[0m equivalent v1.0.2
+2026-10-15T01:28:20.6495349Z [1m[32m  Downloaded[0m crossterm_winapi v0.9.1
+2026-10-15T01:28:20.6746783Z [1m[32m  Downloaded[0m colorchoice v1.0.4
+2026-10-15T01:28:20.6822728Z [1m[32m  Downloaded[0m cfg-if v1.0.3
+2026-10-15T01:28:20.6930359Z [1m[32m  Downloaded[0m array-init-cursor v0.2.1
+2026-10-15T01:28:20.6998582Z [1m[32m  Downloaded[0m adler2 v2.0.1
+2026-10-15T01:28:20.7119610Z [1m[32m  Downloaded[0m futures-core v0.3.31
+2026-10-15T01:28:20.7222447Z [1m[32m  Downloaded[0m anstyle-wincon v3.0.10
+2026-10-15T01:28:21.1372062Z 🍹 Building a mixed python/rust project
+2026-10-15T01:28:21.1377134Z 🔗 Found pyo3 bindings with abi3 support
+2026-10-15T01:28:21.3260265Z 📡 Using build options features, bindings from pyproject.toml
+2026-10-15T01:28:21.4783205Z Using Python 3.12.10 environment at: D:\a\tdigest-rs\tdigest-rs\.venv
+2026-10-15T01:28:21.4799426Z Audited 2 packages in 2ms
+2026-10-15T01:28:22.0707485Z [1m[32m   Compiling[0m proc-macro2 v1.0.101
+2026-10-15T01:28:22.0708609Z [1m[32m   Compiling[0m unicode-ident v1.0.19
+2026-10-15T01:28:22.0709725Z [1m[32m   Compiling[0m quote v1.0.41
+2026-10-15T01:28:22.0710359Z [1m[32m   Compiling[0m version_check v0.9.5
+2026-10-15T01:28:22.1931460Z [1m[32m   Compiling[0m getrandom v0.3.3
+2026-10-15T01:28:22.4310689Z [1m[32m   Compiling[0m cfg-if v1.0.3
+2026-10-15T01:28:22.4737293Z [1m[32m   Compiling[0m autocfg v1.5.0
+2026-10-15T01:28:22.8487589Z [1m[32m   Compiling[0m libm v0.2.15
+2026-10-15T01:28:24.3720696Z [1m[32m   Compiling[0m shlex v1.3.0
+2026-10-15T01:28:24.4532010Z [1m[32m   Compiling[0m find-msvc-tools v0.1.3
+2026-10-15T01:28:24.6388575Z [1m[32m   Compiling[0m jobserver v0.1.34
+2026-10-15T01:28:24.6464649Z [1m[32m   Compiling[0m libc v0.2.176
+2026-10-15T01:28:25.0718605Z [1m[32m   Compiling[0m cc v1.2.40
+2026-10-15T01:28:25.1853743Z [1m[32m   Compiling[0m crossbeam-utils v0.8.21
+2026-10-15T01:28:25.7668626Z [1m[32m   Compiling[0m serde_core v1.0.228
+2026-10-15T01:28:25.9004010Z [1m[32m   Compiling[0m zerocopy v0.8.27
+2026-10-15T01:28:26.0736769Z [1m[32m   Compiling[0m syn v2.0.106
+2026-10-15T01:28:26.4036054Z [1m[32m   Compiling[0m serde v1.0.228
+2026-10-15T01:28:26.7529598Z [1m[32m   Compiling[0m windows_x86_64_msvc v0.52.6
+2026-10-15T01:28:27.0408946Z [1m[32m   Compiling[0m rayon-core v1.13.0
+2026-10-15T01:28:27.3489247Z [1m[32m   Compiling[0m num-traits v0.2.19
+2026-10-15T01:28:27.7594458Z [1m[32m   Compiling[0m parking_lot_core v0.9.12
+2026-10-15T01:28:28.0420460Z [1m[32m   Compiling[0m psm v0.1.27
+2026-10-15T01:28:28.4779620Z [1m[32m   Compiling[0m stacker v0.1.22
+2026-10-15T01:28:28.7793835Z [1m[32m   Compiling[0m target-lexicon v0.13.3
+2026-10-15T01:28:30.2837259Z [1m[32m   Compiling[0m rustversion v1.0.22
+2026-10-15T01:28:30.7232274Z [1m[32m   Compiling[0m signal-hook v0.3.18
+2026-10-15T01:28:30.9467000Z [1m[32m   Compiling[0m heck v0.5.0
+2026-10-15T01:28:31.3663330Z [1m[32m   Compiling[0m slotmap v1.0.7
+2026-10-15T01:28:31.5367800Z [1m[32m   Compiling[0m pyo3-build-config v0.25.1
+2026-10-15T01:28:31.6063253Z [1m[32m   Compiling[0m once_cell v1.21.3
+2026-10-15T01:28:31.9133435Z [1m[32m   Compiling[0m chrono-tz v0.10.4
+2026-10-15T01:28:32.2642455Z [1m[32m   Compiling[0m thiserror v2.0.17
+2026-10-15T01:28:32.9753872Z [1m[32m   Compiling[0m crossbeam-epoch v0.9.18
+2026-10-15T01:28:33.3684040Z [1m[32m   Compiling[0m crossbeam-deque v0.8.6
+2026-10-15T01:28:33.8086353Z [1m[32m   Compiling[0m windows-link v0.2.1
+2026-10-15T01:28:33.8716415Z [1m[32m   Compiling[0m equivalent v1.0.2
+2026-10-15T01:28:33.9241622Z [1m[32m   Compiling[0m serde_derive v1.0.228
+2026-10-15T01:28:33.9447326Z [1m[32m   Compiling[0m bytemuck_derive v1.10.2
+2026-10-15T01:28:34.1902083Z [1m[32m   Compiling[0m strum_macros v0.27.2
+2026-10-15T01:28:35.8722562Z [1m[32m   Compiling[0m thiserror-impl v2.0.17
+2026-10-15T01:28:37.6066551Z [1m[32m   Compiling[0m foldhash v0.1.5
+2026-10-15T01:28:37.9159519Z [1m[32m   Compiling[0m allocator-api2 v0.2.21
+2026-10-15T01:28:38.0171293Z [1m[32m   Compiling[0m pyo3-ffi v0.25.1
+2026-10-15T01:28:38.3682590Z [1m[32m   Compiling[0m pyo3-macros-backend v0.25.1
+2026-10-15T01:28:38.4990780Z [1m[32m   Compiling[0m anyhow v1.0.100
+2026-10-15T01:28:38.5991749Z [1m[32m   Compiling[0m memchr v2.7.6
+2026-10-15T01:28:39.1367140Z [1m[32m   Compiling[0m windows-targets v0.52.6
+2026-10-15T01:28:39.2563913Z [1m[32m   Compiling[0m memoffset v0.9.1
+2026-10-15T01:28:39.4814190Z [1m[32m   Compiling[0m smallvec v1.15.1
+2026-10-15T01:28:39.8236070Z [1m[32m   Compiling[0m scopeguard v1.2.0
+2026-10-15T01:28:39.9100729Z [1m[32m   Compiling[0m lock_api v0.4.14
+2026-10-15T01:28:40.1593466Z [1m[32m   Compiling[0m either v1.15.0
+2026-10-15T01:28:40.2338214Z [1m[32m   Compiling[0m ppv-lite86 v0.2.21
+2026-10-15T01:28:40.5253667Z [1m[32m   Compiling[0m rayon v1.11.0
+2026-10-15T01:28:40.8167740Z [1m[32m   Compiling[0m windows-sys v0.59.0
+2026-10-15T01:28:42.3522796Z [1m[32m   Compiling[0m pyo3 v0.25.1
+2026-10-15T01:28:42.6583679Z [1m[32m   Compiling[0m rand_core v0.9.3
+2026-10-15T01:28:43.2243701Z [1m[32m   Compiling[0m pkg-config v0.3.32
+2026-10-15T01:28:43.4078898Z [1m[32m   Compiling[0m ryu v1.0.20
+2026-10-15T01:28:43.9398400Z [1m[32m   Compiling[0m paste v1.0.15
+2026-10-15T01:28:44.0434510Z [1m[32m   Compiling[0m hashbrown v0.15.5
+2026-10-15T01:28:44.5540215Z [1m[32m   Compiling[0m itoa v1.0.15
+2026-10-15T01:28:44.7285860Z [1m[32m   Compiling[0m zstd-sys v2.0.16+zstd.1.5.7
+2026-10-15T01:28:44.8657575Z [1m[32m   Compiling[0m rand_chacha v0.9.0
+2026-10-15T01:28:45.3308056Z [1m[32m   Compiling[0m parking_lot v0.12.5
+2026-10-15T01:28:45.4437276Z [1m[32m   Compiling[0m bitflags v2.9.4
+2026-10-15T01:28:46.0413002Z [1m[32m   Compiling[0m aho-corasick v1.1.3
+2026-10-15T01:28:47.5735860Z [1m[32m   Compiling[0m pyo3-macros v0.25.1
+2026-10-15T01:28:47.6179602Z [1m[32m   Compiling[0m array-init-cursor v0.2.1
+2026-10-15T01:28:47.7075466Z [1m[32m   Compiling[0m regex-syntax v0.8.6
+2026-10-15T01:28:48.6245116Z [1m[32m   Compiling[0m byteorder v1.5.0
+2026-10-15T01:28:48.9162375Z [1m[32m   Compiling[0m serde_json v1.0.145
+2026-10-15T01:28:49.1383395Z [1m[32m   Compiling[0m indoc v2.0.6
+2026-10-15T01:28:49.6184358Z [1m[32m   Compiling[0m crc32fast v1.5.0
+2026-10-15T01:28:49.8438812Z [1m[32m   Compiling[0m unindent v0.2.4
+2026-10-15T01:28:50.5592568Z [1m[32m   Compiling[0m regex-automata v0.4.11
+2026-10-15T01:28:57.6138301Z [1m[32m   Compiling[0m planus v1.1.1
+2026-10-15T01:29:03.4579414Z [1m[32m   Compiling[0m rand v0.9.2
+2026-10-15T01:29:05.3152797Z [1m[32m   Compiling[0m signal-hook-registry v1.4.6
+2026-10-15T01:29:06.5052245Z [1m[32m   Compiling[0m zlib-rs v0.5.2
+2026-10-15T01:29:08.0041700Z [1m[32m   Compiling[0m simd-adler32 v0.3.7
+2026-10-15T01:29:10.8091711Z [1m[32m   Compiling[0m adler2 v2.0.1
+2026-10-15T01:29:10.9808015Z [1m[32m   Compiling[0m simdutf8 v0.1.5
+2026-10-15T01:29:11.9932349Z [1m[32m   Compiling[0m virtue v0.0.18
+2026-10-15T01:29:12.9550194Z [1m[32m   Compiling[0m bincode_derive v2.0.1
+2026-10-15T01:29:14.1574280Z [1m[32m   Compiling[0m miniz_oxide v0.8.9
+2026-10-15T01:29:17.6580465Z [1m[32m   Compiling[0m libz-rs-sys v0.5.2
+2026-10-15T01:29:18.4588185Z [1m[32m   Compiling[0m rmp v0.8.14
+2026-10-15T01:29:19.5958027Z [1m[32m   Compiling[0m polars-arrow-format v0.2.1
+2026-10-15T01:29:20.9772523Z [1m[32m   Compiling[0m regex v1.11.3
+2026-10-15T01:29:24.1270985Z [1m[32m   Compiling[0m castaway v0.2.4
+2026-10-15T01:29:24.5632360Z [1m[32m   Compiling[0m lz4-sys v1.11.1+lz4-1.10.0
+2026-10-15T01:29:25.1442861Z [1m[32m   Compiling[0m polars-utils v0.51.0
+2026-10-15T01:29:25.4073639Z [1m[32m   Compiling[0m unty v0.0.4
+2026-10-15T01:29:25.4911329Z [1m[32m   Compiling[0m siphasher v1.0.1
+2026-10-15T01:29:25.5430689Z [1m[32m   Compiling[0m zstd-safe v7.2.4
+2026-10-15T01:29:25.7196877Z [1m[32m   Compiling[0m hashbrown v0.16.0
+2026-10-15T01:29:25.7725056Z [1m[32m   Compiling[0m static_assertions v1.1.0
+2026-10-15T01:29:26.0289500Z [1m[32m   Compiling[0m compact_str v0.9.0
+2026-10-15T01:29:27.0840996Z [1m[32m   Compiling[0m indexmap v2.11.4
+2026-10-15T01:29:28.3816236Z [1m[32m   Compiling[0m phf_shared v0.12.1
+2026-10-15T01:29:28.4255864Z [1m[32m   Compiling[0m bincode v2.0.1
+2026-10-15T01:29:30.6405125Z [1m[32m   Compiling[0m polars-error v0.51.0
+2026-10-15T01:29:31.0310749Z [1m[32m   Compiling[0m flate2 v1.1.4
+2026-10-15T01:29:33.7459979Z [1m[32m   Compiling[0m rmp-serde v1.3.0
+2026-10-15T01:29:35.7047667Z [1m[32m   Compiling[0m serde_stacker v0.1.14
+2026-10-15T01:29:35.7483273Z [1m[32m   Compiling[0m raw-cpuid v11.6.0
+2026-10-15T01:29:35.9764856Z [1m[32m   Compiling[0m bytes v1.10.1
+2026-10-15T01:29:37.7712569Z [1m[32m   Compiling[0m chrono v0.4.42
+2026-10-15T01:29:38.0143822Z [1m[32m   Compiling[0m uuid v1.18.1
+2026-10-15T01:29:38.0976584Z [1m[32m   Compiling[0m bytemuck v1.24.0
+2026-10-15T01:29:38.6462250Z [1m[32m   Compiling[0m polars-schema v0.51.0
+2026-10-15T01:29:39.1220404Z [1m[32m   Compiling[0m memmap2 v0.9.8
+2026-10-15T01:29:43.5583166Z [1m[32m   Compiling[0m phf v0.12.1
+2026-10-15T01:29:44.1468142Z [1m[32m   Compiling[0m polars-arrow v0.51.0
+2026-10-15T01:29:44.1867555Z [1m[32m   Compiling[0m typenum v1.19.0
+2026-10-15T01:29:46.7422202Z [1m[32m   Compiling[0m zstd v0.13.3
+2026-10-15T01:29:47.9955766Z [1m[32m   Compiling[0m lz4 v1.28.1
+2026-10-15T01:29:49.0411443Z [1m[32m   Compiling[0m generic-array v0.14.7
+2026-10-15T01:29:49.3608688Z [1m[32m   Compiling[0m ethnum v1.5.2
+2026-10-15T01:29:49.8684793Z [1m[32m   Compiling[0m dyn-clone v1.0.20
+2026-10-15T01:29:51.0790015Z [1m[32m   Compiling[0m streaming-iterator v0.1.9
+2026-10-15T01:29:56.0253356Z [1m[32m   Compiling[0m polars-compute v0.51.0
+2026-10-15T01:29:56.2453718Z [1m[32m   Compiling[0m winapi v0.3.9
+2026-10-15T01:29:56.2959253Z [1m[32m   Compiling[0m debug_unsafe v0.1.3
+2026-10-15T01:29:56.3807977Z [1m[32m   Compiling[0m atoi_simd v0.16.1
+2026-10-15T01:29:56.8665828Z [1m[32m   Compiling[0m skiplist v0.6.0
+2026-10-15T01:29:58.0595785Z [1m[32m   Compiling[0m fast-float2 v0.2.3
+2026-10-15T01:29:58.3565288Z [1m[32m   Compiling[0m strength_reduce v0.2.4
+2026-10-15T01:29:59.4371451Z [1m[32m   Compiling[0m litrs v0.4.2
+2026-10-15T01:30:01.7586684Z [1m[32m   Compiling[0m document-features v0.2.11
+2026-10-15T01:30:02.4823185Z [1m[32m   Compiling[0m crossterm_winapi v0.9.1
+2026-10-15T01:30:02.6709225Z [1m[32m   Compiling[0m crypto-common v0.1.6
+2026-10-15T01:30:02.7830299Z [1m[32m   Compiling[0m block-buffer v0.10.4
+2026-10-15T01:30:03.1766476Z [1m[32m   Compiling[0m boxcar v0.2.14
+2026-10-15T01:30:03.5470658Z [1m[32m   Compiling[0m digest v0.10.7
+2026-10-15T01:30:03.6448733Z [1m[32m   Compiling[0m crossterm v0.29.0
+2026-10-15T01:30:04.3652609Z [1m[32m   Compiling[0m num-integer v0.1.46
+2026-10-15T01:30:05.2682615Z [1m[32m   Compiling[0m polars-core v0.51.0
+2026-10-15T01:30:05.4925880Z [1m[32m   Compiling[0m cpufeatures v0.2.17
+2026-10-15T01:30:05.5544054Z [1m[32m   Compiling[0m windows_x86_64_msvc v0.53.1
+2026-10-15T01:30:06.0669837Z [1m[32m   Compiling[0m polars-dtype v0.51.0
+2026-10-15T01:30:10.6505798Z [1m[32m   Compiling[0m unicode-segmentation v1.12.0
+2026-10-15T01:30:12.2108151Z [1m[32m   Compiling[0m unicode-width v0.2.2
+2026-10-15T01:30:12.6450632Z [1m[32m   Compiling[0m comfy-table v7.2.1
+2026-10-15T01:30:19.2750340Z [1m[32m   Compiling[0m polars-row v0.51.0
+2026-10-15T01:30:41.7634963Z [1m[32m   Compiling[0m sha2 v0.10.9
+2026-10-15T01:30:42.3585880Z [1m[32m   Compiling[0m rand_distr v0.5.1
+2026-10-15T01:30:43.6231041Z [1m[32m   Compiling[0m ahash v0.8.12
+2026-10-15T01:30:43.8855077Z [1m[32m   Compiling[0m xxhash-rust v0.8.15
+2026-10-15T01:30:44.1656243Z [1m[32m   Compiling[0m ref-cast v1.0.25
+2026-10-15T01:30:49.1230245Z [1m[32m   Compiling[0m halfbrown v0.3.0
+2026-10-15T01:30:49.6257196Z [1m[32m   Compiling[0m ref-cast-impl v1.0.25
+2026-10-15T01:30:50.3833698Z [1m[32m   Compiling[0m float-cmp v0.10.0
+2026-10-15T01:30:50.5338758Z [1m[32m   Compiling[0m fallible-streaming-iterator v0.1.9
+2026-10-15T01:31:36.6532828Z [1m[32m   Compiling[0m value-trait v0.11.0
+2026-10-15T01:31:37.5625759Z [1m[32m   Compiling[0m windows-targets v0.53.5
+2026-10-15T01:31:37.9718695Z [1m[32m   Compiling[0m recursive-proc-macro-impl v0.1.1
+2026-10-15T01:31:38.4699370Z [1m[32m   Compiling[0m polars-ops v0.51.0
+2026-10-15T01:31:38.7816616Z [1m[32m   Compiling[0m simd-json v0.15.1
+2026-10-15T01:31:50.7350975Z [1m[32m   Compiling[0m windows-sys v0.60.2
+2026-10-15T01:31:52.2849449Z [1m[32m   Compiling[0m streaming-decompression v0.1.2
+2026-10-15T01:31:52.3911714Z [1m[32m   Compiling[0m num-bigint v0.4.6
+2026-10-15T01:32:01.5896504Z [1m[32m   Compiling[0m argminmax v0.6.3
+2026-10-15T01:32:04.4586430Z [1m[32m   Compiling[0m base64 v0.22.1
+2026-10-15T01:32:05.6314341Z [1m[32m   Compiling[0m polars-parquet-format v0.1.0
+2026-10-15T01:32:08.8967438Z [1m[32m   Compiling[0m polars-parquet v0.51.0
+2026-10-15T01:33:14.6332267Z [1m[32m   Compiling[0m polars-json v0.51.0
+2026-10-15T01:33:36.7713076Z [1m[32m   Compiling[0m polars-plan v0.51.0
+2026-10-15T01:33:37.1618468Z [1m[32m   Compiling[0m home v0.5.11
+2026-10-15T01:33:39.5214795Z [1m[32m   Compiling[0m num-complex v0.4.6
+2026-10-15T01:33:40.3972887Z [1m[32m   Compiling[0m matrixmultiply v0.3.10
+2026-10-15T01:33:40.6498546Z [1m[32m   Compiling[0m anstyle v1.0.13
+2026-10-15T01:33:41.0572259Z [1m[32m   Compiling[0m utf8parse v0.2.2
+2026-10-15T01:33:41.1626341Z [1m[32m   Compiling[0m glob v0.3.3
+2026-10-15T01:33:43.8093829Z [1m[32m   Compiling[0m percent-encoding v2.3.2
+2026-10-15T01:33:44.0237939Z [1m[32m   Compiling[0m once_cell_polyfill v1.70.2
+2026-10-15T01:33:44.5240296Z [1m[32m   Compiling[0m polars-io v0.51.0
+2026-10-15T01:34:24.1403982Z [1m[32m   Compiling[0m anstyle-wincon v3.0.10
+2026-10-15T01:34:28.4612076Z [1m[32m   Compiling[0m anstyle-parse v0.2.7
+2026-10-15T01:34:49.1892388Z [1m[32m   Compiling[0m anstyle-query v1.1.4
+2026-10-15T01:34:49.3949792Z [1m[32m   Compiling[0m recursive v0.1.1
+2026-10-15T01:34:49.9024590Z [1m[32m   Compiling[0m now v0.1.3
+2026-10-15T01:34:50.0844884Z [1m[32m   Compiling[0m polars v0.51.0
+2026-10-15T01:34:50.3334485Z [1m[32m   Compiling[0m colorchoice v1.0.4
+2026-10-15T01:34:50.4426711Z [1m[32m   Compiling[0m is_terminal_polyfill v1.70.2
+2026-10-15T01:34:50.5288012Z [1m[32m   Compiling[0m rawpointer v0.2.1
+2026-10-15T01:34:50.6714090Z [1m[32m   Compiling[0m thiserror v1.0.69
+2026-10-15T01:34:56.1366681Z [1m[32m   Compiling[0m anstream v0.6.21
+2026-10-15T01:34:57.3497351Z [1m[32m   Compiling[0m polars-time v0.51.0
+2026-10-15T01:35:15.3461073Z [1m[32m   Compiling[0m num-rational v0.4.2
+2026-10-15T01:35:18.2356314Z [1m[32m   Compiling[0m polars-ffi v0.51.0
+2026-10-15T01:35:19.9497266Z [1m[32m   Compiling[0m num-iter v0.1.46
+2026-10-15T01:35:20.0755100Z [1m[32m   Compiling[0m numpy v0.25.0
+2026-10-15T01:35:20.3446065Z [1m[32m   Compiling[0m thiserror-impl v1.0.69
+2026-10-15T01:35:22.3569779Z [1m[32m   Compiling[0m strsim v0.11.1
+2026-10-15T01:35:24.1947405Z [1m[32m   Compiling[0m iter-read v1.1.0
+2026-10-15T01:35:24.4069136Z [1m[32m   Compiling[0m clap_lex v0.7.5
+2026-10-15T01:35:24.9589478Z [1m[32m   Compiling[0m clap_builder v4.5.48
+2026-10-15T01:35:49.3955568Z [1m[32m   Compiling[0m serde-pickle v1.2.0
+2026-10-15T01:35:57.0826141Z [1m[32m   Compiling[0m num v0.4.3
+2026-10-15T01:35:57.1624938Z [1m[32m   Compiling[0m pyo3-polars-derive v0.18.0
+2026-10-15T01:35:58.0156648Z [1m[32m   Compiling[0m ndarray v0.16.1
+2026-10-15T01:36:04.8847003Z [1m[32m   Compiling[0m itertools v0.14.0
+2026-10-15T01:36:07.6342187Z [1m[32m   Compiling[0m clap_derive v4.5.47
+2026-10-15T01:36:11.1697669Z [1m[32m   Compiling[0m rustc-hash v2.1.1
+2026-10-15T01:36:17.9026954Z [1m[32m   Compiling[0m pyo3-polars v0.24.0
+2026-10-15T01:36:22.1106195Z [1m[32m   Compiling[0m clap v4.5.48
+2026-10-15T01:36:22.2402681Z [1m[32m   Compiling[0m tdigest_core v0.2.0 (D:\a\tdigest-rs\tdigest-rs\src\upstream)
+2026-10-15T01:36:22.4540649Z [1m[32m   Compiling[0m ordered-float v5.1.0
+2026-10-15T01:38:33.1534337Z [1m[32m   Compiling[0m tdigest-rs v2.0.0 (D:\a\tdigest-rs\tdigest-rs)
+2026-10-15T01:38:48.7052658Z [1m[32m    Finished[0m `release` profile [optimized] target(s) in 10m 27s
+2026-10-15T01:38:48.7911237Z 📦 Built wheel for abi3 Python ≥ 3.10 to C:\Users\RUNNER~1\AppData\Local\Temp\.tmpnlRtMy\tdigest_rs-2.0.0-cp310-abi3-win_amd64.whl
+2026-10-15T01:38:49.0751139Z ✏️ Setting installed package as editable
+2026-10-15T01:38:49.1289881Z 🛠 Installed tdigest-rs-2.0.0
+2026-10-15T01:38:49.3012404Z ##[group]Run uv run --project bindings/python --no-sync python scripts/test_python_interfaces.py
+2026-10-15T01:38:49.3013863Z [36;1muv run --project bindings/python --no-sync python scripts/test_python_interfaces.py[0m
+2026-10-15T01:38:49.3099524Z shell: C:\Program Files\PowerShell\7\pwsh.EXE -command ". '{0}'"
+2026-10-15T01:38:49.3099959Z env:
+2026-10-15T01:38:49.3100174Z   CARGO_TERM_COLOR: always
+2026-10-15T01:38:49.3100498Z   DEFAULT_PYTHON_VERSION: 3.12
+2026-10-15T01:38:49.3100812Z   PIP_DISABLE_PIP_VERSION_CHECK: 1
+2026-10-15T01:38:49.3101187Z   UV_PROJECT_ENVIRONMENT: D:\a\tdigest-rs\tdigest-rs/.venv
+2026-10-15T01:38:49.3101649Z   pythonLocation: C:\hostedtoolcache\windows\Python\3.12.10\x64
+2026-10-15T01:38:49.3102176Z   PKG_CONFIG_PATH: C:\hostedtoolcache\windows\Python\3.12.10\x64/lib/pkgconfig
+2026-10-15T01:38:49.3102688Z   Python_ROOT_DIR: C:\hostedtoolcache\windows\Python\3.12.10\x64
+2026-10-15T01:38:49.3103266Z   Python2_ROOT_DIR: C:\hostedtoolcache\windows\Python\3.12.10\x64
+2026-10-15T01:38:49.3103734Z   Python3_ROOT_DIR: C:\hostedtoolcache\windows\Python\3.12.10\x64
+2026-10-15T01:38:49.3104125Z ##[endgroup]
+2026-10-15T01:38:49.9922646Z Traceback (most recent call last):
+2026-10-15T01:38:49.9934210Z   File "D:\a\tdigest-rs\tdigest-rs\scripts\test_python_interfaces.py", line 74, in <module>
+2026-10-15T01:38:49.9935111Z     main()
+2026-10-15T01:38:49.9935590Z   File "D:\a\tdigest-rs\tdigest-rs\scripts\test_python_interfaces.py", line 22, in main
+2026-10-15T01:38:49.9936105Z     verify_upstream_snapshot(root)
+2026-10-15T01:38:49.9936648Z   File "D:\a\tdigest-rs\tdigest-rs\scripts\test_legacy_wheel.py", line 35, in verify_upstream_snapshot
+2026-10-15T01:38:49.9937163Z     verify_sources(root)
+2026-10-15T01:38:49.9938278Z   File "D:\a\tdigest-rs\tdigest-rs\scripts\check_upstream_sources.py", line 33, in verify_sources
+2026-10-15T01:38:49.9939435Z     raise RuntimeError(f"original upstream implementation changed: {relative}")
+2026-10-15T01:38:49.9940534Z RuntimeError: original upstream implementation changed: src/upstream/LICENSE
+2026-10-15T01:38:50.1587884Z ##[error]Process completed with exit code 1.
+2026-10-15T01:38:50.1927118Z Post job cleanup.
+2026-10-15T01:38:50.4255391Z [command]"C:\Program Files\Git\bin\git.exe" version
+2026-10-15T01:38:50.4560235Z git version 2.55.0.windows.5
+2026-10-15T01:38:50.4632439Z Temporarily overriding HOME='D:\a\_temp\4deb5040-0658-45dd-8e43-05398a623a0c' before making global git config changes
+2026-10-15T01:38:50.4633861Z Adding repository directory to the temporary git global config as a safe directory
+2026-10-15T01:38:50.4646082Z [command]"C:\Program Files\Git\bin\git.exe" config --global --add safe.directory D:\a\tdigest-rs\tdigest-rs
+2026-10-15T01:38:50.5024450Z [command]"C:\Program Files\Git\bin\git.exe" config --local --name-only --get-regexp core\.sshCommand
+2026-10-15T01:38:50.5400617Z [command]"C:\Program Files\Git\bin\git.exe" submodule foreach --recursive "sh -c \"git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :\""
+2026-10-15T01:38:51.2012965Z [command]"C:\Program Files\Git\bin\git.exe" config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+2026-10-15T01:38:51.2296821Z http.https://github.com/.extraheader
+2026-10-15T01:38:51.2353462Z [command]"C:\Program Files\Git\bin\git.exe" config --local --unset-all http.https://github.com/.extraheader
+2026-10-15T01:38:51.2792962Z [command]"C:\Program Files\Git\bin\git.exe" submodule foreach --recursive "sh -c \"git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :\""
+2026-10-15T01:38:51.8720843Z [command]"C:\Program Files\Git\bin\git.exe" config --local --name-only --get-regexp ^includeIf\.gitdir:
+2026-10-15T01:38:51.9048362Z [command]"C:\Program Files\Git\bin\git.exe" submodule foreach --recursive "git config --local --show-origin --name-only --get-regexp remote.origin.url"
+2026-10-15T01:38:52.5238514Z Cleaning up orphan processes
+2026-10-15T01:38:52.5449961Z Terminate orphan process: pid (5564) (vctip)

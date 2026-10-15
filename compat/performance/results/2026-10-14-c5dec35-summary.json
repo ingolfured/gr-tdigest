@@ -1,0 +1,39 @@
+{
+  "source_head": "c5dec35059990b40fe6f036dc83590bf0cdf2a70",
+  "baseline_head": "22867bd55739a96a6fab3c8c48b27406ecb32197",
+  "case_count": 30,
+  "started_utc": "2026-10-14T22:34:42.037485+00:00",
+  "finished_utc": "2026-10-14T22:38:07.039162+00:00",
+  "source_changed_during_run": [],
+  "original_control_failures": [],
+  "cases_with_non_timing_changes": 0,
+  "changed_fields": [],
+  "non_timing_change_count": 0,
+  "layouts": {
+    "f32": {
+      "baseline": {
+        "object_bytes": 96.0,
+        "centroid_bytes": 16.0,
+        "consistent_linear_layout": true
+      },
+      "candidate": {
+        "object_bytes": 96.0,
+        "centroid_bytes": 16.0,
+        "consistent_linear_layout": true
+      }
+    },
+    "f64": {
+      "baseline": {
+        "object_bytes": 104.0,
+        "centroid_bytes": 24.0,
+        "consistent_linear_layout": true
+      },
+      "candidate": {
+        "object_bytes": 104.0,
+        "centroid_bytes": 24.0,
+        "consistent_linear_layout": true
+      }
+    }
+  },
+  "source_boundary": "Includes bounded finite compression means and query-only subnormal normalization. Excludes proposed transactional scaling and packaging hygiene patches."
+}

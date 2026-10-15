@@ -1,0 +1,3 @@
+    Finished `release` profile [optimized] target(s) in 0.01s
+     Running `/var/tmp/codex-tdigest-pr3-20261014/overnight/numerical-review/original-rust-api-option/validation/isolated-target/release/original-api-consumer-workspace-path`
+original Rust crate imports and all seven methods passed

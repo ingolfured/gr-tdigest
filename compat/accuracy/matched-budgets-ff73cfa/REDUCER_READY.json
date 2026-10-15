@@ -1,0 +1,21 @@
+{
+  "status": "static_review_and_synthetic_gates_passed_real_reduction_not_started",
+  "requires": "Root explicitly releases the heavy CPU slot before execution",
+  "reducer_sha256": "b7969ebeba0d1bc37f621b1b3b18fae841d9b6966b9f3e78ff1d4423e810e9a9",
+  "synthetic_test_sha256": "30d42a10103908ffff513ff3c02dd4b7524ddd850ed8109ebdd8d91188d3de73",
+  "synthetic_log_sha256": "7e26d2498cb5fb78c35e0e5bb4b73254ecb045b85b89135ed0e85d9f70d14d5c",
+  "synthetic_tests": {"passed": 6, "failed": 0, "seconds_reported": 0.013},
+  "metadata_report_sha256": "14a827d8718f65cdc50985903ec0daeb0ac35b5690daf75ea30499e5deee1c9f",
+  "selection_lock_sha256": "300203022d0dfbaee3e0a5bcf947bee6f804687b927238cd2e1b0576f16bb562",
+  "output_freshness": "Checked absent after synthetic gate; runner will recheck immediately before execution",
+  "argv_in_wsl_ArchFresh_as_ingo": [
+    "python3",
+    "/mnt/c/Users/ingol/Documents/Codex/2026-10-14/hi/work/overnight-bench/storage_budget_summary/reduce_heldout.py",
+    "--execute", "--cpu-slot-released",
+    "--study", "/var/tmp/codex-tdigest-pr3-20261014/overnight/storage-budget-study-ff73cfa",
+    "--metadata-report", "/mnt/c/Users/ingol/Documents/Codex/2026-10-14/hi/work/overnight-bench/storage_budget_summary/held-out-metadata-ff73cfa/policy-summary.json",
+    "--output", "/var/tmp/codex-tdigest-pr3-20261014/overnight/storage-budget-full-metrics-ff73cfa-20261015"
+  ],
+  "budgets": {"processing_seconds": 600, "decompressed_bytes": 8589934592, "metric_output_bytes": 67108864, "max_line_bytes": 8388608},
+  "consumer_gate": "Require status.json status=complete and verify its output_sha256 before using summary results"
+}

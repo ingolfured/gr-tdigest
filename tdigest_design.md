@@ -211,6 +211,18 @@ Cluster kind emission:
 
 Delta mode uses the same k-limit merge with K2Norm and zero tolerance. Its normalizer uses the number of centroids in the current pass; quantiles use cumulative weight. Delta mode bypasses Stage 4 and Stage 6.
 
+The K2Norm merge pass requires a positive normalizer `4*ln(n/delta)+24`.
+When it is zero or negative, the input has very few normalized centroids
+relative to the requested delta. Stage 3 retains those centroids unchanged,
+including their weights and Atomic/Mixed kinds, instead of applying a reversed
+scale that merges every input. The same guard applies when K2Norm is selected
+with max-size mode; its later cap/policy stages still run. Positive-domain
+arithmetic is unchanged, including the `+infinity` normalizer reached when a
+tiny positive delta overflows `n/delta` and the scale factor becomes zero.
+This changes the modern engine only; the original `tdigest_rs`/`tdigest_core`
+calculation path remains pinned.
+
+
 ### 4.4 Stage 4: cap
 
 If interior count exceeds `core_cap`, run a second k-limit merge on the Stage-3 output:
@@ -449,8 +461,10 @@ Adapters (`src/py.rs`, `src/jni.rs`, `src/polars_expr.rs`) should remain thin ar
 
 ## Original G-Research numerical compatibility
 
-`tdigest_rs.TDigest` uses the pinned `src/upstream` implementation through
-`src/upstream_py.rs`. Both f32 arithmetic and u32 centroid weights are retained.
+`tdigest_rs.TDigest` uses the pinned `tdigest_core` workspace package at
+`src/upstream` through `src/upstream_py.rs`. The original Rust package and Python
+wrapper share these source files; a private crate alias preserves the adapter
+path without duplicating arithmetic. Both f32 arithmetic and u32 centroid weights are retained.
 The Python wrapper is unchanged from upstream, including its cached arrays and
 default-delta reconstruction during copy/pickle. This deliberate separate path
 preserves existing application outputs; `gr_tdigest`, Polars, Java, and the CLI

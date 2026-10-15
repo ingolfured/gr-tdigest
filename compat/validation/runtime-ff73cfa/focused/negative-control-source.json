@@ -1,0 +1,6 @@
+{
+  "test": "test_k2norm_domain.py",
+  "sha256": "2aa6a4d9538639ba4c90b095160fcdf6d57cbe616afc9bf97f33de1efffe3daa",
+  "same_as_final_source": "integration/api_coherence/test_k2norm_domain.py",
+  "old_native_source_commit": "3d0182a5713be0d1835296a8c7a340c987243072"
+}

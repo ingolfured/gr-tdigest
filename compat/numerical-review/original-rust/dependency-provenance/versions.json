@@ -1,0 +1,108 @@
+{
+  "pinned_upstream_lock": {
+    "anyhow": [
+      "1.0.93"
+    ],
+    "autocfg": [
+      "1.1.0"
+    ],
+    "either": [
+      "1.10.0"
+    ],
+    "itertools": [
+      "0.14.0"
+    ],
+    "num": [
+      "0.4.3"
+    ],
+    "num-bigint": [
+      "0.4.5"
+    ],
+    "num-complex": [
+      "0.4.6"
+    ],
+    "num-integer": [
+      "0.1.46"
+    ],
+    "num-iter": [
+      "0.1.45"
+    ],
+    "num-rational": [
+      "0.4.2"
+    ],
+    "num-traits": [
+      "0.2.19"
+    ]
+  },
+  "candidate_workspace_lock": {
+    "anyhow": [
+      "1.0.100"
+    ],
+    "autocfg": [
+      "1.5.0"
+    ],
+    "either": [
+      "1.15.0"
+    ],
+    "itertools": [
+      "0.10.5",
+      "0.14.0"
+    ],
+    "num": [
+      "0.4.3"
+    ],
+    "num-bigint": [
+      "0.4.6"
+    ],
+    "num-complex": [
+      "0.4.6"
+    ],
+    "num-integer": [
+      "0.1.46"
+    ],
+    "num-iter": [
+      "0.1.46"
+    ],
+    "num-rational": [
+      "0.4.2"
+    ],
+    "num-traits": [
+      "0.2.19"
+    ]
+  },
+  "independent_fixture_generator_lock": {
+    "anyhow": [
+      "1.0.104"
+    ],
+    "autocfg": [
+      "1.5.1"
+    ],
+    "either": [
+      "1.19.0"
+    ],
+    "itertools": [
+      "0.14.0"
+    ],
+    "num": [
+      "0.4.3"
+    ],
+    "num-bigint": [
+      "0.4.8"
+    ],
+    "num-complex": [
+      "0.4.6"
+    ],
+    "num-integer": [
+      "0.1.47"
+    ],
+    "num-iter": [
+      "0.1.46"
+    ],
+    "num-rational": [
+      "0.4.2"
+    ],
+    "num-traits": [
+      "0.2.19"
+    ]
+  }
+}

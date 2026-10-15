@@ -1,0 +1,915 @@
+[
+  {
+    "label": "python-runtimes",
+    "command": [
+      "uv",
+      "python",
+      "install",
+      "3.10",
+      "3.11",
+      "3.12"
+    ],
+    "cwd": "/tmp/tdigest-support-cells-3s6nqtam",
+    "exit_code": 0
+  },
+  {
+    "label": "py310-numpy1-venv",
+    "command": [
+      "uv",
+      "venv",
+      "--python",
+      "3.10",
+      "/tmp/tdigest-support-cells-3s6nqtam/py310-numpy1"
+    ],
+    "cwd": "/tmp/tdigest-support-cells-3s6nqtam",
+    "exit_code": 0
+  },
+  {
+    "label": "py310-numpy1-pip",
+    "command": [
+      "/tmp/tdigest-support-cells-3s6nqtam/py310-numpy1/bin/python",
+      "-I",
+      "-m",
+      "ensurepip",
+      "--upgrade"
+    ],
+    "cwd": "/tmp/tdigest-support-cells-3s6nqtam",
+    "exit_code": 0
+  },
+  {
+    "label": "py310-numpy1-deps",
+    "command": [
+      "uv",
+      "pip",
+      "install",
+      "--only-binary",
+      ":all:",
+      "--python",
+      "/tmp/tdigest-support-cells-3s6nqtam/py310-numpy1/bin/python",
+      "numpy==1.26.4",
+      "scipy==1.15.3",
+      "pytest==8.4.2",
+      "polars==1.34.0"
+    ],
+    "cwd": "/tmp/tdigest-support-cells-3s6nqtam",
+    "exit_code": 0
+  },
+  {
+    "label": "py310-numpy2-venv",
+    "command": [
+      "uv",
+      "venv",
+      "--python",
+      "3.10",
+      "/tmp/tdigest-support-cells-3s6nqtam/py310-numpy2"
+    ],
+    "cwd": "/tmp/tdigest-support-cells-3s6nqtam",
+    "exit_code": 0
+  },
+  {
+    "label": "py310-numpy2-pip",
+    "command": [
+      "/tmp/tdigest-support-cells-3s6nqtam/py310-numpy2/bin/python",
+      "-I",
+      "-m",
+      "ensurepip",
+      "--upgrade"
+    ],
+    "cwd": "/tmp/tdigest-support-cells-3s6nqtam",
+    "exit_code": 0
+  },
+  {
+    "label": "py310-numpy2-deps",
+    "command": [
+      "uv",
+      "pip",
+      "install",
+      "--only-binary",
+      ":all:",
+      "--python",
+      "/tmp/tdigest-support-cells-3s6nqtam/py310-numpy2/bin/python",
+      "numpy==2.2.6",
+      "scipy==1.15.3",
+      "pytest==8.4.2",
+      "polars==1.34.0"
+    ],
+    "cwd": "/tmp/tdigest-support-cells-3s6nqtam",
+    "exit_code": 0
+  },
+  {
+    "label": "py311-numpy1-venv",
+    "command": [
+      "uv",
+      "venv",
+      "--python",
+      "3.11",
+      "/tmp/tdigest-support-cells-3s6nqtam/py311-numpy1"
+    ],
+    "cwd": "/tmp/tdigest-support-cells-3s6nqtam",
+    "exit_code": 0
+  },
+  {
+    "label": "py311-numpy1-pip",
+    "command": [
+      "/tmp/tdigest-support-cells-3s6nqtam/py311-numpy1/bin/python",
+      "-I",
+      "-m",
+      "ensurepip",
+      "--upgrade"
+    ],
+    "cwd": "/tmp/tdigest-support-cells-3s6nqtam",
+    "exit_code": 0
+  },
+  {
+    "label": "py311-numpy1-deps",
+    "command": [
+      "uv",
+      "pip",
+      "install",
+      "--only-binary",
+      ":all:",
+      "--python",
+      "/tmp/tdigest-support-cells-3s6nqtam/py311-numpy1/bin/python",
+      "numpy==1.26.4",
+      "scipy==1.17.1",
+      "pytest==8.4.2",
+      "polars==1.34.0"
+    ],
+    "cwd": "/tmp/tdigest-support-cells-3s6nqtam",
+    "exit_code": 0
+  },
+  {
+    "label": "py311-numpy2-venv",
+    "command": [
+      "uv",
+      "venv",
+      "--python",
+      "3.11",
+      "/tmp/tdigest-support-cells-3s6nqtam/py311-numpy2"
+    ],
+    "cwd": "/tmp/tdigest-support-cells-3s6nqtam",
+    "exit_code": 0
+  },
+  {
+    "label": "py311-numpy2-pip",
+    "command": [
+      "/tmp/tdigest-support-cells-3s6nqtam/py311-numpy2/bin/python",
+      "-I",
+      "-m",
+      "ensurepip",
+      "--upgrade"
+    ],
+    "cwd": "/tmp/tdigest-support-cells-3s6nqtam",
+    "exit_code": 0
+  },
+  {
+    "label": "py311-numpy2-deps",
+    "command": [
+      "uv",
+      "pip",
+      "install",
+      "--only-binary",
+      ":all:",
+      "--python",
+      "/tmp/tdigest-support-cells-3s6nqtam/py311-numpy2/bin/python",
+      "numpy==2.3.4",
+      "scipy==1.17.1",
+      "pytest==8.4.2",
+      "polars==1.34.0"
+    ],
+    "cwd": "/tmp/tdigest-support-cells-3s6nqtam",
+    "exit_code": 0
+  },
+  {
+    "label": "py312-numpy1-venv",
+    "command": [
+      "uv",
+      "venv",
+      "--python",
+      "3.12",
+      "/tmp/tdigest-support-cells-3s6nqtam/py312-numpy1"
+    ],
+    "cwd": "/tmp/tdigest-support-cells-3s6nqtam",
+    "exit_code": 0
+  },
+  {
+    "label": "py312-numpy1-pip",
+    "command": [
+      "/tmp/tdigest-support-cells-3s6nqtam/py312-numpy1/bin/python",
+      "-I",
+      "-m",
+      "ensurepip",
+      "--upgrade"
+    ],
+    "cwd": "/tmp/tdigest-support-cells-3s6nqtam",
+    "exit_code": 0
+  },
+  {
+    "label": "py312-numpy1-deps",
+    "command": [
+      "uv",
+      "pip",
+      "install",
+      "--only-binary",
+      ":all:",
+      "--python",
+      "/tmp/tdigest-support-cells-3s6nqtam/py312-numpy1/bin/python",
+      "numpy==1.26.4",
+      "scipy==1.17.1",
+      "pytest==8.4.2",
+      "polars==1.34.0"
+    ],
+    "cwd": "/tmp/tdigest-support-cells-3s6nqtam",
+    "exit_code": 0
+  },
+  {
+    "label": "py312-numpy2-venv",
+    "command": [
+      "uv",
+      "venv",
+      "--python",
+      "3.12",
+      "/tmp/tdigest-support-cells-3s6nqtam/py312-numpy2"
+    ],
+    "cwd": "/tmp/tdigest-support-cells-3s6nqtam",
+    "exit_code": 0
+  },
+  {
+    "label": "py312-numpy2-pip",
+    "command": [
+      "/tmp/tdigest-support-cells-3s6nqtam/py312-numpy2/bin/python",
+      "-I",
+      "-m",
+      "ensurepip",
+      "--upgrade"
+    ],
+    "cwd": "/tmp/tdigest-support-cells-3s6nqtam",
+    "exit_code": 0
+  },
+  {
+    "label": "py312-numpy2-deps",
+    "command": [
+      "uv",
+      "pip",
+      "install",
+      "--only-binary",
+      ":all:",
+      "--python",
+      "/tmp/tdigest-support-cells-3s6nqtam/py312-numpy2/bin/python",
+      "numpy==2.3.4",
+      "scipy==1.17.1",
+      "pytest==8.4.2",
+      "polars==1.34.0"
+    ],
+    "cwd": "/tmp/tdigest-support-cells-3s6nqtam",
+    "exit_code": 0
+  },
+  {
+    "label": "py310-numpy1-no-polars-venv",
+    "command": [
+      "uv",
+      "venv",
+      "--python",
+      "3.10",
+      "/tmp/tdigest-support-cells-3s6nqtam/py310-numpy1-no-polars"
+    ],
+    "cwd": "/tmp/tdigest-support-cells-3s6nqtam",
+    "exit_code": 0
+  },
+  {
+    "label": "py310-numpy1-no-polars-pip",
+    "command": [
+      "/tmp/tdigest-support-cells-3s6nqtam/py310-numpy1-no-polars/bin/python",
+      "-I",
+      "-m",
+      "ensurepip",
+      "--upgrade"
+    ],
+    "cwd": "/tmp/tdigest-support-cells-3s6nqtam",
+    "exit_code": 0
+  },
+  {
+    "label": "py310-numpy1-no-polars-deps",
+    "command": [
+      "uv",
+      "pip",
+      "install",
+      "--only-binary",
+      ":all:",
+      "--python",
+      "/tmp/tdigest-support-cells-3s6nqtam/py310-numpy1-no-polars/bin/python",
+      "numpy==1.26.4",
+      "scipy==1.15.3",
+      "pytest==8.4.2"
+    ],
+    "cwd": "/tmp/tdigest-support-cells-3s6nqtam",
+    "exit_code": 0
+  },
+  {
+    "label": "source-archive",
+    "command": [
+      "uv",
+      "run",
+      "--project",
+      "/var/tmp/codex-tdigest-pr3-20261014/work/gr-tdigest-f64-weights/bindings/python",
+      "--no-sync",
+      "maturin",
+      "sdist",
+      "-o",
+      "/var/tmp/codex-tdigest-pr3-20261014/overnight/runtime-support-ff73cfa/sdist"
+    ],
+    "cwd": "/var/tmp/codex-tdigest-pr3-20261014/work/gr-tdigest-f64-weights/bindings/python",
+    "exit_code": 0
+  },
+  {
+    "label": "release-wheel",
+    "command": [
+      "uv",
+      "run",
+      "--project",
+      "/var/tmp/codex-tdigest-pr3-20261014/work/gr-tdigest-f64-weights/bindings/python",
+      "--no-sync",
+      "maturin",
+      "build",
+      "--release",
+      "--locked",
+      "-F",
+      "python",
+      "--compatibility",
+      "linux",
+      "--interpreter",
+      "/tmp/tdigest-support-cells-3s6nqtam/py310-numpy1/bin/python",
+      "-o",
+      "/var/tmp/codex-tdigest-pr3-20261014/overnight/runtime-support-ff73cfa/wheels"
+    ],
+    "cwd": "/var/tmp/codex-tdigest-pr3-20261014/work/gr-tdigest-f64-weights/bindings/python",
+    "exit_code": 0
+  },
+  {
+    "label": "py310-numpy1-install",
+    "command": [
+      "/tmp/tdigest-support-cells-3s6nqtam/py310-numpy1/bin/python",
+      "-I",
+      "-m",
+      "pip",
+      "install",
+      "--no-index",
+      "/var/tmp/codex-tdigest-pr3-20261014/overnight/runtime-support-ff73cfa/wheels/gr_tdigest-0.2.4-cp310-abi3-linux_x86_64.whl[polars]"
+    ],
+    "cwd": "/tmp/tdigest-support-cells-3s6nqtam",
+    "exit_code": 0
+  },
+  {
+    "label": "py310-numpy1-pip-check",
+    "command": [
+      "/tmp/tdigest-support-cells-3s6nqtam/py310-numpy1/bin/python",
+      "-I",
+      "-m",
+      "pip",
+      "check"
+    ],
+    "cwd": "/tmp/tdigest-support-cells-3s6nqtam",
+    "exit_code": 0
+  },
+  {
+    "label": "py310-numpy1-imports",
+    "command": [
+      "/tmp/tdigest-support-cells-3s6nqtam/py310-numpy1/bin/python",
+      "-I",
+      "-c",
+      "\nimport hashlib, importlib, importlib.metadata as metadata, importlib.util, json, pathlib, sys\nexpected = json.loads(sys.argv[1])\nassert sys.flags.isolated == 1\nassert '.'.join(map(str, sys.version_info[:2])) == expected['python']\nprefix = pathlib.Path(sys.prefix).resolve()\nnames = ('tdigest_rs', 'tdigest_rs.lib', 'tdigest_rs.tdigest_rs',\n         'gr_tdigest', 'gr_tdigest._gr_tdigest')\nmodules = {name: importlib.import_module(name) for name in names}\npaths = {name: pathlib.Path(module.__file__).resolve() for name, module in modules.items()}\nassert all(path.is_relative_to(prefix) for path in paths.values()), paths\nassert paths['tdigest_rs.tdigest_rs'].name == 'tdigest_rs.py', paths\nassert modules['tdigest_rs'].TDigest.__module__ == 'tdigest_rs.lib'\nnative_hash = hashlib.sha256(paths['gr_tdigest._gr_tdigest'].read_bytes()).hexdigest()\nassert native_hash == expected['native_sha256'], native_hash\ndist = metadata.distribution(expected['distribution'])\nassert dist.version == expected['version'], dist.version\nassert sorted(part.strip() for part in dist.metadata['Requires-Python'].split(',')) == ['<3.13', '>=3.10'], dist.metadata['Requires-Python']\nversions = {name: metadata.version(name) for name in ('numpy', 'scipy', 'pytest', 'pip')}\nif expected['polars'] is None:\n    assert importlib.util.find_spec('polars') is None\n    assert not any(name == 'polars' or name.startswith('polars.') for name in sys.modules)\n    try:\n        metadata.distribution('polars')\n    except metadata.PackageNotFoundError:\n        pass\n    else:\n        raise AssertionError('base installation unexpectedly includes Polars')\nelse:\n    versions['polars'] = metadata.version('polars')\n    assert versions['polars'] == expected['polars']\nfor name in ('numpy', 'scipy', 'pytest'):\n    assert versions[name] == expected[name], (name, versions[name])\nprint(json.dumps({'python': sys.version, 'executable': sys.executable,\n                  'dependencies': versions, 'native_sha256': native_hash,\n                  'imports': {name: str(path) for name, path in paths.items()},\n                  'distribution': dist.metadata['Name'], 'version': dist.version}, indent=2))\n",
+      "{\"wheel\": \"/var/tmp/codex-tdigest-pr3-20261014/overnight/runtime-support-ff73cfa/wheels/gr_tdigest-0.2.4-cp310-abi3-linux_x86_64.whl\", \"wheel_sha256\": \"c9930f0b46f401e44c86d1485882389d6d5e6ff8e4bcd3e0c081b34094c88637\", \"native_sha256\": \"0bae335c3943b6220727e0e50b659faa79c7df9f138fdfbe7644a42a01d1f2ac\", \"distribution\": \"gr-tdigest\", \"version\": \"0.2.4\", \"requires_python\": \">=3.10, <3.13\", \"requires_dist\": [\"numpy>=1.26.4,<3\", \"polars==1.34.0 ; extra == 'polars'\"], \"tags\": [\"cp310-abi3-linux_x86_64\"], \"sdist\": \"/var/tmp/codex-tdigest-pr3-20261014/overnight/runtime-support-ff73cfa/sdist/gr_tdigest-0.2.4.tar.gz\", \"sdist_sha256\": \"338edb677d4853d0f4c5201fe2eafef6ded1b3951a198cb4936f559bff0290f9\", \"label\": \"py310-numpy1\", \"python\": \"3.10\", \"executable\": \"/tmp/tdigest-support-cells-3s6nqtam/py310-numpy1/bin/python\", \"numpy\": \"1.26.4\", \"scipy\": \"1.15.3\", \"polars\": \"1.34.0\", \"pytest\": \"8.4.2\"}"
+    ],
+    "cwd": "/tmp/tdigest-support-cells-3s6nqtam",
+    "exit_code": 0
+  },
+  {
+    "label": "py310-numpy1-compatibility",
+    "command": [
+      "/tmp/tdigest-support-cells-3s6nqtam/py310-numpy1/bin/python",
+      "-I",
+      "-m",
+      "pytest",
+      "-q",
+      "-c",
+      "/dev/null",
+      "-p",
+      "no:cacheprovider",
+      "-o",
+      "xfail_strict=true",
+      "--junitxml",
+      "/var/tmp/codex-tdigest-pr3-20261014/overnight/runtime-support-ff73cfa/py310-numpy1-compatibility.xml",
+      "/tmp/tdigest-support-cells-3s6nqtam/tests",
+      "/tmp/tdigest-support-cells-3s6nqtam/parity"
+    ],
+    "cwd": "/tmp/tdigest-support-cells-3s6nqtam",
+    "exit_code": 0
+  },
+  {
+    "label": "py310-numpy1-modern",
+    "command": [
+      "/tmp/tdigest-support-cells-3s6nqtam/py310-numpy1/bin/python",
+      "-I",
+      "-m",
+      "pytest",
+      "-q",
+      "-c",
+      "/dev/null",
+      "-p",
+      "no:cacheprovider",
+      "-o",
+      "xfail_strict=true",
+      "--junitxml",
+      "/var/tmp/codex-tdigest-pr3-20261014/overnight/runtime-support-ff73cfa/py310-numpy1-modern.xml",
+      "/tmp/tdigest-support-cells-3s6nqtam/modern"
+    ],
+    "cwd": "/tmp/tdigest-support-cells-3s6nqtam",
+    "exit_code": 0
+  },
+  {
+    "label": "py310-numpy2-install",
+    "command": [
+      "/tmp/tdigest-support-cells-3s6nqtam/py310-numpy2/bin/python",
+      "-I",
+      "-m",
+      "pip",
+      "install",
+      "--no-index",
+      "/var/tmp/codex-tdigest-pr3-20261014/overnight/runtime-support-ff73cfa/wheels/gr_tdigest-0.2.4-cp310-abi3-linux_x86_64.whl[polars]"
+    ],
+    "cwd": "/tmp/tdigest-support-cells-3s6nqtam",
+    "exit_code": 0
+  },
+  {
+    "label": "py310-numpy2-pip-check",
+    "command": [
+      "/tmp/tdigest-support-cells-3s6nqtam/py310-numpy2/bin/python",
+      "-I",
+      "-m",
+      "pip",
+      "check"
+    ],
+    "cwd": "/tmp/tdigest-support-cells-3s6nqtam",
+    "exit_code": 0
+  },
+  {
+    "label": "py310-numpy2-imports",
+    "command": [
+      "/tmp/tdigest-support-cells-3s6nqtam/py310-numpy2/bin/python",
+      "-I",
+      "-c",
+      "\nimport hashlib, importlib, importlib.metadata as metadata, importlib.util, json, pathlib, sys\nexpected = json.loads(sys.argv[1])\nassert sys.flags.isolated == 1\nassert '.'.join(map(str, sys.version_info[:2])) == expected['python']\nprefix = pathlib.Path(sys.prefix).resolve()\nnames = ('tdigest_rs', 'tdigest_rs.lib', 'tdigest_rs.tdigest_rs',\n         'gr_tdigest', 'gr_tdigest._gr_tdigest')\nmodules = {name: importlib.import_module(name) for name in names}\npaths = {name: pathlib.Path(module.__file__).resolve() for name, module in modules.items()}\nassert all(path.is_relative_to(prefix) for path in paths.values()), paths\nassert paths['tdigest_rs.tdigest_rs'].name == 'tdigest_rs.py', paths\nassert modules['tdigest_rs'].TDigest.__module__ == 'tdigest_rs.lib'\nnative_hash = hashlib.sha256(paths['gr_tdigest._gr_tdigest'].read_bytes()).hexdigest()\nassert native_hash == expected['native_sha256'], native_hash\ndist = metadata.distribution(expected['distribution'])\nassert dist.version == expected['version'], dist.version\nassert sorted(part.strip() for part in dist.metadata['Requires-Python'].split(',')) == ['<3.13', '>=3.10'], dist.metadata['Requires-Python']\nversions = {name: metadata.version(name) for name in ('numpy', 'scipy', 'pytest', 'pip')}\nif expected['polars'] is None:\n    assert importlib.util.find_spec('polars') is None\n    assert not any(name == 'polars' or name.startswith('polars.') for name in sys.modules)\n    try:\n        metadata.distribution('polars')\n    except metadata.PackageNotFoundError:\n        pass\n    else:\n        raise AssertionError('base installation unexpectedly includes Polars')\nelse:\n    versions['polars'] = metadata.version('polars')\n    assert versions['polars'] == expected['polars']\nfor name in ('numpy', 'scipy', 'pytest'):\n    assert versions[name] == expected[name], (name, versions[name])\nprint(json.dumps({'python': sys.version, 'executable': sys.executable,\n                  'dependencies': versions, 'native_sha256': native_hash,\n                  'imports': {name: str(path) for name, path in paths.items()},\n                  'distribution': dist.metadata['Name'], 'version': dist.version}, indent=2))\n",
+      "{\"wheel\": \"/var/tmp/codex-tdigest-pr3-20261014/overnight/runtime-support-ff73cfa/wheels/gr_tdigest-0.2.4-cp310-abi3-linux_x86_64.whl\", \"wheel_sha256\": \"c9930f0b46f401e44c86d1485882389d6d5e6ff8e4bcd3e0c081b34094c88637\", \"native_sha256\": \"0bae335c3943b6220727e0e50b659faa79c7df9f138fdfbe7644a42a01d1f2ac\", \"distribution\": \"gr-tdigest\", \"version\": \"0.2.4\", \"requires_python\": \">=3.10, <3.13\", \"requires_dist\": [\"numpy>=1.26.4,<3\", \"polars==1.34.0 ; extra == 'polars'\"], \"tags\": [\"cp310-abi3-linux_x86_64\"], \"sdist\": \"/var/tmp/codex-tdigest-pr3-20261014/overnight/runtime-support-ff73cfa/sdist/gr_tdigest-0.2.4.tar.gz\", \"sdist_sha256\": \"338edb677d4853d0f4c5201fe2eafef6ded1b3951a198cb4936f559bff0290f9\", \"label\": \"py310-numpy2\", \"python\": \"3.10\", \"executable\": \"/tmp/tdigest-support-cells-3s6nqtam/py310-numpy2/bin/python\", \"numpy\": \"2.2.6\", \"scipy\": \"1.15.3\", \"polars\": \"1.34.0\", \"pytest\": \"8.4.2\"}"
+    ],
+    "cwd": "/tmp/tdigest-support-cells-3s6nqtam",
+    "exit_code": 0
+  },
+  {
+    "label": "py310-numpy2-compatibility",
+    "command": [
+      "/tmp/tdigest-support-cells-3s6nqtam/py310-numpy2/bin/python",
+      "-I",
+      "-m",
+      "pytest",
+      "-q",
+      "-c",
+      "/dev/null",
+      "-p",
+      "no:cacheprovider",
+      "-o",
+      "xfail_strict=true",
+      "--junitxml",
+      "/var/tmp/codex-tdigest-pr3-20261014/overnight/runtime-support-ff73cfa/py310-numpy2-compatibility.xml",
+      "/tmp/tdigest-support-cells-3s6nqtam/tests",
+      "/tmp/tdigest-support-cells-3s6nqtam/parity"
+    ],
+    "cwd": "/tmp/tdigest-support-cells-3s6nqtam",
+    "exit_code": 0
+  },
+  {
+    "label": "py310-numpy2-modern",
+    "command": [
+      "/tmp/tdigest-support-cells-3s6nqtam/py310-numpy2/bin/python",
+      "-I",
+      "-m",
+      "pytest",
+      "-q",
+      "-c",
+      "/dev/null",
+      "-p",
+      "no:cacheprovider",
+      "-o",
+      "xfail_strict=true",
+      "--junitxml",
+      "/var/tmp/codex-tdigest-pr3-20261014/overnight/runtime-support-ff73cfa/py310-numpy2-modern.xml",
+      "/tmp/tdigest-support-cells-3s6nqtam/modern"
+    ],
+    "cwd": "/tmp/tdigest-support-cells-3s6nqtam",
+    "exit_code": 0
+  },
+  {
+    "label": "py311-numpy1-install",
+    "command": [
+      "/tmp/tdigest-support-cells-3s6nqtam/py311-numpy1/bin/python",
+      "-I",
+      "-m",
+      "pip",
+      "install",
+      "--no-index",
+      "/var/tmp/codex-tdigest-pr3-20261014/overnight/runtime-support-ff73cfa/wheels/gr_tdigest-0.2.4-cp310-abi3-linux_x86_64.whl[polars]"
+    ],
+    "cwd": "/tmp/tdigest-support-cells-3s6nqtam",
+    "exit_code": 0
+  },
+  {
+    "label": "py311-numpy1-pip-check",
+    "command": [
+      "/tmp/tdigest-support-cells-3s6nqtam/py311-numpy1/bin/python",
+      "-I",
+      "-m",
+      "pip",
+      "check"
+    ],
+    "cwd": "/tmp/tdigest-support-cells-3s6nqtam",
+    "exit_code": 0
+  },
+  {
+    "label": "py311-numpy1-imports",
+    "command": [
+      "/tmp/tdigest-support-cells-3s6nqtam/py311-numpy1/bin/python",
+      "-I",
+      "-c",
+      "\nimport hashlib, importlib, importlib.metadata as metadata, importlib.util, json, pathlib, sys\nexpected = json.loads(sys.argv[1])\nassert sys.flags.isolated == 1\nassert '.'.join(map(str, sys.version_info[:2])) == expected['python']\nprefix = pathlib.Path(sys.prefix).resolve()\nnames = ('tdigest_rs', 'tdigest_rs.lib', 'tdigest_rs.tdigest_rs',\n         'gr_tdigest', 'gr_tdigest._gr_tdigest')\nmodules = {name: importlib.import_module(name) for name in names}\npaths = {name: pathlib.Path(module.__file__).resolve() for name, module in modules.items()}\nassert all(path.is_relative_to(prefix) for path in paths.values()), paths\nassert paths['tdigest_rs.tdigest_rs'].name == 'tdigest_rs.py', paths\nassert modules['tdigest_rs'].TDigest.__module__ == 'tdigest_rs.lib'\nnative_hash = hashlib.sha256(paths['gr_tdigest._gr_tdigest'].read_bytes()).hexdigest()\nassert native_hash == expected['native_sha256'], native_hash\ndist = metadata.distribution(expected['distribution'])\nassert dist.version == expected['version'], dist.version\nassert sorted(part.strip() for part in dist.metadata['Requires-Python'].split(',')) == ['<3.13', '>=3.10'], dist.metadata['Requires-Python']\nversions = {name: metadata.version(name) for name in ('numpy', 'scipy', 'pytest', 'pip')}\nif expected['polars'] is None:\n    assert importlib.util.find_spec('polars') is None\n    assert not any(name == 'polars' or name.startswith('polars.') for name in sys.modules)\n    try:\n        metadata.distribution('polars')\n    except metadata.PackageNotFoundError:\n        pass\n    else:\n        raise AssertionError('base installation unexpectedly includes Polars')\nelse:\n    versions['polars'] = metadata.version('polars')\n    assert versions['polars'] == expected['polars']\nfor name in ('numpy', 'scipy', 'pytest'):\n    assert versions[name] == expected[name], (name, versions[name])\nprint(json.dumps({'python': sys.version, 'executable': sys.executable,\n                  'dependencies': versions, 'native_sha256': native_hash,\n                  'imports': {name: str(path) for name, path in paths.items()},\n                  'distribution': dist.metadata['Name'], 'version': dist.version}, indent=2))\n",
+      "{\"wheel\": \"/var/tmp/codex-tdigest-pr3-20261014/overnight/runtime-support-ff73cfa/wheels/gr_tdigest-0.2.4-cp310-abi3-linux_x86_64.whl\", \"wheel_sha256\": \"c9930f0b46f401e44c86d1485882389d6d5e6ff8e4bcd3e0c081b34094c88637\", \"native_sha256\": \"0bae335c3943b6220727e0e50b659faa79c7df9f138fdfbe7644a42a01d1f2ac\", \"distribution\": \"gr-tdigest\", \"version\": \"0.2.4\", \"requires_python\": \">=3.10, <3.13\", \"requires_dist\": [\"numpy>=1.26.4,<3\", \"polars==1.34.0 ; extra == 'polars'\"], \"tags\": [\"cp310-abi3-linux_x86_64\"], \"sdist\": \"/var/tmp/codex-tdigest-pr3-20261014/overnight/runtime-support-ff73cfa/sdist/gr_tdigest-0.2.4.tar.gz\", \"sdist_sha256\": \"338edb677d4853d0f4c5201fe2eafef6ded1b3951a198cb4936f559bff0290f9\", \"label\": \"py311-numpy1\", \"python\": \"3.11\", \"executable\": \"/tmp/tdigest-support-cells-3s6nqtam/py311-numpy1/bin/python\", \"numpy\": \"1.26.4\", \"scipy\": \"1.17.1\", \"polars\": \"1.34.0\", \"pytest\": \"8.4.2\"}"
+    ],
+    "cwd": "/tmp/tdigest-support-cells-3s6nqtam",
+    "exit_code": 0
+  },
+  {
+    "label": "py311-numpy1-compatibility",
+    "command": [
+      "/tmp/tdigest-support-cells-3s6nqtam/py311-numpy1/bin/python",
+      "-I",
+      "-m",
+      "pytest",
+      "-q",
+      "-c",
+      "/dev/null",
+      "-p",
+      "no:cacheprovider",
+      "-o",
+      "xfail_strict=true",
+      "--junitxml",
+      "/var/tmp/codex-tdigest-pr3-20261014/overnight/runtime-support-ff73cfa/py311-numpy1-compatibility.xml",
+      "/tmp/tdigest-support-cells-3s6nqtam/tests",
+      "/tmp/tdigest-support-cells-3s6nqtam/parity"
+    ],
+    "cwd": "/tmp/tdigest-support-cells-3s6nqtam",
+    "exit_code": 0
+  },
+  {
+    "label": "py311-numpy1-modern",
+    "command": [
+      "/tmp/tdigest-support-cells-3s6nqtam/py311-numpy1/bin/python",
+      "-I",
+      "-m",
+      "pytest",
+      "-q",
+      "-c",
+      "/dev/null",
+      "-p",
+      "no:cacheprovider",
+      "-o",
+      "xfail_strict=true",
+      "--junitxml",
+      "/var/tmp/codex-tdigest-pr3-20261014/overnight/runtime-support-ff73cfa/py311-numpy1-modern.xml",
+      "/tmp/tdigest-support-cells-3s6nqtam/modern"
+    ],
+    "cwd": "/tmp/tdigest-support-cells-3s6nqtam",
+    "exit_code": 0
+  },
+  {
+    "label": "py311-numpy2-install",
+    "command": [
+      "/tmp/tdigest-support-cells-3s6nqtam/py311-numpy2/bin/python",
+      "-I",
+      "-m",
+      "pip",
+      "install",
+      "--no-index",
+      "/var/tmp/codex-tdigest-pr3-20261014/overnight/runtime-support-ff73cfa/wheels/gr_tdigest-0.2.4-cp310-abi3-linux_x86_64.whl[polars]"
+    ],
+    "cwd": "/tmp/tdigest-support-cells-3s6nqtam",
+    "exit_code": 0
+  },
+  {
+    "label": "py311-numpy2-pip-check",
+    "command": [
+      "/tmp/tdigest-support-cells-3s6nqtam/py311-numpy2/bin/python",
+      "-I",
+      "-m",
+      "pip",
+      "check"
+    ],
+    "cwd": "/tmp/tdigest-support-cells-3s6nqtam",
+    "exit_code": 0
+  },
+  {
+    "label": "py311-numpy2-imports",
+    "command": [
+      "/tmp/tdigest-support-cells-3s6nqtam/py311-numpy2/bin/python",
+      "-I",
+      "-c",
+      "\nimport hashlib, importlib, importlib.metadata as metadata, importlib.util, json, pathlib, sys\nexpected = json.loads(sys.argv[1])\nassert sys.flags.isolated == 1\nassert '.'.join(map(str, sys.version_info[:2])) == expected['python']\nprefix = pathlib.Path(sys.prefix).resolve()\nnames = ('tdigest_rs', 'tdigest_rs.lib', 'tdigest_rs.tdigest_rs',\n         'gr_tdigest', 'gr_tdigest._gr_tdigest')\nmodules = {name: importlib.import_module(name) for name in names}\npaths = {name: pathlib.Path(module.__file__).resolve() for name, module in modules.items()}\nassert all(path.is_relative_to(prefix) for path in paths.values()), paths\nassert paths['tdigest_rs.tdigest_rs'].name == 'tdigest_rs.py', paths\nassert modules['tdigest_rs'].TDigest.__module__ == 'tdigest_rs.lib'\nnative_hash = hashlib.sha256(paths['gr_tdigest._gr_tdigest'].read_bytes()).hexdigest()\nassert native_hash == expected['native_sha256'], native_hash\ndist = metadata.distribution(expected['distribution'])\nassert dist.version == expected['version'], dist.version\nassert sorted(part.strip() for part in dist.metadata['Requires-Python'].split(',')) == ['<3.13', '>=3.10'], dist.metadata['Requires-Python']\nversions = {name: metadata.version(name) for name in ('numpy', 'scipy', 'pytest', 'pip')}\nif expected['polars'] is None:\n    assert importlib.util.find_spec('polars') is None\n    assert not any(name == 'polars' or name.startswith('polars.') for name in sys.modules)\n    try:\n        metadata.distribution('polars')\n    except metadata.PackageNotFoundError:\n        pass\n    else:\n        raise AssertionError('base installation unexpectedly includes Polars')\nelse:\n    versions['polars'] = metadata.version('polars')\n    assert versions['polars'] == expected['polars']\nfor name in ('numpy', 'scipy', 'pytest'):\n    assert versions[name] == expected[name], (name, versions[name])\nprint(json.dumps({'python': sys.version, 'executable': sys.executable,\n                  'dependencies': versions, 'native_sha256': native_hash,\n                  'imports': {name: str(path) for name, path in paths.items()},\n                  'distribution': dist.metadata['Name'], 'version': dist.version}, indent=2))\n",
+      "{\"wheel\": \"/var/tmp/codex-tdigest-pr3-20261014/overnight/runtime-support-ff73cfa/wheels/gr_tdigest-0.2.4-cp310-abi3-linux_x86_64.whl\", \"wheel_sha256\": \"c9930f0b46f401e44c86d1485882389d6d5e6ff8e4bcd3e0c081b34094c88637\", \"native_sha256\": \"0bae335c3943b6220727e0e50b659faa79c7df9f138fdfbe7644a42a01d1f2ac\", \"distribution\": \"gr-tdigest\", \"version\": \"0.2.4\", \"requires_python\": \">=3.10, <3.13\", \"requires_dist\": [\"numpy>=1.26.4,<3\", \"polars==1.34.0 ; extra == 'polars'\"], \"tags\": [\"cp310-abi3-linux_x86_64\"], \"sdist\": \"/var/tmp/codex-tdigest-pr3-20261014/overnight/runtime-support-ff73cfa/sdist/gr_tdigest-0.2.4.tar.gz\", \"sdist_sha256\": \"338edb677d4853d0f4c5201fe2eafef6ded1b3951a198cb4936f559bff0290f9\", \"label\": \"py311-numpy2\", \"python\": \"3.11\", \"executable\": \"/tmp/tdigest-support-cells-3s6nqtam/py311-numpy2/bin/python\", \"numpy\": \"2.3.4\", \"scipy\": \"1.17.1\", \"polars\": \"1.34.0\", \"pytest\": \"8.4.2\"}"
+    ],
+    "cwd": "/tmp/tdigest-support-cells-3s6nqtam",
+    "exit_code": 0
+  },
+  {
+    "label": "py311-numpy2-compatibility",
+    "command": [
+      "/tmp/tdigest-support-cells-3s6nqtam/py311-numpy2/bin/python",
+      "-I",
+      "-m",
+      "pytest",
+      "-q",
+      "-c",
+      "/dev/null",
+      "-p",
+      "no:cacheprovider",
+      "-o",
+      "xfail_strict=true",
+      "--junitxml",
+      "/var/tmp/codex-tdigest-pr3-20261014/overnight/runtime-support-ff73cfa/py311-numpy2-compatibility.xml",
+      "/tmp/tdigest-support-cells-3s6nqtam/tests",
+      "/tmp/tdigest-support-cells-3s6nqtam/parity"
+    ],
+    "cwd": "/tmp/tdigest-support-cells-3s6nqtam",
+    "exit_code": 0
+  },
+  {
+    "label": "py311-numpy2-modern",
+    "command": [
+      "/tmp/tdigest-support-cells-3s6nqtam/py311-numpy2/bin/python",
+      "-I",
+      "-m",
+      "pytest",
+      "-q",
+      "-c",
+      "/dev/null",
+      "-p",
+      "no:cacheprovider",
+      "-o",
+      "xfail_strict=true",
+      "--junitxml",
+      "/var/tmp/codex-tdigest-pr3-20261014/overnight/runtime-support-ff73cfa/py311-numpy2-modern.xml",
+      "/tmp/tdigest-support-cells-3s6nqtam/modern"
+    ],
+    "cwd": "/tmp/tdigest-support-cells-3s6nqtam",
+    "exit_code": 0
+  },
+  {
+    "label": "py312-numpy1-install",
+    "command": [
+      "/tmp/tdigest-support-cells-3s6nqtam/py312-numpy1/bin/python",
+      "-I",
+      "-m",
+      "pip",
+      "install",
+      "--no-index",
+      "/var/tmp/codex-tdigest-pr3-20261014/overnight/runtime-support-ff73cfa/wheels/gr_tdigest-0.2.4-cp310-abi3-linux_x86_64.whl[polars]"
+    ],
+    "cwd": "/tmp/tdigest-support-cells-3s6nqtam",
+    "exit_code": 0
+  },
+  {
+    "label": "py312-numpy1-pip-check",
+    "command": [
+      "/tmp/tdigest-support-cells-3s6nqtam/py312-numpy1/bin/python",
+      "-I",
+      "-m",
+      "pip",
+      "check"
+    ],
+    "cwd": "/tmp/tdigest-support-cells-3s6nqtam",
+    "exit_code": 0
+  },
+  {
+    "label": "py312-numpy1-imports",
+    "command": [
+      "/tmp/tdigest-support-cells-3s6nqtam/py312-numpy1/bin/python",
+      "-I",
+      "-c",
+      "\nimport hashlib, importlib, importlib.metadata as metadata, importlib.util, json, pathlib, sys\nexpected = json.loads(sys.argv[1])\nassert sys.flags.isolated == 1\nassert '.'.join(map(str, sys.version_info[:2])) == expected['python']\nprefix = pathlib.Path(sys.prefix).resolve()\nnames = ('tdigest_rs', 'tdigest_rs.lib', 'tdigest_rs.tdigest_rs',\n         'gr_tdigest', 'gr_tdigest._gr_tdigest')\nmodules = {name: importlib.import_module(name) for name in names}\npaths = {name: pathlib.Path(module.__file__).resolve() for name, module in modules.items()}\nassert all(path.is_relative_to(prefix) for path in paths.values()), paths\nassert paths['tdigest_rs.tdigest_rs'].name == 'tdigest_rs.py', paths\nassert modules['tdigest_rs'].TDigest.__module__ == 'tdigest_rs.lib'\nnative_hash = hashlib.sha256(paths['gr_tdigest._gr_tdigest'].read_bytes()).hexdigest()\nassert native_hash == expected['native_sha256'], native_hash\ndist = metadata.distribution(expected['distribution'])\nassert dist.version == expected['version'], dist.version\nassert sorted(part.strip() for part in dist.metadata['Requires-Python'].split(',')) == ['<3.13', '>=3.10'], dist.metadata['Requires-Python']\nversions = {name: metadata.version(name) for name in ('numpy', 'scipy', 'pytest', 'pip')}\nif expected['polars'] is None:\n    assert importlib.util.find_spec('polars') is None\n    assert not any(name == 'polars' or name.startswith('polars.') for name in sys.modules)\n    try:\n        metadata.distribution('polars')\n    except metadata.PackageNotFoundError:\n        pass\n    else:\n        raise AssertionError('base installation unexpectedly includes Polars')\nelse:\n    versions['polars'] = metadata.version('polars')\n    assert versions['polars'] == expected['polars']\nfor name in ('numpy', 'scipy', 'pytest'):\n    assert versions[name] == expected[name], (name, versions[name])\nprint(json.dumps({'python': sys.version, 'executable': sys.executable,\n                  'dependencies': versions, 'native_sha256': native_hash,\n                  'imports': {name: str(path) for name, path in paths.items()},\n                  'distribution': dist.metadata['Name'], 'version': dist.version}, indent=2))\n",
+      "{\"wheel\": \"/var/tmp/codex-tdigest-pr3-20261014/overnight/runtime-support-ff73cfa/wheels/gr_tdigest-0.2.4-cp310-abi3-linux_x86_64.whl\", \"wheel_sha256\": \"c9930f0b46f401e44c86d1485882389d6d5e6ff8e4bcd3e0c081b34094c88637\", \"native_sha256\": \"0bae335c3943b6220727e0e50b659faa79c7df9f138fdfbe7644a42a01d1f2ac\", \"distribution\": \"gr-tdigest\", \"version\": \"0.2.4\", \"requires_python\": \">=3.10, <3.13\", \"requires_dist\": [\"numpy>=1.26.4,<3\", \"polars==1.34.0 ; extra == 'polars'\"], \"tags\": [\"cp310-abi3-linux_x86_64\"], \"sdist\": \"/var/tmp/codex-tdigest-pr3-20261014/overnight/runtime-support-ff73cfa/sdist/gr_tdigest-0.2.4.tar.gz\", \"sdist_sha256\": \"338edb677d4853d0f4c5201fe2eafef6ded1b3951a198cb4936f559bff0290f9\", \"label\": \"py312-numpy1\", \"python\": \"3.12\", \"executable\": \"/tmp/tdigest-support-cells-3s6nqtam/py312-numpy1/bin/python\", \"numpy\": \"1.26.4\", \"scipy\": \"1.17.1\", \"polars\": \"1.34.0\", \"pytest\": \"8.4.2\"}"
+    ],
+    "cwd": "/tmp/tdigest-support-cells-3s6nqtam",
+    "exit_code": 0
+  },
+  {
+    "label": "py312-numpy1-compatibility",
+    "command": [
+      "/tmp/tdigest-support-cells-3s6nqtam/py312-numpy1/bin/python",
+      "-I",
+      "-m",
+      "pytest",
+      "-q",
+      "-c",
+      "/dev/null",
+      "-p",
+      "no:cacheprovider",
+      "-o",
+      "xfail_strict=true",
+      "--junitxml",
+      "/var/tmp/codex-tdigest-pr3-20261014/overnight/runtime-support-ff73cfa/py312-numpy1-compatibility.xml",
+      "/tmp/tdigest-support-cells-3s6nqtam/tests",
+      "/tmp/tdigest-support-cells-3s6nqtam/parity"
+    ],
+    "cwd": "/tmp/tdigest-support-cells-3s6nqtam",
+    "exit_code": 0
+  },
+  {
+    "label": "py312-numpy1-modern",
+    "command": [
+      "/tmp/tdigest-support-cells-3s6nqtam/py312-numpy1/bin/python",
+      "-I",
+      "-m",
+      "pytest",
+      "-q",
+      "-c",
+      "/dev/null",
+      "-p",
+      "no:cacheprovider",
+      "-o",
+      "xfail_strict=true",
+      "--junitxml",
+      "/var/tmp/codex-tdigest-pr3-20261014/overnight/runtime-support-ff73cfa/py312-numpy1-modern.xml",
+      "/tmp/tdigest-support-cells-3s6nqtam/modern"
+    ],
+    "cwd": "/tmp/tdigest-support-cells-3s6nqtam",
+    "exit_code": 0
+  },
+  {
+    "label": "py312-numpy2-install",
+    "command": [
+      "/tmp/tdigest-support-cells-3s6nqtam/py312-numpy2/bin/python",
+      "-I",
+      "-m",
+      "pip",
+      "install",
+      "--no-index",
+      "/var/tmp/codex-tdigest-pr3-20261014/overnight/runtime-support-ff73cfa/wheels/gr_tdigest-0.2.4-cp310-abi3-linux_x86_64.whl[polars]"
+    ],
+    "cwd": "/tmp/tdigest-support-cells-3s6nqtam",
+    "exit_code": 0
+  },
+  {
+    "label": "py312-numpy2-pip-check",
+    "command": [
+      "/tmp/tdigest-support-cells-3s6nqtam/py312-numpy2/bin/python",
+      "-I",
+      "-m",
+      "pip",
+      "check"
+    ],
+    "cwd": "/tmp/tdigest-support-cells-3s6nqtam",
+    "exit_code": 0
+  },
+  {
+    "label": "py312-numpy2-imports",
+    "command": [
+      "/tmp/tdigest-support-cells-3s6nqtam/py312-numpy2/bin/python",
+      "-I",
+      "-c",
+      "\nimport hashlib, importlib, importlib.metadata as metadata, importlib.util, json, pathlib, sys\nexpected = json.loads(sys.argv[1])\nassert sys.flags.isolated == 1\nassert '.'.join(map(str, sys.version_info[:2])) == expected['python']\nprefix = pathlib.Path(sys.prefix).resolve()\nnames = ('tdigest_rs', 'tdigest_rs.lib', 'tdigest_rs.tdigest_rs',\n         'gr_tdigest', 'gr_tdigest._gr_tdigest')\nmodules = {name: importlib.import_module(name) for name in names}\npaths = {name: pathlib.Path(module.__file__).resolve() for name, module in modules.items()}\nassert all(path.is_relative_to(prefix) for path in paths.values()), paths\nassert paths['tdigest_rs.tdigest_rs'].name == 'tdigest_rs.py', paths\nassert modules['tdigest_rs'].TDigest.__module__ == 'tdigest_rs.lib'\nnative_hash = hashlib.sha256(paths['gr_tdigest._gr_tdigest'].read_bytes()).hexdigest()\nassert native_hash == expected['native_sha256'], native_hash\ndist = metadata.distribution(expected['distribution'])\nassert dist.version == expected['version'], dist.version\nassert sorted(part.strip() for part in dist.metadata['Requires-Python'].split(',')) == ['<3.13', '>=3.10'], dist.metadata['Requires-Python']\nversions = {name: metadata.version(name) for name in ('numpy', 'scipy', 'pytest', 'pip')}\nif expected['polars'] is None:\n    assert importlib.util.find_spec('polars') is None\n    assert not any(name == 'polars' or name.startswith('polars.') for name in sys.modules)\n    try:\n        metadata.distribution('polars')\n    except metadata.PackageNotFoundError:\n        pass\n    else:\n        raise AssertionError('base installation unexpectedly includes Polars')\nelse:\n    versions['polars'] = metadata.version('polars')\n    assert versions['polars'] == expected['polars']\nfor name in ('numpy', 'scipy', 'pytest'):\n    assert versions[name] == expected[name], (name, versions[name])\nprint(json.dumps({'python': sys.version, 'executable': sys.executable,\n                  'dependencies': versions, 'native_sha256': native_hash,\n                  'imports': {name: str(path) for name, path in paths.items()},\n                  'distribution': dist.metadata['Name'], 'version': dist.version}, indent=2))\n",
+      "{\"wheel\": \"/var/tmp/codex-tdigest-pr3-20261014/overnight/runtime-support-ff73cfa/wheels/gr_tdigest-0.2.4-cp310-abi3-linux_x86_64.whl\", \"wheel_sha256\": \"c9930f0b46f401e44c86d1485882389d6d5e6ff8e4bcd3e0c081b34094c88637\", \"native_sha256\": \"0bae335c3943b6220727e0e50b659faa79c7df9f138fdfbe7644a42a01d1f2ac\", \"distribution\": \"gr-tdigest\", \"version\": \"0.2.4\", \"requires_python\": \">=3.10, <3.13\", \"requires_dist\": [\"numpy>=1.26.4,<3\", \"polars==1.34.0 ; extra == 'polars'\"], \"tags\": [\"cp310-abi3-linux_x86_64\"], \"sdist\": \"/var/tmp/codex-tdigest-pr3-20261014/overnight/runtime-support-ff73cfa/sdist/gr_tdigest-0.2.4.tar.gz\", \"sdist_sha256\": \"338edb677d4853d0f4c5201fe2eafef6ded1b3951a198cb4936f559bff0290f9\", \"label\": \"py312-numpy2\", \"python\": \"3.12\", \"executable\": \"/tmp/tdigest-support-cells-3s6nqtam/py312-numpy2/bin/python\", \"numpy\": \"2.3.4\", \"scipy\": \"1.17.1\", \"polars\": \"1.34.0\", \"pytest\": \"8.4.2\"}"
+    ],
+    "cwd": "/tmp/tdigest-support-cells-3s6nqtam",
+    "exit_code": 0
+  },
+  {
+    "label": "py312-numpy2-compatibility",
+    "command": [
+      "/tmp/tdigest-support-cells-3s6nqtam/py312-numpy2/bin/python",
+      "-I",
+      "-m",
+      "pytest",
+      "-q",
+      "-c",
+      "/dev/null",
+      "-p",
+      "no:cacheprovider",
+      "-o",
+      "xfail_strict=true",
+      "--junitxml",
+      "/var/tmp/codex-tdigest-pr3-20261014/overnight/runtime-support-ff73cfa/py312-numpy2-compatibility.xml",
+      "/tmp/tdigest-support-cells-3s6nqtam/tests",
+      "/tmp/tdigest-support-cells-3s6nqtam/parity"
+    ],
+    "cwd": "/tmp/tdigest-support-cells-3s6nqtam",
+    "exit_code": 0
+  },
+  {
+    "label": "py312-numpy2-modern",
+    "command": [
+      "/tmp/tdigest-support-cells-3s6nqtam/py312-numpy2/bin/python",
+      "-I",
+      "-m",
+      "pytest",
+      "-q",
+      "-c",
+      "/dev/null",
+      "-p",
+      "no:cacheprovider",
+      "-o",
+      "xfail_strict=true",
+      "--junitxml",
+      "/var/tmp/codex-tdigest-pr3-20261014/overnight/runtime-support-ff73cfa/py312-numpy2-modern.xml",
+      "/tmp/tdigest-support-cells-3s6nqtam/modern"
+    ],
+    "cwd": "/tmp/tdigest-support-cells-3s6nqtam",
+    "exit_code": 0
+  },
+  {
+    "label": "py310-numpy1-no-polars-install",
+    "command": [
+      "/tmp/tdigest-support-cells-3s6nqtam/py310-numpy1-no-polars/bin/python",
+      "-I",
+      "-m",
+      "pip",
+      "install",
+      "--no-index",
+      "/var/tmp/codex-tdigest-pr3-20261014/overnight/runtime-support-ff73cfa/wheels/gr_tdigest-0.2.4-cp310-abi3-linux_x86_64.whl"
+    ],
+    "cwd": "/tmp/tdigest-support-cells-3s6nqtam",
+    "exit_code": 0
+  },
+  {
+    "label": "py310-numpy1-no-polars-pip-check",
+    "command": [
+      "/tmp/tdigest-support-cells-3s6nqtam/py310-numpy1-no-polars/bin/python",
+      "-I",
+      "-m",
+      "pip",
+      "check"
+    ],
+    "cwd": "/tmp/tdigest-support-cells-3s6nqtam",
+    "exit_code": 0
+  },
+  {
+    "label": "py310-numpy1-no-polars-imports",
+    "command": [
+      "/tmp/tdigest-support-cells-3s6nqtam/py310-numpy1-no-polars/bin/python",
+      "-I",
+      "-c",
+      "\nimport hashlib, importlib, importlib.metadata as metadata, importlib.util, json, pathlib, sys\nexpected = json.loads(sys.argv[1])\nassert sys.flags.isolated == 1\nassert '.'.join(map(str, sys.version_info[:2])) == expected['python']\nprefix = pathlib.Path(sys.prefix).resolve()\nnames = ('tdigest_rs', 'tdigest_rs.lib', 'tdigest_rs.tdigest_rs',\n         'gr_tdigest', 'gr_tdigest._gr_tdigest')\nmodules = {name: importlib.import_module(name) for name in names}\npaths = {name: pathlib.Path(module.__file__).resolve() for name, module in modules.items()}\nassert all(path.is_relative_to(prefix) for path in paths.values()), paths\nassert paths['tdigest_rs.tdigest_rs'].name == 'tdigest_rs.py', paths\nassert modules['tdigest_rs'].TDigest.__module__ == 'tdigest_rs.lib'\nnative_hash = hashlib.sha256(paths['gr_tdigest._gr_tdigest'].read_bytes()).hexdigest()\nassert native_hash == expected['native_sha256'], native_hash\ndist = metadata.distribution(expected['distribution'])\nassert dist.version == expected['version'], dist.version\nassert sorted(part.strip() for part in dist.metadata['Requires-Python'].split(',')) == ['<3.13', '>=3.10'], dist.metadata['Requires-Python']\nversions = {name: metadata.version(name) for name in ('numpy', 'scipy', 'pytest', 'pip')}\nif expected['polars'] is None:\n    assert importlib.util.find_spec('polars') is None\n    assert not any(name == 'polars' or name.startswith('polars.') for name in sys.modules)\n    try:\n        metadata.distribution('polars')\n    except metadata.PackageNotFoundError:\n        pass\n    else:\n        raise AssertionError('base installation unexpectedly includes Polars')\nelse:\n    versions['polars'] = metadata.version('polars')\n    assert versions['polars'] == expected['polars']\nfor name in ('numpy', 'scipy', 'pytest'):\n    assert versions[name] == expected[name], (name, versions[name])\nprint(json.dumps({'python': sys.version, 'executable': sys.executable,\n                  'dependencies': versions, 'native_sha256': native_hash,\n                  'imports': {name: str(path) for name, path in paths.items()},\n                  'distribution': dist.metadata['Name'], 'version': dist.version}, indent=2))\n",
+      "{\"wheel\": \"/var/tmp/codex-tdigest-pr3-20261014/overnight/runtime-support-ff73cfa/wheels/gr_tdigest-0.2.4-cp310-abi3-linux_x86_64.whl\", \"wheel_sha256\": \"c9930f0b46f401e44c86d1485882389d6d5e6ff8e4bcd3e0c081b34094c88637\", \"native_sha256\": \"0bae335c3943b6220727e0e50b659faa79c7df9f138fdfbe7644a42a01d1f2ac\", \"distribution\": \"gr-tdigest\", \"version\": \"0.2.4\", \"requires_python\": \">=3.10, <3.13\", \"requires_dist\": [\"numpy>=1.26.4,<3\", \"polars==1.34.0 ; extra == 'polars'\"], \"tags\": [\"cp310-abi3-linux_x86_64\"], \"sdist\": \"/var/tmp/codex-tdigest-pr3-20261014/overnight/runtime-support-ff73cfa/sdist/gr_tdigest-0.2.4.tar.gz\", \"sdist_sha256\": \"338edb677d4853d0f4c5201fe2eafef6ded1b3951a198cb4936f559bff0290f9\", \"label\": \"py310-numpy1-no-polars\", \"python\": \"3.10\", \"executable\": \"/tmp/tdigest-support-cells-3s6nqtam/py310-numpy1-no-polars/bin/python\", \"numpy\": \"1.26.4\", \"scipy\": \"1.15.3\", \"polars\": null, \"pytest\": \"8.4.2\"}"
+    ],
+    "cwd": "/tmp/tdigest-support-cells-3s6nqtam",
+    "exit_code": 0
+  },
+  {
+    "label": "py310-numpy1-no-polars-compatibility",
+    "command": [
+      "/tmp/tdigest-support-cells-3s6nqtam/py310-numpy1-no-polars/bin/python",
+      "-I",
+      "-m",
+      "pytest",
+      "-q",
+      "-c",
+      "/dev/null",
+      "-p",
+      "no:cacheprovider",
+      "-o",
+      "xfail_strict=true",
+      "--junitxml",
+      "/var/tmp/codex-tdigest-pr3-20261014/overnight/runtime-support-ff73cfa/py310-numpy1-no-polars-compatibility.xml",
+      "/tmp/tdigest-support-cells-3s6nqtam/tests",
+      "/tmp/tdigest-support-cells-3s6nqtam/parity"
+    ],
+    "cwd": "/tmp/tdigest-support-cells-3s6nqtam",
+    "exit_code": 0
+  },
+  {
+    "label": "py310-numpy1-no-polars-modern_python",
+    "command": [
+      "/tmp/tdigest-support-cells-3s6nqtam/py310-numpy1-no-polars/bin/python",
+      "-I",
+      "-m",
+      "pytest",
+      "-q",
+      "-c",
+      "/dev/null",
+      "-p",
+      "no:cacheprovider",
+      "-o",
+      "xfail_strict=true",
+      "--junitxml",
+      "/var/tmp/codex-tdigest-pr3-20261014/overnight/runtime-support-ff73cfa/py310-numpy1-no-polars-modern_python.xml",
+      "/tmp/tdigest-support-cells-3s6nqtam/modern/test_api_python.py"
+    ],
+    "cwd": "/tmp/tdigest-support-cells-3s6nqtam",
+    "exit_code": 0
+  }
+]

@@ -1,0 +1,11 @@
+{
+  "source_commit": "ff73cfab31d6368d203c1a361b8efaaea29d735b",
+  "phase": "test",
+  "command": [
+    "make",
+    "test"
+  ],
+  "exit_code": 0,
+  "elapsed_seconds": 42.63094687461853,
+  "completed_utc": "2026-10-15T00:28:21Z"
+}

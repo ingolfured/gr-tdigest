@@ -1,0 +1,231 @@
+{
+  "source_commit": "52f6212008111b62fa07374278b850868b9ea77e",
+  "source_tree": "697959c6f4932082f4e5b6f6f1809ad6c39cfc5e",
+  "canonical_commands": {
+    "build": {
+      "source_commit": "52f6212008111b62fa07374278b850868b9ea77e",
+      "phase": "build",
+      "command": [
+        "make",
+        "build"
+      ],
+      "exit_code": 0,
+      "elapsed_seconds": 14.580446243286133,
+      "completed_utc": "2026-10-14T22:57:57Z"
+    },
+    "test": {
+      "source_commit": "52f6212008111b62fa07374278b850868b9ea77e",
+      "phase": "test",
+      "command": [
+        "make",
+        "test"
+      ],
+      "exit_code": 0,
+      "elapsed_seconds": 31.497157096862793,
+      "completed_utc": "2026-10-14T22:58:29Z"
+    },
+    "lint": {
+      "source_commit": "52f6212008111b62fa07374278b850868b9ea77e",
+      "phase": "lint",
+      "command": [
+        "make",
+        "lint"
+      ],
+      "exit_code": 0,
+      "elapsed_seconds": 2.305007219314575,
+      "completed_utc": "2026-10-14T22:58:31Z"
+    },
+    "wheel": {
+      "source_commit": "52f6212008111b62fa07374278b850868b9ea77e",
+      "phase": "wheel",
+      "command": [
+        "make",
+        "legacy-wheel-test"
+      ],
+      "exit_code": 0,
+      "elapsed_seconds": 10.681922674179077,
+      "completed_utc": "2026-10-14T22:58:42Z"
+    }
+  },
+  "counts": {
+    "python_and_coherence": 314,
+    "unchanged_upstream": 91,
+    "installed_compatibility": 208,
+    "installed_modern_api_and_regressions": 70,
+    "rust": "112 passed; three pre-existing ignored tests",
+    "java": "passed"
+  },
+  "logs_sha256": {
+    "test.log": "42391510ba86503924e46af4afc9bad1b1326f0441f609849b3486f936514c76",
+    "wheel.log": "56c393c2daa3043425191c16c6f2ed811dbfbbe7f7e58cd2fede3cd393e39368",
+    "build.log": "b3c555248841af081eba9dfe2435f35c80ea30de10a4fac04404f8a97eb54b1a",
+    "lint.log": "432cc8e9bb49a26471ea45236c421c84c23588fd3dd6230d02371f186e979acf"
+  },
+  "wheel": {
+    "source_commit": "52f6212008111b62fa07374278b850868b9ea77e",
+    "source_tree": "697959c6f4932082f4e5b6f6f1809ad6c39cfc5e",
+    "wheel": "/var/tmp/codex-tdigest-pr3-20261014/overnight/release-wheel-52f6212/gr_tdigest-0.2.4-cp312-abi3-linux_x86_64.whl",
+    "sha256": "b1a2f6329410a55cbe3b3cb2b49517fae6851309e130bf2e2220cc6b1f0c11bf",
+    "native_sha256": {
+      "gr_tdigest/_gr_tdigest.abi3.so": "78a7473df6e7b20c703a57559b8ea9975848a3f55f745a7fcd1e721a598ece09"
+    },
+    "archive_members": [
+      "gr_tdigest-0.2.4.dist-info/METADATA",
+      "gr_tdigest-0.2.4.dist-info/WHEEL",
+      "gr_tdigest/__init__.py",
+      "tdigest_rs/tdigest_rs.py",
+      "tdigest_rs/lib.py",
+      "tdigest_rs/__init__.py",
+      "gr_tdigest/_gr_tdigest.abi3.so",
+      "gr_tdigest-0.2.4.dist-info/RECORD"
+    ],
+    "copied_utc": "2026-10-14T22:58:39Z",
+    "note": "Optimized Linux wheel preserved during canonical installed compatibility gate; outcome is recorded separately."
+  },
+  "audits": {
+    "modern-weighted-point-audit": {
+      "status": "PASS",
+      "seed": 202610140639,
+      "controls": {
+        "trials": 12,
+        "scales": [
+          1e-300,
+          1e-46,
+          0.1,
+          1.0,
+          16777216.0,
+          1000000000.0,
+          1e+39,
+          1e+300
+        ],
+        "precisions": [
+          "f32",
+          "f64"
+        ],
+        "max_size": 1000,
+        "values_per_trial": 12,
+        "integer_value_range": [
+          -5,
+          5
+        ],
+        "integer_weight_range": [
+          1,
+          9
+        ],
+        "merge_fan_in": 40,
+        "merge_trials": [
+          0,
+          5
+        ],
+        "merge_scales": [
+          1e-46,
+          0.1,
+          1.0,
+          1000000000.0
+        ],
+        "rank_absolute_tolerance": 5e-14,
+        "weight_relative_tolerance": 2e-14
+      },
+      "seconds": 0.32858882899927266,
+      "checks": {
+        "cdf": 13568,
+        "quantile_rank": 19968,
+        "digests": 800,
+        "integer_mass": 304
+      },
+      "ordinary_failure_count": 0,
+      "failure_details": [],
+      "known_extreme_probes": [],
+      "known_extreme_probes_are_part_of_gate": false,
+      "environment": {
+        "python": "3.12.12 (main, Oct 14 2025, 21:25:31) [Clang 20.1.4 ]",
+        "platform": "Linux-6.6.87.2-microsoft-standard-WSL2-x86_64-with-glibc2.44",
+        "package_version": "0.2.4",
+        "package_path": "/var/tmp/codex-tdigest-pr3-20261014/overnight/release-wheel-52f6212/modern-venv/lib/python3.12/site-packages/gr_tdigest/__init__.py",
+        "native_path": "/var/tmp/codex-tdigest-pr3-20261014/overnight/release-wheel-52f6212/modern-venv/lib/python3.12/site-packages/gr_tdigest/_gr_tdigest.abi3.so",
+        "native_sha256": "78a7473df6e7b20c703a57559b8ea9975848a3f55f745a7fcd1e721a598ece09",
+        "audit_script_sha256": "285b034fa19dbfb7752bc27cd23dc80ed4c51c510f30f7c68ad731783c2fc51d"
+      },
+      "source": {
+        "directory": "/var/tmp/codex-tdigest-pr3-20261014/work/gr-tdigest-f64-weights",
+        "sha256": {
+          "src/tdigest/cdf.rs": "55eeb11a1da871aee389d1256308fdc64a6c66d43d3f08d7f60e1729c80e65cc",
+          "src/tdigest/centroids.rs": "8b25d23223086bde557c5ba365e72892fc006f5c1e2be97be3f954dfd50ebe02",
+          "src/tdigest/codecs.rs": "509ac5271656581faf1aa9d3f866682f0fab4d66432fd2926631d5a32a298f37",
+          "src/tdigest/compressor.rs": "242b56730504fe6bd921f7443ee9a5fe62a74753808236b36d61e835edfa426a",
+          "src/tdigest/frontends.rs": "700aa6b18be1e26cc3f718469c15d090eb95c93c309b702954b4dd0b82e6201e",
+          "src/tdigest/merges.rs": "20631b3fe7e9af922d2b633ff0926a2a0598f7694508188e81d7e67cf878e765",
+          "src/tdigest/mod.rs": "eee25a98a6b0e935a7cec9baa109e0090ba39e1811db4725ab799450b6754fe1",
+          "src/tdigest/precision.rs": "7473c43ec96afc101a39c6bda8b83e82e1b13e8d5725c3556805b3585bfe14d7",
+          "src/tdigest/quantile.rs": "a99599dcc81c0623e3182ce2ede325cd7c34ac263985af217d6e7a865d9eb0e1",
+          "src/tdigest/scale.rs": "dfed088ef9d9b189475424283d65f8f9096670956cc8f2eba6469bb725d1693b",
+          "src/tdigest/singleton_policy.rs": "1f26944b9aa7575a5d86a5c31b97ed5bc80f2a9c9f12cf5ed9db1ca7436e5fa7",
+          "src/tdigest/tdigest.rs": "3f5b7aec088962341dde5fbf125aabcfff0ae7889bbe27979930c53951994f40",
+          "src/tdigest/test_helpers.rs": "f4556c0dee84cfad9c05325c8cea58c449e0135a8849fbefda6385761d94c0c5",
+          "src/tdigest/wire.rs": "7ab74c1e27105975d3ac40b2370666482d01e8834819ea59ba465f689a23a9cf",
+          "src/py.rs": "7c5a91556ea55cce8acec2d94cb787f79d982d785210a1ec97933807cf0c0020",
+          "bindings/python/gr_tdigest/__init__.py": "e6bfb726395c5c41858524d57fe914ba3c06764470154720393344bb484fc8c7"
+        },
+        "commit": "52f6212008111b62fa07374278b850868b9ea77e",
+        "working_tree_status": "",
+        "tracked_diff_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      }
+    },
+    "modern-compressed-state-audit": {
+      "status": "PASS",
+      "seed": 202610140712,
+      "trials": 1,
+      "max_sizes": [
+        10,
+        20,
+        40,
+        100,
+        1000
+      ],
+      "surface": "public",
+      "seconds": 0.5932255930001702,
+      "checks": {
+        "expected_public_capacity_rejections": 6,
+        "cases_attempted": 1440,
+        "states": 3840,
+        "mass_checks": 7680,
+        "cdf_values": 180594,
+        "quantile_values": 503040,
+        "cases_completed": 1440
+      },
+      "failures": [],
+      "provenance": {
+        "script_sha256": "4d32e83fc011ca04baba0dc2291669c8a656b63d7d9b9406381c66e3f63c30fe",
+        "python": "3.12.12 (main, Oct 14 2025, 21:25:31) [Clang 20.1.4 ]",
+        "package": "/var/tmp/codex-tdigest-pr3-20261014/overnight/release-wheel-52f6212/modern-venv/lib/python3.12/site-packages/gr_tdigest/__init__.py",
+        "native_sha256": {
+          "/var/tmp/codex-tdigest-pr3-20261014/overnight/release-wheel-52f6212/modern-venv/lib/python3.12/site-packages/gr_tdigest/_gr_tdigest.abi3.so": "78a7473df6e7b20c703a57559b8ea9975848a3f55f745a7fcd1e721a598ece09"
+        },
+        "git_head": "52f6212008111b62fa07374278b850868b9ea77e",
+        "source_sha256": {
+          "src/tdigest/centroids.rs": "8b25d23223086bde557c5ba365e72892fc006f5c1e2be97be3f954dfd50ebe02",
+          "src/tdigest/compressor.rs": "242b56730504fe6bd921f7443ee9a5fe62a74753808236b36d61e835edfa426a",
+          "src/tdigest/tdigest.rs": "3f5b7aec088962341dde5fbf125aabcfff0ae7889bbe27979930c53951994f40",
+          "src/tdigest/cdf.rs": "55eeb11a1da871aee389d1256308fdc64a6c66d43d3f08d7f60e1729c80e65cc",
+          "src/tdigest/quantile.rs": "a99599dcc81c0623e3182ce2ede325cd7c34ac263985af217d6e7a865d9eb0e1"
+        },
+        "source_ref": "52f6212008111b62fa07374278b850868b9ea77e",
+        "source_ref_sha256": {
+          "src/tdigest/centroids.rs": "8b25d23223086bde557c5ba365e72892fc006f5c1e2be97be3f954dfd50ebe02",
+          "src/tdigest/compressor.rs": "242b56730504fe6bd921f7443ee9a5fe62a74753808236b36d61e835edfa426a",
+          "src/tdigest/tdigest.rs": "3f5b7aec088962341dde5fbf125aabcfff0ae7889bbe27979930c53951994f40",
+          "src/tdigest/cdf.rs": "55eeb11a1da871aee389d1256308fdc64a6c66d43d3f08d7f60e1729c80e65cc",
+          "src/tdigest/quantile.rs": "a99599dcc81c0623e3182ce2ede325cd7c34ac263985af217d6e7a865d9eb0e1"
+        },
+        "worktree_core_matches_source_ref": true
+      },
+      "scope": "Compressed-state invariants only. No exact-rank assertion after lossy compression. Weights have finite normal aggregate mass; subnormal-total and aggregate-overflow cases are separate."
+    }
+  },
+  "limits": [
+    "Linux x86-64, Python 3.12 only; full platform/runtime matrix not established.",
+    "Weight-scaling rejection does not fix input/merge aggregate overflow or weighted-value sum overflow.",
+    "Original public Rust crate API remains a separate rollout contract.",
+    "Performance measurements at c5dec35 predate transactional scaling and packaging changes."
+  ]
+}

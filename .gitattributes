@@ -1,0 +1,56 @@
+bindings/python/tests/data/upstream_numerical_golden.json linguist-generated=true
+compat/performance/results/* linguist-generated=true
+compat/performance/measured-core.patch linguist-generated=true
+bindings/python/tests/data/published_0_1_0_pickle_golden.json linguist-generated=true
+compat/weighted-point-audit/recorded_results/* linguist-generated=true
+compat/compressed-state-audit/recorded_public_result.json linguist-generated=true
+compat/compressed-state-audit/initial_configuration_report.json linguist-generated=true
+compat/compressed-state-audit/historical_initial_audit.py linguist-generated=true
+compat/validation/*.json linguist-generated=true
+compat/package-ownership/recorded-52f6212/*.json linguist-generated=true
+compat/package-ownership/recorded-52f6212/temporary-project-name.patch linguist-generated=true whitespace=-blank-at-eol
+compat/package-ownership/recorded-52f6212/** linguist-generated=true
+compat/performance/interleaved/PROVENANCE.json linguist-generated=true
+compat/validation/runtime-3d0182a/** linguist-generated=true
+compat/accuracy/held-out-20261015/results/** linguist-generated=true
+compat/accuracy/held-out-20261015/smoke*/** linguist-generated=true
+compat/numerical-review/**/recorded/** linguist-generated=true
+compat/numerical-review/**/tested-source/** linguist-generated=true
+compat/numerical-review/**/dependency-provenance/** linguist-generated=true
+# Preserve exact historical runner bytes covered by the evidence manifest.
+compat/numerical-review/separated-modes/recorded/path-specific-runners/inspect_separated_modes.py whitespace=-blank-at-eol,-blank-at-eof
+compat/numerical-review/**/recorded/logs/*.log whitespace=-blank-at-eol,-blank-at-eof
+compat/validation/runtime-3d0182a/*.log whitespace=-blank-at-eol,-blank-at-eof
+compat/validation/runtime-ff73cfa/** linguist-generated=true
+compat/validation/runtime-ff73cfa/**/*.log whitespace=-blank-at-eof,-blank-at-eol,-space-before-tab
+compat/validation/runtime-ff73cfa/focused/negative-control.xml whitespace=-blank-at-eol
+
+# Frozen measurement records; narrative and reproduction sources remain reviewable.
+compat/accuracy/matched-budgets-ff73cfa/results/** linguist-generated=true
+compat/performance/matched-budgets-ff73cfa/results/** linguist-generated=true
+compat/performance/matched-budgets-ff73cfa/recorded/** linguist-generated=true
+# Retain standard CSV/recorded-log CRLF bytes covered by approved manifests.
+compat/accuracy/matched-budgets-ff73cfa/** whitespace=cr-at-eol
+compat/performance/matched-budgets-ff73cfa/** whitespace=cr-at-eol
+
+# Preserve the exact LF bytes verified by the upstream checksum guards.
+bindings/python/tdigest_rs/lib.py text eol=lf
+compat/tdigest-rs-upstream/bindings/python/benchmarks/run.py text eol=lf
+compat/tdigest-rs-upstream/bindings/python/tests/__init__.py text eol=lf
+compat/tdigest-rs-upstream/bindings/python/tests/conftest.py text eol=lf
+compat/tdigest-rs-upstream/bindings/python/tests/constants.py text eol=lf
+compat/tdigest-rs-upstream/bindings/python/tests/test_distributions.py text eol=lf
+compat/tdigest-rs-upstream/bindings/python/tests/test_tdigest.py text eol=lf
+compat/tdigest-rs-upstream/bindings/python/tests/utils.py text eol=lf
+src/upstream/LICENSE text eol=lf
+src/upstream/core.rs text eol=lf
+src/upstream/lib.rs text eol=lf
+src/upstream/scale.rs text eol=lf
+src/upstream/traits.rs text eol=lf
+
+# Preserve recorded checkout controls and CI logs byte for byte.
+compat/validation/checkout-lf-20261015/** linguist-generated=true
+compat/validation/checkout-lf-20261015/README.md linguist-generated=false
+compat/validation/checkout-lf-20261015/prepare_and_verify.py linguist-generated=false
+compat/validation/checkout-lf-20261015/**/*.log whitespace=cr-at-eol,-blank-at-eol,-blank-at-eof,-space-before-tab
+compat/validation/checkout-lf-20261015/**/*.patch whitespace=cr-at-eol,-blank-at-eol

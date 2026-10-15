@@ -1,0 +1,21 @@
+{
+  "source_commit": "52f6212008111b62fa07374278b850868b9ea77e",
+  "source_tree": "697959c6f4932082f4e5b6f6f1809ad6c39cfc5e",
+  "wheel": "/var/tmp/codex-tdigest-pr3-20261014/overnight/release-wheel-52f6212/gr_tdigest-0.2.4-cp312-abi3-linux_x86_64.whl",
+  "sha256": "b1a2f6329410a55cbe3b3cb2b49517fae6851309e130bf2e2220cc6b1f0c11bf",
+  "native_sha256": {
+    "gr_tdigest/_gr_tdigest.abi3.so": "78a7473df6e7b20c703a57559b8ea9975848a3f55f745a7fcd1e721a598ece09"
+  },
+  "archive_members": [
+    "gr_tdigest-0.2.4.dist-info/METADATA",
+    "gr_tdigest-0.2.4.dist-info/WHEEL",
+    "gr_tdigest/__init__.py",
+    "tdigest_rs/tdigest_rs.py",
+    "tdigest_rs/lib.py",
+    "tdigest_rs/__init__.py",
+    "gr_tdigest/_gr_tdigest.abi3.so",
+    "gr_tdigest-0.2.4.dist-info/RECORD"
+  ],
+  "copied_utc": "2026-10-14T22:58:39Z",
+  "note": "Optimized Linux wheel preserved during canonical installed compatibility gate; outcome is recorded separately."
+}

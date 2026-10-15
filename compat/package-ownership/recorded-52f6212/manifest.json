@@ -1,0 +1,23 @@
+{
+  "source_commit": "52f6212008111b62fa07374278b850868b9ea77e",
+  "sha256": {
+    "commands.json": "e60025d5f411ef186f50a2fd22a1a9a6a955c9bd2fc5cb3b260bd08ac6105f50",
+    "artifacts.json": "3cc1a5d8d2a268945d1a7f344bab2f66464bdcf429ff9db6ef806b63eb09bfa7",
+    "uninstalled.json": "cbbb25451ff62204c9d8e3a48b96a415e3f3bf32af2b7c60ef2d001eaf70b561",
+    "upgraded.json": "850f09aa3160a147b637e08c385f24d050c9073a55688070a5bcb6d6eab4b5b3",
+    "temporary-project-name.patch": "5186c66b5e3327d55fa10d189bbb64f159b965f58124c5c3bfca61a783f007d3",
+    "staged-test-hashes.json": "663750e7571435e15f622d65b86f1d1656298501bf3f4e77d8f6eb48b0b061f2",
+    "RESULT.json": "fc11fb408941e5d3c7a0b253f9b0313e223e64d17ca7317c1009b76061316a85",
+    "sdist-hygiene-validation.json": "74d15bb8839e82c026dd465308163ad26e3b002df64d8b4753c33a27d029fb33",
+    "sdist-readme-metadata-validation.json": "404c39660f7e3d2725150e855a9c4c55a55b3c25b12bd00c8e7ff9b7c4206c21",
+    "old.json": "4fe92bc43866b7330bedc705d7dd07a4df29faefbbd3972f3207ce65693417f0",
+    "reinstalled.json": "88f5dfb8c2f7cb440929080533d3bd3b8acf9c093efb3d82509e050f1952c2c9",
+    "source-export.json": "280fdf8b9373cd5b35d349c2294908ccd2409c9bb2666c131317e0f79d9ed001",
+    "standard-sdist-rebuild.json": "3265c6015ff418c6b87d66a79b6fdba23ef9991dc3311148b0ad5ec3ddbe9cd4",
+    "export-verification.json": "42796768b6bdd1b6395c669ec613f4f0ecff329831a911a48254e69507056ba7",
+    "scripts/rebuild_standard_sdist_wheel.py": "d540622e15d2a45ccdeb625453525bac45014db8cd992abcbc36596ffc39418f",
+    "scripts/probe_installed.py": "474b222f0a15a98816c5789a261b4ea87013fb7f05c32cdd64872fb6ffbb6278",
+    "scripts/run_probe.py": "9221c9cec7bb277b91942eb39e106ce9b62601036684f36ea501d8226ae1ed3c"
+  },
+  "note": "Recorded experiment scripts retain the original isolated WSL paths; they are audit snapshots, not portable release commands."
+}

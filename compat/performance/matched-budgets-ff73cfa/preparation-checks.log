@@ -1,0 +1,43 @@
+1 file reformatted, 1 file left unchanged
+All checks passed!
+test_byte_cap_retains_bounded_prefix (test_guards.Guards.test_byte_cap_retains_bounded_prefix) ... ok
+test_closed_pipes_do_not_escape_deadline (test_guards.Guards.test_closed_pipes_do_not_escape_deadline) ... ok
+test_duplicate_parameter_pairs_are_reused (test_guards.Guards.test_duplicate_parameter_pairs_are_reused) ... ok
+test_frozen_binary_manifest_settings_and_implementation (test_guards.Guards.test_frozen_binary_manifest_settings_and_implementation) ... ok
+test_full_schedule_bounds_and_reverse_pairing (test_guards.Guards.test_full_schedule_bounds_and_reverse_pairing) ... ok
+test_global_deadline_kills_and_keeps_prefix (test_guards.Guards.test_global_deadline_kills_and_keeps_prefix) ... ok
+test_historical_source_rejected (test_guards.Guards.test_historical_source_rejected) ... ok
+test_inherited_nonfinite_rank_is_not_censored (test_guards.Guards.test_inherited_nonfinite_rank_is_not_censored) ... ok
+test_missing_duplicate_and_bad_status_rejected (test_guards.Guards.test_missing_duplicate_and_bad_status_rejected) ... ok
+test_no_launch_when_budget_exhausted (test_guards.Guards.test_no_launch_when_budget_exhausted) ... ok
+test_nontraining_status_rejected (test_guards.Guards.test_nontraining_status_rejected) ... ok
+test_nonzero_preserves_failure_output (test_guards.Guards.test_nonzero_preserves_failure_output) ... ok
+test_orphan_pipe_cannot_escape_deadline (test_guards.Guards.test_orphan_pipe_cannot_escape_deadline) ... ok
+test_per_process_deadline_is_stricter (test_guards.Guards.test_per_process_deadline_is_stricter) ... ok
+test_policy_misses_stay_visible (test_guards.Guards.test_policy_misses_stay_visible) ... ok
+test_route_state_iteration_and_query_tampering_rejected (test_guards.Guards.test_route_state_iteration_and_query_tampering_rejected) ... ok
+test_serialized_draft_is_bound_and_requires_no_core (test_guards.Guards.test_serialized_draft_is_bound_and_requires_no_core) ... ok
+test_stderr_also_counts_towards_cap (test_guards.Guards.test_stderr_also_counts_towards_cap) ... ok
+test_unavailable_is_not_substituted (test_guards.Guards.test_unavailable_is_not_substituted) ... ok
+test_valid_output_streamed (test_guards.Guards.test_valid_output_streamed) ... ok
+
+----------------------------------------------------------------------
+Ran 20 tests in 0.825s
+
+OK
+{
+  "status": "not executed",
+  "source": "ff73cfab31d6368d203c1a361b8efaaea29d735b",
+  "accuracy_protocol_sha256": "9c2a455e689802eb2dbbe7764764238b794fa5975e2517d5e3c1355fed66904a",
+  "max_pairs": 18,
+  "max_full_processes": 72,
+  "global_seconds": 600,
+  "selection_hash": "required at runtime",
+  "implementation_sha256": {
+    "PLAN.md": "72e3bb21f824998f063e806fd099ff951699a10456dd8505764cd7d801e6b2ab",
+    "PROTOCOL.draft.json": "7cc10afd395791e5aadae80afab5dd695f7f77a5acf6457845bb0c7e85c599eb",
+    "timing_tail.rs": "66e4d20cbd19714d68e2d4ed6f09d3c31f2f1c3e56fe78758f647b427ddeea05",
+    "run_timing.py": "0a138336819090073eed1b1e97825935255ee727db9e88d4e72599b85666d0de",
+    "test_guards.py": "548f8b0d01cf9e8a7cbe172473c1bea827cc88a4b326227366b62e9306673754"
+  }
+}

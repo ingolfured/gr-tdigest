@@ -1,0 +1,39 @@
+Original numerical source and Python wrapper checksums match.
+All seven upstream file checksums match the pinned snapshot.
+python-runtimes (log: /var/tmp/codex-tdigest-pr3-20261014/overnight/runtime-support-360ad5b/python-runtimes.log)
+py310-numpy1-venv (log: /var/tmp/codex-tdigest-pr3-20261014/overnight/runtime-support-360ad5b/py310-numpy1-venv.log)
+py310-numpy1-pip (log: /var/tmp/codex-tdigest-pr3-20261014/overnight/runtime-support-360ad5b/py310-numpy1-pip.log)
+py310-numpy1-deps (log: /var/tmp/codex-tdigest-pr3-20261014/overnight/runtime-support-360ad5b/py310-numpy1-deps.log)
+py310-numpy2-venv (log: /var/tmp/codex-tdigest-pr3-20261014/overnight/runtime-support-360ad5b/py310-numpy2-venv.log)
+py310-numpy2-pip (log: /var/tmp/codex-tdigest-pr3-20261014/overnight/runtime-support-360ad5b/py310-numpy2-pip.log)
+py310-numpy2-deps (log: /var/tmp/codex-tdigest-pr3-20261014/overnight/runtime-support-360ad5b/py310-numpy2-deps.log)
+py311-numpy1-venv (log: /var/tmp/codex-tdigest-pr3-20261014/overnight/runtime-support-360ad5b/py311-numpy1-venv.log)
+py311-numpy1-pip (log: /var/tmp/codex-tdigest-pr3-20261014/overnight/runtime-support-360ad5b/py311-numpy1-pip.log)
+py311-numpy1-deps (log: /var/tmp/codex-tdigest-pr3-20261014/overnight/runtime-support-360ad5b/py311-numpy1-deps.log)
+py311-numpy2-venv (log: /var/tmp/codex-tdigest-pr3-20261014/overnight/runtime-support-360ad5b/py311-numpy2-venv.log)
+py311-numpy2-pip (log: /var/tmp/codex-tdigest-pr3-20261014/overnight/runtime-support-360ad5b/py311-numpy2-pip.log)
+py311-numpy2-deps (log: /var/tmp/codex-tdigest-pr3-20261014/overnight/runtime-support-360ad5b/py311-numpy2-deps.log)
+py312-numpy1-venv (log: /var/tmp/codex-tdigest-pr3-20261014/overnight/runtime-support-360ad5b/py312-numpy1-venv.log)
+py312-numpy1-pip (log: /var/tmp/codex-tdigest-pr3-20261014/overnight/runtime-support-360ad5b/py312-numpy1-pip.log)
+py312-numpy1-deps (log: /var/tmp/codex-tdigest-pr3-20261014/overnight/runtime-support-360ad5b/py312-numpy1-deps.log)
+py312-numpy2-venv (log: /var/tmp/codex-tdigest-pr3-20261014/overnight/runtime-support-360ad5b/py312-numpy2-venv.log)
+py312-numpy2-pip (log: /var/tmp/codex-tdigest-pr3-20261014/overnight/runtime-support-360ad5b/py312-numpy2-pip.log)
+py312-numpy2-deps (log: /var/tmp/codex-tdigest-pr3-20261014/overnight/runtime-support-360ad5b/py312-numpy2-deps.log)
+py310-numpy1-no-polars-venv (log: /var/tmp/codex-tdigest-pr3-20261014/overnight/runtime-support-360ad5b/py310-numpy1-no-polars-venv.log)
+py310-numpy1-no-polars-pip (log: /var/tmp/codex-tdigest-pr3-20261014/overnight/runtime-support-360ad5b/py310-numpy1-no-polars-pip.log)
+py310-numpy1-no-polars-deps (log: /var/tmp/codex-tdigest-pr3-20261014/overnight/runtime-support-360ad5b/py310-numpy1-no-polars-deps.log)
+source-archive (log: /var/tmp/codex-tdigest-pr3-20261014/overnight/runtime-support-360ad5b/source-archive.log)
+Source archive contains required active source bytes and no duplicate paths or Python caches.
+release-wheel (log: /var/tmp/codex-tdigest-pr3-20261014/overnight/runtime-support-360ad5b/release-wheel.log)
+Release wheel contains no Python cache/bytecode files.
+Traceback (most recent call last):
+  File "/var/tmp/codex-tdigest-pr3-20261014/work/gr-tdigest-f64-weights/scripts/test_python_support.py", line 311, in <module>
+    main()
+  File "/var/tmp/codex-tdigest-pr3-20261014/work/gr-tdigest-f64-weights/scripts/test_python_support.py", line 249, in main
+    artifact = inspect_wheel(wheel)
+               ^^^^^^^^^^^^^^^^^^^^
+  File "/var/tmp/codex-tdigest-pr3-20261014/work/gr-tdigest-f64-weights/scripts/test_python_support.py", line 105, in inspect_wheel
+    require(metadata["Requires-Python"] == ">=3.10,<3.13", "unexpected Python support metadata")
+  File "/var/tmp/codex-tdigest-pr3-20261014/work/gr-tdigest-f64-weights/scripts/test_python_support.py", line 89, in require
+    raise RuntimeError(message)
+RuntimeError: unexpected Python support metadata

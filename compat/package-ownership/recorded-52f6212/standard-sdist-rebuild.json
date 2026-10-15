@@ -1,0 +1,182 @@
+{
+  "source_commit": "52f6212008111b62fa07374278b850868b9ea77e",
+  "archive_sha256": "7460857acbf9ab925e0136ee65be43d1c9edb12efaebd75beda0f485fd196a9d",
+  "status": "passed",
+  "commands": [
+    {
+      "label": "maturin-version",
+      "command": [
+        "/var/tmp/codex-tdigest-pr3-20261014/work/gr-tdigest-f64-weights/.venv/bin/maturin",
+        "--version"
+      ],
+      "cwd": "/var/tmp/codex-tdigest-pr3-20261014/overnight/package-hygiene/standard-sdist-wheel-52f6212",
+      "returncode": 0,
+      "elapsed_seconds": 0.0020809859997825697,
+      "log": "/var/tmp/codex-tdigest-pr3-20261014/overnight/package-hygiene/standard-sdist-wheel-52f6212/logs/maturin-version.log"
+    },
+    {
+      "label": "rustc-version",
+      "command": [
+        "rustc",
+        "-Vv"
+      ],
+      "cwd": "/var/tmp/codex-tdigest-pr3-20261014/overnight/package-hygiene/standard-sdist-wheel-52f6212",
+      "returncode": 0,
+      "elapsed_seconds": 0.013036446000114665,
+      "log": "/var/tmp/codex-tdigest-pr3-20261014/overnight/package-hygiene/standard-sdist-wheel-52f6212/logs/rustc-version.log"
+    },
+    {
+      "label": "python-version",
+      "command": [
+        "/var/tmp/codex-tdigest-pr3-20261014/work/gr-tdigest-f64-weights/.venv/bin/python",
+        "-V"
+      ],
+      "cwd": "/var/tmp/codex-tdigest-pr3-20261014/overnight/package-hygiene/standard-sdist-wheel-52f6212",
+      "returncode": 0,
+      "elapsed_seconds": 0.001162561000455753,
+      "log": "/var/tmp/codex-tdigest-pr3-20261014/overnight/package-hygiene/standard-sdist-wheel-52f6212/logs/python-version.log"
+    },
+    {
+      "label": "build-wheel",
+      "command": [
+        "/var/tmp/codex-tdigest-pr3-20261014/work/gr-tdigest-f64-weights/.venv/bin/maturin",
+        "build",
+        "--release",
+        "--locked",
+        "-F",
+        "python",
+        "--compatibility",
+        "linux",
+        "-i",
+        "/var/tmp/codex-tdigest-pr3-20261014/work/gr-tdigest-f64-weights/.venv/bin/python",
+        "-o",
+        "/var/tmp/codex-tdigest-pr3-20261014/overnight/package-hygiene/standard-sdist-wheel-52f6212/wheels"
+      ],
+      "cwd": "/var/tmp/codex-tdigest-pr3-20261014/overnight/package-hygiene/standard-sdist-wheel-52f6212/extracted/gr_tdigest-0.2.4",
+      "returncode": 0,
+      "elapsed_seconds": 311.83808982999835,
+      "log": "/var/tmp/codex-tdigest-pr3-20261014/overnight/package-hygiene/standard-sdist-wheel-52f6212/logs/build-wheel.log"
+    },
+    {
+      "label": "export-dependencies",
+      "command": [
+        "/home/ingo/.local/bin/uv",
+        "export",
+        "--project",
+        "/var/tmp/codex-tdigest-pr3-20261014/overnight/package-hygiene/standard-sdist-wheel-52f6212/extracted/gr_tdigest-0.2.4/bindings/python",
+        "--frozen",
+        "--all-groups",
+        "--no-emit-project",
+        "--no-hashes",
+        "--output-file",
+        "/var/tmp/codex-tdigest-pr3-20261014/overnight/package-hygiene/standard-sdist-wheel-52f6212/requirements.txt"
+      ],
+      "cwd": "/var/tmp/codex-tdigest-pr3-20261014/overnight/package-hygiene/standard-sdist-wheel-52f6212",
+      "returncode": 0,
+      "elapsed_seconds": 0.01089384100123425,
+      "log": "/var/tmp/codex-tdigest-pr3-20261014/overnight/package-hygiene/standard-sdist-wheel-52f6212/logs/export-dependencies.log"
+    },
+    {
+      "label": "create-venv",
+      "command": [
+        "/home/ingo/.local/bin/uv",
+        "venv",
+        "--python",
+        "/var/tmp/codex-tdigest-pr3-20261014/work/gr-tdigest-f64-weights/.venv/bin/python",
+        "/var/tmp/codex-tdigest-pr3-20261014/overnight/package-hygiene/standard-sdist-wheel-52f6212/venv"
+      ],
+      "cwd": "/var/tmp/codex-tdigest-pr3-20261014/overnight/package-hygiene/standard-sdist-wheel-52f6212",
+      "returncode": 0,
+      "elapsed_seconds": 0.007550480997451814,
+      "log": "/var/tmp/codex-tdigest-pr3-20261014/overnight/package-hygiene/standard-sdist-wheel-52f6212/logs/create-venv.log"
+    },
+    {
+      "label": "install-wheel",
+      "command": [
+        "/home/ingo/.local/bin/uv",
+        "pip",
+        "install",
+        "--python",
+        "/var/tmp/codex-tdigest-pr3-20261014/overnight/package-hygiene/standard-sdist-wheel-52f6212/venv/bin/python",
+        "-r",
+        "/var/tmp/codex-tdigest-pr3-20261014/overnight/package-hygiene/standard-sdist-wheel-52f6212/requirements.txt",
+        "/var/tmp/codex-tdigest-pr3-20261014/overnight/package-hygiene/standard-sdist-wheel-52f6212/wheels/gr_tdigest-0.2.4-cp312-abi3-linux_x86_64.whl"
+      ],
+      "cwd": "/var/tmp/codex-tdigest-pr3-20261014/overnight/package-hygiene/standard-sdist-wheel-52f6212",
+      "returncode": 0,
+      "elapsed_seconds": 0.4033256650000112,
+      "log": "/var/tmp/codex-tdigest-pr3-20261014/overnight/package-hygiene/standard-sdist-wheel-52f6212/logs/install-wheel.log"
+    },
+    {
+      "label": "isolated-imports",
+      "command": [
+        "/var/tmp/codex-tdigest-pr3-20261014/overnight/package-hygiene/standard-sdist-wheel-52f6212/venv/bin/python",
+        "-I",
+        "-c",
+        "import hashlib,json,pathlib,sys,tdigest_rs,gr_tdigest,gr_tdigest._gr_tdigest as native; prefix=pathlib.Path(sys.prefix).resolve(); paths={\"legacy\":pathlib.Path(tdigest_rs.__file__).resolve(),\"modern\":pathlib.Path(gr_tdigest.__file__).resolve(),\"native\":pathlib.Path(native.__file__).resolve()}; assert all(p.is_relative_to(prefix) for p in paths.values()); print(json.dumps({\"paths\":{k:str(v) for k,v in paths.items()},\"native_sha256\":hashlib.sha256(paths[\"native\"].read_bytes()).hexdigest(),\"python\":sys.version}))"
+      ],
+      "cwd": "/var/tmp/codex-tdigest-pr3-20261014/overnight/package-hygiene/standard-sdist-wheel-52f6212",
+      "returncode": 0,
+      "elapsed_seconds": 0.25094846700085327,
+      "log": "/var/tmp/codex-tdigest-pr3-20261014/overnight/package-hygiene/standard-sdist-wheel-52f6212/logs/isolated-imports.log"
+    },
+    {
+      "label": "compatibility-tests",
+      "command": [
+        "/var/tmp/codex-tdigest-pr3-20261014/overnight/package-hygiene/standard-sdist-wheel-52f6212/venv/bin/python",
+        "-I",
+        "-m",
+        "pytest",
+        "-q",
+        "/var/tmp/codex-tdigest-pr3-20261014/overnight/package-hygiene/standard-sdist-wheel-52f6212/tests",
+        "/var/tmp/codex-tdigest-pr3-20261014/overnight/package-hygiene/standard-sdist-wheel-52f6212/parity",
+        "--junitxml=/var/tmp/codex-tdigest-pr3-20261014/overnight/package-hygiene/standard-sdist-wheel-52f6212/compatibility.junit.xml"
+      ],
+      "cwd": "/var/tmp/codex-tdigest-pr3-20261014/overnight/package-hygiene/standard-sdist-wheel-52f6212",
+      "returncode": 0,
+      "elapsed_seconds": 2.601035765001143,
+      "log": "/var/tmp/codex-tdigest-pr3-20261014/overnight/package-hygiene/standard-sdist-wheel-52f6212/logs/compatibility-tests.log"
+    }
+  ],
+  "started_utc": "2026-10-14T23:03:20Z",
+  "shared_target_dir": "/var/tmp/codex-tdigest-pr3-20261014/work/gr-tdigest/target",
+  "build_jobs": 2,
+  "maturin_version": "maturin 1.9.6",
+  "rustc_version": "rustc 1.90.0 (1159e78c4 2025-09-14)\nbinary: rustc\ncommit-hash: 1159e78c4747b02ef996e55082b704c09b970588\ncommit-date: 2025-09-14\nhost: x86_64-unknown-linux-gnu\nrelease: 1.90.0\nLLVM version: 20.1.8",
+  "python_version": "Python 3.12.12",
+  "wheel": "/var/tmp/codex-tdigest-pr3-20261014/overnight/package-hygiene/standard-sdist-wheel-52f6212/wheels/gr_tdigest-0.2.4-cp312-abi3-linux_x86_64.whl",
+  "wheel_sha256": "6d0776c84f0479c98b6356f4693963d88c36bde77fa16bf2eb074bf9e67bc4c9",
+  "native_sha256": {
+    "gr_tdigest/_gr_tdigest.abi3.so": "78a7473df6e7b20c703a57559b8ea9975848a3f55f745a7fcd1e721a598ece09"
+  },
+  "archive_members": [
+    "gr_tdigest-0.2.4.dist-info/METADATA",
+    "gr_tdigest-0.2.4.dist-info/WHEEL",
+    "gr_tdigest-0.2.4.dist-info/licenses/LICENSE",
+    "gr_tdigest/__init__.py",
+    "tdigest_rs/tdigest_rs.py",
+    "tdigest_rs/lib.py",
+    "tdigest_rs/__init__.py",
+    "gr_tdigest/_gr_tdigest.abi3.so",
+    "gr_tdigest-0.2.4.dist-info/RECORD"
+  ],
+  "forbidden_members": [],
+  "requirements_sha256": "5fa6fa07e50c6ce1e609fa40416836d578925f3cb4368a27df17e68eded48cc7",
+  "isolated_imports": {
+    "paths": {
+      "legacy": "/var/tmp/codex-tdigest-pr3-20261014/overnight/package-hygiene/standard-sdist-wheel-52f6212/venv/lib/python3.12/site-packages/tdigest_rs/__init__.py",
+      "modern": "/var/tmp/codex-tdigest-pr3-20261014/overnight/package-hygiene/standard-sdist-wheel-52f6212/venv/lib/python3.12/site-packages/gr_tdigest/__init__.py",
+      "native": "/var/tmp/codex-tdigest-pr3-20261014/overnight/package-hygiene/standard-sdist-wheel-52f6212/venv/lib/python3.12/site-packages/gr_tdigest/_gr_tdigest.abi3.so"
+    },
+    "native_sha256": "78a7473df6e7b20c703a57559b8ea9975848a3f55f745a7fcd1e721a598ece09",
+    "python": "3.12.12 (main, Oct 14 2025, 21:25:31) [Clang 20.1.4 ]"
+  },
+  "compatibility_results": {
+    "tests": 208,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0
+  },
+  "extracted_source_files_unchanged_after_build": true,
+  "completed_utc": "2026-10-14T23:08:35Z"
+}

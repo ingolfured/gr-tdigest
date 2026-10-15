@@ -1,0 +1,46 @@
+
+[1m==> Build: Rust lib + CLI (dev)[0m
+   Compiling gr-tdigest v0.2.4 (/var/tmp/codex-tdigest-pr3-20261014/work/gr-tdigest-f64-weights)
+    Finished `dev` profile [unoptimized + debuginfo] target(s) in 2.47s
+    Finished `dev` profile [unoptimized + debuginfo] target(s) in 0.11s
+
+[1m==> Build: Python extension (maturin develop, dev)[0m
+🍹 Building a mixed python/rust project
+🔗 Found pyo3 bindings with abi3 support
+🐍 Not using a specific python interpreter
+📡 Using build options bindings from pyproject.toml
+Using Python 3.12.12 environment at: /var/tmp/codex-tdigest-pr3-20261014/work/gr-tdigest-f64-weights/.venv
+Audited 2 packages in 1ms
+   Compiling gr-tdigest v0.2.4 (/var/tmp/codex-tdigest-pr3-20261014/work/gr-tdigest-f64-weights)
+    Finished `dev` profile [unoptimized + debuginfo] target(s) in 1.24s
+📦 Built wheel for abi3 Python ≥ 3.10 to /tmp/.tmp66iv3e/gr_tdigest-0.2.4-cp310-abi3-linux_x86_64.whl
+✏️ Setting installed package as editable
+🛠 Installed gr-tdigest-0.2.4
+
+[1m==> Build: Java via Gradle (clean + jar)[0m
+openjdk version "21.0.12.1" 2026-08-18 LTS
+OpenJDK Runtime Environment Temurin-21.0.12.1+1 (build 21.0.12.1+1-LTS)
+OpenJDK 64-Bit Server VM Temurin-21.0.12.1+1 (build 21.0.12.1+1-LTS, mixed mode, sharing)
+To honour the JVM settings for this build a single-use Daemon process will be forked. For more on this, please refer to https://docs.gradle.org/9.1.0/userguide/gradle_daemon.html#sec:disabling_the_daemon in the Gradle documentation.
+Daemon will be stopped at the end of the build 
+> Task :clean
+> Task :compileJava
+
+> Task :cargoBuild
+   Compiling gr-tdigest v0.2.4 (/var/tmp/codex-tdigest-pr3-20261014/work/gr-tdigest-f64-weights)
+    Finished `release` profile [optimized] target(s) in 5.11s
+
+> Task :copyNative
+Packaged native -> /var/tmp/codex-tdigest-pr3-20261014/work/gr-tdigest-f64-weights/bindings/java/build/generated-resources/META-INF/native/linux-x86_64/libgr_tdigest.so
+
+> Task :processResources
+> Task :classes
+
+> Task :jar
+Built JAR: /var/tmp/codex-tdigest-pr3-20261014/work/gr-tdigest-f64-weights/bindings/java/build/libs/gr-tdigest-0.2.4.jar (3.69 MB)
+
+BUILD SUCCESSFUL in 9s
+6 actionable tasks: 6 executed
+Consider enabling configuration cache to speed up this build: https://docs.gradle.org/9.1.0/userguide/configuration_cache_enabling.html
+[32m✓ Built bindings/java/build/libs/gr-tdigest-0.2.4.jar[0m
+[32m✓ all components built (PROFILE=dev)[0m

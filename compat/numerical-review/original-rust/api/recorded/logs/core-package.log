@@ -1,0 +1,5 @@
+   Packaging tdigest_core v0.2.0 (/var/tmp/codex-tdigest-pr3-20261014/work/gr-tdigest-f64-weights/src/upstream)
+    Packaged 12 files, 31.1KiB (10.4KiB compressed)
+   Verifying tdigest_core v0.2.0 (/var/tmp/codex-tdigest-pr3-20261014/work/gr-tdigest-f64-weights/src/upstream)
+   Compiling tdigest_core v0.2.0 (/var/tmp/codex-tdigest-pr3-20261014/work/gr-tdigest/target/package/tdigest_core-0.2.0)
+    Finished `dev` profile [unoptimized + debuginfo] target(s) in 0.15s

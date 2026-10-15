@@ -1,0 +1,40 @@
+{
+  "started_utc": "2026-10-14T22:09:40.413206+00:00",
+  "kernel": "Linux-6.6.87.2-microsoft-standard-WSL2-x86_64-with-glibc2.44",
+  "cpuinfo": "processor\t: 0\nvendor_id\t: GenuineIntel\ncpu family\t: 6\nmodel\t\t: 189\nmodel name\t: Intel(R) Core(TM) Ultra 9 288V\nstepping\t: 1\nmicrocode\t: 0xffffffff\ncpu MHz\t\t: 3302.399\ncache size\t: 12288 KB\nphysical id\t: 0\nsiblings\t: 8\ncore id\t\t: 0\ncpu cores\t: 8\napicid\t\t: 0\ninitial apicid\t: 0\nfpu\t\t: yes\nfpu_exception\t: yes\ncpuid level\t: 28\nwp\t\t: yes\nflags\t\t: fpu vme de pse tsc msr pae mce cx8 apic sep mtrr pge mca cmov pat pse36 clflush mmx fxsr sse sse2 ss ht syscall nx pdpe1gb rdtscp lm constant_tsc rep_good nopl xtopology tsc_reliable nonstop_tsc cpuid tsc_known_freq pni pclmulqdq vmx ssse3 fma cx16 pcid sse4_1 sse4_2 x2apic movbe popcnt tsc_deadline_timer aes xsave avx f16c rdrand hypervisor lahf_lm abm 3dnowprefetch ssbd ibrs ibpb stibp ibrs_enhanced tpr_shadow ept vpid ept_ad fsgsbase tsc_adjust bmi1 avx2 smep bmi2 erms invpcid rdseed adx smap clflushopt clwb sha_ni xsaveopt xsavec xgetbv1 xsaves avx_vnni vnmi umip waitpkg gfni vaes vpclmulqdq rdpid movdiri movdir64b fsrm md_clear serialize flush_l1d arch_capabilities\nvmx flags\t: vnmi invvpid ept_x_only ept_ad ept_1gb tsc_offset vtpr ept vpid unrestricted_guest ept_mode_based_exec tsc_scaling usr_wait_pause\nbugs\t\t: spectre_v1 spectre_v2 spec_store_bypass swapgs retbleed eibrs_pbrsb\nbogomips\t: 6604.79\nclflush size\t: 64\ncache_alignment\t: 64\naddress sizes\t: 42 bits physical, 48 bits virtual\npower management:",
+  "rustc": "rustc 1.90.0 (1159e78c4 2025-09-14)\nbinary: rustc\ncommit-hash: 1159e78c4747b02ef996e55082b704c09b970588\ncommit-date: 2025-09-14\nhost: x86_64-unknown-linux-gnu\nrelease: 1.90.0\nLLVM version: 20.1.8",
+  "repository_head": "22867bd55739a96a6fab3c8c48b27406ecb32197",
+  "repository_status": "",
+  "source_sha256": {
+    "src/tdigest/scale.rs": "dfed088ef9d9b189475424283d65f8f9096670956cc8f2eba6469bb725d1693b",
+    "src/tdigest/mod.rs": "eee25a98a6b0e935a7cec9baa109e0090ba39e1811db4725ab799450b6754fe1",
+    "src/tdigest/quantile.rs": "8f3fe7ea795f9f97c2288cb016041893a2390e26fcacf339f93ada3f0818d50c",
+    "src/tdigest/wire.rs": "7ab74c1e27105975d3ac40b2370666482d01e8834819ea59ba465f689a23a9cf",
+    "src/tdigest/cdf.rs": "419d67e56c99878f4c2a4d001f3c22c27fa6ec7691c0751e64719f18fd184e1f",
+    "src/tdigest/codecs.rs": "509ac5271656581faf1aa9d3f866682f0fab4d66432fd2926631d5a32a298f37",
+    "src/tdigest/tdigest.rs": "75acb373ed8698ea7028d7e038dfcbddc047551acff33de0becf98d215c66030",
+    "src/tdigest/precision.rs": "7473c43ec96afc101a39c6bda8b83e82e1b13e8d5725c3556805b3585bfe14d7",
+    "src/tdigest/compressor.rs": "668994b47a40660da6424d7a349611d86b58caf6ff798a48fc03760a8d9f8dff",
+    "src/tdigest/frontends.rs": "700aa6b18be1e26cc3f718469c15d090eb95c93c309b702954b4dd0b82e6201e",
+    "src/tdigest/centroids.rs": "8b25d23223086bde557c5ba365e72892fc006f5c1e2be97be3f954dfd50ebe02",
+    "src/tdigest/merges.rs": "20631b3fe7e9af922d2b633ff0926a2a0598f7694508188e81d7e67cf878e765",
+    "src/tdigest/singleton_policy.rs": "1f26944b9aa7575a5d86a5c31b97ed5bc80f2a9c9f12cf5ed9db1ca7436e5fa7",
+    "src/tdigest/test_helpers.rs": "f4556c0dee84cfad9c05325c8cea58c449e0135a8849fbefda6385761d94c0c5"
+  },
+  "harness_sha256": "f13d466b11b58d5508da54d624ba8c06e699e712282749956c59a7783d3e60b9",
+  "original_pin": "8d9cf1fe82c5c9254e5dc9593f01717e317f4333",
+  "profile": "cargo release defaults: opt-level=3, no LTO, generic target unless overridden by environment",
+  "scope": "Rust cores; original and modern share process jemalloc; excludes language adapters",
+  "environment_overrides": {
+    "RUSTFLAGS": null,
+    "CARGO_ENCODED_RUSTFLAGS": null,
+    "RUSTC": null,
+    "RAYON_NUM_THREADS": "1"
+  },
+  "smoke": false,
+  "affinity_cpu": 0,
+  "binary_sha256": "37cb0af99bd2b8199c03c38a35eab068774e02399059ed56d23807b0a16e326b",
+  "exit_status": 0,
+  "finished_utc": "2026-10-14T22:12:54.076648+00:00",
+  "source_changed_during_run": []
+}

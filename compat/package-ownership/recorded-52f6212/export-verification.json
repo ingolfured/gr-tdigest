@@ -1,0 +1,16 @@
+{
+  "source_commit": "52f6212008111b62fa07374278b850868b9ea77e",
+  "source_archive_sha256": "1463db32365acb9c83be7c250e72960b163d878533670edc2a39124b0c1af365",
+  "source_files_compared": 193,
+  "changed_tracked_file": "bindings/python/pyproject.toml",
+  "only_parsed_change": "project.name: gr-tdigest -> tdigest-rs",
+  "other_source_mismatches": [],
+  "extra_files": [
+    "bindings/python/gr_tdigest/__pycache__/codex_upgrade_probe.pyc",
+    "bindings/python/tdigest_rs/__pycache__/nested/codex_upgrade_probe.txt",
+    "bindings/python/tdigest_rs/codex_upgrade_probe.pyo",
+    "codex_upgrade_root_probe.pyc"
+  ],
+  "result": "PASS",
+  "native_compilation_performed": false
+}

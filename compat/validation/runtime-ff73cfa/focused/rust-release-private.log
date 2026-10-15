@@ -1,0 +1,9 @@
+   Compiling gr-tdigest v0.2.4 (/var/tmp/codex-tdigest-pr3-20261014/work/gr-tdigest-f64-weights)
+    Finished `release` profile [optimized] target(s) in 3.29s
+     Running unittests src/lib.rs (target/release/deps/gr_tdigest-1d282dfdaa1137b4)
+
+running 1 test
+test tdigest::compressor::tests::nonpositive_k2norm_domain_retains_existing_centroid_kinds_and_bits ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 62 filtered out; finished in 0.00s
+

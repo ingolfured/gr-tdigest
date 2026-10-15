@@ -1,0 +1,31 @@
+📦 Including license file `LICENSE`
+🍹 Building a mixed python/rust project
+🔗 Found pyo3 bindings with abi3 support
+🐍 Not using a specific python interpreter
+📡 Using build options bindings from pyproject.toml
+   Compiling pyo3-build-config v0.25.1
+   Compiling pyo3-macros-backend v0.25.1
+   Compiling pyo3-ffi v0.25.1
+   Compiling pyo3 v0.25.1
+   Compiling numpy v0.25.0
+   Compiling pyo3-macros v0.25.1
+   Compiling polars-error v0.51.0
+   Compiling polars-utils v0.51.0
+   Compiling polars-schema v0.51.0
+   Compiling polars-arrow v0.51.0
+   Compiling polars-compute v0.51.0
+   Compiling polars-dtype v0.51.0
+   Compiling polars-row v0.51.0
+   Compiling polars-core v0.51.0
+   Compiling polars-parquet v0.51.0
+   Compiling polars-ops v0.51.0
+   Compiling polars-json v0.51.0
+   Compiling polars-io v0.51.0
+   Compiling polars-time v0.51.0
+   Compiling polars-ffi v0.51.0
+   Compiling polars-plan v0.51.0
+   Compiling polars v0.51.0
+   Compiling pyo3-polars v0.24.0
+   Compiling gr-tdigest v0.2.4 (/var/tmp/codex-tdigest-pr3-20261014/overnight/package-hygiene/normalized-sdist-ff73cfa/extracted/gr_tdigest-0.2.4)
+    Finished `release` profile [optimized] target(s) in 4m 50s
+📦 Built wheel for abi3 Python ≥ 3.10 to /var/tmp/codex-tdigest-pr3-20261014/overnight/package-hygiene/normalized-sdist-ff73cfa/wheels/gr_tdigest-0.2.4-cp310-abi3-linux_x86_64.whl

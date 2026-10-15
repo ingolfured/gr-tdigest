@@ -1,0 +1,129 @@
+{
+  "status": "UPSTREAM_CI_DISABLED_FORK_RUN_INCOMPLETE",
+  "snapshot_utc": "2026-10-15T01:35:02.292086+00:00",
+  "pull_request": {
+    "url": "https://github.com/G-Research/tdigest-rs/pull/38",
+    "title": "Preserve tdigest_rs compatibility and add an opt-in modern engine",
+    "draft": true,
+    "head": "bc1f93e15c216b14b532bb005a2a2e2e662a08f8",
+    "base": "32a49203d6fdbc80e3ea4a381265e83762f87faa",
+    "mergeable": true,
+    "mergeable_state": "blocked",
+    "recorded_reviews": 0
+  },
+  "fork_run": {
+    "url": "https://github.com/ingolfured/tdigest-rs/actions/runs/38665683258",
+    "id": 38665683258,
+    "event": "push",
+    "api_run_status": "queued",
+    "job_counts": {
+      "success": 13,
+      "in_progress": 10,
+      "queued": 2
+    },
+    "note": "Run-level API still says queued although individual jobs have completed or started; job snapshot is authoritative for stated partial progress."
+  },
+  "upstream_ci": {
+    "workflow_id": 90553253,
+    "state": "disabled_inactivity",
+    "workflow_url": "https://github.com/G-Research/tdigest-rs/actions/workflows/ci.yml",
+    "updated_at": "2026-09-22T03:51:43.000+01:00",
+    "head_runs": 0,
+    "head_checks": 0,
+    "approval_wait_observed": false
+  },
+  "required_rules": [
+    {
+      "type": "required_linear_history",
+      "ruleset_source_type": "Repository",
+      "ruleset_source": "G-Research/tdigest-rs",
+      "ruleset_id": 6205684
+    },
+    {
+      "type": "pull_request",
+      "parameters": {
+        "required_approving_review_count": 1,
+        "dismiss_stale_reviews_on_push": true,
+        "required_reviewers": [],
+        "require_code_owner_review": false,
+        "dismissal_restriction": {
+          "enabled": false,
+          "allowed_actors": []
+        },
+        "require_last_push_approval": true,
+        "required_review_thread_resolution": false,
+        "require_extra_approval_for_unattributed_changes": true,
+        "allowed_merge_methods": [
+          "merge",
+          "squash",
+          "rebase"
+        ]
+      },
+      "ruleset_source_type": "Repository",
+      "ruleset_source": "G-Research/tdigest-rs",
+      "ruleset_id": 6205655
+    },
+    {
+      "type": "required_status_checks",
+      "parameters": {
+        "strict_required_status_checks_policy": true,
+        "do_not_enforce_on_create": false,
+        "required_status_checks": [
+          {
+            "context": "All required checks succeeded",
+            "integration_id": 860179
+          }
+        ]
+      },
+      "ruleset_source_type": "Repository",
+      "ruleset_source": "G-Research/tdigest-rs",
+      "ruleset_id": 6205655
+    }
+  ],
+  "workflow_graph": {
+    "triggers": "CI responds to push, pull_request and schedule; reusable Rust/Python jobs run for fork PRs and pushes.",
+    "fork_aggregate": "All required checks done may pass on the fork; the separate app-backed Check required jobs job skips forks.",
+    "upstream_requirement": "All required checks succeeded from app860179 requires the upstream verification workflow; fork-only green does not supply it.",
+    "release": "Only non-fork v-tag pushes can enter release, after required jobs; no release requested or triggered by this branch push.",
+    "platform_scope": "25 initial jobs: Rust lint+4platform tests; Python lint+12runtime/platform tests+7platform builds. Runtime-support waits for all7builds and tests actual GNUx64 release wheel in7cells. Other platform wheel installation is not covered by that job; source-built platform interface tests are separate."
+  },
+  "next_human_actions": [
+    "Upstream maintainer re-enables inactive CI and triggers CI for the current PR; no such setting change was made by this audit.",
+    "Wait for current fork platform jobs and actual GNU-wheel installed matrix; inspect any real failure before claiming platform validation.",
+    "Obtain the required approving review including last-push approval, then explicitly decide when to mark draft ready.",
+    "Agree provisional2.0.0, release sequence, runtime/deployment bounds and shared namespace transition before publication."
+  ],
+  "body_review": {
+    "validated": "Source/evidence identity, Linux test counts, old-state preservation, opt-in boundary, original Rust path caveat, staged dependency transition and platform limits match the reviewed evidence.",
+    "wording_fix": "Avoid promising identical original performance: unchanged original arithmetic runs through a changed PyO3 adapter and output-vector compaction. Say original numerical engine remains; modern-engine speedups require opt-in.",
+    "documentation_patch_fix": "Replace 'skipped aggregate gate' with the precise skipped app-backed verification job; the fork aggregate itself can pass."
+  },
+  "permission_limits": {
+    "upstream_actions_policy": "HTTP403; no inference about hidden policy/approval settings",
+    "classic_branch_protection": "HTTP404; actual required rules obtained successfully from rules/branches/main"
+  },
+  "audit_mutations": "Scratch reports only; no workflow enablement, rerun, approval, repository source edit, build, install, push or publication.",
+  "snapshot_sha256": {
+    "fork-branch-runs.json": "dd39e5a15fcae05438ff5fd48ba866c5bdd7b5363c8879f77489c57bcf9a2e07",
+    "fork-head-checks.json": "27ed682680775b40828188781c963571c1e9ffdf39f3d8c92431357cbd8e608d",
+    "fork-head-runs.json": "90ee6626e8caad1cc0e11ec63cac8afe99548866284637b594bfa9545c759e4a",
+    "fork-head-status.json": "9451ec859b73e56a2d4764096f2588c8dc159dd9560fead458c65103f138873a",
+    "fork-head-suites.json": "4308524a5aa578a32b5ecbbe5a95fe0585a036f809a5071ac06242b4433a44ce",
+    "fork-jobs-detail.json": "dc7900591c10c31661729d67e88c2dc4f2242365a5e393475198919fc5ca832e",
+    "fork-permissions.json": "75003a471764038f907049e5c57ed4caad2cec1f7647aa6d7afe1031cbf74db2",
+    "fork-run-detail.json": "0997af27b312fe760c4edd927be79268719966bcbbb16c146fe6176f95c329e8",
+    "fork-workflows.json": "67ef1a2cc66a90f194d9614f4b9a74febfb2e161b26d88ae16e6f900896730ed",
+    "pull38-reviews.json": "5fc82fd4e54639ef5e0f48f1e63b4456e0569e76d7811708bfde6507dc0785c2",
+    "pull38.json": "c5d2b038a68600279b8e561ac373624b60ee3129853336df3e108d9c87f9494b",
+    "upstream-ci-detail.json": "5848971ff28cb1356c3e5f59e6363ade11a5b98ed4ce4ca94fd60a3ee0a91ad4",
+    "upstream-head-checks.json": "35af4df4d38313b435559bf130af6c741d15adc940e6f339a518228c0b3a8dec",
+    "upstream-head-runs.json": "21bf1080ed210cf779ac11d871355fd9a912fdae6be7d4bb5622bd20f888b008",
+    "upstream-head-status.json": "d1aa285237fc6c4699c7e617c30f22e06825ea1f876607effc687a45b1bce41b",
+    "upstream-head-suites.json": "4c0676a79b0fc40145598f70f88fc562f06ff9cb40d69a643ef4d09011304ffd",
+    "upstream-main-protection.json": "ea1c75f2508b15013f3bd3542757cfcb74276a26a0d444d611743300c03e5155",
+    "upstream-permissions.json": "b9bb5d88a056fa47f9675e33784fc5a23467e269bb8017891fb91cc56dad3e41",
+    "upstream-recent-pr-runs.json": "7b06ae61159ca5cea4e1447b44dd8793d3d6c009ae0eef7424f9e9f9f1b0160b",
+    "upstream-required-rules.json": "24394a85024a4b17c0800ecd7cab8ee2297442af9d6f02d2d4a93d1de7179f13",
+    "upstream-workflows.json": "645868a8d1d067a3acbe666546ab5dd90b076bdad6343561a857e0d9238af6a8"
+  }
+}
