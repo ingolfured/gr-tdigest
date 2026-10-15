@@ -152,8 +152,8 @@ resolution or other Python/platform support.
 ## Speed, accuracy and storage
 
 The [30-case release comparison at c5dec35](performance/RESULTS-c5dec35.md)
-predates only the transactional scaling and packaging changes above. On this
-machine, ten-million-value uniform builds were about **3.6× faster for f64 and
+is historical evidence from before the later transactional scaling, K2Norm domain
+and delivery changes. On this machine, ten-million-value uniform builds were about **3.6× faster for f64 and
 4.6× for f32** than the independent original core. Some tiny/sorted builds and
 sequential merges were slower. Every measured numerical/count/memory/wire field
 matched the earlier `22867bd` run. The [controlled interleaved follow-up](performance/RESULTS-interleaved-20261015.md)
@@ -193,11 +193,24 @@ spare capacity, temporary merge memory and RSS. The speed numbers above are
 therefore not a matched-memory win. A separate predeclared storage/error-budget
 study is being prepared; no result from that study is claimed here.
 
-A separate small-input defect is confirmed in this source: at delta 1,200,
-two normalized means make the K2Norm normalizer negative. For `[0, 0, 100]`,
-the modern median becomes about 33.333 instead of preserving the atomic piles.
-The original compatibility path still returns 0. A focused domain fix and
-regressions are being reviewed; the passing gates above did not cover it.
+A separate small-input defect was confirmed in historical `52f6212` and the
+preserved `3d0182a` wheel: at delta 1,200, two normalized means make the K2Norm
+normalizer negative. For `[0, 0, 100]`, the modern median became about 33.333
+instead of preserving the atomic piles. The current focused correction retains
+the input centroids when that normalizer is zero or negative. It preserves
+ordinary positive-domain calculations, including default delta 300, and leaves
+the original compatibility path unchanged. Non-delta K2Norm protected interiors
+use the same guard; their later cap stages still run. Retaining information may
+use more centroids than the broken collapse.
+
+The 20 new Python/Polars regressions fail in 14 expected cases against the
+preserved wheel, with six passing controls, then all pass on the corrected
+candidate. Four focused Rust integration tests and one private compressor test
+pass in both debug and release. The installed-wheel matrix now includes those
+20 cases (90 modern cases per full cell; 26 in the Polars-free cell). Full-project
+and installed release-wheel validation of this numerical correction remain a
+separate gate; the completed `3d0182a` results above retain their original source
+and counts. No new performance or broad accuracy result is claimed for this fix.
 
 ## What still prevents an upstream release
 
