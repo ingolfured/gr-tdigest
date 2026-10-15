@@ -1,0 +1,180 @@
+{
+  "schema": "selected-budget-native-timing-draft-v1",
+  "status": "Scratch executor implemented and synthetic guards checked; no native compilation, data generation or measurements; parent review and source-bound smoke still required",
+  "execution_requires_parent_review": true,
+  "modern_commit": "ff73cfab31d6368d203c1a361b8efaaea29d735b",
+  "original_commit": "8d9cf1fe82c5c9254e5dc9593f01717e317f4333",
+  "corrected_accuracy_protocol_sha256": "9c2a455e689802eb2dbbe7764764238b794fa5975e2517d5e3c1355fed66904a",
+  "selection_lock_sha256": null,
+  "source_binding": "Modern source, generator/reference files and independent original must match the future corrected accuracy selection lock; historical 52f6212 selection protocol is ineligible.",
+  "fresh_seed": 86028121,
+  "n": 1000000,
+  "distributions": [
+    "normal",
+    "ties",
+    "separated_modes"
+  ],
+  "precisions": [
+    "f32",
+    "f64"
+  ],
+  "policies": [
+    {
+      "kind": "storage",
+      "limit_bytes": 1024
+    },
+    {
+      "kind": "storage",
+      "limit_bytes": 4096
+    },
+    {
+      "kind": "rank",
+      "max_queried_rank_error": 0.02
+    }
+  ],
+  "report_untimed_selection_statuses": {
+    "storage_caps_bytes": [
+      1024,
+      2048,
+      4096
+    ],
+    "rank_thresholds": [
+      0.005,
+      0.01,
+      0.02
+    ]
+  },
+  "delta_choice": "Reuse globally selected per-core/per-precision/per-policy deltas exactly; no timing-driven retuning.",
+  "unavailable": "If either core is unavailable within the frozen grid, omit paired timing and report both statuses/reasons. Never substitute a diagnostic delta.",
+  "deduplicate": "Before execution, group identical (distribution,n,seed,precision,original_delta,modern_delta); attach every policy label and do not count shared timings as independent results.",
+  "max_pairs_before_deduplication": 18,
+  "block_schedule": [
+    {
+      "block": 1,
+      "pair_order": "forward fixed policy/distribution/precision order",
+      "core_order": [
+        "original",
+        "modern"
+      ]
+    },
+    {
+      "block": 2,
+      "pair_order": "reverse of block1",
+      "core_order": [
+        "modern",
+        "original"
+      ]
+    }
+  ],
+  "max_single_core_processes": 72,
+  "merge": {
+    "fan_in": 40,
+    "layout": "balanced_iid",
+    "leaf_rows": 25000,
+    "order": "forward shard index",
+    "construction": "Frozen generator shuffle and round-robin layout",
+    "routes": [
+      "sequential",
+      "modern_kway"
+    ],
+    "leaf_construction_timed": false,
+    "ownership_clone_cost_timed": true
+  },
+  "operations": [
+    "build_from_immutable_slice",
+    "sequential_merge_40",
+    "modern_kway_merge_40",
+    "p50_each_result_route",
+    "modern_scalar_cdf_each_result_route"
+  ],
+  "build_measurement": {
+    "warmups": 1,
+    "batches": 3,
+    "iterations_per_batch": 1,
+    "include_modern_input_clone": true,
+    "output_drop_timed": false
+  },
+  "merge_measurement": {
+    "warmups": 2,
+    "batches": 5,
+    "iterations_per_batch": 8,
+    "include_reset_and_required_clones": true,
+    "output_drop_timed": false
+  },
+  "query_measurement": {
+    "warmup_batches": 2,
+    "batches": 5,
+    "p50_calls_per_batch": 4096,
+    "cdf_calls_per_batch": 4095,
+    "cdf_probes": "Type-7 x at effective q=.1,.5,.9, cycled equally; cast x to selected mean precision",
+    "black_box_input_output_each_call": true,
+    "scalar_cdf_allocation_and_drop_included": true
+  },
+  "operation_order": {
+    "block1": [
+      "build",
+      "sequential",
+      "kway_if_modern",
+      "p50",
+      "cdf_if_modern"
+    ],
+    "block2": "reverse of block1, omitting unsupported operations; canonical validation states prebuilt outside timing"
+  },
+  "query_error_reference": "Same post-cast inputs, effective probability rounding, 1003-point quantile grid and fixed empirical/atom/adjacent/gap CDF probes as corrected accuracy protocol",
+  "report_error_fields": [
+    "p50_rank",
+    "p50_type7_absolute_value",
+    "p50_value_over_IQR_if_defined",
+    "max_queried_rank",
+    "tail_rank_max",
+    "tail_absolute_value_max",
+    "modern_CDF_absolute_error",
+    "inherited_original_observations"
+  ],
+  "report_state_fields": [
+    "object_bytes",
+    "centroid_count",
+    "centroid_payload_bytes",
+    "logical_retained_bytes",
+    "storage_cap_excess_bytes_if_applicable",
+    "rank_threshold_excess_if_applicable",
+    "original_actual_vector_capacity_bytes",
+    "modern_capacity_unknown",
+    "modern_wire_bytes",
+    "leaf_counts_and_logical_bytes"
+  ],
+  "correctness": "Require input/query/leaf/state fingerprints and repeated same-core output bits to agree across samples/blocks; modern invariants and wire parity must pass, inherited original quirks retained.",
+  "platform": "WSL Linux GNU x86_64",
+  "native_profile": "One immutable release binary linking both cores under the same modern crate allocator/dependency graph; identical executable for both core modes.",
+  "cpu": 0,
+  "require_exact_affinity": true,
+  "threads": {
+    "RAYON_NUM_THREADS": 1,
+    "OMP_NUM_THREADS": 1,
+    "MKL_NUM_THREADS": 1,
+    "OPENBLAS_NUM_THREADS": 1
+  },
+  "no_concurrent_heavy_jobs": true,
+  "auto_calibration": false,
+  "timing_wall_budget_seconds": 600,
+  "timing_budget_includes": "All full-run process generation/reference/state verification and warmup/timed work after build/preflight; timeout uses remaining global budget.",
+  "process_timeout_seconds": 30,
+  "smoke_wall_budget_seconds": 60,
+  "smoke": {
+    "n": 32,
+    "max_processes": 36,
+    "policy_delta_coverage": "All selected distinct parameters across 3 distributions and 2 precisions, both cores; no timing claims."
+  },
+  "output_budget_bytes": 67108864,
+  "stopped_run": "Preserve logs and partial raw results, label incomplete, never resume silently or alter repetitions.",
+  "build_timeout_seconds": 1800,
+  "build_jobs": 2,
+  "new_hypothesis": "At independently training-selected logical storage or rank policies, does a speed difference persist on fresh input, and what accuracy/state-size tradeoff accompanies it?",
+  "reporting_limits": [
+    "Descriptive ratios with both counterbalanced blocks and per-core drift controls",
+    "No world-best, statistical significance, guaranteed equal error, equal capacity/RSS, peak memory, full-platform, Python-adapter or allocator-generalization claim",
+    "Modern k-way compared with original sequential is a different route, explicitly labeled",
+    "No old CDF is invented",
+    "Fixed-policy misses remain in the main report; no conditional-success-only summary"
+  ]
+}

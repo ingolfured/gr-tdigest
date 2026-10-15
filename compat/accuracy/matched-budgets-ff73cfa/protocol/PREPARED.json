@@ -1,0 +1,36 @@
+{
+  "status": "PREPARED_NOT_EXECUTED",
+  "modern_source": "ff73cfab31d6368d203c1a361b8efaaea29d735b",
+  "source_tree": "cda5346eb8b2f68f9e40285e7c571f5a6dc2810c",
+  "policy_lock_sha256": "7f9c1877ca9c08b8718f1d034bc058e5acec08ec194635a182f92ff368facede",
+  "execution_protocol_sha256": "9c2a455e689802eb2dbbe7764764238b794fa5975e2517d5e3c1355fed66904a",
+  "driver_sha256": "17650227c939bd6c2e34073f6b813f38758df7e07b5c45c7423a50eec4a5a944",
+  "selector_sha256": "add7c5dd282b83d4a315b67fa6c2274dd2abc8ce6ed75e7274bd5beaa4b168bd",
+  "reference_files_unchanged": {
+    "accuracy_reference.py": "f02ed61e06ad76c4ad8a262430c5c138ed0df3cf66d2bd197fa18cefbe6f5301",
+    "held_out_accuracy.rs": "b239ede5d90bed920360201f3c640cc8ee29cbb81357a6ec4142149dfd2ce056",
+    "held_out_plan.py": "76733a7b48e1a16ef6120f23f8c7e8af4a15f537f907275b129c796d3a93a79d",
+    "run_held_out.py": "174a33c76994b200ee32d6a5a14847f55a339191d09352ad70ea4ed7ae80d0e3"
+  },
+  "historical_inputs_unchanged": {
+    "PLAN.md": "62b827490fa401577b184e42a0d5c80bbc42e7ce9dcd71e8c23b1aa302922281",
+    "accuracy_reference.py": "f02ed61e06ad76c4ad8a262430c5c138ed0df3cf66d2bd197fa18cefbe6f5301",
+    "held_out_accuracy.rs": "b239ede5d90bed920360201f3c640cc8ee29cbb81357a6ec4142149dfd2ce056",
+    "held_out_plan.py": "76733a7b48e1a16ef6120f23f8c7e8af4a15f537f907275b129c796d3a93a79d",
+    "run_held_out.py": "174a33c76994b200ee32d6a5a14847f55a339191d09352ad70ea4ed7ae80d0e3",
+    "select_storage_budget.py": "add7c5dd282b83d4a315b67fa6c2274dd2abc8ce6ed75e7274bd5beaa4b168bd",
+    "storage_budget_plan.py": "afac26bc23e0f724c5453cfb981df84d9a426297cdd8cf83f2f0336ed6b29a59",
+    "run_storage_budget.py": "7380644fe9faae85fb0b40566d9b16b22cf499a4ee583307985c4418a2a8d2cc",
+    "test_driver_gates.py": "1a7be5e41b84c5fbd8859f3e933aa56e95e57fe11fb20fe62c2ca93d6f115528",
+    "policy-lock.json": "619a36df58c8957e531ac1163dbf840f7bff0fd08d1e58d105ace27d334f3735",
+    "execution-protocol.prepared.json": "1c4e9ebc713784b9bfc78c002bd10c4c7e0ba96e8b333a663180d1aefbb64559"
+  },
+  "scientific_policy_changes": [],
+  "static_checks": "AST, Ruff, dry-plan source validation, 14 synthetic subprocess/guard tests; no core calls/builds/datasets",
+  "synthetic_log_sha256": "039bc0b8ac4126b8e5aa59a5b3ea4113afa91e7ec01ca65b10acb32f42492f94",
+  "training_invocations": 1152,
+  "training_states": 16128,
+  "smoke_invocations": 128,
+  "smoke_states": 1408,
+  "preparer_sha256": "473d8d5c29bfff72366d3697d44f9c4e5ac69648a5b11a0d3bd06437d2788c3d"
+}

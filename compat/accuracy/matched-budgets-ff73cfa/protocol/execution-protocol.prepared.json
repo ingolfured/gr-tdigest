@@ -1,0 +1,94 @@
+{
+  "schema": "storage-budget-execution-v1",
+  "policy_lock_sha256": "7f9c1877ca9c08b8718f1d034bc058e5acec08ec194635a182f92ff368facede",
+  "independent_reference_package": "tdigest-original-reference",
+  "design": {
+    "schema": "logical-storage-cap-accuracy-v1",
+    "modern_commit": "ff73cfab31d6368d203c1a361b8efaaea29d735b",
+    "original_commit": "8d9cf1fe82c5c9254e5dc9593f01717e317f4333",
+    "delta_grid": [
+      25,
+      50,
+      100,
+      150,
+      200,
+      300,
+      600,
+      1200
+    ],
+    "logical_storage_caps_bytes": [
+      1024,
+      2048,
+      4096
+    ],
+    "illustrative_max_queried_rank_error_budgets": [
+      0.005,
+      0.01,
+      0.02
+    ],
+    "training_seeds": [
+      1009,
+      10007,
+      65537
+    ],
+    "held_out_seeds": [
+      15485863,
+      32452843,
+      49979687
+    ],
+    "distributions": [
+      "uniform",
+      "normal",
+      "exponential",
+      "lognormal",
+      "pareto",
+      "ties",
+      "spike_tail",
+      "separated_modes"
+    ],
+    "sizes": [
+      32,
+      1000,
+      100000
+    ],
+    "mean_precisions": [
+      "f64",
+      "f32"
+    ],
+    "scale": "K2Norm",
+    "singleton_policy": "Off",
+    "reverse_shard_order_at_n": 100000,
+    "selection": "largest delta whose maximum training logical retained bytes fits the cap over all supported routes; one global delta per core/precision/cap",
+    "rank_budget_selection": "minimum grid delta whose maximum queried training rank error over all datasets and supported routes is <= threshold; not a product tolerance or universal bound",
+    "unreachable": "unavailable within grid; no over-budget substitution; an available single-core cell may run with the unavailable companion at delta25 labelled diagnostic-only",
+    "held_out_budget_violation": "retain, flag and report; never retune",
+    "comparison": "common logical storage cap, not equal actual storage/capacity/RSS or optimal accuracy",
+    "timed_operations": 0,
+    "phase_runtime_seconds": {
+      "smoke": 180,
+      "training": 720,
+      "held-out": 600
+    },
+    "global_dataset_runtime_seconds": 1200,
+    "phase_compressed_output_bytes": {
+      "smoke": 134217728,
+      "training": 1207959552,
+      "held-out": 805306368
+    },
+    "global_compressed_output_bytes": 2147483648,
+    "case_timeout_seconds": 120,
+    "build_timeout_seconds": 1800,
+    "max_json_line_bytes": 8388608
+  },
+  "source_files_sha256": {
+    "PLAN.md": "d6e63064932c18be4fa98da3424878ad5cf740c9dc7bd5f1cd2fb3507f49fc1b",
+    "accuracy_reference.py": "f02ed61e06ad76c4ad8a262430c5c138ed0df3cf66d2bd197fa18cefbe6f5301",
+    "held_out_accuracy.rs": "b239ede5d90bed920360201f3c640cc8ee29cbb81357a6ec4142149dfd2ce056",
+    "held_out_plan.py": "76733a7b48e1a16ef6120f23f8c7e8af4a15f537f907275b129c796d3a93a79d",
+    "run_held_out.py": "174a33c76994b200ee32d6a5a14847f55a339191d09352ad70ea4ed7ae80d0e3",
+    "select_storage_budget.py": "add7c5dd282b83d4a315b67fa6c2274dd2abc8ce6ed75e7274bd5beaa4b168bd",
+    "storage_budget_plan.py": "c73971fcc786d27e04d5ba76abbcedd2b21658a2b0c743ad6f4c95ca66fa7e09",
+    "run_storage_budget.py": "17650227c939bd6c2e34073f6b813f38758df7e07b5c45c7423a50eec4a5a944"
+  },
+  "scope": "No operation timing; fixed training policies; logical bytes are not RSS/capacity"
+}

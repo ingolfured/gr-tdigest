@@ -1,0 +1,15 @@
+{
+  "modern_commit": "ff73cfab31d6368d203c1a361b8efaaea29d735b",
+  "original_commit": "8d9cf1fe82c5c9254e5dc9593f01717e317f4333",
+  "full_reduced_directory": "/var/tmp/codex-tdigest-pr3-20261014/overnight/storage-budget-full-metrics-ff73cfa-20261015",
+  "full_study_directory": "/var/tmp/codex-tdigest-pr3-20261014/overnight/storage-budget-study-ff73cfa",
+  "complete_reduced_output_sha256": {
+    "state-metrics.jsonl": "9e1f69101f14915cde779e95b4587b0aeb32e2c44c1cda6cd2012cce95e0ce90",
+    "route-pairs.jsonl": "7fc3ce92cfda6f225d5180df45e87bf9557c202bd6abf88d63a4bc015ea2a023",
+    "summary.json": "0b0d08d8cceacc825f451e9208cd7e8066290e3d32f0f4544e136c9aa8307829",
+    "raw-file-sha256.json": "1dd7caa5886ca12f34ce9649cd9b2aceb3b98c6f7d7bab266599bf83388cd599"
+  },
+  "bulk_raw_included": false,
+  "compact_full_records_included": false,
+  "reason": "Keep review small; full data and compact states retained in scratch with hashes and reproducible protocol."
+}

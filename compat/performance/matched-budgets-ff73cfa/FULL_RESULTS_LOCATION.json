@@ -1,0 +1,7 @@
+{
+  "run_directory": "/var/tmp/codex-tdigest-pr3-20261014/overnight/matched-budget-timing-ff73cfa",
+  "raw_files_included": false,
+  "native_binary_included": false,
+  "raw_manifest": "results/analysis-validation.json",
+  "reason": "Numeric timing batches, accuracy summaries, controls and provenance are included; full native states/query arrays and immutable source exports remain at the saved run directory."
+}

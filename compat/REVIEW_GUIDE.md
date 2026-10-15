@@ -160,7 +160,71 @@ a manual uninstall: all 208 cases passed after upgrade and reinstall, with all
 transition on Python 3.12; it does not establish unconstrained dependency
 resolution or other Python/platform support.
 
-## Speed, accuracy and storage
+## Frozen storage and error policies on the corrected source
+
+The [matched-budget accuracy study](accuracy/matched-budgets-ff73cfa/RESULTS.md)
+compares opt-in modern K2Norm/Off at `ff73cfa` with the independent original
+`8d9cf1`. Training froze the parameters before three fresh held-out seeds:
+576 dataset-policy invocations, 8,064 states, eight distributions, both
+precisions and sizes 32 to 100,000. The default `tdigest_rs` path remains original.
+
+All 6,048 storage-policy states fit their selected logical cap, and all 2,016
+states selected for the separate 2-percentage-point queried-rank policy meet
+that threshold. The tighter 0.5/1-point policies were unavailable within the
+frozen delta 25–1,200 grid; this is not a proof that no other setting can meet them.
+
+The tradeoff matters: at 1 KiB, the worst modern f64 queried-rank error is
+**43.583 percentage points**, with worst median rank error **19.531 points**.
+At 4 KiB, the worst modern median rank error is 0.8 points versus original
+1.7 points, while modern worst all-query rank error is 10.393/7.087 points
+(f64/f32), versus original 5.454 points. These aggregate maxima span each
+core's available routes; the report also separates like-for-like routes.
+There is no blanket accuracy winner under common logical-storage caps.
+
+Under the separate 2-point policy, modern worst queried-rank error is
+1.16/1.06 points and p50 rank error at most 0.2 points, but logical storage
+reaches **26,504/17,760 bytes**, versus original **13,248/8,848 bytes**.
+Large value errors across separated modes still occur despite small rank
+errors. Logical storage excludes spare capacity, construction/merge peaks and
+RSS. The rank policy does not certify CDF or value error, and these observations
+are not universal bounds.
+
+The [native timing follow-up](performance/matched-budgets-ff73cfa/RESULTS.md)
+uses the same frozen settings on a fresh seed and one-million-value inputs.
+It reports build, 40-way merge, p50 and CDF separately, both counterbalanced
+blocks, actual storage/error policy violations, and unchanged-control drift.
+Its source is the private modern core at `ff73cfa`; it is not Python-wheel
+or JNI overhead evidence. Original imports retain the original numerical engine;
+adapter/packaging changes can still affect runtime costs. Modern-engine speedups
+require explicit opt-in.
+
+## The actual upstream draft
+
+[G-Research/tdigest-rs PR #38](https://github.com/G-Research/tdigest-rs/pull/38)
+now contains the validated implementation. At tested source `daad315`, the
+actual `tdigest-rs` package passes 336 Python/coherence + all 91 untouched
+upstream cases, 121 Rust tests and Java; three pre-existing Rust tests remain
+ignored. Direct and unchanged-source-rebuilt wheels each pass 2,036 installed
+test instances over seven runtime cells, with no skips or xfails.
+
+A genuine published-0.1.0 upgrade preserves all 32 old-restored states exactly.
+All 208 compatibility cases pass after upgrade and after reinstall; package
+ownership/removal checks pass. The actual installed upstream wheel also passes
+the 800-point-digest and 1,440-route / 3,840-state audits. These supersede the
+earlier name-only prototype as evidence for this specific upstream artifact.
+See the [upstream guide and exact artifact records](https://github.com/ingolfured/tdigest-rs/blob/bc1f93e15c216b14b532bb005a2a2e2e662a08f8/docs/review-refresh.md).
+
+The draft retains upstream workflow pins, release graph/platform matrix,
+GNU-only allocator and `com.gresearch.tdigest` Java namespace. Version 2.0.0 is
+provisional. Local Linux evidence does not establish other platform artifacts
+or the minimum Linux deployment floor, and no release has been published.
+
+At the remote check on 15 October, upstream CI is disabled for inactivity.
+Fork platform CI can run, but it cannot create the upstream-required app-backed
+check. A maintainer must re-enable upstream CI and run the current PR; the
+required review approval also remains outstanding.
+
+## Historical speed, accuracy and storage
 
 The [30-case release comparison at c5dec35](performance/RESULTS-c5dec35.md)
 is historical evidence from before the later transactional scaling, K2Norm domain
@@ -201,8 +265,8 @@ bug with a narrow arithmetic fix. No speculative fix was applied.
 At the same delta, continuous data generally uses about twice the logical
 retained storage of the original; ties can use less. Logical state excludes
 spare capacity, temporary merge memory and RSS. The speed numbers above are
-therefore not a matched-memory win. A separate predeclared storage/error-budget
-study is being prepared; no result from that study is claimed here.
+therefore not a matched-memory win. The corrected-source frozen-budget study above supplies the
+separate storage/error comparison; the historical figures keep their own source labels.
 
 A separate small-input defect was confirmed in historical `52f6212` and the
 preserved `3d0182a` wheel: at delta 1,200, two normalized means make the K2Norm
@@ -221,8 +285,8 @@ pass in both debug and release. The installed-wheel matrix now includes those
 20 cases (90 modern cases per full cell; 26 in the Polars-free cell). Full-project,
 direct installed-wheel and unmodified source-rebuilt-wheel gates now pass at
 `ff73cfa`, as recorded above. Historical `3d0182a` results retain their original
-source and counts. No new performance or broad accuracy result is claimed for
-this fix.
+source and counts. The frozen-budget accuracy and native timing reports above
+measure the corrected source separately; they do not establish universal bounds.
 
 ## What still prevents an upstream release
 
@@ -239,6 +303,7 @@ this fix.
 - Retain and disclose numerical limits: compression underflow, tiny mass inside
   a normal total, aggregate/product overflow and malformed seeded state. Original
   arithmetic also retains its upstream uint32 overflow and other quirks.
-- Refresh the implementation of upstream PR #38 from the final validated work.
-  Its status text describes this stack, but its old implementation snapshot has
-  not yet been replaced. Do not merge or publish based on the description alone.
+- Have an upstream maintainer re-enable the CI workflow disabled for inactivity,
+  run the current PR, and complete the required review approval. Fork CI cannot
+  create the upstream-required app-backed check. Agree version/publication
+  sequencing; PR #38 remains a draft with the tested implementation and evidence.
