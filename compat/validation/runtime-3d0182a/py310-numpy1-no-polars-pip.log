@@ -1,0 +1,5 @@
+Looking in links: /tmp/tmp842wbimb
+Processing /tmp/tmp842wbimb/setuptools-79.0.1-py3-none-any.whl
+Processing /tmp/tmp842wbimb/pip-23.0.1-py3-none-any.whl
+Installing collected packages: setuptools, pip
+Successfully installed pip-23.0.1 setuptools-79.0.1

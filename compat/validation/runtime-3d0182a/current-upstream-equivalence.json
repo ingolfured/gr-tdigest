@@ -1,0 +1,186 @@
+{
+  "kind": "read-only upstream refresh planning; no transplant/build/push performed",
+  "upstream_clone": "/var/tmp/codex-tdigest-pr3-20261014/work/tdigest-rs-upstream38",
+  "origin": "https://github.com/ingolfured/tdigest-rs.git",
+  "upstream_remote": "https://github.com/G-Research/tdigest-rs.git",
+  "pr_head": "e8562fd1c25a33cfd09359f671da126837c7bba4",
+  "upstream_main": "32a49203d6fdbc80e3ea4a381265e83762f87faa",
+  "pinned_original": "8d9cf1fe82c5c9254e5dc9593f01717e317f4333",
+  "private_transplant_source": "360ad5b9dcd8b133a40cea9b6b70a83ba390e7fa",
+  "source_validation_status": "Root is validating this source independently; no fresh validation is claimed here.",
+  "pinned_to_current_named_path_diff": {
+    "command": [
+      "git",
+      "diff",
+      "--name-only",
+      "8d9cf1fe82c5c9254e5dc9593f01717e317f4333",
+      "32a49203d6fdbc80e3ea4a381265e83762f87faa",
+      "--",
+      "src",
+      "Cargo.toml",
+      "Cargo.lock",
+      "bindings/python"
+    ],
+    "stdout": "",
+    "exit_code": 0
+  },
+  "all_pinned_to_current_changes": [
+    "M\t.github/workflows/check-required.yml",
+    "M\t.github/workflows/create-release.yml",
+    "M\t.github/workflows/nudge.yml",
+    "M\t.github/workflows/python.yml",
+    "M\t.github/workflows/release.yml",
+    "M\t.github/workflows/rust.yml"
+  ],
+  "pinned_to_current_commits": [
+    "32a49203d6fdbc80e3ea4a381265e83762f87faa bump node20 actions for node24 cutover (#43)",
+    "1b7837ce75ce497bfee7f1ae34cfd7e316e5e958 security: pin GitHub Actions references to commit SHAs (#41)",
+    "dbce595364a2b156b1051502d8cd04f2a3a963d3 ci: migrate macos-13 runner label to macos-15-intel (#42)"
+  ],
+  "original_implementation_copies": [
+    {
+      "upstream": {
+        "path": "src/lib.rs",
+        "git_blob": "773a676d0c0d192a0d19d9f8ce9b101c3014c362",
+        "sha256": "eeb21b517557df106eb57c7d03dde1b8f26fe4b1745ee6f4b30cb604ddcaf63b",
+        "bytes": 1605
+      },
+      "private_source": {
+        "path": "src/upstream/lib.rs",
+        "git_blob": "d9f5591583e8d86dd0639e6e0d63843bc5a2f378",
+        "sha256": "38ecb6bd5d3f17f3d19da2f8b613f50198a613d47edae413f275744ade8a3e4c",
+        "bytes": 1604
+      },
+      "byte_identical": false,
+      "namespace_import_reversal": [
+        "use self::{",
+        "use crate::{"
+      ],
+      "sha256_after_documented_import_reversal": "eeb21b517557df106eb57c7d03dde1b8f26fe4b1745ee6f4b30cb604ddcaf63b",
+      "identical_after_documented_import_reversal": true
+    },
+    {
+      "upstream": {
+        "path": "src/core.rs",
+        "git_blob": "30d89d83d1cbef3215e36fa1b8a2201b61dd8243",
+        "sha256": "1753d6c48728561f77dd076c1a063ee9abe25251b1ed94a798b520173b7d3412",
+        "bytes": 6405
+      },
+      "private_source": {
+        "path": "src/upstream/core.rs",
+        "git_blob": "c2b3592210fe7eba8f6de86bdb7db8531d87e7ac",
+        "sha256": "447766914f92398a43a01e53ecbc61231909eb641f2634c3fc31da2de71c3af8",
+        "bytes": 6405
+      },
+      "byte_identical": false,
+      "namespace_import_reversal": [
+        "use super::{",
+        "use crate::{"
+      ],
+      "sha256_after_documented_import_reversal": "1753d6c48728561f77dd076c1a063ee9abe25251b1ed94a798b520173b7d3412",
+      "identical_after_documented_import_reversal": true
+    },
+    {
+      "upstream": {
+        "path": "src/scale.rs",
+        "git_blob": "6f5163ef778e0619caffeb61584f4ccab2060585",
+        "sha256": "034cf845a9e283d51fe076a6b22956acb21aa31738094f18ed4d6e08c3240558",
+        "bytes": 785
+      },
+      "private_source": {
+        "path": "src/upstream/scale.rs",
+        "git_blob": "a42f6add9d0fc80cdb651639f8335b6f0398c6cd",
+        "sha256": "c4b3cce4ba57da48a6e427f4d2f5f04a4b6c67f790c5b32d7334320f57246bb0",
+        "bytes": 785
+      },
+      "byte_identical": false,
+      "namespace_import_reversal": [
+        "use super::traits::FloatConst;",
+        "use crate::traits::FloatConst;"
+      ],
+      "sha256_after_documented_import_reversal": "034cf845a9e283d51fe076a6b22956acb21aa31738094f18ed4d6e08c3240558",
+      "identical_after_documented_import_reversal": true
+    },
+    {
+      "upstream": {
+        "path": "src/traits.rs",
+        "git_blob": "169b8ec2409d2af96b91c337089efe8d6286176c",
+        "sha256": "74324e7ec5fc5e9e8d448b88fa35c8a0525354eef10eb7fead694cf2d9754868",
+        "bytes": 1209
+      },
+      "private_source": {
+        "path": "src/upstream/traits.rs",
+        "git_blob": "169b8ec2409d2af96b91c337089efe8d6286176c",
+        "sha256": "74324e7ec5fc5e9e8d448b88fa35c8a0525354eef10eb7fead694cf2d9754868",
+        "bytes": 1209
+      },
+      "byte_identical": true,
+      "namespace_import_reversal": null,
+      "sha256_after_documented_import_reversal": "74324e7ec5fc5e9e8d448b88fa35c8a0525354eef10eb7fead694cf2d9754868",
+      "identical_after_documented_import_reversal": true
+    },
+    {
+      "upstream": {
+        "path": "bindings/python/tdigest_rs/lib.py",
+        "git_blob": "d505ec39ce9a2412e71b4a03491a69122911cf41",
+        "sha256": "0ed15e8d3d18e2d9e82b4a0c8e1cdbace3de315dc79649566e35c28bb9446aad",
+        "bytes": 3364
+      },
+      "private_source": {
+        "path": "bindings/python/tdigest_rs/lib.py",
+        "git_blob": "d505ec39ce9a2412e71b4a03491a69122911cf41",
+        "sha256": "0ed15e8d3d18e2d9e82b4a0c8e1cdbace3de315dc79649566e35c28bb9446aad",
+        "bytes": 3364
+      },
+      "byte_identical": true,
+      "namespace_import_reversal": null,
+      "sha256_after_documented_import_reversal": "0ed15e8d3d18e2d9e82b4a0c8e1cdbace3de315dc79649566e35c28bb9446aad",
+      "identical_after_documented_import_reversal": true
+    }
+  ],
+  "current_upstream_workflows": {
+    ".github/workflows/check-required.yml": {
+      "path": ".github/workflows/check-required.yml",
+      "git_blob": "8917b1fa6b142a7bf2f2ee37169774b3d8d0ae84",
+      "sha256": "d542795b69568cb3d05696e7522bfd69b98b498369bed38d1af0c2d7f13b3c6d",
+      "bytes": 3904
+    },
+    ".github/workflows/ci.yml": {
+      "path": ".github/workflows/ci.yml",
+      "git_blob": "32a01033acdb2b13e53e1d127599421eee77459b",
+      "sha256": "33a0cb2c680035b00818fbec4f2b8a83ca3c73d96cbee7e2146fbab0fb2622ae",
+      "bytes": 1338
+    },
+    ".github/workflows/create-release.yml": {
+      "path": ".github/workflows/create-release.yml",
+      "git_blob": "88b1c926fa093370037d86c238c8fc34f6429641",
+      "sha256": "2e4c387c441ce0f139203c4736bf51b6b22cf49b8a3a49468275470cebc2193b",
+      "bytes": 2374
+    },
+    ".github/workflows/nudge.yml": {
+      "path": ".github/workflows/nudge.yml",
+      "git_blob": "2683a9d295bb2ed3896a4242107713b2ef9d0fc1",
+      "sha256": "c8b8228c640d2c2801074897476953ed3bd05394b23b1ba5a145a407f9dc5df4",
+      "bytes": 358
+    },
+    ".github/workflows/python.yml": {
+      "path": ".github/workflows/python.yml",
+      "git_blob": "af29ce5e8b65a56c95d0109e1c7ec03f764958db",
+      "sha256": "78aa0fac139a3502401b39f7763c734a2926d89c34dd073818047d5b899bef6a",
+      "bytes": 2758
+    },
+    ".github/workflows/release.yml": {
+      "path": ".github/workflows/release.yml",
+      "git_blob": "0991985cee9a9cc5bbcf0babdce8b2062aab2bf5",
+      "sha256": "af96d6639b527da4589085a4ac60e31eaeb417677d20c4a2e8b8240c313e281f",
+      "bytes": 1205
+    },
+    ".github/workflows/rust.yml": {
+      "path": ".github/workflows/rust.yml",
+      "git_blob": "54e336b44188532865853aa926bfd2db6b4a47c6",
+      "sha256": "27adc40193098c685f95000560c428f97786807c2b61474f4b66e096a2a53114",
+      "bytes": 761
+    }
+  },
+  "checkout_clean": true
+}

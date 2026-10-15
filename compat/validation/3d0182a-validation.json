@@ -1,0 +1,84 @@
+{
+  "source_commit": "3d0182a5713be0d1835296a8c7a340c987243072",
+  "canonical_source_commit": "360ad5b9dcd8b133a40cea9b6b70a83ba390e7fa",
+  "gate_only_followup": "Only test_python_support.py formatting/order assertions and CHANGELOG changed after canonical validation; native library, Python packages and dependency graph are identical.",
+  "phases": {
+    "sync": {
+      "source_commit": "360ad5b9dcd8b133a40cea9b6b70a83ba390e7fa",
+      "phase": "sync",
+      "command": [
+        "uv",
+        "sync",
+        "--locked",
+        "--python",
+        "3.12",
+        "--all-groups",
+        "--project",
+        "bindings/python"
+      ],
+      "exit_code": 0,
+      "elapsed_seconds": 299.74065136909485,
+      "completed_utc": "2026-10-14T23:53:46Z"
+    },
+    "build": {
+      "source_commit": "360ad5b9dcd8b133a40cea9b6b70a83ba390e7fa",
+      "phase": "build",
+      "command": [
+        "make",
+        "build"
+      ],
+      "exit_code": 0,
+      "elapsed_seconds": 100.12618947029114,
+      "completed_utc": "2026-10-14T23:55:26Z"
+    },
+    "test": {
+      "source_commit": "360ad5b9dcd8b133a40cea9b6b70a83ba390e7fa",
+      "phase": "test",
+      "command": [
+        "make",
+        "test"
+      ],
+      "exit_code": 0,
+      "elapsed_seconds": 58.678322553634644,
+      "completed_utc": "2026-10-14T23:56:25Z"
+    },
+    "lint": {
+      "source_commit": "360ad5b9dcd8b133a40cea9b6b70a83ba390e7fa",
+      "phase": "lint",
+      "command": [
+        "make",
+        "lint"
+      ],
+      "exit_code": 0,
+      "elapsed_seconds": 7.8112709522247314,
+      "completed_utc": "2026-10-14T23:56:33Z"
+    },
+    "support": {
+      "source_commit": "3d0182a5713be0d1835296a8c7a340c987243072",
+      "phase": "support",
+      "command": [
+        "uv",
+        "run",
+        "--project",
+        "bindings/python",
+        "--no-sync",
+        "python",
+        "scripts/test_python_support.py",
+        "--output-dir",
+        "/var/tmp/codex-tdigest-pr3-20261014/overnight/runtime-support-3d0182a"
+      ],
+      "exit_code": 0,
+      "elapsed_seconds": 352.0698997974396,
+      "completed_utc": "2026-10-15T00:11:40Z"
+    }
+  },
+  "counts": {
+    "python_and_coherence": 314,
+    "untouched_original_python": 91,
+    "rust_passed": 116,
+    "rust_preexisting_ignored": 3,
+    "direct_wheel_case_instances": 1902,
+    "rebuilt_sdist_wheel_case_instances": 1902
+  },
+  "scope": "Linux/WSL. Distinct direct and actual normalized-sdist wheels each passed their own seven-cell gate. Pinned dependency combinations, not an unconstrained resolver or full platform claim."
+}

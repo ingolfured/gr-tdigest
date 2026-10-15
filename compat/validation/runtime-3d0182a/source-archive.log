@@ -1,0 +1,8 @@
+error: manifest path `Cargo.toml` does not exist
+🍹 Building a mixed python/rust project
+🔗 Found pyo3 bindings with abi3 support
+📡 Using build options features, bindings, compatibility from pyproject.toml
+From `cargo package --list --allow-dirty --manifest-path /var/tmp/codex-tdigest-pr3-20261014/work/gr-tdigest-f64-weights/crates/testdata/Cargo.toml`:
+warning: manifest has no license, license-file, documentation, homepage or repository.
+See https://doc.rust-lang.org/cargo/reference/manifest.html#package-metadata for more info.
+📦 Built source distribution to /var/tmp/codex-tdigest-pr3-20261014/overnight/runtime-support-3d0182a/sdist/gr_tdigest-0.2.4.tar.gz

@@ -1,0 +1,8 @@
+[package]
+name = "original-api-consumer-packaged-path"
+version = "0.0.0"
+edition = "2021"
+[workspace]
+[dependencies]
+tdigest_core = { version = "0.2.0", path = "/var/tmp/codex-tdigest-pr3-20261014/overnight/numerical-review/original-rust-api-option/validation/unpacked/tdigest_core-0.2.0" }
+anyhow = "1.0.93"

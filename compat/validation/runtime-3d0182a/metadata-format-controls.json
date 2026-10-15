@@ -1,0 +1,44 @@
+[
+  {
+    "variant": "actual-wheel",
+    "status": "PASS",
+    "sha256": "e32d72303bf3a31e3efdd4ad1dfa7064630fd206620b1bc94d77c241160e56db",
+    "requires_python": ">=3.10, <3.13"
+  },
+  {
+    "variant": "compact",
+    "requires_python": ">=3.10,<3.13",
+    "accepted": true,
+    "expected": true
+  },
+  {
+    "variant": "reverse",
+    "requires_python": "<3.13, >=3.10",
+    "accepted": true,
+    "expected": true
+  },
+  {
+    "variant": "raised-floor",
+    "requires_python": ">=3.11,<3.13",
+    "accepted": false,
+    "expected": false
+  },
+  {
+    "variant": "removed-upper",
+    "requires_python": ">=3.10",
+    "accepted": false,
+    "expected": false
+  },
+  {
+    "variant": "wider-upper",
+    "requires_python": ">=3.10,<3.14",
+    "accepted": false,
+    "expected": false
+  },
+  {
+    "variant": "duplicate",
+    "requires_python": ">=3.10,<3.13,<3.13",
+    "accepted": false,
+    "expected": false
+  }
+]

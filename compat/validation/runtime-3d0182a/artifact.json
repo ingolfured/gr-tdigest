@@ -1,0 +1,17 @@
+{
+  "wheel": "/var/tmp/codex-tdigest-pr3-20261014/overnight/runtime-support-3d0182a/wheels/gr_tdigest-0.2.4-cp310-abi3-linux_x86_64.whl",
+  "wheel_sha256": "f34d0f016fb09896a1691f804129fb381e614973074f13d0dce469446d9f975e",
+  "native_sha256": "9a10ee77533a0ee0f8a59c0f661f4df4988a410d371471e7bbca32d49564fb9e",
+  "distribution": "gr-tdigest",
+  "version": "0.2.4",
+  "requires_python": ">=3.10, <3.13",
+  "requires_dist": [
+    "numpy>=1.26.4,<3",
+    "polars==1.34.0 ; extra == 'polars'"
+  ],
+  "tags": [
+    "cp310-abi3-linux_x86_64"
+  ],
+  "sdist": "/var/tmp/codex-tdigest-pr3-20261014/overnight/runtime-support-3d0182a/sdist/gr_tdigest-0.2.4.tar.gz",
+  "sdist_sha256": "8ef04af1f62a4b057044680375ff441eaf5037cf8fc546733dde5d694c1c8915"
+}

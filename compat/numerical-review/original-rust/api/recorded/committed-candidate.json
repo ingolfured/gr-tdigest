@@ -1,0 +1,22 @@
+{
+  "commit": "3b8fa69b9228be596d8733f58cdc39d780002b83",
+  "branch": "review/candidate-original-rust-api",
+  "parent": "7d9e13250772f7bbe7ae2433d3401efe326e07f3",
+  "working_tree_clean": true,
+  "files": {
+    "Cargo.toml": "300055ded9cbed4bfd4393817c9dd2e051d050115c3da3ace6c074779add83b9",
+    "src/upstream/Cargo.toml": "771d31ee603fdd8268276d626d8b181f6bc0680bba16022e05fa0b8c48d4e313",
+    "src/upstream/CORE_README.md": "8d1058b9983674eb5fae7fe6bc659778d078185ea5ab6c5dbb71dfc614156e3d",
+    "src/lib.rs": "f8f6b12762dc84bed6991aa9ef0b0471b5709cdd682757652a0843e832efe8b5",
+    "Cargo.lock": "046756d3a59e1f573807a5c613a7ebca158b634d1b96c360bbd1ee565790c7ae",
+    "Makefile": "21e7df0333ceda8298c7099f09a2831916829d05fb4a52c66fbff4e9fdb2091c",
+    "src/upstream/tests/public_api.rs": "b8448a7cf81999232f3c396d35ce4d9922c33204c3747a3edfa09f169426c16b",
+    "tests/original_rust_numerics.rs": "2a884cab7a53efbbda96614d98c41aaf727012bd65bac96725282f5502da7e67",
+    "src/upstream/PROVENANCE.md": "d1339996597120827624c920a77d05593d2eef94dbd7eff844bfda1d47c2d1e6",
+    "CHANGELOG.md": "12a7f525bc29caa8059b62263db21da9a29a8edf3bb9bd10ed3fde7dd01cbc22",
+    "api_design.md": "079ec1d50fff8e7b0d6ba7f66c8e2448b751bd962bff7f33a307655812762e42",
+    "tdigest_design.md": "37f75b1186129b6ba3afad3c4b3a1f0ffd36eec34c0651381b0232cf1c9dbc73",
+    "README.md": "f800fe25789f468ccc5e1802b89817dd2e33a11b98c47730faf384d644746875"
+  },
+  "scope": "Original Rust package/API only; no runtime draft, no registry publication or push. Narrow gates passed; root owns subsequent full gates."
+}

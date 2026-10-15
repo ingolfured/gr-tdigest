@@ -5,6 +5,7 @@ All notable changes to this project are documented in this file.
 ## [Unreleased]
 
 ### Fixed
+- Record the original Rust committed-lock oracle, restored public crate/consumer checks, seven-environment direct and source-rebuilt wheel validation, and the held-out accuracy/storage findings; keep separated-mode approximation limits and deployment caveats explicit in the three-PR review guide.
 - Compare the two Python support constraints independent of metadata whitespace/order in the installed-wheel gate, while still rejecting changed or missing bounds; preserve the first real-artifact gate failure as evidence.
 - Restore CPython 3.10–3.12 wheel support with a rebuilt py310 ABI3 baseline and NumPy 1.26.4/2.x compatibility; make the tested Polars 1.34.0 integration an optional extra, align the canonical development lock, and gate one real wheel across six full runtimes plus a Polars-free installation. Verify actual source-archive contents and reuse the exact release artifacts before publication.
 - Preserve the original public Rust package as a lightweight shared-source tdigest_core workspace member, retaining its fields, methods, result types, and pinned arithmetic; add new Rust API and independent-output regressions.

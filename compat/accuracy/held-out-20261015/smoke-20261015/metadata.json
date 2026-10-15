@@ -1,0 +1,293 @@
+{
+  "status": "building",
+  "phase": "smoke",
+  "started_utc": "2026-10-14T23:38:47.129852+00:00",
+  "platform": "Linux-6.6.87.2-microsoft-standard-WSL2-x86_64-with-glibc2.44",
+  "protocol": {
+    "schema": 1,
+    "modern_commit": "52f6212008111b62fa07374278b850868b9ea77e",
+    "original_commit": "8d9cf1fe82c5c9254e5dc9593f01717e317f4333",
+    "study": "Fixed delta 300 accuracy; no matched-memory selection or speed claim",
+    "source_files_sha256": {
+      "run_held_out.py": "174a33c76994b200ee32d6a5a14847f55a339191d09352ad70ea4ed7ae80d0e3",
+      "held_out_accuracy.rs": "c6b995f38dea189708f5c2d7f35bec138de982e96557f1bc49ef7aa3e1fa450c",
+      "accuracy_reference.py": "f02ed61e06ad76c4ad8a262430c5c138ed0df3cf66d2bd197fa18cefbe6f5301",
+      "held_out_plan.py": "76733a7b48e1a16ef6120f23f8c7e8af4a15f537f907275b129c796d3a93a79d"
+    },
+    "training_seeds": [
+      1,
+      7,
+      42,
+      20261014,
+      104729
+    ],
+    "held_out_seeds": [
+      13,
+      97,
+      271828,
+      314159,
+      999983
+    ],
+    "distributions": [
+      "uniform",
+      "normal",
+      "exponential",
+      "lognormal",
+      "pareto",
+      "ties",
+      "spike_tail",
+      "separated_modes"
+    ],
+    "sizes": [
+      32,
+      1000,
+      100000
+    ],
+    "original_delta": 300,
+    "modern_delta": 300,
+    "scale": "K2Norm",
+    "singleton_policy": "Off",
+    "mean_precisions": [
+      "f64",
+      "f32"
+    ],
+    "reverse_shard_order_at_n": 100000,
+    "timed_operations": 0
+  },
+  "planned_cases": [
+    {
+      "phase": "smoke",
+      "seed": 1,
+      "kind": "uniform",
+      "n": 32,
+      "precision": "f64",
+      "original_delta": 300,
+      "modern_delta": 300,
+      "merge_order": "forward",
+      "expected_state_records": 11
+    },
+    {
+      "phase": "smoke",
+      "seed": 1,
+      "kind": "uniform",
+      "n": 32,
+      "precision": "f32",
+      "original_delta": 300,
+      "modern_delta": 300,
+      "merge_order": "forward",
+      "expected_state_records": 11
+    },
+    {
+      "phase": "smoke",
+      "seed": 1,
+      "kind": "normal",
+      "n": 32,
+      "precision": "f64",
+      "original_delta": 300,
+      "modern_delta": 300,
+      "merge_order": "forward",
+      "expected_state_records": 11
+    },
+    {
+      "phase": "smoke",
+      "seed": 1,
+      "kind": "normal",
+      "n": 32,
+      "precision": "f32",
+      "original_delta": 300,
+      "modern_delta": 300,
+      "merge_order": "forward",
+      "expected_state_records": 11
+    },
+    {
+      "phase": "smoke",
+      "seed": 1,
+      "kind": "exponential",
+      "n": 32,
+      "precision": "f64",
+      "original_delta": 300,
+      "modern_delta": 300,
+      "merge_order": "forward",
+      "expected_state_records": 11
+    },
+    {
+      "phase": "smoke",
+      "seed": 1,
+      "kind": "exponential",
+      "n": 32,
+      "precision": "f32",
+      "original_delta": 300,
+      "modern_delta": 300,
+      "merge_order": "forward",
+      "expected_state_records": 11
+    },
+    {
+      "phase": "smoke",
+      "seed": 1,
+      "kind": "lognormal",
+      "n": 32,
+      "precision": "f64",
+      "original_delta": 300,
+      "modern_delta": 300,
+      "merge_order": "forward",
+      "expected_state_records": 11
+    },
+    {
+      "phase": "smoke",
+      "seed": 1,
+      "kind": "lognormal",
+      "n": 32,
+      "precision": "f32",
+      "original_delta": 300,
+      "modern_delta": 300,
+      "merge_order": "forward",
+      "expected_state_records": 11
+    },
+    {
+      "phase": "smoke",
+      "seed": 1,
+      "kind": "pareto",
+      "n": 32,
+      "precision": "f64",
+      "original_delta": 300,
+      "modern_delta": 300,
+      "merge_order": "forward",
+      "expected_state_records": 11
+    },
+    {
+      "phase": "smoke",
+      "seed": 1,
+      "kind": "pareto",
+      "n": 32,
+      "precision": "f32",
+      "original_delta": 300,
+      "modern_delta": 300,
+      "merge_order": "forward",
+      "expected_state_records": 11
+    },
+    {
+      "phase": "smoke",
+      "seed": 1,
+      "kind": "ties",
+      "n": 32,
+      "precision": "f64",
+      "original_delta": 300,
+      "modern_delta": 300,
+      "merge_order": "forward",
+      "expected_state_records": 11
+    },
+    {
+      "phase": "smoke",
+      "seed": 1,
+      "kind": "ties",
+      "n": 32,
+      "precision": "f32",
+      "original_delta": 300,
+      "modern_delta": 300,
+      "merge_order": "forward",
+      "expected_state_records": 11
+    },
+    {
+      "phase": "smoke",
+      "seed": 1,
+      "kind": "spike_tail",
+      "n": 32,
+      "precision": "f64",
+      "original_delta": 300,
+      "modern_delta": 300,
+      "merge_order": "forward",
+      "expected_state_records": 11
+    },
+    {
+      "phase": "smoke",
+      "seed": 1,
+      "kind": "spike_tail",
+      "n": 32,
+      "precision": "f32",
+      "original_delta": 300,
+      "modern_delta": 300,
+      "merge_order": "forward",
+      "expected_state_records": 11
+    },
+    {
+      "phase": "smoke",
+      "seed": 1,
+      "kind": "separated_modes",
+      "n": 32,
+      "precision": "f64",
+      "original_delta": 300,
+      "modern_delta": 300,
+      "merge_order": "forward",
+      "expected_state_records": 11
+    },
+    {
+      "phase": "smoke",
+      "seed": 1,
+      "kind": "separated_modes",
+      "n": 32,
+      "precision": "f32",
+      "original_delta": 300,
+      "modern_delta": 300,
+      "merge_order": "forward",
+      "expected_state_records": 11
+    }
+  ],
+  "completed_cases": 0,
+  "record_count": 0,
+  "failures": [],
+  "case_results": [],
+  "source_changes": [],
+  "compressed_case_sha256": {},
+  "runtime_budget_seconds": 180,
+  "case_timeout_seconds": 120,
+  "scope": "No operation timings; wall durations are execution-budget metadata only",
+  "manual_oracle": {
+    "status": "pass",
+    "hand_computed_checks": 14
+  },
+  "modern_tree": "697959c6f4932082f4e5b6f6f1809ad6c39cfc5e",
+  "source_sha256": {
+    "source/src/upstream_py.rs": "03fa57732fc6bb20691139ea9b2208fc46b839bdd5e86b87c3b820a0bae5f094",
+    "source/src/error.rs": "35e6f01c103d0006ed0c1d61c258e9dd545e2ca06963187e5840c25c3e902d51",
+    "source/src/compact_storage.rs": "8517c6704081a6527c95356b685535bdaecea558751807a817b06cef31ba2dc2",
+    "source/src/py.rs": "7c5a91556ea55cce8acec2d94cb787f79d982d785210a1ec97933807cf0c0020",
+    "source/src/polars_expr.rs": "45dfe8d328684838a86d85fff4fc204ba9f40a1ba651aeb1e51e2c7837fe9495",
+    "source/src/lib.rs": "ae03dd726eb6ad6c5d03823864a89decbc1681e7afd2b9628052877b3c86d699",
+    "source/src/jni.rs": "aa00c2af6e97e51959345d9e5175ae01479514d0c529354eeb35bae99e7d5562",
+    "source/src/tdigest/scale.rs": "dfed088ef9d9b189475424283d65f8f9096670956cc8f2eba6469bb725d1693b",
+    "source/src/tdigest/mod.rs": "eee25a98a6b0e935a7cec9baa109e0090ba39e1811db4725ab799450b6754fe1",
+    "source/src/tdigest/quantile.rs": "a99599dcc81c0623e3182ce2ede325cd7c34ac263985af217d6e7a865d9eb0e1",
+    "source/src/tdigest/wire.rs": "7ab74c1e27105975d3ac40b2370666482d01e8834819ea59ba465f689a23a9cf",
+    "source/src/tdigest/cdf.rs": "55eeb11a1da871aee389d1256308fdc64a6c66d43d3f08d7f60e1729c80e65cc",
+    "source/src/tdigest/codecs.rs": "509ac5271656581faf1aa9d3f866682f0fab4d66432fd2926631d5a32a298f37",
+    "source/src/tdigest/tdigest.rs": "3f5b7aec088962341dde5fbf125aabcfff0ae7889bbe27979930c53951994f40",
+    "source/src/tdigest/precision.rs": "7473c43ec96afc101a39c6bda8b83e82e1b13e8d5725c3556805b3585bfe14d7",
+    "source/src/tdigest/compressor.rs": "242b56730504fe6bd921f7443ee9a5fe62a74753808236b36d61e835edfa426a",
+    "source/src/tdigest/frontends.rs": "700aa6b18be1e26cc3f718469c15d090eb95c93c309b702954b4dd0b82e6201e",
+    "source/src/tdigest/centroids.rs": "8b25d23223086bde557c5ba365e72892fc006f5c1e2be97be3f954dfd50ebe02",
+    "source/src/tdigest/merges.rs": "20631b3fe7e9af922d2b633ff0926a2a0598f7694508188e81d7e67cf878e765",
+    "source/src/tdigest/singleton_policy.rs": "1f26944b9aa7575a5d86a5c31b97ed5bc80f2a9c9f12cf5ed9db1ca7436e5fa7",
+    "source/src/tdigest/test_helpers.rs": "f4556c0dee84cfad9c05325c8cea58c449e0135a8849fbefda6385761d94c0c5",
+    "source/src/bin/tdigest_cli.rs": "2ab7290ea18d6e0d7d7423df8b5bc2c76db28c5ed755f12c8a98221df953b904",
+    "source/src/quality/quality_base.rs": "caea4dbc50bcc2420930105db05030823e8c74218e5138bc2acaa7c3d032fffa",
+    "source/src/quality/cdf_quality.rs": "1ade3775b5ed47b4893ca84a4e549331c2cfa012f46c71725948ccb6261acc85",
+    "source/src/quality/quantile_quality.rs": "df4efa0b8a0beab654b01f40ed51fb37c22a372b3b5f728b4f65393fb2f86920",
+    "source/src/upstream/core.rs": "447766914f92398a43a01e53ecbc61231909eb641f2634c3fc31da2de71c3af8",
+    "source/src/upstream/scale.rs": "c4b3cce4ba57da48a6e427f4d2f5f04a4b6c67f790c5b32d7334320f57246bb0",
+    "source/src/upstream/traits.rs": "74324e7ec5fc5e9e8d448b88fa35c8a0525354eef10eb7fead694cf2d9754868",
+    "source/src/upstream/lib.rs": "38ecb6bd5d3f17f3d19da2f8b613f50198a613d47edae413f275744ade8a3e4c",
+    "source/Cargo.toml": "d9ed58540a2e85185fd41b6c81ed0caa7e26c9abd01c6d8661832d4cd159c1e5",
+    "source/Cargo.lock": "f68f7693499ac3212bc4f4632b5ae314dc30d6a01ddbf6968612600fd6ad3df5",
+    "upstream-core/src/core.rs": "1753d6c48728561f77dd076c1a063ee9abe25251b1ed94a798b520173b7d3412",
+    "upstream-core/src/scale.rs": "034cf845a9e283d51fe076a6b22956acb21aa31738094f18ed4d6e08c3240558",
+    "upstream-core/src/traits.rs": "74324e7ec5fc5e9e8d448b88fa35c8a0525354eef10eb7fead694cf2d9754868",
+    "upstream-core/src/lib.rs": "eeb21b517557df106eb57c7d03dde1b8f26fe4b1745ee6f4b30cb604ddcaf63b",
+    "upstream-core/Cargo.toml": "0f2296966287ac49d2ecdd6aef9db17a4a40a2aba18e9533369a6af495f4e41b",
+    "harness/Cargo.toml": "d735eab6439895b67ea3ad0c555fb9576c68fc5b57a6e001c265d7340ea17be4",
+    "harness/src/main.rs": "c6b995f38dea189708f5c2d7f35bec138de982e96557f1bc49ef7aa3e1fa450c"
+  },
+  "rustc": "rustc 1.90.0 (1159e78c4 2025-09-14)\nbinary: rustc\ncommit-hash: 1159e78c4747b02ef996e55082b704c09b970588\ncommit-date: 2025-09-14\nhost: x86_64-unknown-linux-gnu\nrelease: 1.90.0\nLLVM version: 20.1.8",
+  "environment": {
+    "RAYON_NUM_THREADS": "1"
+  }
+}

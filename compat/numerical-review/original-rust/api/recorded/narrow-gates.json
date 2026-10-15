@@ -1,0 +1,118 @@
+{
+  "base": "7d9e13250772f7bbe7ae2433d3401efe326e07f3",
+  "lock_sha256": "046756d3a59e1f573807a5c613a7ebca158b634d1b96c360bbd1ee565790c7ae",
+  "started_utc": "2026-10-14T23:29:48.229854+00:00",
+  "steps": [
+    {
+      "label": "dependency-tree",
+      "command": [
+        "/usr/sbin/cargo",
+        "tree",
+        "--locked",
+        "--offline",
+        "-p",
+        "tdigest_core"
+      ],
+      "cwd": "/var/tmp/codex-tdigest-pr3-20261014/work/gr-tdigest-f64-weights",
+      "exit_code": 0,
+      "elapsed_seconds": 0.10229276600148296,
+      "lock_unchanged": true
+    },
+    {
+      "label": "core-debug",
+      "command": [
+        "/usr/sbin/cargo",
+        "test",
+        "--locked",
+        "--offline",
+        "-p",
+        "tdigest_core"
+      ],
+      "cwd": "/var/tmp/codex-tdigest-pr3-20261014/work/gr-tdigest-f64-weights",
+      "exit_code": 0,
+      "elapsed_seconds": 1.947034454002278,
+      "lock_unchanged": true
+    },
+    {
+      "label": "core-release",
+      "command": [
+        "/usr/sbin/cargo",
+        "test",
+        "--locked",
+        "--offline",
+        "--release",
+        "-p",
+        "tdigest_core"
+      ],
+      "cwd": "/var/tmp/codex-tdigest-pr3-20261014/work/gr-tdigest-f64-weights",
+      "exit_code": 0,
+      "elapsed_seconds": 3.2570877610014577,
+      "lock_unchanged": true
+    },
+    {
+      "label": "original-numerics-debug",
+      "command": [
+        "/usr/sbin/cargo",
+        "test",
+        "--locked",
+        "--offline",
+        "--test",
+        "original_rust_numerics"
+      ],
+      "cwd": "/var/tmp/codex-tdigest-pr3-20261014/work/gr-tdigest-f64-weights",
+      "exit_code": 0,
+      "elapsed_seconds": 50.26620531899971,
+      "lock_unchanged": true
+    },
+    {
+      "label": "original-numerics-release",
+      "command": [
+        "/usr/sbin/cargo",
+        "test",
+        "--locked",
+        "--offline",
+        "--release",
+        "--test",
+        "original_rust_numerics"
+      ],
+      "cwd": "/var/tmp/codex-tdigest-pr3-20261014/work/gr-tdigest-f64-weights",
+      "exit_code": 0,
+      "elapsed_seconds": 311.0147831819995,
+      "lock_unchanged": true
+    },
+    {
+      "label": "python-feature-check",
+      "command": [
+        "/usr/sbin/cargo",
+        "check",
+        "--locked",
+        "--offline",
+        "--features",
+        "python",
+        "--lib"
+      ],
+      "cwd": "/var/tmp/codex-tdigest-pr3-20261014/work/gr-tdigest-f64-weights",
+      "exit_code": 0,
+      "elapsed_seconds": 21.66958604500178,
+      "lock_unchanged": true
+    },
+    {
+      "label": "core-package",
+      "command": [
+        "/usr/sbin/cargo",
+        "package",
+        "--locked",
+        "--offline",
+        "-p",
+        "tdigest_core",
+        "--allow-dirty"
+      ],
+      "cwd": "/var/tmp/codex-tdigest-pr3-20261014/work/gr-tdigest-f64-weights",
+      "exit_code": 0,
+      "elapsed_seconds": 0.18306532200222136,
+      "lock_unchanged": true
+    }
+  ],
+  "success": true,
+  "finished_utc": "2026-10-14T23:36:16.671682+00:00"
+}

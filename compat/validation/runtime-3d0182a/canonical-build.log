@@ -1,0 +1,70 @@
+
+[1m==> Build: Rust lib + CLI (dev)[0m
+   Compiling gr-tdigest v0.2.4 (/var/tmp/codex-tdigest-pr3-20261014/work/gr-tdigest-f64-weights)
+    Finished `dev` profile [unoptimized + debuginfo] target(s) in 4.32s
+    Finished `dev` profile [unoptimized + debuginfo] target(s) in 0.15s
+
+[1m==> Build: Python extension (maturin develop, dev)[0m
+🍹 Building a mixed python/rust project
+🔗 Found pyo3 bindings with abi3 support
+🐍 Not using a specific python interpreter
+📡 Using build options bindings from pyproject.toml
+Using Python 3.12.12 environment at: /var/tmp/codex-tdigest-pr3-20261014/work/gr-tdigest-f64-weights/.venv
+Audited 2 packages in 2ms
+   Compiling pyo3-build-config v0.25.1
+   Compiling tdigest_core v0.2.0 (/var/tmp/codex-tdigest-pr3-20261014/work/gr-tdigest-f64-weights/src/upstream)
+   Compiling pyo3-macros-backend v0.25.1
+   Compiling pyo3-ffi v0.25.1
+   Compiling pyo3 v0.25.1
+   Compiling numpy v0.25.0
+   Compiling pyo3-macros v0.25.1
+   Compiling polars-error v0.51.0
+   Compiling polars-utils v0.51.0
+   Compiling polars-schema v0.51.0
+   Compiling polars-arrow v0.51.0
+   Compiling polars-compute v0.51.0
+   Compiling polars-dtype v0.51.0
+   Compiling polars-row v0.51.0
+   Compiling polars-core v0.51.0
+   Compiling polars-parquet v0.51.0
+   Compiling polars-ops v0.51.0
+   Compiling polars-json v0.51.0
+   Compiling polars-io v0.51.0
+   Compiling polars-time v0.51.0
+   Compiling polars-ffi v0.51.0
+   Compiling polars-plan v0.51.0
+   Compiling polars v0.51.0
+   Compiling pyo3-polars v0.24.0
+   Compiling gr-tdigest v0.2.4 (/var/tmp/codex-tdigest-pr3-20261014/work/gr-tdigest-f64-weights)
+    Finished `dev` profile [unoptimized + debuginfo] target(s) in 1m 19s
+📦 Built wheel for abi3 Python ≥ 3.10 to /tmp/.tmpmsZhwe/gr_tdigest-0.2.4-cp310-abi3-linux_x86_64.whl
+✏️ Setting installed package as editable
+🛠 Installed gr-tdigest-0.2.4
+
+[1m==> Build: Java via Gradle (clean + jar)[0m
+openjdk version "21.0.12.1" 2026-08-18 LTS
+OpenJDK Runtime Environment Temurin-21.0.12.1+1 (build 21.0.12.1+1-LTS)
+OpenJDK 64-Bit Server VM Temurin-21.0.12.1+1 (build 21.0.12.1+1-LTS, mixed mode, sharing)
+To honour the JVM settings for this build a single-use Daemon process will be forked. For more on this, please refer to https://docs.gradle.org/9.1.0/userguide/gradle_daemon.html#sec:disabling_the_daemon in the Gradle documentation.
+Daemon will be stopped at the end of the build 
+> Task :clean
+> Task :compileJava
+
+> Task :cargoBuild
+   Compiling gr-tdigest v0.2.4 (/var/tmp/codex-tdigest-pr3-20261014/work/gr-tdigest-f64-weights)
+    Finished `release` profile [optimized] target(s) in 6.66s
+
+> Task :copyNative
+Packaged native -> /var/tmp/codex-tdigest-pr3-20261014/work/gr-tdigest-f64-weights/bindings/java/build/generated-resources/META-INF/native/linux-x86_64/libgr_tdigest.so
+
+> Task :processResources
+> Task :classes
+
+> Task :jar
+Built JAR: /var/tmp/codex-tdigest-pr3-20261014/work/gr-tdigest-f64-weights/bindings/java/build/libs/gr-tdigest-0.2.4.jar (3.69 MB)
+
+BUILD SUCCESSFUL in 14s
+6 actionable tasks: 6 executed
+Consider enabling configuration cache to speed up this build: https://docs.gradle.org/9.1.0/userguide/configuration_cache_enabling.html
+[32m✓ Built bindings/java/build/libs/gr-tdigest-0.2.4.jar[0m
+[32m✓ all components built (PROFILE=dev)[0m

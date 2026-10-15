@@ -1,0 +1,30 @@
+[
+  {
+    "command": [
+      "python3",
+      "scripts/check_upstream_sources.py"
+    ],
+    "exit_code": 0,
+    "output": "Original numerical source and Python wrapper checksums match.\n"
+  },
+  {
+    "command": [
+      "/usr/sbin/cargo",
+      "fmt",
+      "--all",
+      "--",
+      "--check"
+    ],
+    "exit_code": 0,
+    "output": ""
+  },
+  {
+    "command": [
+      "git",
+      "diff",
+      "--check"
+    ],
+    "exit_code": 0,
+    "output": ""
+  }
+]

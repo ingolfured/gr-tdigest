@@ -1,0 +1,41 @@
+   Compiling polars-utils v0.51.0
+   Compiling chrono v0.4.42
+   Compiling polars-schema v0.51.0
+   Compiling chrono-tz v0.10.4
+   Compiling value-trait v0.11.0
+   Compiling simd-json v0.15.1
+   Compiling num-integer v0.1.46
+   Compiling num-bigint v0.4.6
+   Compiling polars-arrow v0.51.0
+   Compiling predicates v3.1.3
+   Compiling num-rational v0.4.2
+   Compiling num-iter v0.1.46
+   Compiling ordered-float v5.1.0
+   Compiling num-complex v0.4.6
+   Compiling num v0.4.3
+   Compiling plotters v0.3.7
+   Compiling itertools v0.14.0
+   Compiling polars-compute v0.51.0
+   Compiling polars-dtype v0.51.0
+   Compiling polars-row v0.51.0
+   Compiling polars-core v0.51.0
+   Compiling polars-json v0.51.0
+   Compiling criterion v0.5.1
+   Compiling polars-io v0.51.0
+   Compiling polars-ops v0.51.0
+   Compiling polars v0.51.0
+   Compiling polars-plan v0.51.0
+   Compiling assert_cmd v2.0.17
+   Compiling tdigest_core v0.2.0 (/var/tmp/codex-tdigest-pr3-20261014/work/gr-tdigest-f64-weights/src/upstream)
+   Compiling assert_fs v1.1.3
+   Compiling testdata v0.1.0 (/var/tmp/codex-tdigest-pr3-20261014/work/gr-tdigest-f64-weights/crates/testdata)
+   Compiling gr-tdigest v0.2.4 (/var/tmp/codex-tdigest-pr3-20261014/work/gr-tdigest-f64-weights)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 50.21s
+     Running tests/original_rust_numerics.rs (/var/tmp/codex-tdigest-pr3-20261014/work/gr-tdigest/target/debug/deps/original_rust_numerics-a45be3319846f83d)
+
+running 2 tests
+test independent_original_outputs_f64 ... ok
+test independent_original_outputs_f32 ... ok
+
+test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+

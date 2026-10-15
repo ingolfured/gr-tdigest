@@ -1,0 +1,33 @@
+{
+  "status": "PASS: preparation and comparison replay only; no Rust build or native probe",
+  "original_source_files_verified": 35,
+  "symlinks_verified": {
+    "bindings/python/LICENSE": "../../LICENSE",
+    "bindings/python/README.md": "../../README.md"
+  },
+  "original_lock_sha256": "f37b4bc2afb2fc07c0e7c9f2787cd6cedd9b82fea724e3ad536ddaf679c4ac76",
+  "golden_sha256": "517ec82ec124e55920c7049a95f0eb0c9f3e96cf60b4ee7d4457bf31b7a98560",
+  "portable_preparer_sha256": "1decbe2ce966df430bcfb9afa96510777b9a2d34112ee75ff008ca1a2379265c",
+  "portable_runner_sha256": "fe0eac8293876ef7a53183c6bf1e8d1c2366cd6687be83fec2679c8b2a1ef7ef",
+  "portable_runner_dry_mode_no_cargo": true,
+  "historical_output_comparison_replay": {
+    "debug": {
+      "case_count": 70,
+      "numeric_comparisons": {
+        "exact_bits": 1762,
+        "nan_classification": 126
+      },
+      "failures": []
+    },
+    "release": {
+      "case_count": 70,
+      "numeric_comparisons": {
+        "exact_bits": 1762,
+        "nan_classification": 126
+      },
+      "failures": []
+    }
+  },
+  "all_python_syntax_valid": true,
+  "no_binary_or_cache_artifacts": true
+}

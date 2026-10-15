@@ -1,0 +1,31 @@
+   Compiling num-traits v0.2.19
+   Compiling either v1.15.0
+   Compiling itertools v0.14.0
+   Compiling num-integer v0.1.46
+   Compiling num-bigint v0.4.6
+   Compiling num-iter v0.1.46
+   Compiling num-complex v0.4.6
+   Compiling num-rational v0.4.2
+   Compiling num v0.4.3
+   Compiling tdigest_core v0.2.0 (/var/tmp/codex-tdigest-pr3-20261014/work/gr-tdigest-f64-weights/src/upstream)
+    Finished `release` profile [optimized] target(s) in 3.20s
+     Running unittests lib.rs (/var/tmp/codex-tdigest-pr3-20261014/work/gr-tdigest/target/release/deps/tdigest_core-6e8b4d60041cefaf)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests/public_api.rs (/var/tmp/codex-tdigest-pr3-20261014/work/gr-tdigest/target/release/deps/public_api-d8ef7cbe2561ca9c)
+
+running 2 tests
+test original_public_api_f32 ... ok
+test original_public_api_f64 ... ok
+
+test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+   Doc-tests tdigest_core
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+

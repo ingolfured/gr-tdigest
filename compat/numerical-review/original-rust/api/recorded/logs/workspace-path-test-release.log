@@ -1,0 +1,17 @@
+   Compiling tdigest_core v0.2.0 (/var/tmp/codex-tdigest-pr3-20261014/work/gr-tdigest-f64-weights/src/upstream)
+   Compiling original-api-consumer-workspace-path v0.0.0 (/var/tmp/codex-tdigest-pr3-20261014/overnight/numerical-review/original-rust-api-option/validation/consumer-workspace-path)
+    Finished `release` profile [optimized] target(s) in 0.92s
+     Running unittests src/main.rs (/var/tmp/codex-tdigest-pr3-20261014/overnight/numerical-review/original-rust-api-option/validation/isolated-target/release/deps/original_api_consumer_workspace_path-a44133be14b93d4a)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests/public_api.rs (/var/tmp/codex-tdigest-pr3-20261014/overnight/numerical-review/original-rust-api-option/validation/isolated-target/release/deps/public_api-6baaa70db822592e)
+
+running 2 tests
+test original_public_api_f64 ... ok
+test original_public_api_f32 ... ok
+
+test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+

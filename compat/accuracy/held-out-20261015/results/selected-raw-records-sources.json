@@ -1,0 +1,58 @@
+[
+  {
+    "case_file": "0236-separated_modes-1000-f64-999983.jsonl.gz",
+    "case_sha256": "107da6404be7b03d9932cac6ef8406595cffeb2060ee63ac28300a43d8773b55",
+    "core": "original",
+    "route": "direct",
+    "raw_line_sha256": "e27f16c2946381813d872c371638d6c79b56edb9f0a0edb3271f7cbe74ad4455"
+  },
+  {
+    "case_file": "0236-separated_modes-1000-f64-999983.jsonl.gz",
+    "case_sha256": "107da6404be7b03d9932cac6ef8406595cffeb2060ee63ac28300a43d8773b55",
+    "core": "modern",
+    "route": "direct",
+    "raw_line_sha256": "fe75054fa11f47966d79eb2cae772af5ab71162fb97d2f7ff56e1a08619ba930"
+  },
+  {
+    "case_file": "0237-separated_modes-1000-f32-999983.jsonl.gz",
+    "case_sha256": "e054264b540c6aef0f3111b21fa778b670b39fcc7899bbd8771c0fc2755be3ef",
+    "core": "original",
+    "route": "direct",
+    "raw_line_sha256": "0fd2e9b69ec6f419983a1625a5ce6dbd932429befac55352aaf550d91d439783"
+  },
+  {
+    "case_file": "0237-separated_modes-1000-f32-999983.jsonl.gz",
+    "case_sha256": "e054264b540c6aef0f3111b21fa778b670b39fcc7899bbd8771c0fc2755be3ef",
+    "core": "modern",
+    "route": "direct",
+    "raw_line_sha256": "37d32bb6bdd0ecdc7ca47e5e114b696f244b9596cc410c6a2ca4ace4b681a9d8"
+  },
+  {
+    "case_file": "0238-separated_modes-100000-f64-999983.jsonl.gz",
+    "case_sha256": "09954364b3dbaed118424e57bf81fcc6d995ecde8f2e70c10c111ad643899397",
+    "core": "original",
+    "route": "direct",
+    "raw_line_sha256": "2f82e2930d384e394e14577d8b3603da941fa130937d3449737500f8bd919f8c"
+  },
+  {
+    "case_file": "0238-separated_modes-100000-f64-999983.jsonl.gz",
+    "case_sha256": "09954364b3dbaed118424e57bf81fcc6d995ecde8f2e70c10c111ad643899397",
+    "core": "modern",
+    "route": "direct",
+    "raw_line_sha256": "ed0b4da4ffead3a735430e915be03f1cf0b2320f70224f776a270953403d7dc3"
+  },
+  {
+    "case_file": "0239-separated_modes-100000-f32-999983.jsonl.gz",
+    "case_sha256": "7290668c99d30d6bec60c8da31ae4fe10d12686c6f807141dee4cda17fa95bec",
+    "core": "original",
+    "route": "direct",
+    "raw_line_sha256": "3b2b5325f87dc244676a621d4c960fa3e6c890880cd780b4b3607b87d963d70a"
+  },
+  {
+    "case_file": "0239-separated_modes-100000-f32-999983.jsonl.gz",
+    "case_sha256": "7290668c99d30d6bec60c8da31ae4fe10d12686c6f807141dee4cda17fa95bec",
+    "core": "modern",
+    "route": "direct",
+    "raw_line_sha256": "7558485d3be47c2155b8d447556aa59fa2bc17877f8851092c0eb107a468cd64"
+  }
+]

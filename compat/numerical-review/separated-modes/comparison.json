@@ -1,0 +1,176 @@
+{
+  "cases": [
+    {
+      "n": 1000,
+      "precision": "f64",
+      "core": "original",
+      "input_fnv1a64": "edea3ad3bb2543a8",
+      "p50": [
+        0.5,
+        0.5,
+        8.814346314338946,
+        9.982112706476084,
+        0.017000000000000015,
+        1.1677663921371373
+      ],
+      "centroids": 128,
+      "logical_retained_bytes": 1584,
+      "raw_path": "/var/tmp/codex-tdigest-pr3-20261014/overnight/held-out-accuracy/held-out-20261015/cases/0236-separated_modes-1000-f64-999983.jsonl.gz",
+      "raw_sha256": "107da6404be7b03d9932cac6ef8406595cffeb2060ee63ac28300a43d8773b55"
+    },
+    {
+      "n": 1000,
+      "precision": "f64",
+      "core": "modern",
+      "input_fnv1a64": "edea3ad3bb2543a8",
+      "p50": [
+        0.5,
+        0.5,
+        8.814346314338946,
+        9.982112706476084,
+        0.017000000000000015,
+        1.1677663921371373
+      ],
+      "centroids": 128,
+      "logical_retained_bytes": 3176,
+      "raw_path": "/var/tmp/codex-tdigest-pr3-20261014/overnight/held-out-accuracy/held-out-20261015/cases/0236-separated_modes-1000-f64-999983.jsonl.gz",
+      "raw_sha256": "107da6404be7b03d9932cac6ef8406595cffeb2060ee63ac28300a43d8773b55"
+    },
+    {
+      "n": 1000,
+      "precision": "f32",
+      "core": "original",
+      "input_fnv1a64": "0f38da0a5bf4c575",
+      "p50": [
+        0.5,
+        0.5,
+        8.814347267150879,
+        9.982112407684326,
+        0.017000000000000015,
+        1.1677651405334473
+      ],
+      "centroids": 128,
+      "logical_retained_bytes": 1072,
+      "raw_path": "/var/tmp/codex-tdigest-pr3-20261014/overnight/held-out-accuracy/held-out-20261015/cases/0237-separated_modes-1000-f32-999983.jsonl.gz",
+      "raw_sha256": "e054264b540c6aef0f3111b21fa778b670b39fcc7899bbd8771c0fc2755be3ef"
+    },
+    {
+      "n": 1000,
+      "precision": "f32",
+      "core": "modern",
+      "input_fnv1a64": "0f38da0a5bf4c575",
+      "p50": [
+        0.5,
+        0.5,
+        7.945057786029318,
+        9.982112407684326,
+        0.017000000000000015,
+        2.037054621655008
+      ],
+      "centroids": 128,
+      "logical_retained_bytes": 2144,
+      "raw_path": "/var/tmp/codex-tdigest-pr3-20261014/overnight/held-out-accuracy/held-out-20261015/cases/0237-separated_modes-1000-f32-999983.jsonl.gz",
+      "raw_sha256": "e054264b540c6aef0f3111b21fa778b670b39fcc7899bbd8771c0fc2755be3ef"
+    },
+    {
+      "n": 100000,
+      "precision": "f64",
+      "core": "original",
+      "input_fnv1a64": "63f1cf343c6483fe",
+      "p50": [
+        0.5,
+        0.5,
+        -0.5661056623436598,
+        9.970976482413283,
+        0.0010899999999999799,
+        10.537082144756942
+      ],
+      "centroids": 142,
+      "logical_retained_bytes": 1752,
+      "raw_path": "/var/tmp/codex-tdigest-pr3-20261014/overnight/held-out-accuracy/held-out-20261015/cases/0238-separated_modes-100000-f64-999983.jsonl.gz",
+      "raw_sha256": "09954364b3dbaed118424e57bf81fcc6d995ecde8f2e70c10c111ad643899397"
+    },
+    {
+      "n": 100000,
+      "precision": "f64",
+      "core": "modern",
+      "input_fnv1a64": "63f1cf343c6483fe",
+      "p50": [
+        0.5,
+        0.5,
+        -0.5661056623436691,
+        9.970976482413283,
+        0.0010899999999999799,
+        10.537082144756951
+      ],
+      "centroids": 142,
+      "logical_retained_bytes": 3512,
+      "raw_path": "/var/tmp/codex-tdigest-pr3-20261014/overnight/held-out-accuracy/held-out-20261015/cases/0238-separated_modes-100000-f64-999983.jsonl.gz",
+      "raw_sha256": "09954364b3dbaed118424e57bf81fcc6d995ecde8f2e70c10c111ad643899397"
+    },
+    {
+      "n": 100000,
+      "precision": "f32",
+      "core": "original",
+      "input_fnv1a64": "b748db965b52966d",
+      "p50": [
+        0.5,
+        0.5,
+        -0.5764588117599487,
+        9.97097635269165,
+        0.0010899999999999799,
+        10.5474351644516
+      ],
+      "centroids": 142,
+      "logical_retained_bytes": 1184,
+      "raw_path": "/var/tmp/codex-tdigest-pr3-20261014/overnight/held-out-accuracy/held-out-20261015/cases/0239-separated_modes-100000-f32-999983.jsonl.gz",
+      "raw_sha256": "7290668c99d30d6bec60c8da31ae4fe10d12686c6f807141dee4cda17fa95bec"
+    },
+    {
+      "n": 100000,
+      "precision": "f32",
+      "core": "modern",
+      "input_fnv1a64": "b748db965b52966d",
+      "p50": [
+        0.5,
+        0.5,
+        0.7547161229247568,
+        9.97097635269165,
+        0.0010899999999999799,
+        9.216260229766894
+      ],
+      "centroids": 149,
+      "logical_retained_bytes": 2480,
+      "raw_path": "/var/tmp/codex-tdigest-pr3-20261014/overnight/held-out-accuracy/held-out-20261015/cases/0239-separated_modes-100000-f32-999983.jsonl.gz",
+      "raw_sha256": "7290668c99d30d6bec60c8da31ae4fe10d12686c6f807141dee4cda17fa95bec"
+    }
+  ],
+  "scale_factors": [
+    {
+      "n": 995,
+      "delta": 300,
+      "factor": 10.418171133775596
+    },
+    {
+      "n": 1000,
+      "delta": 300,
+      "factor": 10.410922144925786
+    },
+    {
+      "n": 56987,
+      "delta": 300,
+      "factor": 6.668565888473929
+    },
+    {
+      "n": 100000,
+      "delta": 300,
+      "factor": 6.3510112513258346
+    }
+  ],
+  "script_hashes": {
+    "inspect_separated_modes.py": "60aa26024cc16869b743fc10e86fc4303aa75bbee657ffb5e4d754661d325356",
+    "reduce_separated_modes.py": "912faf9cc42e9e73d2fb93c604821d31c85a17d7bc0ef2ec7116003c73d737e6",
+    "package_separated_modes.py": "b6af7a06358e222add20ddf13823b108081f88248b2231a33a20caa540dbdbef"
+  },
+  "claim_scope": "Read-only diagnostic, not an accuracy acceptance gate, no source changes and no benchmark timings."
+}

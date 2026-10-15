@@ -1,0 +1,20 @@
+{
+  "python": "3.10.19 (main, Oct 14 2025, 21:25:25) [Clang 20.1.4 ]",
+  "executable": "/tmp/tdigest-support-cells-7enz8wzu/py310-numpy1-no-polars/bin/python",
+  "dependencies": {
+    "numpy": "1.26.4",
+    "scipy": "1.15.3",
+    "pytest": "8.4.2",
+    "pip": "23.0.1"
+  },
+  "native_sha256": "9a10ee77533a0ee0f8a59c0f661f4df4988a410d371471e7bbca32d49564fb9e",
+  "imports": {
+    "tdigest_rs": "/tmp/tdigest-support-cells-7enz8wzu/py310-numpy1-no-polars/lib/python3.10/site-packages/tdigest_rs/__init__.py",
+    "tdigest_rs.lib": "/tmp/tdigest-support-cells-7enz8wzu/py310-numpy1-no-polars/lib/python3.10/site-packages/tdigest_rs/lib.py",
+    "tdigest_rs.tdigest_rs": "/tmp/tdigest-support-cells-7enz8wzu/py310-numpy1-no-polars/lib/python3.10/site-packages/tdigest_rs/tdigest_rs.py",
+    "gr_tdigest": "/tmp/tdigest-support-cells-7enz8wzu/py310-numpy1-no-polars/lib/python3.10/site-packages/gr_tdigest/__init__.py",
+    "gr_tdigest._gr_tdigest": "/tmp/tdigest-support-cells-7enz8wzu/py310-numpy1-no-polars/lib/python3.10/site-packages/gr_tdigest/_gr_tdigest.abi3.so"
+  },
+  "distribution": "gr-tdigest",
+  "version": "0.2.4"
+}

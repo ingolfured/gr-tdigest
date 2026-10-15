@@ -11,3 +11,13 @@ compat/package-ownership/recorded-52f6212/*.json linguist-generated=true
 compat/package-ownership/recorded-52f6212/temporary-project-name.patch linguist-generated=true whitespace=-blank-at-eol
 compat/package-ownership/recorded-52f6212/** linguist-generated=true
 compat/performance/interleaved/PROVENANCE.json linguist-generated=true
+compat/validation/runtime-3d0182a/** linguist-generated=true
+compat/accuracy/held-out-20261015/results/** linguist-generated=true
+compat/accuracy/held-out-20261015/smoke*/** linguist-generated=true
+compat/numerical-review/**/recorded/** linguist-generated=true
+compat/numerical-review/**/tested-source/** linguist-generated=true
+compat/numerical-review/**/dependency-provenance/** linguist-generated=true
+# Preserve exact historical runner bytes covered by the evidence manifest.
+compat/numerical-review/separated-modes/recorded/path-specific-runners/inspect_separated_modes.py whitespace=-blank-at-eol,-blank-at-eof
+compat/numerical-review/**/recorded/logs/*.log whitespace=-blank-at-eol,-blank-at-eof
+compat/validation/runtime-3d0182a/*.log whitespace=-blank-at-eol,-blank-at-eof

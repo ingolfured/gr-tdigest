@@ -1,0 +1,49 @@
+     Locking 1 package to latest compatible version
+      Adding tdigest_core v0.2.0 (/var/tmp/codex-tdigest-pr3-20261014/overnight/held-out-accuracy/smoke-20261015/upstream-core)
+   Compiling tdigest_core v0.2.0 (/var/tmp/codex-tdigest-pr3-20261014/overnight/held-out-accuracy/smoke-20261015/upstream-core)
+   Compiling gr-tdigest v0.2.4 (/var/tmp/codex-tdigest-pr3-20261014/overnight/held-out-accuracy/smoke-20261015/source)
+   Compiling held-out-accuracy v0.0.0 (/var/tmp/codex-tdigest-pr3-20261014/overnight/held-out-accuracy/smoke-20261015/harness)
+error[E0599]: no function or associated item named `from_bytes` found for struct `gr_tdigest::tdigest::TDigest<f32>` in the current scope
+   --> src/main.rs:154:51
+    |
+154 |                     let restored = TDigest::<$F>::from_bytes(&bytes).unwrap();
+    |                                                   ^^^^^^^^^^ function or associated item not found in `gr_tdigest::tdigest::TDigest<f32>`
+...
+230 | precision_suite!(run32, f32);
+    | ---------------------------- in this macro invocation
+    |
+note: if you're trying to build a new `gr_tdigest::tdigest::TDigest<f32>` consider using one of the following associated functions:
+      gr_tdigest::tdigest::TDigest::<F>::from_unsorted
+      gr_tdigest::tdigest::TDigest::<F>::from_weighted_unsorted
+      gr_tdigest::tdigest::TDigest::<F>::merge_digests
+      gr_tdigest::tdigest::TDigest::<F>::new
+      and 2 others
+   --> /var/tmp/codex-tdigest-pr3-20261014/overnight/held-out-accuracy/smoke-20261015/source/src/tdigest/tdigest.rs:451:5
+    |
+451 |       pub fn from_unsorted(values: &[F], max_size: usize) -> TdResult<TDigest<F>> {
+    |       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+...
+461 | /     pub fn from_weighted_unsorted(
+462 | |         values: &[F],
+463 | |         weights: &[f64],
+464 | |         max_size: usize,
+465 | |     ) -> TdResult<TDigest<F>> {
+    | |_____________________________^
+...
+579 |       pub fn merge_digests(digests: Vec<TDigest<F>>) -> TDigest<F> {
+    |       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+...
+765 | /     pub fn new(
+766 | |         centroids: Vec<Centroid<F>>,
+767 | |         sum: f64,
+768 | |         count: f64,
+...   |
+771 | |         max_size: usize,
+772 | |     ) -> Self {
+    | |_____________^
+    = note: the function or associated item was found for
+            - `gr_tdigest::tdigest::TDigest<f64>`
+    = note: this error originates in the macro `precision_suite` (in Nightly builds, run with -Z macro-backtrace for more info)
+
+For more information about this error, try `rustc --explain E0599`.
+error: could not compile `held-out-accuracy` (bin "held-out-accuracy") due to 1 previous error

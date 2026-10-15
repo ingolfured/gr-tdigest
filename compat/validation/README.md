@@ -1,3 +1,39 @@
+# Validation of original Rust and Python runtime delivery
+
+The library source at `360ad5b` passed the Linux canonical build/test/lint gates;
+`3d0182a5713be0d1835296a8c7a340c987243072` changes only the artifact gate's
+metadata formatting/order assertions and CHANGELOG. The canonical results are:
+314 Python/coherence + 91 untouched original Python cases,
+116 Rust tests and Java tests; three existing Rust tests remain ignored.
+
+The actual optimized cp310 ABI3 wheel passed seven clean environments, totaling
+1,902 test instances with no skips/xfails. Six cells cover CPython 3.10–3.12 ×
+NumPy 1/2 with optional Polars installed; one CPython 3.10/NumPy 1 cell has Polars
+genuinely absent. Every full cell runs 208 compatibility + 70 modern cases;
+the Polars-free cell runs 208 + 26. Repeated environment cases are not distinct
+test definitions. Versions and native/import hashes are retained per cell.
+
+A genuine normalized sdist was rebuilt with `--locked`, without modifying any
+extracted source file. Its distinct wheel passed its own 1,902-instance gate
+and contains byte-identical native code to the direct wheel.
+The direct wheel also passes the unchanged weighted-point and compressed-state
+audits. The canonical command logs, both artifact identities, matrices and
+source-file hashes are in [runtime-3d0182a](runtime-3d0182a/).
+
+See [canonical results](3d0182a-validation.json),
+[direct wheel provenance](3d0182a-provenance.json),
+[additional installed audit commands](3d0182a-modern-wheel-validation.json),
+[point audit](3d0182a-modern-weighted-point-audit.json) and
+[compressed audit](3d0182a-modern-compressed-state-audit.json).
+Original Rust crate/package/oracle evidence has its own
+[source-labelled record](../numerical-review/original-rust/README.md).
+
+These are Linux-native artifacts with explicitly staged/pinned dependency
+combinations. They do not prove unconstrained dependency resolution, manylinux,
+musllinux, macOS/Windows/ARM builds, Python 3.13+, or safe co-installation with a
+second distribution owning the same package paths. Historical reports below
+retain their original source and narrower support claims.
+
 # Validation of safe scaling and corrected packaging
 
 Clean source `52f6212008111b62fa07374278b850868b9ea77e` passed Linux `make build`,

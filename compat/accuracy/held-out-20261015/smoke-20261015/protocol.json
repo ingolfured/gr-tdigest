@@ -1,0 +1,51 @@
+{
+  "schema": 1,
+  "modern_commit": "52f6212008111b62fa07374278b850868b9ea77e",
+  "original_commit": "8d9cf1fe82c5c9254e5dc9593f01717e317f4333",
+  "study": "Fixed delta 300 accuracy; no matched-memory selection or speed claim",
+  "source_files_sha256": {
+    "run_held_out.py": "174a33c76994b200ee32d6a5a14847f55a339191d09352ad70ea4ed7ae80d0e3",
+    "held_out_accuracy.rs": "c6b995f38dea189708f5c2d7f35bec138de982e96557f1bc49ef7aa3e1fa450c",
+    "accuracy_reference.py": "f02ed61e06ad76c4ad8a262430c5c138ed0df3cf66d2bd197fa18cefbe6f5301",
+    "held_out_plan.py": "76733a7b48e1a16ef6120f23f8c7e8af4a15f537f907275b129c796d3a93a79d"
+  },
+  "training_seeds": [
+    1,
+    7,
+    42,
+    20261014,
+    104729
+  ],
+  "held_out_seeds": [
+    13,
+    97,
+    271828,
+    314159,
+    999983
+  ],
+  "distributions": [
+    "uniform",
+    "normal",
+    "exponential",
+    "lognormal",
+    "pareto",
+    "ties",
+    "spike_tail",
+    "separated_modes"
+  ],
+  "sizes": [
+    32,
+    1000,
+    100000
+  ],
+  "original_delta": 300,
+  "modern_delta": 300,
+  "scale": "K2Norm",
+  "singleton_policy": "Off",
+  "mean_precisions": [
+    "f64",
+    "f32"
+  ],
+  "reverse_shard_order_at_n": 100000,
+  "timed_operations": 0
+}

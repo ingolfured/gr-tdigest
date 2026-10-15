@@ -1,0 +1,6 @@
+     Locking 1 package to latest compatible version
+      Adding tdigest_core v0.2.0 (/var/tmp/codex-tdigest-pr3-20261014/overnight/held-out-accuracy/held-out-20261015/upstream-core)
+   Compiling tdigest_core v0.2.0 (/var/tmp/codex-tdigest-pr3-20261014/overnight/held-out-accuracy/held-out-20261015/upstream-core)
+   Compiling gr-tdigest v0.2.4 (/var/tmp/codex-tdigest-pr3-20261014/overnight/held-out-accuracy/held-out-20261015/source)
+   Compiling held-out-accuracy v0.0.0 (/var/tmp/codex-tdigest-pr3-20261014/overnight/held-out-accuracy/held-out-20261015/harness)
+    Finished `release` profile [optimized] target(s) in 3.63s

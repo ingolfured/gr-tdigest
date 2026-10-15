@@ -1,0 +1,378 @@
+[
+  {
+    "kind": "separated_modes",
+    "n": 1000,
+    "seed": 999983,
+    "precision": "f64",
+    "route": "direct",
+    "core": "original",
+    "input_fnv1a64": "edea3ad3bb2543a8",
+    "case_file": "0236-separated_modes-1000-f64-999983.jsonl.gz",
+    "p50": [
+      0.5,
+      0.5,
+      8.814346314338946,
+      9.982112706476084,
+      0.017000000000000015,
+      1.1677663921371373
+    ],
+    "worst_rank_query": [
+      0.516,
+      0.516,
+      9.951204988945689,
+      9.986584956457431,
+      0.03300000000000003,
+      0.03537996751174255
+    ],
+    "worst_value_query": [
+      0.482,
+      0.482,
+      -0.24815212714658624,
+      -9.969949004032792,
+      0.0010000000000000009,
+      9.721796876886206
+    ],
+    "worst_cdf_probe": null,
+    "state": {
+      "centroid_bytes": 12,
+      "centroids": 128,
+      "count": 1000,
+      "logical_retained_bytes": 1584,
+      "object_bytes": 48,
+      "vector_capacity_bytes": 1536
+    }
+  },
+  {
+    "kind": "separated_modes",
+    "n": 1000,
+    "seed": 999983,
+    "precision": "f64",
+    "route": "direct",
+    "core": "modern",
+    "input_fnv1a64": "edea3ad3bb2543a8",
+    "case_file": "0236-separated_modes-1000-f64-999983.jsonl.gz",
+    "p50": [
+      0.5,
+      0.5,
+      8.814346314338946,
+      9.982112706476084,
+      0.017000000000000015,
+      1.1677663921371373
+    ],
+    "worst_rank_query": [
+      0.516,
+      0.516,
+      9.95120498894569,
+      9.986584956457431,
+      0.03300000000000003,
+      0.03537996751174077
+    ],
+    "worst_value_query": [
+      0.482,
+      0.482,
+      -0.24815212714658585,
+      -9.969949004032792,
+      0.0010000000000000009,
+      9.721796876886206
+    ],
+    "worst_cdf_probe": [
+      9.97346979929067,
+      0.5163133520229706,
+      0.483,
+      0.03331335202297059
+    ],
+    "state": {
+      "centroid_bytes": 24,
+      "centroids": 128,
+      "count": 1000.0,
+      "logical_retained_bytes": 3176,
+      "object_bytes": 104,
+      "sum": 340.84055697382,
+      "vector_capacity_bytes": null,
+      "wire_bytes": 2248,
+      "wire_queries_bit_equal": true
+    }
+  },
+  {
+    "kind": "separated_modes",
+    "n": 1000,
+    "seed": 999983,
+    "precision": "f32",
+    "route": "direct",
+    "core": "original",
+    "input_fnv1a64": "0f38da0a5bf4c575",
+    "case_file": "0237-separated_modes-1000-f32-999983.jsonl.gz",
+    "p50": [
+      0.5,
+      0.5,
+      8.814347267150879,
+      9.982112407684326,
+      0.017000000000000015,
+      1.1677651405334473
+    ],
+    "worst_rank_query": [
+      0.516,
+      0.515999972820282,
+      9.951205253601074,
+      9.98658488340061,
+      0.032999972820282,
+      0.035379629799535905
+    ],
+    "worst_value_query": [
+      0.482,
+      0.4819999933242798,
+      -0.24815140664577484,
+      -9.969948790623903,
+      0.0010000066757201997,
+      9.721797383978128
+    ],
+    "worst_cdf_probe": null,
+    "state": {
+      "centroid_bytes": 8,
+      "centroids": 128,
+      "count": 1000,
+      "logical_retained_bytes": 1072,
+      "object_bytes": 48,
+      "vector_capacity_bytes": 1024
+    }
+  },
+  {
+    "kind": "separated_modes",
+    "n": 1000,
+    "seed": 999983,
+    "precision": "f32",
+    "route": "direct",
+    "core": "modern",
+    "input_fnv1a64": "0f38da0a5bf4c575",
+    "case_file": "0237-separated_modes-1000-f32-999983.jsonl.gz",
+    "p50": [
+      0.5,
+      0.5,
+      7.945057786029318,
+      9.982112407684326,
+      0.017000000000000015,
+      2.037054621655008
+    ],
+    "worst_rank_query": [
+      0.513,
+      0.5130000114440918,
+      9.910391132748728,
+      9.986365027035845,
+      0.030000011444091812,
+      0.07597389428711665
+    ],
+    "worst_value_query": [
+      0.482,
+      0.4819999933242798,
+      0.4144896866202301,
+      -9.969948790623903,
+      0.0010000066757201997,
+      10.384438477244133
+    ],
+    "worst_cdf_probe": [
+      9.973468780517578,
+      0.5134172486238457,
+      0.483,
+      0.03041724862384576
+    ],
+    "state": {
+      "centroid_bytes": 16,
+      "centroids": 128,
+      "count": 1000.0,
+      "logical_retained_bytes": 2144,
+      "object_bytes": 96,
+      "sum": 340.8405513763428,
+      "vector_capacity_bytes": null,
+      "wire_bytes": 1736,
+      "wire_queries_bit_equal": true
+    }
+  },
+  {
+    "kind": "separated_modes",
+    "n": 100000,
+    "seed": 999983,
+    "precision": "f64",
+    "route": "direct",
+    "core": "original",
+    "input_fnv1a64": "63f1cf343c6483fe",
+    "case_file": "0238-separated_modes-100000-f64-999983.jsonl.gz",
+    "p50": [
+      0.5,
+      0.5,
+      -0.5661056623436598,
+      9.970976482413283,
+      0.0010899999999999799,
+      10.537082144756942
+    ],
+    "worst_rank_query": [
+      0.456,
+      0.456,
+      -9.790929689447287,
+      -9.986287305587904,
+      0.042910000000000004,
+      0.1953576161406172
+    ],
+    "worst_value_query": [
+      0.499,
+      0.499,
+      -0.8819070257192291,
+      9.964716718349042,
+      8.999999999997899e-05,
+      10.846623744068271
+    ],
+    "worst_cdf_probe": null,
+    "state": {
+      "centroid_bytes": 12,
+      "centroids": 142,
+      "count": 100000,
+      "logical_retained_bytes": 1752,
+      "object_bytes": 48,
+      "vector_capacity_bytes": 1704
+    }
+  },
+  {
+    "kind": "separated_modes",
+    "n": 100000,
+    "seed": 999983,
+    "precision": "f64",
+    "route": "direct",
+    "core": "modern",
+    "input_fnv1a64": "63f1cf343c6483fe",
+    "case_file": "0238-separated_modes-100000-f64-999983.jsonl.gz",
+    "p50": [
+      0.5,
+      0.5,
+      -0.5661056623436691,
+      9.970976482413283,
+      0.0010899999999999799,
+      10.537082144756951
+    ],
+    "worst_rank_query": [
+      0.456,
+      0.456,
+      -9.790929689447298,
+      -9.986287305587904,
+      0.042910000000000004,
+      0.19535761614060654
+    ],
+    "worst_value_query": [
+      0.499,
+      0.499,
+      -0.8819070257192376,
+      9.964716718349042,
+      8.999999999997899e-05,
+      10.84662374406828
+    ],
+    "worst_cdf_probe": [
+      -9.974794947863154,
+      0.455049430967327,
+      0.49609,
+      0.041040569032673
+    ],
+    "state": {
+      "centroid_bytes": 24,
+      "centroids": 142,
+      "count": 100000.0,
+      "logical_retained_bytes": 3512,
+      "object_bytes": 104,
+      "sum": 2180.051621627887,
+      "vector_capacity_bytes": null,
+      "wire_bytes": 2486,
+      "wire_queries_bit_equal": true
+    }
+  },
+  {
+    "kind": "separated_modes",
+    "n": 100000,
+    "seed": 999983,
+    "precision": "f32",
+    "route": "direct",
+    "core": "original",
+    "input_fnv1a64": "b748db965b52966d",
+    "case_file": "0239-separated_modes-100000-f32-999983.jsonl.gz",
+    "p50": [
+      0.5,
+      0.5,
+      -0.5764588117599487,
+      9.97097635269165,
+      0.0010899999999999799,
+      10.5474351644516
+    ],
+    "worst_rank_query": [
+      0.455,
+      0.45500001311302185,
+      -9.967187881469727,
+      -9.986401036919318,
+      0.043719986886978146,
+      0.019213155449591568
+    ],
+    "worst_value_query": [
+      0.499,
+      0.49900001287460327,
+      -0.8934286236763,
+      9.96471680751182,
+      9.001287460325136e-05,
+      10.85814543118812
+    ],
+    "worst_cdf_probe": null,
+    "state": {
+      "centroid_bytes": 8,
+      "centroids": 142,
+      "count": 100000,
+      "logical_retained_bytes": 1184,
+      "object_bytes": 48,
+      "vector_capacity_bytes": 1136
+    }
+  },
+  {
+    "kind": "separated_modes",
+    "n": 100000,
+    "seed": 999983,
+    "precision": "f32",
+    "route": "direct",
+    "core": "modern",
+    "input_fnv1a64": "b748db965b52966d",
+    "case_file": "0239-separated_modes-100000-f32-999983.jsonl.gz",
+    "p50": [
+      0.5,
+      0.5,
+      0.7547161229247568,
+      9.97097635269165,
+      0.0010899999999999799,
+      9.216260229766894
+    ],
+    "worst_rank_query": [
+      0.552,
+      0.5519999861717224,
+      9.965085486774875,
+      9.987428461521858,
+      0.05295998617172243,
+      0.022342974746983657
+    ],
+    "worst_value_query": [
+      0.499,
+      0.49900001287460327,
+      0.23151416030882732,
+      9.96471680751182,
+      9.001287460325136e-05,
+      9.733202647202994
+    ],
+    "worst_cdf_probe": [
+      9.970972061157227,
+      0.5525535257868059,
+      0.49999,
+      0.052563525786805954
+    ],
+    "state": {
+      "centroid_bytes": 16,
+      "centroids": 149,
+      "count": 100000.0,
+      "logical_retained_bytes": 2480,
+      "object_bytes": 96,
+      "sum": 2180.0517559051514,
+      "vector_capacity_bytes": null,
+      "wire_bytes": 2009,
+      "wire_queries_bit_equal": true
+    }
+  }
+]
