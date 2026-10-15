@@ -61,7 +61,7 @@ native_hash = hashlib.sha256(paths['gr_tdigest._gr_tdigest'].read_bytes()).hexdi
 assert native_hash == expected['native_sha256'], native_hash
 dist = metadata.distribution(expected['distribution'])
 assert dist.version == expected['version'], dist.version
-assert dist.metadata['Requires-Python'] == '>=3.10,<3.13', dist.metadata['Requires-Python']
+assert sorted(part.strip() for part in dist.metadata['Requires-Python'].split(',')) == ['<3.13', '>=3.10'], dist.metadata['Requires-Python']
 versions = {name: metadata.version(name) for name in ('numpy', 'scipy', 'pytest', 'pip')}
 if expected['polars'] is None:
     assert importlib.util.find_spec('polars') is None
@@ -102,7 +102,10 @@ def inspect_wheel(wheel: Path) -> dict:
             bool(tags) and all(tag.startswith("cp310-abi3-") for tag in tags),
             f"expected a genuine cp310 ABI3 wheel, got {tags}",
         )
-        require(metadata["Requires-Python"] == ">=3.10,<3.13", "unexpected Python support metadata")
+        require(
+            sorted(part.strip() for part in metadata["Requires-Python"].split(",")) == ["<3.13", ">=3.10"],
+            "unexpected Python support metadata",
+        )
         require("polars" in metadata.get_all("Provides-Extra", []), "wheel omits the Polars extra")
         polars_requirements = [item for item in metadata.get_all("Requires-Dist", []) if item.startswith("polars")]
         require(
