@@ -1,3 +1,4 @@
+use numpy::PyArray1;
 use pyo3::exceptions::{PyTypeError, PyValueError};
 use pyo3::prelude::*;
 use pyo3::types::{PyAny, PyBytes, PyFloat, PyIterator, PyList, PyTuple, PyType};
@@ -133,9 +134,9 @@ fn output_for_values(py: Python<'_>, kind: ContainerKind, values: Vec<f64>) -> P
         ContainerKind::List => Ok(PyList::new(py, &values)?.into_any().unbind()),
         ContainerKind::Tuple => Ok(PyTuple::new(py, &values)?.into_any().unbind()),
         ContainerKind::Other => {
-            let np = py.import("numpy")?;
-            let out = np.call_method1("asarray", (values,))?;
-            Ok(out.unbind())
+            // Keep NumPy ownership (including resize support) while avoiding
+            // the intermediate Python list and per-element Python floats.
+            Ok(PyArray1::from_slice(py, &values).into_any().unbind())
         }
     }
 }
@@ -258,16 +259,16 @@ impl PyTDigest {
 
     #[getter]
     pub fn means(&self, py: Python<'_>) -> PyResult<PyObject> {
-        let np = py.import("numpy")?;
-        let arr = np.call_method1("asarray", (self.inner.centroid_means_f64(),))?;
-        Ok(arr.unbind())
+        Ok(PyArray1::from_slice(py, &self.inner.centroid_means_f64())
+            .into_any()
+            .unbind())
     }
 
     #[getter]
     pub fn weights(&self, py: Python<'_>) -> PyResult<PyObject> {
-        let np = py.import("numpy")?;
-        let arr = np.call_method1("asarray", (self.inner.centroid_weights_f64(),))?;
-        Ok(arr.unbind())
+        Ok(PyArray1::from_slice(py, &self.inner.centroid_weights_f64())
+            .into_any()
+            .unbind())
     }
 
     fn __len__(&self) -> usize {
