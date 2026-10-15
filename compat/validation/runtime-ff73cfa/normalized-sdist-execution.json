@@ -1,0 +1,353 @@
+{
+  "status": "PASS",
+  "source_commit": "ff73cfab31d6368d203c1a361b8efaaea29d735b",
+  "archive_sha256": "338edb677d4853d0f4c5201fe2eafef6ded1b3951a198cb4936f559bff0290f9",
+  "runner_sha256": "1486e136c7ec8270916c27f81f14e8106f38667a86786c85f5d300b951e42042",
+  "plan_sha256": "0be689b29307b904dae27e39fd41a1aca50c9e8519a6aa7c7b25e638598ed259",
+  "started_utc": "2026-10-15T00:48:06Z",
+  "source_before": {
+    "original_source_file_count": 413,
+    "all_original_files_unchanged": true,
+    "additional_files": []
+  },
+  "commands": [
+    {
+      "label": "maturin-version",
+      "command": [
+        "/var/tmp/codex-tdigest-pr3-20261014/work/gr-tdigest-f64-weights/.venv/bin/maturin",
+        "--version"
+      ],
+      "cwd": "/var/tmp/codex-tdigest-pr3-20261014/overnight/package-hygiene/normalized-sdist-ff73cfa",
+      "exit_code": 0,
+      "seconds": 0.002681596997717861,
+      "log": "/var/tmp/codex-tdigest-pr3-20261014/overnight/package-hygiene/normalized-sdist-ff73cfa/logs/maturin-version.log",
+      "log_sha256": "787cb487318bb4be21596ee0dc7ba11f4ba3255927452a9b84ea5fab640afadb"
+    },
+    {
+      "label": "rust-version",
+      "command": [
+        "rustc",
+        "-Vv"
+      ],
+      "cwd": "/var/tmp/codex-tdigest-pr3-20261014/overnight/package-hygiene/normalized-sdist-ff73cfa",
+      "exit_code": 0,
+      "seconds": 0.013726943001529435,
+      "log": "/var/tmp/codex-tdigest-pr3-20261014/overnight/package-hygiene/normalized-sdist-ff73cfa/logs/rust-version.log",
+      "log_sha256": "938db28b83089ab88301ca425f99fa1d8b61ee66e0371babe1db6373ae9810a3"
+    },
+    {
+      "label": "interpreter-version",
+      "command": [
+        "/home/ingo/.local/share/uv/python/cpython-3.10.19-linux-x86_64-gnu/bin/python3.10",
+        "-VV"
+      ],
+      "cwd": "/var/tmp/codex-tdigest-pr3-20261014/overnight/package-hygiene/normalized-sdist-ff73cfa",
+      "exit_code": 0,
+      "seconds": 0.0023751619992253836,
+      "log": "/var/tmp/codex-tdigest-pr3-20261014/overnight/package-hygiene/normalized-sdist-ff73cfa/logs/interpreter-version.log",
+      "log_sha256": "f3252d079713853a68825330dbbac628843abacbcc23b5481253fba87afde0aa"
+    },
+    {
+      "label": "normalized-sdist-build",
+      "command": [
+        "/var/tmp/codex-tdigest-pr3-20261014/work/gr-tdigest-f64-weights/.venv/bin/maturin",
+        "build",
+        "--release",
+        "--locked",
+        "-F",
+        "python",
+        "--compatibility",
+        "linux",
+        "--interpreter",
+        "/home/ingo/.local/share/uv/python/cpython-3.10.19-linux-x86_64-gnu/bin/python3.10",
+        "-o",
+        "/var/tmp/codex-tdigest-pr3-20261014/overnight/package-hygiene/normalized-sdist-ff73cfa/wheels"
+      ],
+      "cwd": "/var/tmp/codex-tdigest-pr3-20261014/overnight/package-hygiene/normalized-sdist-ff73cfa/extracted/gr_tdigest-0.2.4",
+      "exit_code": 0,
+      "seconds": 291.3319142179971,
+      "log": "/var/tmp/codex-tdigest-pr3-20261014/overnight/package-hygiene/normalized-sdist-ff73cfa/logs/normalized-sdist-build.log",
+      "log_sha256": "904ffb4aa25f49e7a4785cd7b6287700afde3c075fc68bb26489fe50bcabfccc"
+    },
+    {
+      "label": "rebuilt-wheel-seven-cells",
+      "command": [
+        "/home/ingo/.local/share/uv/python/cpython-3.12.12-linux-x86_64-gnu/bin/python3.12",
+        "/var/tmp/codex-tdigest-pr3-20261014/overnight/package-hygiene/normalized-sdist-ff73cfa/extracted/gr_tdigest-0.2.4/scripts/test_python_support.py",
+        "--wheel",
+        "/var/tmp/codex-tdigest-pr3-20261014/overnight/package-hygiene/normalized-sdist-ff73cfa/wheels/gr_tdigest-0.2.4-cp310-abi3-linux_x86_64.whl",
+        "--sdist",
+        "/var/tmp/codex-tdigest-pr3-20261014/overnight/runtime-support-ff73cfa/sdist/gr_tdigest-0.2.4.tar.gz",
+        "--output-dir",
+        "/var/tmp/codex-tdigest-pr3-20261014/overnight/package-hygiene/normalized-sdist-ff73cfa/support"
+      ],
+      "cwd": "/var/tmp/codex-tdigest-pr3-20261014/overnight/package-hygiene/normalized-sdist-ff73cfa",
+      "exit_code": 0,
+      "seconds": 46.757754607002425,
+      "log": "/var/tmp/codex-tdigest-pr3-20261014/overnight/package-hygiene/normalized-sdist-ff73cfa/logs/rebuilt-wheel-seven-cells.log",
+      "log_sha256": "588a039cbe26b8c4c992383d0f421e155711b0c32a19586a8c26bbd22949448f"
+    }
+  ],
+  "source_after_build": {
+    "original_source_file_count": 413,
+    "all_original_files_unchanged": true,
+    "additional_files": []
+  },
+  "rebuilt_wheel": "/var/tmp/codex-tdigest-pr3-20261014/overnight/package-hygiene/normalized-sdist-ff73cfa/wheels/gr_tdigest-0.2.4-cp310-abi3-linux_x86_64.whl",
+  "rebuilt_wheel_sha256": "80bf07801f9f50985bed621e8a61011254d87f2adc752ee1760d80b5d8df0953",
+  "artifact": {
+    "wheel": "/var/tmp/codex-tdigest-pr3-20261014/overnight/package-hygiene/normalized-sdist-ff73cfa/wheels/gr_tdigest-0.2.4-cp310-abi3-linux_x86_64.whl",
+    "wheel_sha256": "80bf07801f9f50985bed621e8a61011254d87f2adc752ee1760d80b5d8df0953",
+    "native_sha256": "0bae335c3943b6220727e0e50b659faa79c7df9f138fdfbe7644a42a01d1f2ac",
+    "distribution": "gr-tdigest",
+    "version": "0.2.4",
+    "requires_python": ">=3.10, <3.13",
+    "requires_dist": [
+      "numpy>=1.26.4,<3",
+      "polars==1.34.0 ; extra == 'polars'"
+    ],
+    "tags": [
+      "cp310-abi3-linux_x86_64"
+    ],
+    "sdist": "/var/tmp/codex-tdigest-pr3-20261014/overnight/runtime-support-ff73cfa/sdist/gr_tdigest-0.2.4.tar.gz",
+    "sdist_sha256": "338edb677d4853d0f4c5201fe2eafef6ded1b3951a198cb4936f559bff0290f9"
+  },
+  "matrix": [
+    {
+      "label": "py310-numpy1",
+      "python": "3.10",
+      "executable": "/tmp/tdigest-support-cells-7ym0w799/py310-numpy1/bin/python",
+      "numpy": "1.26.4",
+      "scipy": "1.15.3",
+      "polars": "1.34.0",
+      "pytest": "8.4.2",
+      "status": "PASS",
+      "installed": {
+        "python": "3.10.19 (main, Oct 14 2025, 21:25:25) [Clang 20.1.4 ]",
+        "executable": "/tmp/tdigest-support-cells-7ym0w799/py310-numpy1/bin/python",
+        "dependencies": {
+          "numpy": "1.26.4",
+          "scipy": "1.15.3",
+          "pytest": "8.4.2",
+          "pip": "23.0.1",
+          "polars": "1.34.0"
+        },
+        "native_sha256": "0bae335c3943b6220727e0e50b659faa79c7df9f138fdfbe7644a42a01d1f2ac",
+        "imports": {
+          "tdigest_rs": "/tmp/tdigest-support-cells-7ym0w799/py310-numpy1/lib/python3.10/site-packages/tdigest_rs/__init__.py",
+          "tdigest_rs.lib": "/tmp/tdigest-support-cells-7ym0w799/py310-numpy1/lib/python3.10/site-packages/tdigest_rs/lib.py",
+          "tdigest_rs.tdigest_rs": "/tmp/tdigest-support-cells-7ym0w799/py310-numpy1/lib/python3.10/site-packages/tdigest_rs/tdigest_rs.py",
+          "gr_tdigest": "/tmp/tdigest-support-cells-7ym0w799/py310-numpy1/lib/python3.10/site-packages/gr_tdigest/__init__.py",
+          "gr_tdigest._gr_tdigest": "/tmp/tdigest-support-cells-7ym0w799/py310-numpy1/lib/python3.10/site-packages/gr_tdigest/_gr_tdigest.abi3.so"
+        },
+        "distribution": "gr-tdigest",
+        "version": "0.2.4"
+      },
+      "compatibility_passed": 208,
+      "modern_passed": 90
+    },
+    {
+      "label": "py310-numpy2",
+      "python": "3.10",
+      "executable": "/tmp/tdigest-support-cells-7ym0w799/py310-numpy2/bin/python",
+      "numpy": "2.2.6",
+      "scipy": "1.15.3",
+      "polars": "1.34.0",
+      "pytest": "8.4.2",
+      "status": "PASS",
+      "installed": {
+        "python": "3.10.19 (main, Oct 14 2025, 21:25:25) [Clang 20.1.4 ]",
+        "executable": "/tmp/tdigest-support-cells-7ym0w799/py310-numpy2/bin/python",
+        "dependencies": {
+          "numpy": "2.2.6",
+          "scipy": "1.15.3",
+          "pytest": "8.4.2",
+          "pip": "23.0.1",
+          "polars": "1.34.0"
+        },
+        "native_sha256": "0bae335c3943b6220727e0e50b659faa79c7df9f138fdfbe7644a42a01d1f2ac",
+        "imports": {
+          "tdigest_rs": "/tmp/tdigest-support-cells-7ym0w799/py310-numpy2/lib/python3.10/site-packages/tdigest_rs/__init__.py",
+          "tdigest_rs.lib": "/tmp/tdigest-support-cells-7ym0w799/py310-numpy2/lib/python3.10/site-packages/tdigest_rs/lib.py",
+          "tdigest_rs.tdigest_rs": "/tmp/tdigest-support-cells-7ym0w799/py310-numpy2/lib/python3.10/site-packages/tdigest_rs/tdigest_rs.py",
+          "gr_tdigest": "/tmp/tdigest-support-cells-7ym0w799/py310-numpy2/lib/python3.10/site-packages/gr_tdigest/__init__.py",
+          "gr_tdigest._gr_tdigest": "/tmp/tdigest-support-cells-7ym0w799/py310-numpy2/lib/python3.10/site-packages/gr_tdigest/_gr_tdigest.abi3.so"
+        },
+        "distribution": "gr-tdigest",
+        "version": "0.2.4"
+      },
+      "compatibility_passed": 208,
+      "modern_passed": 90
+    },
+    {
+      "label": "py311-numpy1",
+      "python": "3.11",
+      "executable": "/tmp/tdigest-support-cells-7ym0w799/py311-numpy1/bin/python",
+      "numpy": "1.26.4",
+      "scipy": "1.17.1",
+      "polars": "1.34.0",
+      "pytest": "8.4.2",
+      "status": "PASS",
+      "installed": {
+        "python": "3.11.14 (main, Oct 14 2025, 21:26:53) [Clang 20.1.4 ]",
+        "executable": "/tmp/tdigest-support-cells-7ym0w799/py311-numpy1/bin/python",
+        "dependencies": {
+          "numpy": "1.26.4",
+          "scipy": "1.17.1",
+          "pytest": "8.4.2",
+          "pip": "24.0",
+          "polars": "1.34.0"
+        },
+        "native_sha256": "0bae335c3943b6220727e0e50b659faa79c7df9f138fdfbe7644a42a01d1f2ac",
+        "imports": {
+          "tdigest_rs": "/tmp/tdigest-support-cells-7ym0w799/py311-numpy1/lib/python3.11/site-packages/tdigest_rs/__init__.py",
+          "tdigest_rs.lib": "/tmp/tdigest-support-cells-7ym0w799/py311-numpy1/lib/python3.11/site-packages/tdigest_rs/lib.py",
+          "tdigest_rs.tdigest_rs": "/tmp/tdigest-support-cells-7ym0w799/py311-numpy1/lib/python3.11/site-packages/tdigest_rs/tdigest_rs.py",
+          "gr_tdigest": "/tmp/tdigest-support-cells-7ym0w799/py311-numpy1/lib/python3.11/site-packages/gr_tdigest/__init__.py",
+          "gr_tdigest._gr_tdigest": "/tmp/tdigest-support-cells-7ym0w799/py311-numpy1/lib/python3.11/site-packages/gr_tdigest/_gr_tdigest.abi3.so"
+        },
+        "distribution": "gr-tdigest",
+        "version": "0.2.4"
+      },
+      "compatibility_passed": 208,
+      "modern_passed": 90
+    },
+    {
+      "label": "py311-numpy2",
+      "python": "3.11",
+      "executable": "/tmp/tdigest-support-cells-7ym0w799/py311-numpy2/bin/python",
+      "numpy": "2.3.4",
+      "scipy": "1.17.1",
+      "polars": "1.34.0",
+      "pytest": "8.4.2",
+      "status": "PASS",
+      "installed": {
+        "python": "3.11.14 (main, Oct 14 2025, 21:26:53) [Clang 20.1.4 ]",
+        "executable": "/tmp/tdigest-support-cells-7ym0w799/py311-numpy2/bin/python",
+        "dependencies": {
+          "numpy": "2.3.4",
+          "scipy": "1.17.1",
+          "pytest": "8.4.2",
+          "pip": "24.0",
+          "polars": "1.34.0"
+        },
+        "native_sha256": "0bae335c3943b6220727e0e50b659faa79c7df9f138fdfbe7644a42a01d1f2ac",
+        "imports": {
+          "tdigest_rs": "/tmp/tdigest-support-cells-7ym0w799/py311-numpy2/lib/python3.11/site-packages/tdigest_rs/__init__.py",
+          "tdigest_rs.lib": "/tmp/tdigest-support-cells-7ym0w799/py311-numpy2/lib/python3.11/site-packages/tdigest_rs/lib.py",
+          "tdigest_rs.tdigest_rs": "/tmp/tdigest-support-cells-7ym0w799/py311-numpy2/lib/python3.11/site-packages/tdigest_rs/tdigest_rs.py",
+          "gr_tdigest": "/tmp/tdigest-support-cells-7ym0w799/py311-numpy2/lib/python3.11/site-packages/gr_tdigest/__init__.py",
+          "gr_tdigest._gr_tdigest": "/tmp/tdigest-support-cells-7ym0w799/py311-numpy2/lib/python3.11/site-packages/gr_tdigest/_gr_tdigest.abi3.so"
+        },
+        "distribution": "gr-tdigest",
+        "version": "0.2.4"
+      },
+      "compatibility_passed": 208,
+      "modern_passed": 90
+    },
+    {
+      "label": "py312-numpy1",
+      "python": "3.12",
+      "executable": "/tmp/tdigest-support-cells-7ym0w799/py312-numpy1/bin/python",
+      "numpy": "1.26.4",
+      "scipy": "1.17.1",
+      "polars": "1.34.0",
+      "pytest": "8.4.2",
+      "status": "PASS",
+      "installed": {
+        "python": "3.12.12 (main, Oct 14 2025, 21:25:31) [Clang 20.1.4 ]",
+        "executable": "/tmp/tdigest-support-cells-7ym0w799/py312-numpy1/bin/python",
+        "dependencies": {
+          "numpy": "1.26.4",
+          "scipy": "1.17.1",
+          "pytest": "8.4.2",
+          "pip": "25.0.1",
+          "polars": "1.34.0"
+        },
+        "native_sha256": "0bae335c3943b6220727e0e50b659faa79c7df9f138fdfbe7644a42a01d1f2ac",
+        "imports": {
+          "tdigest_rs": "/tmp/tdigest-support-cells-7ym0w799/py312-numpy1/lib/python3.12/site-packages/tdigest_rs/__init__.py",
+          "tdigest_rs.lib": "/tmp/tdigest-support-cells-7ym0w799/py312-numpy1/lib/python3.12/site-packages/tdigest_rs/lib.py",
+          "tdigest_rs.tdigest_rs": "/tmp/tdigest-support-cells-7ym0w799/py312-numpy1/lib/python3.12/site-packages/tdigest_rs/tdigest_rs.py",
+          "gr_tdigest": "/tmp/tdigest-support-cells-7ym0w799/py312-numpy1/lib/python3.12/site-packages/gr_tdigest/__init__.py",
+          "gr_tdigest._gr_tdigest": "/tmp/tdigest-support-cells-7ym0w799/py312-numpy1/lib/python3.12/site-packages/gr_tdigest/_gr_tdigest.abi3.so"
+        },
+        "distribution": "gr-tdigest",
+        "version": "0.2.4"
+      },
+      "compatibility_passed": 208,
+      "modern_passed": 90
+    },
+    {
+      "label": "py312-numpy2",
+      "python": "3.12",
+      "executable": "/tmp/tdigest-support-cells-7ym0w799/py312-numpy2/bin/python",
+      "numpy": "2.3.4",
+      "scipy": "1.17.1",
+      "polars": "1.34.0",
+      "pytest": "8.4.2",
+      "status": "PASS",
+      "installed": {
+        "python": "3.12.12 (main, Oct 14 2025, 21:25:31) [Clang 20.1.4 ]",
+        "executable": "/tmp/tdigest-support-cells-7ym0w799/py312-numpy2/bin/python",
+        "dependencies": {
+          "numpy": "2.3.4",
+          "scipy": "1.17.1",
+          "pytest": "8.4.2",
+          "pip": "25.0.1",
+          "polars": "1.34.0"
+        },
+        "native_sha256": "0bae335c3943b6220727e0e50b659faa79c7df9f138fdfbe7644a42a01d1f2ac",
+        "imports": {
+          "tdigest_rs": "/tmp/tdigest-support-cells-7ym0w799/py312-numpy2/lib/python3.12/site-packages/tdigest_rs/__init__.py",
+          "tdigest_rs.lib": "/tmp/tdigest-support-cells-7ym0w799/py312-numpy2/lib/python3.12/site-packages/tdigest_rs/lib.py",
+          "tdigest_rs.tdigest_rs": "/tmp/tdigest-support-cells-7ym0w799/py312-numpy2/lib/python3.12/site-packages/tdigest_rs/tdigest_rs.py",
+          "gr_tdigest": "/tmp/tdigest-support-cells-7ym0w799/py312-numpy2/lib/python3.12/site-packages/gr_tdigest/__init__.py",
+          "gr_tdigest._gr_tdigest": "/tmp/tdigest-support-cells-7ym0w799/py312-numpy2/lib/python3.12/site-packages/gr_tdigest/_gr_tdigest.abi3.so"
+        },
+        "distribution": "gr-tdigest",
+        "version": "0.2.4"
+      },
+      "compatibility_passed": 208,
+      "modern_passed": 90
+    },
+    {
+      "label": "py310-numpy1-no-polars",
+      "python": "3.10",
+      "executable": "/tmp/tdigest-support-cells-7ym0w799/py310-numpy1-no-polars/bin/python",
+      "numpy": "1.26.4",
+      "scipy": "1.15.3",
+      "polars": null,
+      "pytest": "8.4.2",
+      "status": "PASS",
+      "installed": {
+        "python": "3.10.19 (main, Oct 14 2025, 21:25:25) [Clang 20.1.4 ]",
+        "executable": "/tmp/tdigest-support-cells-7ym0w799/py310-numpy1-no-polars/bin/python",
+        "dependencies": {
+          "numpy": "1.26.4",
+          "scipy": "1.15.3",
+          "pytest": "8.4.2",
+          "pip": "23.0.1"
+        },
+        "native_sha256": "0bae335c3943b6220727e0e50b659faa79c7df9f138fdfbe7644a42a01d1f2ac",
+        "imports": {
+          "tdigest_rs": "/tmp/tdigest-support-cells-7ym0w799/py310-numpy1-no-polars/lib/python3.10/site-packages/tdigest_rs/__init__.py",
+          "tdigest_rs.lib": "/tmp/tdigest-support-cells-7ym0w799/py310-numpy1-no-polars/lib/python3.10/site-packages/tdigest_rs/lib.py",
+          "tdigest_rs.tdigest_rs": "/tmp/tdigest-support-cells-7ym0w799/py310-numpy1-no-polars/lib/python3.10/site-packages/tdigest_rs/tdigest_rs.py",
+          "gr_tdigest": "/tmp/tdigest-support-cells-7ym0w799/py310-numpy1-no-polars/lib/python3.10/site-packages/gr_tdigest/__init__.py",
+          "gr_tdigest._gr_tdigest": "/tmp/tdigest-support-cells-7ym0w799/py310-numpy1-no-polars/lib/python3.10/site-packages/gr_tdigest/_gr_tdigest.abi3.so"
+        },
+        "distribution": "gr-tdigest",
+        "version": "0.2.4"
+      },
+      "compatibility_passed": 208,
+      "modern_python_passed": 26
+    }
+  ],
+  "source_after_tests": {
+    "original_source_file_count": 413,
+    "all_original_files_unchanged": true,
+    "additional_files": []
+  },
+  "completed_utc": "2026-10-15T00:53:44Z"
+}

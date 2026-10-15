@@ -1,0 +1,82 @@
+{
+  "source_commit": "ff73cfab31d6368d203c1a361b8efaaea29d735b",
+  "phases": {
+    "sync": {
+      "source_commit": "ff73cfab31d6368d203c1a361b8efaaea29d735b",
+      "phase": "sync",
+      "command": [
+        "uv",
+        "sync",
+        "--locked",
+        "--python",
+        "3.12",
+        "--all-groups",
+        "--project",
+        "bindings/python"
+      ],
+      "exit_code": 0,
+      "elapsed_seconds": 0.015952587127685547,
+      "completed_utc": "2026-10-15T00:27:24Z"
+    },
+    "build": {
+      "source_commit": "ff73cfab31d6368d203c1a361b8efaaea29d735b",
+      "phase": "build",
+      "command": [
+        "make",
+        "build"
+      ],
+      "exit_code": 0,
+      "elapsed_seconds": 14.688889741897583,
+      "completed_utc": "2026-10-15T00:27:38Z"
+    },
+    "test": {
+      "source_commit": "ff73cfab31d6368d203c1a361b8efaaea29d735b",
+      "phase": "test",
+      "command": [
+        "make",
+        "test"
+      ],
+      "exit_code": 0,
+      "elapsed_seconds": 42.63094687461853,
+      "completed_utc": "2026-10-15T00:28:21Z"
+    },
+    "lint": {
+      "source_commit": "ff73cfab31d6368d203c1a361b8efaaea29d735b",
+      "phase": "lint",
+      "command": [
+        "make",
+        "lint"
+      ],
+      "exit_code": 0,
+      "elapsed_seconds": 2.390871286392212,
+      "completed_utc": "2026-10-15T00:28:23Z"
+    },
+    "support": {
+      "source_commit": "ff73cfab31d6368d203c1a361b8efaaea29d735b",
+      "phase": "support",
+      "command": [
+        "uv",
+        "run",
+        "--project",
+        "bindings/python",
+        "--no-sync",
+        "python",
+        "scripts/test_python_support.py",
+        "--output-dir",
+        "/var/tmp/codex-tdigest-pr3-20261014/overnight/runtime-support-ff73cfa"
+      ],
+      "exit_code": 0,
+      "elapsed_seconds": 370.95389771461487,
+      "completed_utc": "2026-10-15T00:34:34Z"
+    }
+  },
+  "counts": {
+    "python_and_coherence": 334,
+    "untouched_upstream": 91,
+    "rust_passed": 121,
+    "rust_preexisting_ignored": 3,
+    "direct_wheel_case_instances": 2022,
+    "normalized_sdist_wheel_case_instances": 2022
+  },
+  "scope": "WSL Linux x86_64, seven pinned runtime combinations per artifact; no skips/xfails in installed gates. Original calculations unchanged. Not an unconstrained resolver, platform or manylinux proof."
+}

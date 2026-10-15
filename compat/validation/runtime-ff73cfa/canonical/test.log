@@ -1,0 +1,157 @@
+   Compiling gr-tdigest v0.2.4 (/var/tmp/codex-tdigest-pr3-20261014/work/gr-tdigest-f64-weights)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 12.95s
+     Running unittests src/lib.rs (target/debug/deps/gr_tdigest-e1f9d05e749c72c6)
+
+running 63 tests
+ii..............................................i..............
+test result: ok. 60 passed; 0 failed; 3 ignored; 0 measured; 0 filtered out; finished in 1.04s
+
+     Running unittests src/bin/tdigest_cli.rs (target/debug/deps/tdigest-0dc65897fef79059)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests/api_capability_parity.rs (target/debug/deps/api_capability_parity-b5b93272d472cb36)
+
+running 5 tests
+.....
+test result: ok. 5 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.13s
+
+     Running tests/cli_capabilities.rs (target/debug/deps/cli_capabilities-a0fa3db2fbf0f542)
+
+running 5 tests
+.....
+test result: ok. 5 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.01s
+
+     Running tests/cluster_mean_bounds.rs (target/debug/deps/cluster_mean_bounds-902a62ccbfb25a30)
+
+running 1 test
+.
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests/f32_weight_mass.rs (target/debug/deps/f32_weight_mass-1f819e5231a936a5)
+
+running 13 tests
+.............
+test result: ok. 13 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.01s
+
+     Running tests/k2norm_domain.rs (target/debug/deps/k2norm_domain-132490ba7ffdca83)
+
+running 4 tests
+....
+test result: ok. 4 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests/original_rust_numerics.rs (target/debug/deps/original_rust_numerics-a45be3319846f83d)
+
+running 2 tests
+..
+test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests/single_cluster_mean_regressions.rs (target/debug/deps/single_cluster_mean_regressions-7bcf684d4a88078d)
+
+running 2 tests
+..
+test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests/subnormal_query_regressions.rs (target/debug/deps/subnormal_query_regressions-164b3b6671eb700e)
+
+running 10 tests
+..........
+test result: ok. 10 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests/transactional_weight_scaling.rs (target/debug/deps/transactional_weight_scaling-dcd20bca88439dc4)
+
+running 3 tests
+...
+test result: ok. 3 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests/weighted_edge_regressions.rs (target/debug/deps/weighted_edge_regressions-9290bd9eb6e4aa00)
+
+running 7 tests
+.......
+test result: ok. 7 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests/wire_state_regressions.rs (target/debug/deps/wire_state_regressions-9b71d8a492fd0ec1)
+
+running 6 tests
+......
+test result: ok. 6 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+   Doc-tests gr_tdigest
+
+running 1 test
+.
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 9.13s
+
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.06s
+     Running unittests lib.rs (target/debug/deps/tdigest_core-bdb2dbd99f6f5b2d)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests/public_api.rs (target/debug/deps/public_api-39fb731cfa638099)
+
+running 2 tests
+..
+test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+   Doc-tests tdigest_core
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+openjdk version "21.0.12.1" 2026-08-18 LTS
+OpenJDK Runtime Environment Temurin-21.0.12.1+1 (build 21.0.12.1+1-LTS)
+OpenJDK 64-Bit Server VM Temurin-21.0.12.1+1 (build 21.0.12.1+1-LTS, mixed mode, sharing)
+To honour the JVM settings for this build a single-use Daemon process will be forked. For more on this, please refer to https://docs.gradle.org/9.1.0/userguide/gradle_daemon.html#sec:disabling_the_daemon in the Gradle documentation.
+Daemon will be stopped at the end of the build 
+> Task :compileJava UP-TO-DATE
+
+> Task :cargoBuild
+    Finished `release` profile [optimized] target(s) in 0.11s
+
+> Task :copyNative
+Packaged native -> /var/tmp/codex-tdigest-pr3-20261014/work/gr-tdigest-f64-weights/bindings/java/build/generated-resources/META-INF/native/linux-x86_64/libgr_tdigest.so
+
+> Task :processResources UP-TO-DATE
+> Task :classes UP-TO-DATE
+> Task :compileTestJava
+> Task :processTestResources NO-SOURCE
+> Task :testClasses
+> Task :test
+
+BUILD SUCCESSFUL in 5s
+6 actionable tasks: 4 executed, 2 up-to-date
+Consider enabling configuration cache to speed up this build: https://docs.gradle.org/9.1.0/userguide/configuration_cache_enabling.html
+
+[1m==> Build: Python extension (maturin develop, dev)[0m
+🍹 Building a mixed python/rust project
+🔗 Found pyo3 bindings with abi3 support
+🐍 Not using a specific python interpreter
+📡 Using build options bindings from pyproject.toml
+Using Python 3.12.12 environment at: /var/tmp/codex-tdigest-pr3-20261014/work/gr-tdigest-f64-weights/.venv
+Audited 2 packages in 0.97ms
+   Compiling gr-tdigest v0.2.4 (/var/tmp/codex-tdigest-pr3-20261014/work/gr-tdigest-f64-weights)
+    Finished `dev` profile [unoptimized + debuginfo] target(s) in 1.23s
+📦 Built wheel for abi3 Python ≥ 3.10 to /tmp/.tmpHezSqI/gr_tdigest-0.2.4-cp310-abi3-linux_x86_64.whl
+✏️ Setting installed package as editable
+🛠 Installed gr-tdigest-0.2.4
+........................................................................ [ 21%]
+........................................................................ [ 43%]
+........................................................................ [ 64%]
+........................................................................ [ 86%]
+..............................................                           [100%]
+=============================== warnings summary ===============================
+tests/test_published_pickle_migration.py: 16 warnings
+  /var/tmp/codex-tdigest-pr3-20261014/work/gr-tdigest-f64-weights/bindings/python/tests/test_published_pickle_migration.py:25: DeprecationWarning: numpy.core.numeric is deprecated and has been renamed to numpy._core.numeric. The numpy._core namespace contains private NumPy internals and its use is discouraged, as NumPy internals can change without warning in any release. In practice, most real-world usage of numpy.core is to access functionality in the public NumPy API. If that is the case, use the public NumPy API. If not, you are using NumPy internals. If you would still like to access an internal attribute, use numpy._core.numeric._frombuffer.
+    digest = pickle.loads(payload)
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+Original numerical source and Python wrapper checksums match.
+........................................................................ [ 79%]
+...................                                                      [100%]
+91 passed in 1.31s
+✅ all unit tests passed

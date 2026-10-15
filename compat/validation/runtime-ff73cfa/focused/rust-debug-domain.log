@@ -1,0 +1,12 @@
+   Compiling gr-tdigest v0.2.4 (/var/tmp/codex-tdigest-pr3-20261014/work/gr-tdigest-f64-weights)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 3.16s
+     Running tests/k2norm_domain.rs (target/debug/deps/k2norm_domain-132490ba7ffdca83)
+
+running 4 tests
+test tiny_positive_delta_keeps_its_existing_aggressive_compression ... ok
+test max_size_k2norm_retains_tiny_interiors_and_keeps_normal_caps ... ok
+test f32_large_delta_preserves_piles_across_mutations ... ok
+test f64_large_delta_preserves_piles_across_mutations ... ok
+
+test result: ok. 4 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+

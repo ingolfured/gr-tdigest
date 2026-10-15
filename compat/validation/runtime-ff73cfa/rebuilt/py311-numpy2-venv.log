@@ -1,0 +1,3 @@
+Using CPython 3.11.14
+Creating virtual environment at: py311-numpy2
+Activate with: source py311-numpy2/bin/activate

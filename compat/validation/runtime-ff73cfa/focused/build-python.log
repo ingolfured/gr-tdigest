@@ -1,0 +1,13 @@
+
+[1m==> Build: Python extension (maturin develop, dev)[0m
+🍹 Building a mixed python/rust project
+🔗 Found pyo3 bindings with abi3 support
+🐍 Not using a specific python interpreter
+📡 Using build options bindings from pyproject.toml
+Using Python 3.12.12 environment at: /var/tmp/codex-tdigest-pr3-20261014/work/gr-tdigest-f64-weights/.venv
+Audited 2 packages in 0.95ms
+   Compiling gr-tdigest v0.2.4 (/var/tmp/codex-tdigest-pr3-20261014/work/gr-tdigest-f64-weights)
+    Finished `dev` profile [unoptimized + debuginfo] target(s) in 1.44s
+📦 Built wheel for abi3 Python ≥ 3.10 to /tmp/.tmpclHWkj/gr_tdigest-0.2.4-cp310-abi3-linux_x86_64.whl
+✏️ Setting installed package as editable
+🛠 Installed gr-tdigest-0.2.4

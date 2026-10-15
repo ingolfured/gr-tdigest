@@ -21,3 +21,6 @@ compat/numerical-review/**/dependency-provenance/** linguist-generated=true
 compat/numerical-review/separated-modes/recorded/path-specific-runners/inspect_separated_modes.py whitespace=-blank-at-eol,-blank-at-eof
 compat/numerical-review/**/recorded/logs/*.log whitespace=-blank-at-eol,-blank-at-eof
 compat/validation/runtime-3d0182a/*.log whitespace=-blank-at-eol,-blank-at-eof
+compat/validation/runtime-ff73cfa/** linguist-generated=true
+compat/validation/runtime-ff73cfa/**/*.log whitespace=-blank-at-eof,-blank-at-eol,-space-before-tab
+compat/validation/runtime-ff73cfa/focused/negative-control.xml whitespace=-blank-at-eol

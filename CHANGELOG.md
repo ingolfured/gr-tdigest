@@ -5,6 +5,7 @@ All notable changes to this project are documented in this file.
 ## [Unreleased]
 
 ### Fixed
+- Record the K2Norm negative controls, full corrected-source Linux validation, and seven-runtime direct/source-rebuilt wheel gates, with exact artifact identities and bounded claims.
 - Preserve normalized centroids when a high delta makes the K2Norm normalizer nonpositive, preventing exact piles from collapsing into one mixed centroid; retain ordinary positive-domain and tiny-delta behavior, with Rust/Python/Polars mutation and computed-domain boundary regressions. The same-wheel runtime matrix includes all 20 new modern cases (90 per full cell; Polars-free coverage remains 26).
 - Record the original Rust committed-lock oracle, restored public crate/consumer checks, seven-environment direct and source-rebuilt wheel validation, and the held-out accuracy/storage findings; keep separated-mode approximation limits and deployment caveats explicit in the three-PR review guide.
 - Compare the two Python support constraints independent of metadata whitespace/order in the installed-wheel gate, while still rejecting changed or missing bounds; preserve the first real-artifact gate failure as evidence.

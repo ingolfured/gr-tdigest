@@ -100,6 +100,17 @@ its answers; smaller storage alone does not justify changing them.
 
 ## Evidence on the corrected source
 
+The latest K2Norm correction at `ff73cfa` passes the full Linux build, test and
+lint gates: **334 Python/coherence + 91 untouched upstream cases**, **121 Rust
+tests**, and Java; three pre-existing Rust tests remain ignored. The direct
+optimized wheel and a distinct wheel rebuilt from its unmodified normalized
+source archive each pass **2,022 test instances** across seven runtime cells,
+with no skips/xfails. Each full cell runs 208 compatibility + 90 modern cases;
+the Polars-free cell runs 208 + 26. The direct wheel also passes both numerical
+invariant audits below. These are repeated environment cases, not 2,022 distinct
+test definitions. [Exact logs and identities](validation/README.md) connect each
+claim to its source and artifact. Earlier delivery evidence follows separately.
+
 The unchanged library code passed Linux `make build`, `make test` and `make lint`
 at `360ad5b`; `3d0182a` only corrects metadata spacing/order assertions in the
 new artifact gate. The canonical suite passed: **314
@@ -207,10 +218,11 @@ The 20 new Python/Polars regressions fail in 14 expected cases against the
 preserved wheel, with six passing controls, then all pass on the corrected
 candidate. Four focused Rust integration tests and one private compressor test
 pass in both debug and release. The installed-wheel matrix now includes those
-20 cases (90 modern cases per full cell; 26 in the Polars-free cell). Full-project
-and installed release-wheel validation of this numerical correction remain a
-separate gate; the completed `3d0182a` results above retain their original source
-and counts. No new performance or broad accuracy result is claimed for this fix.
+20 cases (90 modern cases per full cell; 26 in the Polars-free cell). Full-project,
+direct installed-wheel and unmodified source-rebuilt-wheel gates now pass at
+`ff73cfa`, as recorded above. Historical `3d0182a` results retain their original
+source and counts. No new performance or broad accuracy result is claimed for
+this fix.
 
 ## What still prevents an upstream release
 

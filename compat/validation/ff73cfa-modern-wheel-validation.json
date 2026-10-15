@@ -1,0 +1,156 @@
+{
+  "status": "PASS",
+  "source_commit": "ff73cfab31d6368d203c1a361b8efaaea29d735b",
+  "plan": {
+    "source_commit": "ff73cfab31d6368d203c1a361b8efaaea29d735b",
+    "source_dir": "/var/tmp/codex-tdigest-pr3-20261014/work/gr-tdigest-f64-weights",
+    "artifact_dir": "/var/tmp/codex-tdigest-pr3-20261014/overnight/release-wheel-ff73cfa",
+    "output": "/var/tmp/codex-tdigest-pr3-20261014/overnight/release-wheel-ff73cfa/numerical-audits-only",
+    "audits": {
+      "weighted": "compat/weighted-point-audit/audit_weighted_points.py",
+      "compressed": "compat/compressed-state-audit/audit_compressed_invariants.py"
+    },
+    "api_test_cases_run": 0,
+    "note": "Create a fresh installed wheel environment; no build and no pytest. Existing seven runtime cells already cover their API cases."
+  },
+  "api_test_cases_run": 0,
+  "api_case_coverage": "No repeated API tests; the seven-cell installed support matrix supplies that coverage separately.",
+  "provenance_file_sha256": "4fb73e95ac66d65542ed9c7766133839b825d7edf8a676480855898eec665bd0",
+  "wheel_sha256": "c9930f0b46f401e44c86d1485882389d6d5e6ff8e4bcd3e0c081b34094c88637",
+  "native_sha256": "0bae335c3943b6220727e0e50b659faa79c7df9f138fdfbe7644a42a01d1f2ac",
+  "audit_source_sha256": {
+    "compat/weighted-point-audit/audit_weighted_points.py": "285b034fa19dbfb7752bc27cd23dc80ed4c51c510f30f7c68ad731783c2fc51d",
+    "compat/compressed-state-audit/audit_compressed_invariants.py": "4d32e83fc011ca04baba0dc2291669c8a656b63d7d9b9406381c66e3f63c30fe"
+  },
+  "test_source_sha256": {},
+  "driver_sha256": "5326f36c4393f4e9b127e760acfb687050cc776e33a9ffbc543c1b36843bb362",
+  "commands": [
+    {
+      "label": "venv",
+      "command": [
+        "uv",
+        "venv",
+        "--python",
+        "/var/tmp/codex-tdigest-pr3-20261014/work/gr-tdigest-f64-weights/.venv/bin/python",
+        "/var/tmp/codex-tdigest-pr3-20261014/overnight/release-wheel-ff73cfa/numerical-audits-only/venv"
+      ],
+      "cwd": "/var/tmp/codex-tdigest-pr3-20261014/overnight/release-wheel-ff73cfa/numerical-audits-only/checks",
+      "exit_code": 0,
+      "seconds": 0.01589471199986292,
+      "log_sha256": "e3b3e6df7a6cbe23c283558bd8fbff535f980f0755a5e0984e7867e0ecbc4d37"
+    },
+    {
+      "label": "install",
+      "command": [
+        "uv",
+        "pip",
+        "install",
+        "--offline",
+        "--only-binary",
+        ":all:",
+        "--python",
+        "/var/tmp/codex-tdigest-pr3-20261014/overnight/release-wheel-ff73cfa/numerical-audits-only/venv/bin/python",
+        "/var/tmp/codex-tdigest-pr3-20261014/overnight/release-wheel-ff73cfa/gr_tdigest-0.2.4-cp310-abi3-linux_x86_64.whl",
+        "numpy==2.3.4"
+      ],
+      "cwd": "/var/tmp/codex-tdigest-pr3-20261014/overnight/release-wheel-ff73cfa/numerical-audits-only/checks",
+      "exit_code": 0,
+      "seconds": 0.11453043300207355,
+      "log_sha256": "0298564542789a5b83e51cdb4e7ed950dbdab8a7d59269471a2bd3640bce4d6d"
+    },
+    {
+      "label": "installed-imports",
+      "command": [
+        "/var/tmp/codex-tdigest-pr3-20261014/overnight/release-wheel-ff73cfa/numerical-audits-only/venv/bin/python",
+        "-I",
+        "-c",
+        "import hashlib,json,pathlib,sys\nimport gr_tdigest,gr_tdigest._gr_tdigest as native,numpy\nroot=pathlib.Path(sys.prefix).resolve()\npaths={\"package\":pathlib.Path(gr_tdigest.__file__).resolve(),\"native\":pathlib.Path(native.__file__).resolve(),\"numpy\":pathlib.Path(numpy.__file__).resolve()}\nassert all(p.is_relative_to(root) for p in paths.values()),paths\nexpected=json.loads(sys.argv[1])\nassert hashlib.sha256(paths[\"native\"].read_bytes()).hexdigest()==expected[\"native_sha256\"]\nassert hashlib.sha256(paths[\"package\"].read_bytes()).hexdigest()==expected[\"wrapper_sha256\"]\nassert numpy.__version__==\"2.3.4\"\nprint(json.dumps({\"python\":sys.version,\"prefix\":str(root),\"paths\":{k:str(v) for k,v in paths.items()},\"native_sha256\":expected[\"native_sha256\"],\"wrapper_sha256\":expected[\"wrapper_sha256\"],\"numpy\":numpy.__version__}))\n",
+        "{\"native_sha256\": \"0bae335c3943b6220727e0e50b659faa79c7df9f138fdfbe7644a42a01d1f2ac\", \"wrapper_sha256\": \"e6bfb726395c5c41858524d57fe914ba3c06764470154720393344bb484fc8c7\"}"
+      ],
+      "cwd": "/var/tmp/codex-tdigest-pr3-20261014/overnight/release-wheel-ff73cfa/numerical-audits-only/checks",
+      "exit_code": 0,
+      "seconds": 0.2185677380002744,
+      "log_sha256": "e471546c2b5ea0627b42d4e443dce89654dd233f36ac5be5eca2affd6b90c76a"
+    },
+    {
+      "label": "weighted-point",
+      "command": [
+        "/var/tmp/codex-tdigest-pr3-20261014/overnight/release-wheel-ff73cfa/numerical-audits-only/venv/bin/python",
+        "-I",
+        "/var/tmp/codex-tdigest-pr3-20261014/overnight/release-wheel-ff73cfa/numerical-audits-only/checks/audit_weighted_points.py",
+        "--source-dir",
+        "/var/tmp/codex-tdigest-pr3-20261014/work/gr-tdigest-f64-weights",
+        "--output",
+        "/var/tmp/codex-tdigest-pr3-20261014/overnight/release-wheel-ff73cfa/modern-weighted-point-audit.json"
+      ],
+      "cwd": "/var/tmp/codex-tdigest-pr3-20261014/overnight/release-wheel-ff73cfa/numerical-audits-only/checks",
+      "exit_code": 0,
+      "seconds": 0.3737235350017727,
+      "log_sha256": "18ff98878e5343be51c6f7d2ac6dfd8c29413ca1405d136d0d59ec7e655052c1"
+    },
+    {
+      "label": "compressed-state",
+      "command": [
+        "/var/tmp/codex-tdigest-pr3-20261014/overnight/release-wheel-ff73cfa/numerical-audits-only/venv/bin/python",
+        "-I",
+        "/var/tmp/codex-tdigest-pr3-20261014/overnight/release-wheel-ff73cfa/numerical-audits-only/checks/audit_compressed_invariants.py",
+        "--source-dir",
+        "/var/tmp/codex-tdigest-pr3-20261014/work/gr-tdigest-f64-weights",
+        "--source-ref",
+        "ff73cfab31d6368d203c1a361b8efaaea29d735b",
+        "--output",
+        "/var/tmp/codex-tdigest-pr3-20261014/overnight/release-wheel-ff73cfa/modern-compressed-state-audit.json"
+      ],
+      "cwd": "/var/tmp/codex-tdigest-pr3-20261014/overnight/release-wheel-ff73cfa/numerical-audits-only/checks",
+      "exit_code": 0,
+      "seconds": 0.617673160002596,
+      "log_sha256": "83ed8f94e0622982bb3d7684db1d282e57aa8b8782b0295a63f23b55a5b76e65"
+    },
+    {
+      "label": "installed-imports-after",
+      "command": [
+        "/var/tmp/codex-tdigest-pr3-20261014/overnight/release-wheel-ff73cfa/numerical-audits-only/venv/bin/python",
+        "-I",
+        "-c",
+        "import hashlib,json,pathlib,sys\nimport gr_tdigest,gr_tdigest._gr_tdigest as native,numpy\nroot=pathlib.Path(sys.prefix).resolve()\npaths={\"package\":pathlib.Path(gr_tdigest.__file__).resolve(),\"native\":pathlib.Path(native.__file__).resolve(),\"numpy\":pathlib.Path(numpy.__file__).resolve()}\nassert all(p.is_relative_to(root) for p in paths.values()),paths\nexpected=json.loads(sys.argv[1])\nassert hashlib.sha256(paths[\"native\"].read_bytes()).hexdigest()==expected[\"native_sha256\"]\nassert hashlib.sha256(paths[\"package\"].read_bytes()).hexdigest()==expected[\"wrapper_sha256\"]\nassert numpy.__version__==\"2.3.4\"\nprint(json.dumps({\"python\":sys.version,\"prefix\":str(root),\"paths\":{k:str(v) for k,v in paths.items()},\"native_sha256\":expected[\"native_sha256\"],\"wrapper_sha256\":expected[\"wrapper_sha256\"],\"numpy\":numpy.__version__}))\n",
+        "{\"native_sha256\": \"0bae335c3943b6220727e0e50b659faa79c7df9f138fdfbe7644a42a01d1f2ac\", \"wrapper_sha256\": \"e6bfb726395c5c41858524d57fe914ba3c06764470154720393344bb484fc8c7\"}"
+      ],
+      "cwd": "/var/tmp/codex-tdigest-pr3-20261014/overnight/release-wheel-ff73cfa/numerical-audits-only/checks",
+      "exit_code": 0,
+      "seconds": 0.16825609900115523,
+      "log_sha256": "e471546c2b5ea0627b42d4e443dce89654dd233f36ac5be5eca2affd6b90c76a"
+    }
+  ],
+  "installed_imports": {
+    "python": "3.12.12 (main, Oct 14 2025, 21:25:31) [Clang 20.1.4 ]",
+    "prefix": "/var/tmp/codex-tdigest-pr3-20261014/overnight/release-wheel-ff73cfa/numerical-audits-only/venv",
+    "paths": {
+      "package": "/var/tmp/codex-tdigest-pr3-20261014/overnight/release-wheel-ff73cfa/numerical-audits-only/venv/lib/python3.12/site-packages/gr_tdigest/__init__.py",
+      "native": "/var/tmp/codex-tdigest-pr3-20261014/overnight/release-wheel-ff73cfa/numerical-audits-only/venv/lib/python3.12/site-packages/gr_tdigest/_gr_tdigest.abi3.so",
+      "numpy": "/var/tmp/codex-tdigest-pr3-20261014/overnight/release-wheel-ff73cfa/numerical-audits-only/venv/lib/python3.12/site-packages/numpy/__init__.py"
+    },
+    "native_sha256": "0bae335c3943b6220727e0e50b659faa79c7df9f138fdfbe7644a42a01d1f2ac",
+    "wrapper_sha256": "e6bfb726395c5c41858524d57fe914ba3c06764470154720393344bb484fc8c7",
+    "numpy": "2.3.4"
+  },
+  "weighted_checks": {
+    "cdf": 13568,
+    "quantile_rank": 19968,
+    "digests": 800,
+    "integer_mass": 304
+  },
+  "compressed_checks": {
+    "expected_public_capacity_rejections": 6,
+    "cases_attempted": 1440,
+    "states": 3840,
+    "mass_checks": 7680,
+    "cdf_values": 180594,
+    "quantile_values": 503040,
+    "cases_completed": 1440
+  },
+  "audit_result_sha256": {
+    "weighted": "22b9ccb1820cc95315e3515ada8b1a731b3963df6fd00e9651734591bac60731",
+    "compressed": "f005b48e2c6f744f764a1da6046032084668421c4b774e740586cd62d8499ef5"
+  },
+  "source_clean_after": true
+}

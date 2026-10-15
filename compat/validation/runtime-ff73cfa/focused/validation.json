@@ -1,0 +1,327 @@
+{
+  "status": "FOCUSED_GATES_PASS",
+  "candidate_base": "66e56e4dd751926c8e99de347fedcb7df3bdd8a5",
+  "patch_sha256": "ada0779c1c5f664eff73ab8f1882344cf25ae9ed801ea3341c5260fbdafbe8be",
+  "driver_sha256": "4a3e470c6c2e6c38e2a45da79d4deac2d42151a8964464124dcd6235e9330df1",
+  "commands": [
+    {
+      "label": "negative-dependencies",
+      "command": [
+        "uv",
+        "pip",
+        "install",
+        "--offline",
+        "--only-binary",
+        ":all:",
+        "--python",
+        "/var/tmp/codex-tdigest-pr3-20261014/overnight/release-wheel-3d0182a/numerical-audits-only/venv/bin/python",
+        "polars==1.34.0",
+        "pytest==8.4.2"
+      ],
+      "cwd": "/var/tmp/codex-tdigest-pr3-20261014/overnight/numerical-review/k2norm-domain/validation-66e56e4/negative-control",
+      "exit_code": 0,
+      "expected_exit_code": 0,
+      "seconds": 0.03112267199685448,
+      "log_sha256": "e8066e1f09cd0ebc120bb652ded1fe259c71b378a3076d4b3be07f032602ebfb"
+    },
+    {
+      "label": "negative-import-before",
+      "command": [
+        "/var/tmp/codex-tdigest-pr3-20261014/overnight/release-wheel-3d0182a/numerical-audits-only/venv/bin/python",
+        "-I",
+        "-c",
+        "import hashlib,json,pathlib,sys,gr_tdigest,gr_tdigest._gr_tdigest as native,numpy,polars,pytest\nroot=pathlib.Path(sys.prefix).resolve()\np=pathlib.Path(native.__file__).resolve()\nassert p.is_relative_to(root),p\nassert pathlib.Path(gr_tdigest.__file__).resolve().is_relative_to(root)\nassert numpy.__version__==\"2.3.4\"\nassert polars.__version__==\"1.34.0\"\nassert pytest.__version__==\"8.4.2\"\nprint(json.dumps({\"python\":sys.version,\"prefix\":str(root),\"native\":str(p),\"native_sha256\":hashlib.sha256(p.read_bytes()).hexdigest(),\"numpy\":numpy.__version__,\"polars\":polars.__version__,\"pytest\":pytest.__version__}))"
+      ],
+      "cwd": "/var/tmp/codex-tdigest-pr3-20261014/overnight/numerical-review/k2norm-domain/validation-66e56e4/negative-control",
+      "exit_code": 0,
+      "expected_exit_code": 0,
+      "seconds": 0.47733125100057805,
+      "log_sha256": "cdde9db4a3b56ddfff4190e4b321cf6d304d01d419ca8ebba1cdbd1e73d8554f"
+    },
+    {
+      "label": "negative-pytest",
+      "command": [
+        "/var/tmp/codex-tdigest-pr3-20261014/overnight/release-wheel-3d0182a/numerical-audits-only/venv/bin/python",
+        "-I",
+        "-m",
+        "pytest",
+        "-q",
+        "-c",
+        "/dev/null",
+        "-p",
+        "no:cacheprovider",
+        "--junitxml",
+        "/var/tmp/codex-tdigest-pr3-20261014/overnight/numerical-review/k2norm-domain/validation-66e56e4/negative-control.xml",
+        "/var/tmp/codex-tdigest-pr3-20261014/overnight/numerical-review/k2norm-domain/validation-66e56e4/negative-control/test_k2norm_domain.py"
+      ],
+      "cwd": "/var/tmp/codex-tdigest-pr3-20261014/overnight/numerical-review/k2norm-domain/validation-66e56e4/negative-control",
+      "exit_code": 1,
+      "expected_exit_code": 1,
+      "seconds": 0.39309161500204937,
+      "log_sha256": "19eb226adae9e8b9232e17d77c61d8045b80a98cbdc918d840501f5f720fb3d4"
+    },
+    {
+      "label": "negative-import-after",
+      "command": [
+        "/var/tmp/codex-tdigest-pr3-20261014/overnight/release-wheel-3d0182a/numerical-audits-only/venv/bin/python",
+        "-I",
+        "-c",
+        "import hashlib,json,pathlib,sys,gr_tdigest,gr_tdigest._gr_tdigest as native,numpy,polars,pytest\nroot=pathlib.Path(sys.prefix).resolve()\np=pathlib.Path(native.__file__).resolve()\nassert p.is_relative_to(root),p\nassert pathlib.Path(gr_tdigest.__file__).resolve().is_relative_to(root)\nassert numpy.__version__==\"2.3.4\"\nassert polars.__version__==\"1.34.0\"\nassert pytest.__version__==\"8.4.2\"\nprint(json.dumps({\"python\":sys.version,\"prefix\":str(root),\"native\":str(p),\"native_sha256\":hashlib.sha256(p.read_bytes()).hexdigest(),\"numpy\":numpy.__version__,\"polars\":polars.__version__,\"pytest\":pytest.__version__}))"
+      ],
+      "cwd": "/var/tmp/codex-tdigest-pr3-20261014/overnight/numerical-review/k2norm-domain/validation-66e56e4/negative-control",
+      "exit_code": 0,
+      "expected_exit_code": 0,
+      "seconds": 0.21683786300127394,
+      "log_sha256": "cdde9db4a3b56ddfff4190e4b321cf6d304d01d419ca8ebba1cdbd1e73d8554f"
+    },
+    {
+      "label": "apply-check",
+      "command": [
+        "git",
+        "apply",
+        "--check",
+        "--exclude=CHANGELOG.md",
+        "/var/tmp/codex-tdigest-pr3-20261014/overnight/numerical-review/k2norm-domain/k2norm-positive-domain.patch"
+      ],
+      "cwd": "/var/tmp/codex-tdigest-pr3-20261014/work/gr-tdigest-f64-weights",
+      "exit_code": 0,
+      "expected_exit_code": 0,
+      "seconds": 0.0015271920019586105,
+      "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "label": "apply",
+      "command": [
+        "git",
+        "apply",
+        "--exclude=CHANGELOG.md",
+        "/var/tmp/codex-tdigest-pr3-20261014/overnight/numerical-review/k2norm-domain/k2norm-positive-domain.patch"
+      ],
+      "cwd": "/var/tmp/codex-tdigest-pr3-20261014/work/gr-tdigest-f64-weights",
+      "exit_code": 0,
+      "expected_exit_code": 0,
+      "seconds": 0.0019708309991983697,
+      "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "label": "rust-debug-domain",
+      "command": [
+        "cargo",
+        "test",
+        "--locked",
+        "--test",
+        "k2norm_domain"
+      ],
+      "cwd": "/var/tmp/codex-tdigest-pr3-20261014/work/gr-tdigest-f64-weights",
+      "exit_code": 0,
+      "expected_exit_code": 0,
+      "seconds": 3.2106351340007677,
+      "log_sha256": "06b4331b790b1b2cb1c95d028550709cd92a97fc11e50e07acae247a3a10c8bd"
+    },
+    {
+      "label": "rust-debug-private",
+      "command": [
+        "cargo",
+        "test",
+        "--locked",
+        "--lib",
+        "nonpositive_k2norm_domain_retains_existing_centroid_kinds_and_bits"
+      ],
+      "cwd": "/var/tmp/codex-tdigest-pr3-20261014/work/gr-tdigest-f64-weights",
+      "exit_code": 0,
+      "expected_exit_code": 0,
+      "seconds": 1.5619045880011981,
+      "log_sha256": "825f969fb2fe807e0c7cf8ecdce4f788775c34e75c37171eaa24263745f84cd2"
+    },
+    {
+      "label": "rust-release-domain",
+      "command": [
+        "cargo",
+        "test",
+        "--locked",
+        "--release",
+        "--test",
+        "k2norm_domain"
+      ],
+      "cwd": "/var/tmp/codex-tdigest-pr3-20261014/work/gr-tdigest-f64-weights",
+      "exit_code": 0,
+      "expected_exit_code": 0,
+      "seconds": 5.2297340689983685,
+      "log_sha256": "b1ced6b35a628083d06d1c74de5a9af45a8d665e3bfe198732f2a21cf2bb7efd"
+    },
+    {
+      "label": "rust-release-private",
+      "command": [
+        "cargo",
+        "test",
+        "--locked",
+        "--release",
+        "--lib",
+        "nonpositive_k2norm_domain_retains_existing_centroid_kinds_and_bits"
+      ],
+      "cwd": "/var/tmp/codex-tdigest-pr3-20261014/work/gr-tdigest-f64-weights",
+      "exit_code": 0,
+      "expected_exit_code": 0,
+      "seconds": 3.344564172999526,
+      "log_sha256": "a45ceea0514d7f415776d30f593bf9b14e4df9bd59abc44ac8dcbeec6b79f5b5"
+    },
+    {
+      "label": "build-python",
+      "command": [
+        "make",
+        "build-python"
+      ],
+      "cwd": "/var/tmp/codex-tdigest-pr3-20261014/work/gr-tdigest-f64-weights",
+      "exit_code": 0,
+      "expected_exit_code": 0,
+      "seconds": 2.170101914998668,
+      "log_sha256": "005e7bc8cba31750f111c9af3a2ec7aac9a6b6ad4e328e481ba87880f18d3ca6"
+    },
+    {
+      "label": "corrected-coherence",
+      "command": [
+        "/var/tmp/codex-tdigest-pr3-20261014/work/gr-tdigest-f64-weights/.venv/bin/python",
+        "-m",
+        "pytest",
+        "-q",
+        "--junitxml",
+        "/var/tmp/codex-tdigest-pr3-20261014/overnight/numerical-review/k2norm-domain/validation-66e56e4/corrected-coherence.xml",
+        "integration/api_coherence/test_k2norm_domain.py"
+      ],
+      "cwd": "/var/tmp/codex-tdigest-pr3-20261014/work/gr-tdigest-f64-weights",
+      "exit_code": 0,
+      "expected_exit_code": 0,
+      "seconds": 0.3567975829973875,
+      "log_sha256": "c04c1ded789ce0134fb9650cc736b55e0d2c5c82cca5725728b3553db1fd0ab9"
+    },
+    {
+      "label": "ruff-check",
+      "command": [
+        "/var/tmp/codex-tdigest-pr3-20261014/work/gr-tdigest-f64-weights/.venv/bin/ruff",
+        "check",
+        "--config",
+        "/var/tmp/codex-tdigest-pr3-20261014/work/gr-tdigest-f64-weights/bindings/python/pyproject.toml",
+        "integration/api_coherence/test_k2norm_domain.py",
+        "scripts/test_python_support.py"
+      ],
+      "cwd": "/var/tmp/codex-tdigest-pr3-20261014/work/gr-tdigest-f64-weights",
+      "exit_code": 0,
+      "expected_exit_code": 0,
+      "seconds": 0.00864381300198147,
+      "log_sha256": "82b3e6a6c090a57601d22943bd23fca9218d1031dbe5a7b754092f9a156b4f18"
+    },
+    {
+      "label": "ruff-format",
+      "command": [
+        "/var/tmp/codex-tdigest-pr3-20261014/work/gr-tdigest-f64-weights/.venv/bin/ruff",
+        "format",
+        "--check",
+        "--config",
+        "/var/tmp/codex-tdigest-pr3-20261014/work/gr-tdigest-f64-weights/bindings/python/pyproject.toml",
+        "integration/api_coherence/test_k2norm_domain.py",
+        "scripts/test_python_support.py"
+      ],
+      "cwd": "/var/tmp/codex-tdigest-pr3-20261014/work/gr-tdigest-f64-weights",
+      "exit_code": 0,
+      "expected_exit_code": 0,
+      "seconds": 0.008536565997928847,
+      "log_sha256": "3bc53bf3e981a98a34a852e175bf9b77af841edea74fca595d9aedcbaf9a4938"
+    },
+    {
+      "label": "rustfmt-check",
+      "command": [
+        "cargo",
+        "fmt",
+        "--all",
+        "--",
+        "--check"
+      ],
+      "cwd": "/var/tmp/codex-tdigest-pr3-20261014/work/gr-tdigest-f64-weights",
+      "exit_code": 0,
+      "expected_exit_code": 0,
+      "seconds": 0.12419140099882497,
+      "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "label": "corrected-native",
+      "command": [
+        "/var/tmp/codex-tdigest-pr3-20261014/work/gr-tdigest-f64-weights/.venv/bin/python",
+        "-c",
+        "import hashlib,json,pathlib,gr_tdigest._gr_tdigest as n; p=pathlib.Path(n.__file__).resolve(); print(json.dumps({\"native\":str(p),\"sha256\":hashlib.sha256(p.read_bytes()).hexdigest()}))"
+      ],
+      "cwd": "/var/tmp/codex-tdigest-pr3-20261014/work/gr-tdigest-f64-weights",
+      "exit_code": 0,
+      "expected_exit_code": 0,
+      "seconds": 0.08104463099880377,
+      "log_sha256": "ac9740cbdffb268f9e042b9031a6264e21e48ed67615fb2f0f45625f11a75dba"
+    }
+  ],
+  "negative_control": {
+    "status": "EXPECTED_FAILURES",
+    "source_commit": "3d0182a5713be0d1835296a8c7a340c987243072",
+    "native": {
+      "python": "3.12.12 (main, Oct 14 2025, 21:25:31) [Clang 20.1.4 ]",
+      "prefix": "/var/tmp/codex-tdigest-pr3-20261014/overnight/release-wheel-3d0182a/numerical-audits-only/venv",
+      "native": "/var/tmp/codex-tdigest-pr3-20261014/overnight/release-wheel-3d0182a/numerical-audits-only/venv/lib/python3.12/site-packages/gr_tdigest/_gr_tdigest.abi3.so",
+      "native_sha256": "9a10ee77533a0ee0f8a59c0f661f4df4988a410d371471e7bbca32d49564fb9e",
+      "numpy": "2.3.4",
+      "polars": "1.34.0",
+      "pytest": "8.4.2"
+    },
+    "cases": {
+      "total": 20,
+      "failed": 14,
+      "errors": 0,
+      "skipped": 0,
+      "failed_names": [
+        "test_high_delta_direct_update_and_merge_preserve_exact_piles[810.0-f32]",
+        "test_high_delta_direct_update_and_merge_preserve_exact_piles[810.0-f64]",
+        "test_high_delta_direct_update_and_merge_preserve_exact_piles[1200.0-f32]",
+        "test_high_delta_direct_update_and_merge_preserve_exact_piles[1200.0-f64]",
+        "test_high_delta_direct_update_and_merge_preserve_exact_piles[2400.0-f32]",
+        "test_high_delta_direct_update_and_merge_preserve_exact_piles[2400.0-f64]",
+        "test_polars_keeps_high_delta_when_mutating_serialized_state[update-f32]",
+        "test_polars_keeps_high_delta_when_mutating_serialized_state[update-f64]",
+        "test_polars_keeps_high_delta_when_mutating_serialized_state[merge-f32]",
+        "test_polars_keeps_high_delta_when_mutating_serialized_state[merge-f64]",
+        "test_polars_explicit_k2norm_capacity_preserves_small_interiors[use-f32]",
+        "test_polars_explicit_k2norm_capacity_preserves_small_interiors[use-f64]",
+        "test_polars_explicit_k2norm_capacity_preserves_small_interiors[edges-f32]",
+        "test_polars_explicit_k2norm_capacity_preserves_small_interiors[edges-f64]"
+      ]
+    },
+    "test_sha256": "2aa6a4d9538639ba4c90b095160fcdf6d57cbe616afc9bf97f33de1efffe3daa"
+  },
+  "applied_source_sha256": {
+    "src/tdigest/compressor.rs": "302108296e1ee8b13e49a0cb83c64e9105eef3a1709208532417cb94ddc56adc",
+    "tests/k2norm_domain.rs": "494f4be915016d7c4491f66d4806e148aa83cfca3e7a9e8507117b62b63b0df2",
+    "integration/api_coherence/test_k2norm_domain.py": "2aa6a4d9538639ba4c90b095160fcdf6d57cbe616afc9bf97f33de1efffe3daa",
+    "scripts/test_python_support.py": "049c4a571859585e8eb5a7cc551a23f10c778f92d2100972789761fb7c1a9c63",
+    "tdigest_design.md": "0b2f1d12505b4791bf404bb7d8ea6579637bb028c159108a39b0ac7c78fc526d",
+    "CHANGELOG.md": "7c2feabc794ac213838668da49ce798b02977c9f5ffa0c24ff260e0cbc30d653"
+  },
+  "corrected_native": {
+    "native": "/var/tmp/codex-tdigest-pr3-20261014/work/gr-tdigest-f64-weights/bindings/python/gr_tdigest/_gr_tdigest.abi3.so",
+    "sha256": "d5bfa45cd532a9042b66599fe028049ef1dc2aa0aa22168d2f0bf1a4e2fae1d6"
+  },
+  "corrected_cases": {
+    "total": 20,
+    "failed": 0,
+    "errors": 0,
+    "skipped": 0,
+    "failed_names": []
+  },
+  "final_source_sha256": {
+    "CHANGELOG.md": "7c2feabc794ac213838668da49ce798b02977c9f5ffa0c24ff260e0cbc30d653",
+    "compat/REVIEW_GUIDE.md": "5cea8a664e2e1bb7091ada9b2399dc1472a8bf9df681862eb4c89ac9088b0f25",
+    "scripts/test_python_support.py": "049c4a571859585e8eb5a7cc551a23f10c778f92d2100972789761fb7c1a9c63",
+    "src/tdigest/compressor.rs": "302108296e1ee8b13e49a0cb83c64e9105eef3a1709208532417cb94ddc56adc",
+    "tdigest_design.md": "0b2f1d12505b4791bf404bb7d8ea6579637bb028c159108a39b0ac7c78fc526d",
+    "tests/k2norm_domain.rs": "494f4be915016d7c4491f66d4806e148aa83cfca3e7a9e8507117b62b63b0df2",
+    "integration/api_coherence/test_k2norm_domain.py": "2aa6a4d9538639ba4c90b095160fcdf6d57cbe616afc9bf97f33de1efffe3daa"
+  },
+  "scope": "Focused validation only; canonical/full installed artifact gates remain for root. No push.",
+  "commit": "ff73cfab31d6368d203c1a361b8efaaea29d735b",
+  "tree": "cda5346eb8b2f68f9e40285e7c571f5a6dc2810c",
+  "clean_status": ""
+}

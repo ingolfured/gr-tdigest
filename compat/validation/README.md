@@ -1,3 +1,28 @@
+# Validation of the K2Norm domain correction
+
+Clean source `ff73cfab31d6368d203c1a361b8efaaea29d735b` passes Linux build,
+test and lint: **334 Python/coherence + 91 untouched original cases**, **121
+Rust tests**, and Java. Three pre-existing Rust cases remain ignored.
+The optimized wheel passes **2,022 test instances** across seven environments:
+six CPython 3.10–3.12 / NumPy 1–2 cells each run 208 compatibility + 90 modern
+cases; a Polars-free cell runs 208 + 26. There are no skips or xfails in these
+installed gates. An unmodified normalized source archive produces a distinct
+wheel which passes its own same seven-cell gate.
+
+The direct artifact also passes the unchanged 800-digest weighted-point and
+1,440-route / 3,840-state compressed audits. The new 20-case K2Norm suite first
+produced 14 expected failures and six passing controls on the preserved old
+wheel, then all 20 passed on the fix. Focused Rust cases pass debug and release.
+The original compatibility calculation path is unchanged.
+
+See [canonical results](ff73cfa-validation.json),
+[artifact provenance](ff73cfa-provenance.json),
+[installed audits](ff73cfa-modern-wheel-validation.json), and
+[raw logs, matrices and negative control](runtime-ff73cfa/).
+These are pinned Linux runtime/artifact checks, not manylinux, cross-platform,
+unconstrained resolver or universal accuracy guarantees. Earlier results retain
+their source labels below.
+
 # Validation of original Rust and Python runtime delivery
 
 The library source at `360ad5b` passed the Linux canonical build/test/lint gates;
