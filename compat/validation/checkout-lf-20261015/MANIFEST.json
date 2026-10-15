@@ -1,0 +1,82 @@
+{
+  "README.md": {
+    "sha256": "c78efb0a5003fb88423533b33c2b331aa86e0dee870a4d3edbf7a4adf60d63c7",
+    "bytes": 3614
+  },
+  "RESULTS.json": {
+    "sha256": "dbab13c5ec7a5b1bf3d240057c2f98fab5f557bab2766f38221c74574946539f",
+    "bytes": 37594
+  },
+  "ci-failure-logs/116196989529.raw.log": {
+    "sha256": "ae3994fb22ccf6c205446caa6e2bb43d52fd30f7b62568e978f4b5361b816bb8",
+    "bytes": 67658
+  },
+  "ci-failure-logs/116196989691.raw.log": {
+    "sha256": "992926cac8faef4b684d56930ce7ce5c752392f2ba27ed712afc283f39fe29a3",
+    "bytes": 67759
+  },
+  "ci-failure-logs/116196989773.raw.log": {
+    "sha256": "e1fd23c8d4619b968537bba81128213cdd201bb4f56e096960f217980ce08339",
+    "bytes": 67633
+  },
+  "prepare_and_verify.py": {
+    "sha256": "1d954c81f4d75e8227f6c12c32ac873db2c4240f3e0d36544ffaffd88ef04db5",
+    "bytes": 13002
+  },
+  "private/01-original-lf-guard.log": {
+    "sha256": "375c793b93080cc90b727d0af75de0b801ef3337898d34b8bdbdd27034948dd3",
+    "bytes": 123
+  },
+  "private/02-autocrlf-negative-guard.log": {
+    "sha256": "6736f8cb392e99264d95a2fa9d9d0c28c138c0cbaf641c2c4f905432603f792a",
+    "bytes": 599
+  },
+  "private/03-corrected-autocrlf-guard.log": {
+    "sha256": "375c793b93080cc90b727d0af75de0b801ef3337898d34b8bdbdd27034948dd3",
+    "bytes": 123
+  },
+  "private/04-deliberate-mutation-negative-guard.log": {
+    "sha256": "b0616ea48f18f267b02ce7818a5ffc3501a92dda069e8f2902ff643095fc5305",
+    "bytes": 601
+  },
+  "private/05-restored-corrected-guard.log": {
+    "sha256": "375c793b93080cc90b727d0af75de0b801ef3337898d34b8bdbdd27034948dd3",
+    "bytes": 123
+  },
+  "private/checkout-lf.patch": {
+    "sha256": "b62138ddd2eb871d9eac5c99507570427189294c36662f45f57e7c79fd4074bb",
+    "bytes": 2254
+  },
+  "private/source-tree.git-ls-tree-z": {
+    "sha256": "9ed286f76a4b50761b4dc3923d2e186081f0056b996ca22cab72938dc1812319",
+    "bytes": 74347
+  },
+  "upstream/01-original-lf-guard.log": {
+    "sha256": "375c793b93080cc90b727d0af75de0b801ef3337898d34b8bdbdd27034948dd3",
+    "bytes": 123
+  },
+  "upstream/02-autocrlf-negative-guard.log": {
+    "sha256": "5574cf72c8f5aaf188ae564ed69648fb0ec42dd7f3040a938210dcf708a8a810",
+    "bytes": 601
+  },
+  "upstream/03-corrected-autocrlf-guard.log": {
+    "sha256": "375c793b93080cc90b727d0af75de0b801ef3337898d34b8bdbdd27034948dd3",
+    "bytes": 123
+  },
+  "upstream/04-deliberate-mutation-negative-guard.log": {
+    "sha256": "857e6827a8271af9a1cb9b121a9e1a7c4621d9c966c0f861e8a8a765772a150d",
+    "bytes": 603
+  },
+  "upstream/05-restored-corrected-guard.log": {
+    "sha256": "375c793b93080cc90b727d0af75de0b801ef3337898d34b8bdbdd27034948dd3",
+    "bytes": 123
+  },
+  "upstream/checkout-lf.patch": {
+    "sha256": "a46520bfb43290c079b7f2c3c031c86b8b30f00d2898f93b5bf3b3b21e4a2093",
+    "bytes": 2027
+  },
+  "upstream/source-tree.git-ls-tree-z": {
+    "sha256": "5c384d667b9e92783162d64f6b3d4c91fb4298df83d6251e06790bad4cc89828",
+    "bytes": 40329
+  }
+}

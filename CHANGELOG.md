@@ -5,6 +5,7 @@ All notable changes to this project are documented in this file.
 ## [Unreleased]
 
 ### Fixed
+- Preserve LF checkout bytes for the 13 checksum-bound original implementation, Python wrapper, tests and benchmark files, including when Git uses `core.autocrlf=true`; keep the raw-byte checks and numerical code unchanged.
 - Record independently reviewed frozen-budget accuracy and native timing evidence on the corrected source, including tight-storage losses, value/rank distinctions and policy violations; connect the personal review stack to the validated actual upstream draft.
 - Record the K2Norm negative controls, full corrected-source Linux validation, and seven-runtime direct/source-rebuilt wheel gates, with exact artifact identities and bounded claims.
 - Preserve normalized centroids when a high delta makes the K2Norm normalizer nonpositive, preventing exact piles from collapsing into one mixed centroid; retain ordinary positive-domain and tiny-delta behavior, with Rust/Python/Polars mutation and computed-domain boundary regressions. The same-wheel runtime matrix includes all 20 new modern cases (90 per full cell; Polars-free coverage remains 26).

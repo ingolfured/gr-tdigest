@@ -32,3 +32,25 @@ compat/performance/matched-budgets-ff73cfa/recorded/** linguist-generated=true
 # Retain standard CSV/recorded-log CRLF bytes covered by approved manifests.
 compat/accuracy/matched-budgets-ff73cfa/** whitespace=cr-at-eol
 compat/performance/matched-budgets-ff73cfa/** whitespace=cr-at-eol
+
+# Preserve the exact LF bytes verified by the upstream checksum guards.
+bindings/python/tdigest_rs/lib.py text eol=lf
+compat/tdigest-rs-upstream/bindings/python/benchmarks/run.py text eol=lf
+compat/tdigest-rs-upstream/bindings/python/tests/__init__.py text eol=lf
+compat/tdigest-rs-upstream/bindings/python/tests/conftest.py text eol=lf
+compat/tdigest-rs-upstream/bindings/python/tests/constants.py text eol=lf
+compat/tdigest-rs-upstream/bindings/python/tests/test_distributions.py text eol=lf
+compat/tdigest-rs-upstream/bindings/python/tests/test_tdigest.py text eol=lf
+compat/tdigest-rs-upstream/bindings/python/tests/utils.py text eol=lf
+src/upstream/LICENSE text eol=lf
+src/upstream/core.rs text eol=lf
+src/upstream/lib.rs text eol=lf
+src/upstream/scale.rs text eol=lf
+src/upstream/traits.rs text eol=lf
+
+# Preserve recorded checkout controls and CI logs byte for byte.
+compat/validation/checkout-lf-20261015/** linguist-generated=true
+compat/validation/checkout-lf-20261015/README.md linguist-generated=false
+compat/validation/checkout-lf-20261015/prepare_and_verify.py linguist-generated=false
+compat/validation/checkout-lf-20261015/**/*.log whitespace=cr-at-eol,-blank-at-eol,-blank-at-eof,-space-before-tab
+compat/validation/checkout-lf-20261015/**/*.patch whitespace=cr-at-eol,-blank-at-eol
