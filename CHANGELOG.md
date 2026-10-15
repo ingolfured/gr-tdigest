@@ -5,6 +5,7 @@ All notable changes to this project are documented in this file.
 ## [Unreleased]
 
 ### Fixed
+- Copy modern Python NumPy query results and centroid arrays directly into NumPy-owned memory, avoiding intermediate Python float/list objects while preserving exact values and independent writable/resizable arrays. Qualified NumPy 2 heldout batches used 44.86–54.76% less CDF time and 36.53–51.39% less quantile time in the recorded single-thread Linux workload; unresolved and noisy cases are retained in `compat/performance/numpy-output-20261015`.
 - Preserve LF checkout bytes for the 13 checksum-bound original implementation, Python wrapper, tests and benchmark files, including when Git uses `core.autocrlf=true`; keep the raw-byte checks and numerical code unchanged.
 - Record independently reviewed frozen-budget accuracy and native timing evidence on the corrected source, including tight-storage losses, value/rank distinctions and policy violations; connect the personal review stack to the validated actual upstream draft.
 - Record the K2Norm negative controls, full corrected-source Linux validation, and seven-runtime direct/source-rebuilt wheel gates, with exact artifact identities and bounded claims.
