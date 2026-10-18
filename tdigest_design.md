@@ -471,3 +471,14 @@ preserves existing application outputs; `gr_tdigest`, Polars, Java, and the CLI
 continue using the modern shared core. Numerical fixes there must not silently
 change the original interface. See the vendored source provenance and exact
 output regression tests.
+
+## E17 quantile prefix screening
+
+This isolated experiment scans whole centroid weights to locate both centers and
+the atomic boundary, without allocating a prefix vector. It aims to remove drift
+from repeatedly accumulating half-weight spans. Exact reflection symmetry and
+existing CDF gap round trips are separate gates: the CDF itself evaluates some
+atomic boundaries as two half-weight additions, so changing only quantile may
+trade one boundary error for another. Any failing gate rejects this prototype;
+there is no tolerance covering jumps across distinct point masses. The original
+`tdigest_rs` implementation and stored state are unchanged.

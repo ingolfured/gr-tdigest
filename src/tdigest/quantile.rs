@@ -123,14 +123,15 @@ impl<F: FloatLike + FloatCore> TDigest<F> {
             };
         }
 
-        let (left_idx, right_idx, left_center_cum_w, center_span_w) =
+        let (left_idx, right_idx, left_center_cum_w, right_center_cum_w, boundary) =
             self.find_bracketing_centroids(target_index);
 
         self.interpolate_between_centroids(
             left_idx,
             right_idx,
             left_center_cum_w,
-            center_span_w,
+            right_center_cum_w,
+            boundary,
             target_index,
         )
     }
@@ -145,32 +146,36 @@ impl<F: FloatLike + FloatCore> TDigest<F> {
     /// Half-weight bracketing: find adjacent centroids whose center-to-center
     /// span contains `index`.
     ///
-    /// Returns `(left_idx, right_idx, cumulative_weight_at_left_center, center_span_weight)`.
-    fn find_bracketing_centroids(&self, index: f64) -> (usize, usize, f64, f64) {
-        let first_w = self.centroids()[0].weight_f64();
-        let mut cum_w_at_left_center = first_w / 2.0;
-
-        for left_idx in 0..(self.centroids().len() - 1) {
-            let w_left = self.centroids()[left_idx].weight_f64();
-            let w_right = self.centroids()[left_idx + 1].weight_f64();
-            let center_span_weight = (w_left + w_right) / 2.0;
-
-            if cum_w_at_left_center + center_span_weight > index {
+    /// Returns indices, both cumulative centers, and the whole-weight boundary.
+    /// Scan once without allocating a prefix vector.
+    fn find_bracketing_centroids(&self, index: f64) -> (usize, usize, f64, f64, f64) {
+        let cents = self.centroids();
+        let mut prefix = 0.0;
+        for left_idx in 0..(cents.len() - 2) {
+            let w_left = cents[left_idx].weight_f64();
+            let boundary = prefix + w_left;
+            let right_center = boundary + cents[left_idx + 1].weight_f64() / 2.0;
+            if right_center > index {
                 return (
                     left_idx,
                     left_idx + 1,
-                    cum_w_at_left_center,
-                    center_span_weight,
+                    prefix + w_left / 2.0,
+                    right_center,
+                    boundary,
                 );
             }
-            cum_w_at_left_center += center_span_weight;
+            prefix = boundary;
         }
-
-        // Fallback: last pair (shouldn't happen in normal flow).
-        let m = self.centroids().len();
-        let w_last = self.centroids()[m - 1].weight_f64();
-        let span_w = (self.centroids()[m - 2].weight_f64() + w_last) / 2.0;
-        (m - 2, m - 1, self.count() - w_last / 2.0 - span_w, span_w)
+        let left_idx = cents.len() - 2;
+        let w_left = cents[left_idx].weight_f64();
+        let boundary = prefix + w_left;
+        (
+            left_idx,
+            left_idx + 1,
+            prefix + w_left / 2.0,
+            boundary + cents[left_idx + 1].weight_f64() / 2.0,
+            boundary,
+        )
     }
 
     /// Interpolate between bracketing centroids with symmetric singleton/pile logic.
@@ -182,7 +187,8 @@ impl<F: FloatLike + FloatCore> TDigest<F> {
         left_idx: usize,
         right_idx: usize,
         cum_w_at_left_center: f64,
-        center_span_weight: f64,
+        right_center_cum_w: f64,
+        boundary: f64,
         target_index: f64,
     ) -> f64 {
         let left = &self.centroids()[left_idx];
@@ -190,14 +196,9 @@ impl<F: FloatLike + FloatCore> TDigest<F> {
 
         let (w_left, w_right) = (left.weight_f64(), right.weight_f64());
         let (m_left, m_right) = (left.mean_f64(), right.mean_f64());
-        let right_center_cum_w = cum_w_at_left_center + center_span_weight;
 
         if left.is_atomic() && right.is_atomic() {
-            // Atomic neighbors share one boundary, with no interpolated mass.
-            // Deriving that boundary independently from both centers can leave
-            // a rounding-sized positive span (even for equal weights like 0.1),
-            // incorrectly moving the boundary quantile to one of the means.
-            let boundary = cum_w_at_left_center + w_left / 2.0;
+            // Use the same whole-weight prefix that brackets the pair.
             return if target_index < boundary {
                 m_left
             } else if target_index > boundary {
