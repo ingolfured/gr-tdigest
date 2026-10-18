@@ -297,22 +297,53 @@ struct DecodedV3Header {
     delta: Option<f64>,
 }
 
-pub fn wire_precision(bytes: &[u8]) -> WireResult<WirePrecision> {
-    if bytes.len() < 5 {
-        return Err(WireError::InvalidHeader("buffer too small"));
-    }
-    if &bytes[0..4] != MAGIC {
-        return Err(WireError::InvalidMagic);
+/// A checked precision/header view tied to the unchanged input bytes.
+/// V3 checksum/header validation can be reused for the following payload decode.
+pub(crate) struct ValidatedWire<'a> {
+    bytes: &'a [u8],
+    version: WireVersion,
+    precision: WirePrecision,
+    v3_header: Option<DecodedV3Header>,
+}
+
+impl<'a> ValidatedWire<'a> {
+    pub(crate) fn new(bytes: &'a [u8]) -> WireResult<Self> {
+        if bytes.len() < 5 {
+            return Err(WireError::InvalidHeader("buffer too small"));
+        }
+        if &bytes[0..4] != MAGIC {
+            return Err(WireError::InvalidMagic);
+        }
+        let version = WireVersion::from_u8(bytes[4])?;
+        let (precision, v3_header) = match version {
+            WireVersion::V1 | WireVersion::V2 => (wire_precision_v12(bytes, version)?, None),
+            WireVersion::V3 => {
+                let header = parse_v3_header(bytes, true)?;
+                (header.width.to_precision(), Some(header))
+            }
+        };
+        Ok(Self {
+            bytes,
+            version,
+            precision,
+            v3_header,
+        })
     }
 
-    let version = WireVersion::from_u8(bytes[4])?;
-    match version {
-        WireVersion::V1 | WireVersion::V2 => wire_precision_v12(bytes, version),
-        WireVersion::V3 => {
-            let h = parse_v3_header(bytes, true)?;
-            Ok(h.width.to_precision())
+    pub(crate) fn precision(&self) -> WirePrecision {
+        self.precision
+    }
+
+    pub(crate) fn decode(self) -> WireResult<WireDecodedDigest> {
+        match self.v3_header {
+            Some(header) => decode_digest_v3_with_header(self.bytes, header),
+            None => decode_digest_v12(self.bytes, self.version),
         }
     }
+}
+
+pub fn wire_precision(bytes: &[u8]) -> WireResult<WirePrecision> {
+    Ok(ValidatedWire::new(bytes)?.precision())
 }
 
 fn wire_precision_v12(bytes: &[u8], version: WireVersion) -> WireResult<WirePrecision> {
@@ -934,7 +965,10 @@ fn parse_v3_header(bytes: &[u8], verify_checksum: bool) -> WireResult<DecodedV3H
 
 fn decode_digest_v3(bytes: &[u8]) -> WireResult<WireDecodedDigest> {
     let h = parse_v3_header(bytes, true)?;
+    decode_digest_v3_with_header(bytes, h)
+}
 
+fn decode_digest_v3_with_header(bytes: &[u8], h: DecodedV3Header) -> WireResult<WireDecodedDigest> {
     let _ = h.flags; // reserved for future behavior branching
 
     let stats = DigestStats {

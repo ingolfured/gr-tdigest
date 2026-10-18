@@ -15,9 +15,7 @@ use crate::tdigest::frontends::{
 };
 use crate::tdigest::precision::FloatLike;
 use crate::tdigest::singleton_policy::SingletonPolicy;
-use crate::tdigest::wire::{
-    encode_digest_with_version, wire_precision, WirePrecision, WireVersion,
-};
+use crate::tdigest::wire::{encode_digest_with_version, WirePrecision, WireVersion};
 use crate::tdigest::{ScaleFamily, TDigest};
 
 /* ==================== input dtypes ==================== */
@@ -399,31 +397,30 @@ fn from_bytes(inputs: &[Series]) -> PolarsResult<Series> {
         );
     }
 
-    // Optional precision hint: second arg (Float32 → expect f32; otherwise f64).
-    let expected_prec: WirePrecision = if inputs.len() > 1 {
-        if inputs
-            .get(1)
-            .map(|hint| matches!(hint.dtype(), DataType::Float32))
-            .unwrap_or(false)
-        {
-            WirePrecision::F32
-        } else {
-            WirePrecision::F64
-        }
+    // Validate each header/checksum once. Without a hint the first decoded
+    // blob supplies precision, with the same errors before payload decoding.
+    let mut expected_prec = if inputs.len() > 1 {
+        Some(
+            if inputs
+                .get(1)
+                .map(|hint| matches!(hint.dtype(), DataType::Float32))
+                .unwrap_or(false)
+            {
+                WirePrecision::F32
+            } else {
+                WirePrecision::F64
+            },
+        )
     } else {
-        // No hint: sniff first blob from wire header.
-        let first = bin.into_no_null_iter().next().ok_or_else(|| {
-            PolarsError::ComputeError("tdigest.from_bytes: empty input column".into())
-        })?;
-        wire_precision(first)
-            .map_err(|e| PolarsError::ComputeError(format!("tdigest.from_bytes: {e}").into()))?
+        None
     };
 
     let mut digests: Vec<FrontendDigest> = Vec::with_capacity(s.len());
     for bytes in bin.into_no_null_iter() {
-        let d = FrontendDigest::from_bytes_with_expected(bytes, expected_prec)
+        let (digest, actual) = FrontendDigest::from_bytes_for_column(bytes, expected_prec)
             .map_err(|e| PolarsError::ComputeError(e.to_string().into()))?;
-        digests.push(d);
+        expected_prec = Some(actual);
+        digests.push(digest);
     }
 
     let merged = FrontendDigest::merge_all(digests)

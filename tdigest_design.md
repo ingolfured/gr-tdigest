@@ -409,6 +409,7 @@ Decode behavior:
 - v2 decodes centroid kind explicitly from payload and preserves atomic-vs-mixed identity.
 - v2/v3 preserve fractional centroid weights on wire.
 - v3 checksum is verified when present.
+- Polars column decoding retains a private validated view of each unchanged blob, reusing its V3 header/checksum for payload decoding. Precision mismatch is checked before payload validation, and error prefixes/order remain unchanged. Without a hint, the first row supplies precision through this same validation pass.
 - v3 flag bit3 (0x08) means an f32-mean digest contains weights that require f64
   precision. It adds no bytes: the payload already stores f64 weights. The flag
   is checksum-covered, and older readers reject it instead of narrowing mass.

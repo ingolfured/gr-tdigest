@@ -5,7 +5,7 @@
 use std::fmt::{Display, Formatter};
 
 use crate::tdigest::wire::{
-    decode_digest, encode_digest, encode_digest_with_version, wire_precision, WireDecodedDigest,
+    decode_digest, encode_digest, encode_digest_with_version, ValidatedWire, WireDecodedDigest,
     WirePrecision, WireResult, WireVersion,
 };
 use crate::tdigest::TDigest;
@@ -585,19 +585,35 @@ Rebuild or cast to a shared configuration before merge.",
         bytes: &[u8],
         expected: WirePrecision,
     ) -> Result<Self, FrontendError> {
-        let actual = wire_precision(bytes)
-            .map_err(|e| FrontendError::DecodeError(format!("tdigest.from_bytes: {e}")))?;
+        Self::from_bytes_for_column(bytes, Some(expected)).map(|(digest, _)| digest)
+    }
 
-        if actual != expected {
-            return Err(FrontendError::DecodeError(format!(
-                "tdigest.from_bytes: mixed f32/f64 blobs in column (expected {})",
-                match expected {
-                    WirePrecision::F32 => "f32",
-                    WirePrecision::F64 => "f64",
-                }
-            )));
+    pub(crate) fn from_bytes_for_column(
+        bytes: &[u8],
+        expected: Option<WirePrecision>,
+    ) -> Result<(Self, WirePrecision), FrontendError> {
+        let validated = ValidatedWire::new(bytes)
+            .map_err(|e| FrontendError::DecodeError(format!("tdigest.from_bytes: {e}")))?;
+        let actual = validated.precision();
+        if let Some(expected) = expected {
+            if actual != expected {
+                return Err(FrontendError::DecodeError(format!(
+                    "tdigest.from_bytes: mixed f32/f64 blobs in column (expected {})",
+                    match expected {
+                        WirePrecision::F32 => "f32",
+                        WirePrecision::F64 => "f64",
+                    }
+                )));
+            }
         }
-        Self::from_bytes(bytes)
+        let decoded = validated
+            .decode()
+            .map_err(|e| FrontendError::DecodeError(format!("tdigest decode error: {e}")))?;
+        let digest = match decoded {
+            WireDecodedDigest::F32(td) => Self::F32(td),
+            WireDecodedDigest::F64(td) => Self::F64(td),
+        };
+        Ok((digest, actual))
     }
 
     #[inline]
@@ -619,6 +635,64 @@ mod tests {
             scale: ScaleFamily::K2,
             policy: SingletonPolicy::Use,
             delta: None,
+        }
+    }
+
+    #[test]
+    fn validated_column_decode_preserves_old_error_order_and_bytes() {
+        fn reference(bytes: &[u8], expected: WirePrecision) -> Result<FrontendDigest, String> {
+            let actual = crate::tdigest::wire::wire_precision(bytes)
+                .map_err(|e| format!("tdigest.from_bytes: {e}"))?;
+            if actual != expected {
+                return Err(format!(
+                    "tdigest.from_bytes: mixed f32/f64 blobs in column (expected {})",
+                    if expected == WirePrecision::F32 {
+                        "f32"
+                    } else {
+                        "f64"
+                    }
+                ));
+            }
+            FrontendDigest::from_bytes(bytes).map_err(|e| e.to_string())
+        }
+        let mut blobs = vec![vec![], vec![0; 4], b"WRONG".to_vec()];
+        for precision in [DigestPrecision::F32, DigestPrecision::F64] {
+            for values in [vec![], vec![-0.0, 1.0, 2.0, 2.0]] {
+                let digest =
+                    FrontendDigest::from_values(values, cfg_k2_use(64), precision).unwrap();
+                for version in [WireVersion::V1, WireVersion::V2, WireVersion::V3] {
+                    let valid = digest.to_bytes_with_version(version);
+                    blobs.push(valid.clone());
+                    for index in 0..valid.len() {
+                        let mut corrupted = valid.clone();
+                        corrupted[index] ^= 0xff;
+                        blobs.push(corrupted);
+                    }
+                    for end in 0..valid.len() {
+                        blobs.push(valid[..end].to_vec());
+                    }
+                }
+            }
+        }
+        // Valid-checksum V3 with invalid payload: mismatch must still take
+        // precedence over payload validation, but checksum precedes mismatch.
+        let d = FrontendDigest::from_values(vec![0.0, 1.0], cfg_k2_use(64), DigestPrecision::F64)
+            .unwrap();
+        let mut invalid_kind = d.to_bytes();
+        let header_len = invalid_kind[6] as usize;
+        invalid_kind[header_len + 16] = 255;
+        invalid_kind[60..64].fill(0);
+        let crc = crc32fast::hash(&invalid_kind);
+        invalid_kind[60..64].copy_from_slice(&crc.to_le_bytes());
+        blobs.push(invalid_kind);
+        for blob in &blobs {
+            for expected in [WirePrecision::F32, WirePrecision::F64] {
+                let old = reference(blob, expected).map(|digest| digest.to_bytes());
+                let new = FrontendDigest::from_bytes_with_expected(blob, expected)
+                    .map(|digest| digest.to_bytes())
+                    .map_err(|e| e.to_string());
+                assert_eq!(new, old);
+            }
         }
     }
 
