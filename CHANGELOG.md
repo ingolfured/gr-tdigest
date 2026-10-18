@@ -5,6 +5,7 @@ All notable changes to this project are documented in this file.
 ## [Unreleased]
 
 ### Research handoff
+- Archive transfer batch 3/8: preserve checksummed research data for machine migration; no new benchmark or release claim.
 - Archive transfer batch 2/8: preserve checksummed research data for machine migration; no new benchmark or release claim.
 - Archive transfer batch 1/8: preserve checksummed research data for machine migration; no new benchmark or release claim.
 - Preserve the October 2026 experiment sources, branch/PR map, original compatibility evidence, raw measurements and latest many-core workload priorities for cross-machine continuation; product code and original numerical contracts are unchanged.
