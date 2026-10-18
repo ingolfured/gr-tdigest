@@ -5,6 +5,7 @@ All notable changes to this project are documented in this file.
 ## [Unreleased]
 
 ### Research handoff
+- Archive transfer batch 4/8: preserve checksummed research data for machine migration; no new benchmark or release claim.
 - Archive transfer batch 3/8: preserve checksummed research data for machine migration; no new benchmark or release claim.
 - Archive transfer batch 2/8: preserve checksummed research data for machine migration; no new benchmark or release claim.
 - Archive transfer batch 1/8: preserve checksummed research data for machine migration; no new benchmark or release claim.
