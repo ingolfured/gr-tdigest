@@ -125,7 +125,7 @@ Weighted constructor/merge helpers:
 1. Scan digests and keep only non-empty runs (`count>0` and non-empty centroid vector).
 2. Pick the first non-empty digest as the config source (`max_size`, `scale`, `policy`, `delta`).
 3. Perform a streaming k-way merge of sorted centroid runs via `KWayCentroidMerge::from_runs`.
-  - Implementation uses a min-heap over run heads (`O(total_len * log(k))`).
+  - Implementation uses a min-heap over run heads (`O(total_len * log(k))`). A continuing run replaces the root through `peek_mut`, causing one heap repair; exhausted runs are popped. Mean/run-index/element-index ordering is unchanged.
   - It avoids materializing one full concat+sort buffer before compression.
   - Historical concat+sort run merge is retained only as a `#[cfg(test)]` baseline helper.
 4. Recompress with `compress_into` using the chosen config.

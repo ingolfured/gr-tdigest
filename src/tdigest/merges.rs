@@ -177,15 +177,19 @@ impl<'a, F: FloatLike + FloatCore> Iterator for KWayCentroidMerge<'a, F> {
 
     #[inline]
     fn next(&mut self) -> Option<Self::Item> {
-        let head = self.heads.pop()?;
-        let run = &self.runs[head.run_idx];
-        let out = run[head.elem_idx];
-
-        let next_idx = head.elem_idx + 1;
-        if let Some(next) = run.get(next_idx) {
-            self.heads
-                .push(RunHead::new(next.mean_f64(), head.run_idx, next_idx));
-        }
+        let out = {
+            let mut head = self.heads.peek_mut()?;
+            let run = &self.runs[head.run_idx];
+            let out = run[head.elem_idx];
+            let next_idx = head.elem_idx + 1;
+            if let Some(next) = run.get(next_idx) {
+                // Replacing the minimum head needs one heap repair on drop.
+                *head = RunHead::new(next.mean_f64(), head.run_idx, next_idx);
+            } else {
+                std::collections::binary_heap::PeekMut::pop(head);
+            }
+            out
+        };
 
         self.remaining = self.remaining.saturating_sub(1);
         Some(out)
@@ -314,6 +318,80 @@ where
 mod tests {
     use super::*;
     use rand::{rngs::StdRng, Rng, SeedableRng};
+
+    fn heap_root_fixtures<F: FloatLike + FloatCore>() {
+        let mut rng = StdRng::seed_from_u64(0xD208_987);
+        for fan_in in [0, 1, 2, 3, 4, 40] {
+            for _ in 0..32 {
+                let runs: Vec<Vec<Centroid<F>>> = (0..fan_in)
+                    .map(|run_index| {
+                        let len = rng.random_range(0..80);
+                        let mut run: Vec<_> = (0..len)
+                            .map(|i| {
+                                let raw = rng.random_range(-10..=10) as f64;
+                                let mean = if raw == 0.0 && run_index % 2 == 0 {
+                                    -0.0
+                                } else {
+                                    raw
+                                };
+                                let weight = if i % 7 == 0 {
+                                    1e-309
+                                } else {
+                                    (i + 1) as f64 / 16.0
+                                };
+                                if i % 2 == 0 {
+                                    Centroid::<F>::new_atomic_f64(mean, weight)
+                                } else {
+                                    Centroid::<F>::new_mixed_f64(mean, weight)
+                                }
+                            })
+                            .collect();
+                        run.sort_by(|a, b| a.mean_f64().total_cmp(b.mean_f64()));
+                        run
+                    })
+                    .collect();
+                let refs: Vec<_> = runs.iter().map(Vec::as_slice).collect();
+                let mut reference = KWayCentroidMerge::from_runs(&refs);
+                let mut candidate = KWayCentroidMerge::from_runs(&refs);
+                let mut remaining: usize = runs.iter().map(Vec::len).sum();
+                // Retain the original pop/push algorithm as an independent
+                // control; do not call candidate.next() for the reference.
+                while let Some(head) = reference.heads.pop() {
+                    assert_eq!(candidate.size_hint(), (remaining, Some(remaining)));
+                    let run = &reference.runs[head.run_idx];
+                    let expected = run[head.elem_idx];
+                    let next_idx = head.elem_idx + 1;
+                    if let Some(next) = run.get(next_idx) {
+                        reference
+                            .heads
+                            .push(RunHead::new(next.mean_f64(), head.run_idx, next_idx));
+                    }
+                    let actual = candidate.next().unwrap();
+                    assert_eq!(actual.mean_f64().to_bits(), expected.mean_f64().to_bits());
+                    assert_eq!(
+                        actual.weight_f64().to_bits(),
+                        expected.weight_f64().to_bits()
+                    );
+                    assert_eq!(actual.is_atomic(), expected.is_atomic());
+                    remaining -= 1;
+                }
+                assert_eq!(remaining, 0);
+                assert_eq!(candidate.size_hint(), (0, Some(0)));
+                assert!(candidate.next().is_none());
+                assert!(candidate.next().is_none());
+            }
+        }
+    }
+
+    #[test]
+    fn heap_root_f32_preserves_pop_push_bits_and_exhaustion() {
+        heap_root_fixtures::<f32>();
+    }
+
+    #[test]
+    fn heap_root_f64_preserves_pop_push_bits_and_exhaustion() {
+        heap_root_fixtures::<f64>();
+    }
 
     #[test]
     fn normalization_preserves_mixed_kind_and_fractional_mass() {
