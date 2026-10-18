@@ -209,6 +209,23 @@ Cluster kind emission:
 - Single-item cluster stays atomic only if its head item was atomic.
 - Multi-item cluster is always emitted as mixed.
 
+In isolated experiment E18, max-size mode selects a single Stage-3 pass direction
+by comparing mirrored centroid weights from the outside inward. At the first
+unequal pair it starts at the lighter side; equal weight profiles keep the original
+forward pass bit-for-bit. Reverse traversal sums weights and weighted values in
+that traversal order, uses the same scale loop, bounds cluster means between the
+two endpoint means, then reverses the output in place. It neither copies a reversed
+input nor adds persistent state or a second compression pass. Stage-4 cap search,
+delta mode, and the independent original upstream engine retain forward behavior.
+
+The rule is deterministic and reflection-equivariant for asymmetric weight
+profiles, but is a heuristic, not a proof of improved quantiles or symmetry of the
+entire pipeline. Full pipeline cap selection can remain asymmetric. Equal-profile
+raw builds pay an O(n) mirrored comparison scan and may show only overhead. Weighted
+rank, value and CDF accuracy plus runtime/storage must improve in held-out tests
+before adoption; no improvement is claimed yet. Descending accumulation retains
+the existing finite-mean bound and invalid aggregate behavior.
+
 Delta mode uses the same k-limit merge with K2Norm and zero tolerance. Its normalizer uses the number of centroids in the current pass; quantiles use cumulative weight. Delta mode bypasses Stage 4 and Stage 6.
 
 The K2Norm merge pass requires a positive normalizer `4*ln(n/delta)+24`.

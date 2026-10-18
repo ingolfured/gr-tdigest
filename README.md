@@ -158,3 +158,5 @@ by its original name, while local path dependencies must point to that directory
 The repository root remains the separate modern `gr-tdigest` package. Registry
 publication requires publishing the matching `tdigest_core` version first; this
 workspace layout does not itself publish either package.
+
+Experimental branch E18 chooses a single compression direction for the modern max-size engine from mirrored weights. It is pending weighted accuracy and timing screening; equal-profile inputs retain numerical behavior but incur a scan. See `tdigest_design.md` for scope.
