@@ -4,6 +4,10 @@ All notable changes to this project are documented in this file.
 
 ## [Unreleased]
 
+### Research handoff
+- Archive transfer batch 1/8: preserve checksummed research data for machine migration; no new benchmark or release claim.
+- Preserve the October 2026 experiment sources, branch/PR map, original compatibility evidence, raw measurements and latest many-core workload priorities for cross-machine continuation; product code and original numerical contracts are unchanged.
+
 ### Fixed
 - Copy modern Python NumPy query results and centroid arrays directly into NumPy-owned memory, avoiding intermediate Python float/list objects while preserving exact values and independent writable/resizable arrays. Qualified NumPy 2 heldout batches used 44.86–54.76% less CDF time and 36.53–51.39% less quantile time in the recorded single-thread Linux workload; unresolved and noisy cases are retained in `compat/performance/numpy-output-20261015`.
 - Preserve LF checkout bytes for the 13 checksum-bound original implementation, Python wrapper, tests and benchmark files, including when Git uses `core.autocrlf=true`; keep the raw-byte checks and numerical code unchanged.
