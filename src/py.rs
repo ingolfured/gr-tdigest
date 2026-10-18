@@ -1,3 +1,4 @@
+use numpy::{PyArray1, PyArrayDescrMethods, PyArrayMethods, PyUntypedArrayMethods};
 use pyo3::exceptions::{PyTypeError, PyValueError};
 use pyo3::prelude::*;
 use pyo3::types::{PyAny, PyBytes, PyFloat, PyIterator, PyList, PyTuple, PyType};
@@ -128,6 +129,38 @@ fn array_values(py: Python<'_>, obj: PyObject) -> PyResult<(usize, Vec<f64>)> {
     }
 }
 
+// Training keeps ownership of its input vector. Copy compatible NumPy buffers
+// directly, without constructing a Python scalar for each element. Unsupported
+// layouts and dtypes retain the established generic conversion path.
+fn training_array_values(py: Python<'_>, obj: PyObject) -> PyResult<(usize, Vec<f64>)> {
+    let bound = obj.bind(py);
+    if let Ok(array) = bound.downcast::<PyArray1<f64>>() {
+        if array.is_c_contiguous()
+            && array.dtype().is_native_byteorder() == Some(true)
+            && array.data().is_aligned()
+        {
+            if let Ok(view) = array.try_readonly() {
+                if let Ok(values) = view.as_slice() {
+                    return Ok((1, values.to_vec()));
+                }
+            }
+        }
+    }
+    if let Ok(array) = bound.downcast::<PyArray1<f32>>() {
+        if array.is_c_contiguous()
+            && array.dtype().is_native_byteorder() == Some(true)
+            && array.data().is_aligned()
+        {
+            if let Ok(view) = array.try_readonly() {
+                if let Ok(values) = view.as_slice() {
+                    return Ok((1, values.iter().map(|&value| f64::from(value)).collect()));
+                }
+            }
+        }
+    }
+    array_values(py, obj)
+}
+
 fn output_for_values(py: Python<'_>, kind: ContainerKind, values: Vec<f64>) -> PyResult<PyObject> {
     match kind {
         ContainerKind::List => Ok(PyList::new(py, &values)?.into_any().unbind()),
@@ -173,7 +206,7 @@ impl PyTDigest {
 
         let (sc, policy) =
             resolve_delta_mode_defaults(scale, singleton_policy, pin_per_side, delta)?;
-        let (_ndim, values_f64) = array_values(py, values)?;
+        let (_ndim, values_f64) = training_array_values(py, values)?;
 
         let config = DigestConfig {
             max_size,
@@ -211,8 +244,8 @@ impl PyTDigest {
 
         let (sc, policy) =
             resolve_delta_mode_defaults(scale, singleton_policy, pin_per_side, delta)?;
-        let (_ndim_m, means_f64) = array_values(py, means)?;
-        let (_ndim_w, weights_f64) = array_values(py, weights)?;
+        let (_ndim_m, means_f64) = training_array_values(py, means)?;
+        let (_ndim_w, weights_f64) = training_array_values(py, weights)?;
         if means_f64.len() != weights_f64.len() {
             return Err(PyValueError::new_err(format!(
                 "from_means_weights: means and weights must have the same length (got {} vs {})",
@@ -291,7 +324,7 @@ impl PyTDigest {
     }
 
     pub fn add(&mut self, py: Python<'_>, values: PyObject) -> PyResult<()> {
-        let (_ndim, values_f64) = array_values(py, values)?;
+        let (_ndim, values_f64) = training_array_values(py, values)?;
         self.inner
             .add_values_f64(values_f64)
             .map_err(map_frontend_err)
@@ -303,8 +336,8 @@ impl PyTDigest {
         values: PyObject,
         weights: PyObject,
     ) -> PyResult<()> {
-        let (_ndim_v, values_f64) = array_values(py, values)?;
-        let (_ndim_w, weights_f64) = array_values(py, weights)?;
+        let (_ndim_v, values_f64) = training_array_values(py, values)?;
+        let (_ndim_w, weights_f64) = training_array_values(py, weights)?;
         self.inner
             .add_weighted_f64(values_f64, weights_f64)
             .map_err(map_frontend_err)

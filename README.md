@@ -158,3 +158,5 @@ by its original name, while local path dependencies must point to that directory
 The repository root remains the separate modern `gr-tdigest` package. Registry
 publication requires publishing the matching `tdigest_core` version first; this
 workspace layout does not itself publish either package.
+
+Modern Python training accepts NumPy arrays without retaining or mutating their storage; scalar, list, strided and byte-swapped inputs retain their existing conversion behavior.

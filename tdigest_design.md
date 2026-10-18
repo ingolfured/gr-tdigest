@@ -471,3 +471,5 @@ preserves existing application outputs; `gr_tdigest`, Polars, Java, and the CLI
 continue using the modern shared core. Numerical fixes there must not silently
 change the original interface. See the vendored source provenance and exact
 output regression tests.
+
+Modern Python training conversion has a direct copy path for aligned native-endian contiguous one-dimensional NumPy f32/f64 arrays. It takes a read-only borrow while copying into an owned Rust vector; no input buffer survives into digest state. Strided, byte-swapped, unaligned, scalar, object and non-float inputs retain generic NumPy/Python extraction. Core validation and query conversion are unchanged.
