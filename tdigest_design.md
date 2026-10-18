@@ -237,6 +237,11 @@ Safety fallback:
 - If rare plateau behavior prevents converging under cap, Stage 4 tightens `d'` further for a bounded number of retries.
 - If still over cap, it falls back to order-preserving equal-weight bucketization as a last-resort guard.
 
+Equal-weight bucketization reserves its final bucket for all remaining inputs.
+A rounded target can be reached while positive trailing weights remain; those
+inputs still affect the last weighted mean, even when adding their mass to the
+total rounds away. Existing accumulation precision and input order are retained.
+
 ### 4.5 Stage 5: assemble
 
 Concatenate without mutation:

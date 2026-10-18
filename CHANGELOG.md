@@ -5,6 +5,7 @@ All notable changes to this project are documented in this file.
 ## [Unreleased]
 
 ### Fixed
+- Consume every input in equal-weight bucketization by reserving the final bucket for the remaining stream; tiny positive tail weights can carry a material weighted-value contribution even when total-mass rounding hides their loss. Retain exact ordinary-input controls and cover both precisions, updates, merges, and Python/Polars.
 - Preserve LF checkout bytes for the 13 checksum-bound original implementation, Python wrapper, tests and benchmark files, including when Git uses `core.autocrlf=true`; keep the raw-byte checks and numerical code unchanged.
 - Record independently reviewed frozen-budget accuracy and native timing evidence on the corrected source, including tight-storage losses, value/rank distinctions and policy violations; connect the personal review stack to the validated actual upstream draft.
 - Record the K2Norm negative controls, full corrected-source Linux validation, and seven-runtime direct/source-rebuilt wheel gates, with exact artifact identities and bounded claims.

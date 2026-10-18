@@ -437,7 +437,7 @@ fn cap_with_second_klimit<F: FloatLike + FloatCore>(
 
 /// **(4) Cap** — order-preserving equal-weight bucketization into `buckets` groups.
 ///
-/// - Emits up to `buckets` outputs; a tiny trailing remainder may be skipped (see [`cap_core`]).
+/// - Emits up to `buckets` outputs and consumes every input, including tiny trailing weights.
 /// - Multi-item buckets are **mixed**; a one-item bucket retains its input kind.
 fn bucketize_equal_weight<F: FloatLike + FloatCore>(
     cs: &[Centroid<F>],
@@ -462,12 +462,11 @@ fn bucketize_equal_weight<F: FloatLike + FloatCore>(
 
     for c in cs {
         acc.add(c);
-        if acc.w_sum >= target && acc.w_sum > 0.0 {
+        // Reserve the final bucket for every remaining input. Floating-point
+        // rounding can fill the target before a positive tail is consumed.
+        if acc.w_sum >= target && acc.w_sum > 0.0 && out.len() + 1 < buckets {
             out.push(acc.centroid::<F>());
             acc.clear();
-            if out.len() == buckets {
-                break;
-            }
         }
     }
     if !acc.is_empty() && out.len() < buckets {
@@ -662,6 +661,94 @@ mod tests {
                 assert_eq!(output[0].kind(), centroid.kind());
             }
         }
+    }
+
+    // Regression fixtures make the tiny mass's weighted-value contribution
+    // exactly one, although adding that mass to the total rounds away.
+    fn bucket_tail_consumes_all_inputs<F: FloatLike + FloatCore>() {
+        for buckets in [2, 3, 4, 7] {
+            let mut items: Vec<_> = (0..buckets)
+                .map(|i| Centroid::<F>::new_atomic_f64(i as f64, 1.0))
+                .collect();
+            items.push(Centroid::<F>::new_atomic_f64(
+                2.0_f64.powi(60),
+                2.0_f64.powi(-60),
+            ));
+            let out = bucketize_equal_weight(&items, buckets);
+            assert_eq!(out.len(), buckets);
+            assert_eq!(
+                out.last().unwrap().mean_f64(),
+                buckets as f64,
+                "a positive final input must participate even if total mass rounds down"
+            );
+            assert_eq!(out.last().unwrap().weight_f64(), 1.0);
+            assert!(!out.last().unwrap().is_atomic());
+            assert_eq!(
+                out.iter().map(|c| c.weight_f64()).sum::<f64>(),
+                buckets as f64
+            );
+            let expected_moment = ((buckets - 1) * buckets / 2 + 1) as f64;
+            assert_eq!(
+                out.iter()
+                    .map(|c| c.mean_f64() * c.weight_f64())
+                    .sum::<f64>(),
+                expected_moment
+            );
+            for (i, centroid) in out[..buckets - 1].iter().enumerate() {
+                assert_eq!(
+                    (
+                        centroid.mean_f64(),
+                        centroid.weight_f64(),
+                        centroid.is_atomic()
+                    ),
+                    (i as f64, 1.0, true)
+                );
+            }
+        }
+    }
+
+    #[test]
+    fn bucket_tail_f32_preserves_tiny_contributions() {
+        bucket_tail_consumes_all_inputs::<f32>();
+    }
+
+    #[test]
+    fn bucket_tail_f64_preserves_tiny_contributions() {
+        bucket_tail_consumes_all_inputs::<f64>();
+    }
+
+    #[test]
+    fn bucket_tail_ordinary_outputs_are_unchanged() {
+        macro_rules! controls {
+            ($float:ty) => {
+                for (weights, expected) in [
+                    (
+                        [1.0, 1.0, 1.0, 1.0],
+                        vec![(0.5, 2.0, false), (2.5, 2.0, false)],
+                    ),
+                    (
+                        [0.5, 1.5, 1.0, 1.0],
+                        vec![(0.75, 2.0, false), (2.5, 2.0, false)],
+                    ),
+                    ([1.0, 1.0, 1.0, 5.0], vec![(2.25, 8.0, false)]),
+                ] {
+                    let items: Vec<_> = weights
+                        .into_iter()
+                        .enumerate()
+                        .map(|(i, w)| Centroid::<$float>::new_atomic_f64(i as f64, w))
+                        .collect();
+                    let out = bucketize_equal_weight(&items, 2);
+                    assert_eq!(
+                        out.iter()
+                            .map(|c| (c.mean_f64(), c.weight_f64(), c.is_atomic()))
+                            .collect::<Vec<_>>(),
+                        expected
+                    );
+                }
+            };
+        }
+        controls!(f32);
+        controls!(f64);
     }
 
     // ---- tiny helpers ----
