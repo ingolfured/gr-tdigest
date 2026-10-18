@@ -384,6 +384,7 @@ Implemented in `src/tdigest/wire.rs`.
 
 Versioning:
 - Encoder default writes TDIG **v3**.
+- Vec and direct Python-byte output share the same field-order encoders through safe buffer writers. Python validates the selected format before allocating its final immutable bytes object, then fills it directly without an intermediate byte vector.
 - Decoder supports **v1**, **v2**, and **v3**.
 - Explicit versioned encoding is available via:
   - Rust core: `to_bytes_with_version(WireVersion::V1|V2|V3)`

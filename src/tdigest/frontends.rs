@@ -555,6 +555,22 @@ Rebuild or cast to a shared configuration before merge.",
         }
     }
 
+    #[cfg(feature = "python")]
+    pub(crate) fn encoded_wire_len(&self, version: WireVersion) -> usize {
+        match self {
+            Self::F32(td) => crate::tdigest::wire::encoded_digest_len(td, version),
+            Self::F64(td) => crate::tdigest::wire::encoded_digest_len(td, version),
+        }
+    }
+
+    #[cfg(feature = "python")]
+    pub(crate) fn encode_validated_into(&self, version: WireVersion, bytes: &mut [u8]) {
+        match self {
+            Self::F32(td) => crate::tdigest::wire::encode_validated_digest_into(td, version, bytes),
+            Self::F64(td) => crate::tdigest::wire::encode_validated_digest_into(td, version, bytes),
+        }
+    }
+
     /// Validate format-specific limits before using the infallible encoder.
     pub fn validate_wire_version(&self, version: WireVersion) -> WireResult<()> {
         match self {

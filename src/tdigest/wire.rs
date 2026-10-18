@@ -351,29 +351,95 @@ fn wire_precision_v12(bytes: &[u8], version: WireVersion) -> WireResult<WirePrec
  * Small helpers
  * ============================ */
 
-#[inline]
-fn write_u64(buf: &mut Vec<u8>, v: u64) {
-    buf.extend_from_slice(&v.to_le_bytes());
+// Both Vec callers and Python's final bytes allocation use the same field
+// order, scalar encodings and checksum logic. This writer needs no unsafe code.
+trait EncodeBuffer {
+    fn extend_bytes(&mut self, bytes: &[u8]);
+    fn push_byte(&mut self, byte: u8);
+    fn written_len(&self) -> usize;
+    fn as_bytes(&self) -> &[u8];
+    fn overwrite(&mut self, offset: usize, bytes: &[u8]);
+}
+
+impl EncodeBuffer for Vec<u8> {
+    #[inline]
+    fn extend_bytes(&mut self, bytes: &[u8]) {
+        self.extend_from_slice(bytes);
+    }
+    #[inline]
+    fn push_byte(&mut self, byte: u8) {
+        self.push(byte);
+    }
+    #[inline]
+    fn written_len(&self) -> usize {
+        self.len()
+    }
+    #[inline]
+    fn as_bytes(&self) -> &[u8] {
+        self.as_slice()
+    }
+    #[inline]
+    fn overwrite(&mut self, offset: usize, bytes: &[u8]) {
+        self[offset..offset + bytes.len()].copy_from_slice(bytes);
+    }
+}
+
+#[cfg(any(feature = "python", test))]
+struct SliceEncoder<'a> {
+    bytes: &'a mut [u8],
+    offset: usize,
+}
+
+#[cfg(any(feature = "python", test))]
+impl EncodeBuffer for SliceEncoder<'_> {
+    #[inline]
+    fn extend_bytes(&mut self, bytes: &[u8]) {
+        let end = self.offset + bytes.len();
+        self.bytes[self.offset..end].copy_from_slice(bytes);
+        self.offset = end;
+    }
+    #[inline]
+    fn push_byte(&mut self, byte: u8) {
+        self.bytes[self.offset] = byte;
+        self.offset += 1;
+    }
+    #[inline]
+    fn written_len(&self) -> usize {
+        self.offset
+    }
+    #[inline]
+    fn as_bytes(&self) -> &[u8] {
+        &self.bytes[..self.offset]
+    }
+    #[inline]
+    fn overwrite(&mut self, offset: usize, bytes: &[u8]) {
+        self.bytes[offset..offset + bytes.len()].copy_from_slice(bytes);
+    }
 }
 
 #[inline]
-fn write_u32(buf: &mut Vec<u8>, v: u32) {
-    buf.extend_from_slice(&v.to_le_bytes());
+fn write_u64<B: EncodeBuffer>(buf: &mut B, v: u64) {
+    buf.extend_bytes(&v.to_le_bytes());
 }
 
 #[inline]
-fn write_f64(buf: &mut Vec<u8>, v: f64) {
-    buf.extend_from_slice(&v.to_le_bytes());
+fn write_u32<B: EncodeBuffer>(buf: &mut B, v: u32) {
+    buf.extend_bytes(&v.to_le_bytes());
 }
 
 #[inline]
-fn write_f32(buf: &mut Vec<u8>, v: f32) {
-    buf.extend_from_slice(&v.to_le_bytes());
+fn write_f64<B: EncodeBuffer>(buf: &mut B, v: f64) {
+    buf.extend_bytes(&v.to_le_bytes());
 }
 
 #[inline]
-fn write_u8(buf: &mut Vec<u8>, v: u8) {
-    buf.push(v);
+fn write_f32<B: EncodeBuffer>(buf: &mut B, v: f32) {
+    buf.extend_bytes(&v.to_le_bytes());
+}
+
+#[inline]
+fn write_u8<B: EncodeBuffer>(buf: &mut B, v: u8) {
+    buf.push_byte(v);
 }
 
 #[inline]
@@ -538,9 +604,63 @@ where
     }
 }
 
-fn encode_digest_v12<F>(td: &TDigest<F>, version: WireVersion) -> Vec<u8>
+pub(crate) fn encoded_digest_len<F: FloatLike + FloatCore>(
+    td: &TDigest<F>,
+    version: WireVersion,
+) -> usize {
+    let width = if Precision::of_type::<F>() == Precision::F32 {
+        WireFloatWidth::F32
+    } else {
+        WireFloatWidth::F64
+    };
+    let header_len = if version == WireVersion::V3 {
+        HEADER_LEN_V3_MIN
+            + if td.delta().is_some() { 8 } else { 0 }
+            + if matches!(td.singleton_policy(), SingletonPolicy::UseWithProtectedEdges(pin) if pin > u8::MAX as usize)
+            {
+                8
+            } else {
+                0
+            }
+    } else {
+        HEADER_LEN_V12
+    };
+    header_len + centroid_stride(version, width) * td.centroids().len()
+}
+
+// Callers validate the selected format before allocating the destination,
+// exactly as encode_digest_with_version does before its Vec allocation.
+#[cfg(any(feature = "python", test))]
+pub(crate) fn encode_validated_digest_into<F: FloatLike + FloatCore>(
+    td: &TDigest<F>,
+    version: WireVersion,
+    bytes: &mut [u8],
+) {
+    assert_eq!(bytes.len(), encoded_digest_len(td, version));
+    let mut sink = SliceEncoder { bytes, offset: 0 };
+    match version {
+        WireVersion::V1 | WireVersion::V2 => encode_digest_v12_into(td, version, &mut sink),
+        WireVersion::V3 => encode_digest_v3_into(td, &mut sink),
+    }
+    debug_assert_eq!(sink.written_len(), sink.bytes.len());
+}
+
+fn encode_digest_v12<F: FloatLike + FloatCore>(td: &TDigest<F>, version: WireVersion) -> Vec<u8> {
+    let mut bytes = Vec::with_capacity(encoded_digest_len(td, version));
+    encode_digest_v12_into(td, version, &mut bytes);
+    bytes
+}
+
+fn encode_digest_v3<F: FloatLike + FloatCore>(td: &TDigest<F>) -> Vec<u8> {
+    let mut bytes = Vec::with_capacity(encoded_digest_len(td, WireVersion::V3));
+    encode_digest_v3_into(td, &mut bytes);
+    bytes
+}
+
+fn encode_digest_v12_into<F, B>(td: &TDigest<F>, version: WireVersion, buf: &mut B)
 where
     F: FloatLike + FloatCore,
+    B: EncodeBuffer,
 {
     debug_assert!(matches!(version, WireVersion::V1 | WireVersion::V2));
 
@@ -549,41 +669,38 @@ where
         Precision::F32 => WireFloatWidth::F32,
         _ => WireFloatWidth::F64,
     };
-    let per_centroid_len = centroid_stride(version, width);
-
-    let mut buf = Vec::with_capacity(HEADER_LEN_V12 + per_centroid_len * (n as usize));
 
     // magic + version
-    buf.extend_from_slice(MAGIC);
-    buf.push(version.as_u8());
+    buf.extend_bytes(MAGIC);
+    buf.push_byte(version.as_u8());
 
     // scale / policy / pin_per_side
     let scale_code = scale_to_code(td.scale());
     let (policy_code, pin_per_side) = policy_to_code(&td.singleton_policy());
-    buf.push(scale_code);
-    buf.push(policy_code);
-    buf.push(pin_per_side);
+    buf.push_byte(scale_code);
+    buf.push_byte(policy_code);
+    buf.push_byte(pin_per_side);
 
     // max_size
-    write_u64(&mut buf, td.max_size() as u64);
+    write_u64(buf, td.max_size() as u64);
 
     let cents = td.centroids();
     if version == WireVersion::V1 {
         // validate_digest has checked exact integer conversion and total range.
         let total_weight_u64: u64 = cents.iter().map(|c| c.weight_f64() as u64).sum();
-        write_u64(&mut buf, total_weight_u64);
+        write_u64(buf, total_weight_u64);
     } else {
         // Version 2 stores exact f64 total_weight.
-        write_f64(&mut buf, td.count());
+        write_f64(buf, td.count());
     }
 
     // min / max / centroid_count / data_sum
-    write_f64(&mut buf, td.min());
-    write_f64(&mut buf, td.max());
-    write_u64(&mut buf, n);
-    write_f64(&mut buf, td.sum());
+    write_f64(buf, td.min());
+    write_f64(buf, td.max());
+    write_u64(buf, n);
+    write_f64(buf, td.sum());
 
-    debug_assert_eq!(buf.len(), HEADER_LEN_V12);
+    debug_assert_eq!(buf.written_len(), HEADER_LEN_V12);
 
     // payload: centroids
     for c in cents {
@@ -592,32 +709,31 @@ where
 
         match width {
             WireFloatWidth::F32 => {
-                write_f32(&mut buf, mean_f64 as f32);
+                write_f32(buf, mean_f64 as f32);
                 if version == WireVersion::V1 {
-                    write_u64(&mut buf, w as u64);
+                    write_u64(buf, w as u64);
                 } else {
-                    write_f64(&mut buf, w);
-                    write_u8(&mut buf, kind_to_code(c));
+                    write_f64(buf, w);
+                    write_u8(buf, kind_to_code(c));
                 }
             }
             WireFloatWidth::F64 => {
-                write_f64(&mut buf, mean_f64);
+                write_f64(buf, mean_f64);
                 if version == WireVersion::V1 {
-                    write_u64(&mut buf, w as u64);
+                    write_u64(buf, w as u64);
                 } else {
-                    write_f64(&mut buf, w);
-                    write_u8(&mut buf, kind_to_code(c));
+                    write_f64(buf, w);
+                    write_u8(buf, kind_to_code(c));
                 }
             }
         }
     }
-
-    buf
 }
 
-fn encode_digest_v3<F>(td: &TDigest<F>) -> Vec<u8>
+fn encode_digest_v3_into<F, B>(td: &TDigest<F>, buf: &mut B)
 where
     F: FloatLike + FloatCore,
+    B: EncodeBuffer,
 {
     let n = td.centroids().len() as u64;
     let width = match Precision::of_type::<F>() {
@@ -648,39 +764,36 @@ where
     let header_len = HEADER_LEN_V3_MIN
         + if td.delta().is_some() { 8 } else { 0 }
         + if wide_pin.is_some() { 8 } else { 0 };
-    let per_centroid_len = centroid_stride(WireVersion::V3, width);
-
-    let mut buf = Vec::with_capacity(header_len + per_centroid_len * (n as usize));
 
     // fixed v3 header
-    buf.extend_from_slice(MAGIC); // 0..4
-    buf.push(WireVersion::V3.as_u8()); // 4
-    buf.push(flags); // 5
-    buf.push(header_len as u8); // 6
-    buf.push(width.to_precision_code()); // 7
+    buf.extend_bytes(MAGIC); // 0..4
+    buf.push_byte(WireVersion::V3.as_u8()); // 4
+    buf.push_byte(flags); // 5
+    buf.push_byte(header_len as u8); // 6
+    buf.push_byte(width.to_precision_code()); // 7
 
     let scale_code = scale_to_code(td.scale());
     let (policy_code, pin_per_side) = policy_to_code(&td.singleton_policy());
-    buf.push(scale_code); // 8
-    buf.push(policy_code); // 9
-    buf.push(pin_per_side); // 10
-    buf.push(0); // 11 reserved
+    buf.push_byte(scale_code); // 8
+    buf.push_byte(policy_code); // 9
+    buf.push_byte(pin_per_side); // 10
+    buf.push_byte(0); // 11 reserved
 
-    write_u64(&mut buf, td.max_size() as u64); // 12..20
-    write_f64(&mut buf, td.count()); // 20..28
-    write_f64(&mut buf, td.min()); // 28..36
-    write_f64(&mut buf, td.max()); // 36..44
-    write_u64(&mut buf, n); // 44..52
-    write_f64(&mut buf, td.sum()); // 52..60
-    write_u32(&mut buf, 0); // 60..64 checksum placeholder
+    write_u64(buf, td.max_size() as u64); // 12..20
+    write_f64(buf, td.count()); // 20..28
+    write_f64(buf, td.min()); // 28..36
+    write_f64(buf, td.max()); // 36..44
+    write_u64(buf, n); // 44..52
+    write_f64(buf, td.sum()); // 52..60
+    write_u32(buf, 0); // 60..64 checksum placeholder
     if let Some(delta) = td.delta() {
-        write_f64(&mut buf, delta); // first optional extension
+        write_f64(buf, delta); // first optional extension
     }
     if let Some(pin) = wide_pin {
-        write_u64(&mut buf, pin as u64); // follows delta when present
+        write_u64(buf, pin as u64); // follows delta when present
     }
 
-    debug_assert_eq!(buf.len(), header_len);
+    debug_assert_eq!(buf.written_len(), header_len);
 
     // payload: same as v2 layout
     for c in td.centroids() {
@@ -689,24 +802,22 @@ where
 
         match width {
             WireFloatWidth::F32 => {
-                write_f32(&mut buf, mean_f64 as f32);
-                write_f64(&mut buf, w);
-                write_u8(&mut buf, kind_to_code(c));
+                write_f32(buf, mean_f64 as f32);
+                write_f64(buf, w);
+                write_u8(buf, kind_to_code(c));
             }
             WireFloatWidth::F64 => {
-                write_f64(&mut buf, mean_f64);
-                write_f64(&mut buf, w);
-                write_u8(&mut buf, kind_to_code(c));
+                write_f64(buf, mean_f64);
+                write_f64(buf, w);
+                write_u8(buf, kind_to_code(c));
             }
         }
     }
 
     if (flags & V3_FLAG_CHECKSUM) != 0 {
-        let checksum = checksum_v3(&buf, header_len);
-        buf[V3_CHECKSUM_OFFSET..V3_CHECKSUM_OFFSET + 4].copy_from_slice(&checksum.to_le_bytes());
+        let checksum = checksum_v3(buf.as_bytes(), header_len);
+        buf.overwrite(V3_CHECKSUM_OFFSET, &checksum.to_le_bytes());
     }
-
-    buf
 }
 
 /* ============================
@@ -1202,5 +1313,70 @@ mod tests {
         assert_eq!(blob[4], VERSION_V3);
         assert_eq!(blob[6] as usize, HEADER_LEN_V3_MIN);
         assert_eq!(blob[7], PRECISION_CODE_F64);
+    }
+}
+
+#[cfg(test)]
+mod direct_slice_tests {
+    use super::*;
+
+    fn check_direct_slice<F: FloatLike + FloatCore>() {
+        let mut digests = vec![TDigest::<F>::default()];
+        for weights in [
+            [1.0, 2.0, 3.0],
+            [0.125, 0.25, 0.5],
+            [16_777_217.0, 2.0, 3.0],
+        ] {
+            for config in 0..3 {
+                let cents = vec![
+                    Centroid::<F>::new_atomic_f64(-0.0, weights[0]),
+                    Centroid::<F>::new_mixed_f64(2.0, weights[1]),
+                    Centroid::<F>::new_atomic_f64(5.0, weights[2]),
+                ];
+                let mut builder = TDigest::<F>::builder()
+                    .max_size(64)
+                    .singleton_policy(SingletonPolicy::Off);
+                if config == 1 {
+                    builder = builder.delta(300.0).scale(ScaleFamily::K2Norm);
+                }
+                if config == 2 {
+                    builder = builder.singleton_policy(SingletonPolicy::UseWithProtectedEdges(300));
+                }
+                digests.push(
+                    builder
+                        .with_centroids_and_stats(
+                            cents,
+                            DigestStats {
+                                data_sum: 2.0 * weights[1] + 5.0 * weights[2],
+                                total_weight: weights.iter().sum(),
+                                data_min: -0.0,
+                                data_max: 5.0,
+                            },
+                        )
+                        .build(),
+                );
+            }
+        }
+        for td in digests {
+            for version in [WireVersion::V1, WireVersion::V2, WireVersion::V3] {
+                if version.validate_digest(&td).is_err() {
+                    continue;
+                }
+                let old = encode_digest_with_version(&td, version);
+                let mut direct = vec![0xa5; encoded_digest_len(&td, version)];
+                encode_validated_digest_into(&td, version, &mut direct);
+                assert_eq!(direct, old);
+                assert!(decode_digest(&direct).is_ok());
+            }
+        }
+    }
+
+    #[test]
+    fn direct_slice_f32_matches_vec_bytes_all_formats_and_extensions() {
+        check_direct_slice::<f32>();
+    }
+    #[test]
+    fn direct_slice_f64_matches_vec_bytes_all_formats_and_extensions() {
+        check_direct_slice::<f64>();
     }
 }

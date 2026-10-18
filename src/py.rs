@@ -337,16 +337,22 @@ impl PyTDigest {
         py: Python<'py>,
         version: Option<u8>,
     ) -> PyResult<Bound<'py, PyBytes>> {
-        let bytes = if let Some(v) = version {
+        let version = if let Some(v) = version {
             let parsed = parse_wire_version(v)?;
             self.inner
                 .validate_wire_version(parsed)
                 .map_err(|e| PyValueError::new_err(e.to_string()))?;
-            self.inner.to_bytes_with_version(parsed)
+            parsed
         } else {
-            self.inner.to_bytes()
+            self.inner
+                .validate_wire_version(WireVersion::LATEST)
+                .expect("selected TDIG version cannot represent digest state");
+            WireVersion::LATEST
         };
-        Ok(PyBytes::new(py, &bytes))
+        PyBytes::new_with(py, self.inner.encoded_wire_len(version), |bytes| {
+            self.inner.encode_validated_into(version, bytes);
+            Ok(())
+        })
     }
 
     #[staticmethod]

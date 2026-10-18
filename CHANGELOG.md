@@ -44,6 +44,7 @@ All notable changes to this project are documented in this file.
 - Preserve the original upstream benchmark as a reference and provide a separate custom benchmark smoke target.
 
 ### Changed
+- Encode modern Python TDIG bytes directly into the final Python allocation through a shared safe slice writer, avoiding the intermediate Rust byte vector/copy while retaining field order, CRC, version validation and immutable bytes ownership.
 - Compressor Stage 4 cap strategy now uses a second k-limit merge with binary-searched `d'` (same scale-family geometry as Stage 3) instead of always using equal-weight bucketization.
 - Added Stage 4 unit coverage for cap/weight/order invariants under the new second-pass k-limit cap behavior.
 - Updated `tdigest_design.md` to document the new Stage 4 cap flow and fallback behavior.

@@ -13,7 +13,7 @@ T-Digest provides a mergeable summary of a distribution, enabling approximate qu
 - ⚖️ Weighted ingest across Rust/Python/Polars/Java (`add_weighted`, `add_weighted_values`, Java weighted adds).
 - 🔄 Explicit precision casting across surfaces (`cast_precision` / `castPrecision`).
 - 📦 TDIG v3 wire default (flags + header length + precision code + checksum), with v1/v2 decode compatibility.
-- 🧭 Explicit wire-version encode controls (`to_bytes(version=1|2|3)`, `toBytes(version)`).
+- 🧭 Explicit wire-version encode controls (`to_bytes(version=1|2|3)`, `toBytes(version)`); Python encodes directly into its immutable bytes result.
 - 🖥️ Rust CLI subcommands (`build`, `quantile`, `cdf`, `median`) with `text|csv|json|ndjson` ingestion.
 - 🎚️ Scale families: `Quad`, `K1`, `K2`, `K3`.
 - 🔩 Singleton handling policy: edge-precision (`keep N`), respect singletons, or uniform merge.
