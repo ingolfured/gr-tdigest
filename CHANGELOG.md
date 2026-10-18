@@ -4,6 +4,9 @@ All notable changes to this project are documented in this file.
 
 ## [Unreleased]
 
+### Experimental
+- Evaluate consuming the first owned frontend merge input directly, removing two redundant clones while preserving merge order, empty behavior and validation.
+
 ### Fixed
 - Preserve LF checkout bytes for the 13 checksum-bound original implementation, Python wrapper, tests and benchmark files, including when Git uses `core.autocrlf=true`; keep the raw-byte checks and numerical code unchanged.
 - Record independently reviewed frozen-budget accuracy and native timing evidence on the corrected source, including tight-storage losses, value/rank distinctions and policy violations; connect the personal review stack to the validated actual upstream draft.
@@ -44,6 +47,7 @@ All notable changes to this project are documented in this file.
 - Preserve the original upstream benchmark as a reference and provide a separate custom benchmark smoke target.
 
 ### Changed
+- Compact the final owned frontend merge accumulator, preserving the former clone-based retained capacity for publicly seeded digest vectors, including empty vectors and single-input merges.
 - Compressor Stage 4 cap strategy now uses a second k-limit merge with binary-searched `d'` (same scale-family geometry as Stage 3) instead of always using equal-weight bucketization.
 - Added Stage 4 unit coverage for cap/weight/order invariants under the new second-pass k-limit cap behavior.
 - Updated `tdigest_design.md` to document the new Stage 4 cap flow and fallback behavior.

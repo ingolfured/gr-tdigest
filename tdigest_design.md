@@ -121,6 +121,12 @@ Weighted constructor/merge helpers:
 
 ### 3.3 Digest-to-digest merge (`merge_digests`)
 
+The shared frontend `merge_all` consumes its owned input vector and starts from
+its first digest directly. Remaining digests retain their original order and
+pass through the same strict `merge_in_place` validation. Empty input still
+returns the canonical frontend empty digest.
+
+
 `TDigest::merge_digests(digests)`:
 1. Scan digests and keep only non-empty runs (`count>0` and non-empty centroid vector).
 2. Pick the first non-empty digest as the config source (`max_size`, `scale`, `policy`, `delta`).
@@ -471,3 +477,8 @@ preserves existing application outputs; `gr_tdigest`, Polars, Java, and the CLI
 continue using the modern shared core. Numerical fixes there must not silently
 change the original interface. See the vendored source provenance and exact
 output regression tests.
+
+Owned frontend merge results shrink spare centroid capacity before return. The
+public Rust builder can accept an overallocated vector even when ordinary
+training and decode paths are compact; ownership transfer must retain the
+compact allocation previously produced by cloning that input.

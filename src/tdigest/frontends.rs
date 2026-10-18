@@ -478,14 +478,18 @@ Rebuild or cast to a shared configuration before merge.",
     }
 
     pub fn merge_all(digests: Vec<Self>) -> Result<Self, FrontendError> {
-        if digests.is_empty() {
+        let mut digests = digests.into_iter();
+        let Some(mut acc) = digests.next() else {
             return Ok(Self::canonical_empty());
+        };
+        for digest in digests {
+            acc.merge_in_place(&digest)?;
         }
-
-        let first = digests[0].clone();
-        let mut acc = first.clone();
-        for d in digests.iter().skip(1) {
-            acc.merge_in_place(d)?;
+        // The former clones also compacted seeded vectors. Preserve that
+        // retained-memory behavior when taking ownership of the first input.
+        match &mut acc {
+            Self::F32(td) => td.compact_centroid_capacity(),
+            Self::F64(td) => td.compact_centroid_capacity(),
         }
         Ok(acc)
     }

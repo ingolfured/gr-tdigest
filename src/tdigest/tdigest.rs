@@ -823,6 +823,12 @@ impl<F: FloatLike + FloatCore> TDigest<F> {
         self.max_size
     }
 
+    // Ownership-preserving frontend operations must retain the compact
+    // allocation previously produced by Vec::clone, even for seeded vectors.
+    pub(crate) fn compact_centroid_capacity(&mut self) {
+        self.centroids.shrink_to_fit();
+    }
+
     /// Borrow the internal centroids.
     #[inline]
     pub fn centroids_ref(&self) -> &[Centroid<F>] {
@@ -918,6 +924,52 @@ mod tests {
 
     fn approx(a: f64, b: f64, eps: f64) -> bool {
         (a - b).abs() <= eps * (1.0 + a.abs() + b.abs())
+    }
+
+    #[test]
+    fn frontend_owned_merge_compacts_publicly_seeded_capacity() {
+        use crate::tdigest::frontends::FrontendDigest;
+        macro_rules! check {
+            ($float:ty, $variant:ident) => {{
+                for len in [0, 3] {
+                    for trailing_empty in [false, true] {
+                        let mut centroids = Vec::with_capacity(1024);
+                        centroids.extend(
+                            (0..len).map(|i| Centroid::<$float>::new_atomic_f64(i as f64, 1.0)),
+                        );
+                        let seeded = TDigest::<$float>::builder()
+                            .max_size(64)
+                            .singleton_policy(SingletonPolicy::Off)
+                            .with_centroids_and_stats(
+                                centroids,
+                                DigestStats {
+                                    total_weight: len as f64,
+                                    data_sum: if len == 0 { 0.0 } else { 3.0 },
+                                    data_min: if len == 0 { f64::NAN } else { 0.0 },
+                                    data_max: if len == 0 { f64::NAN } else { 2.0 },
+                                },
+                            )
+                            .build();
+                        assert_eq!(seeded.centroids.capacity(), 1024);
+                        let old_result = seeded.clone();
+                        assert_eq!(old_result.centroids.capacity(), len);
+                        let mut inputs = vec![FrontendDigest::$variant(seeded)];
+                        if trailing_empty {
+                            inputs.push(FrontendDigest::$variant(TDigest::<$float>::default()));
+                        }
+                        let FrontendDigest::$variant(result) =
+                            FrontendDigest::merge_all(inputs).unwrap()
+                        else {
+                            panic!("precision changed")
+                        };
+                        assert_eq!(result.centroids.capacity(), old_result.centroids.capacity());
+                        assert_eq!(result.to_bytes(), old_result.to_bytes());
+                    }
+                }
+            }};
+        }
+        check!(f32, F32);
+        check!(f64, F64);
     }
 
     #[derive(Clone, Copy, Debug)]
