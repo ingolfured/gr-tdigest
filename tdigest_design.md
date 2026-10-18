@@ -471,3 +471,5 @@ preserves existing application outputs; `gr_tdigest`, Polars, Java, and the CLI
 continue using the modern shared core. Numerical fixes there must not silently
 change the original interface. See the vendored source provenance and exact
 output regression tests.
+
+Modern Python NumPy outputs use PyArray1::from_slice to copy f64 results directly into NumPy-owned memory. List and tuple outputs retain their existing container paths. The direct copy preserves dtype, shape, independent writable storage, OWNDATA and resizing. Moving Rust vectors into NumPy was considered but excluded because Rust-owned ndarray buffers cannot be resized.

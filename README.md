@@ -158,3 +158,5 @@ by its original name, while local path dependencies must point to that directory
 The repository root remains the separate modern `gr-tdigest` package. Registry
 publication requires publishing the matching `tdigest_core` version first; this
 workspace layout does not itself publish either package.
+
+Modern Python NumPy query results and centroid arrays are independent writable Float64 snapshots; they retain ordinary NumPy ownership and resizing behavior.
