@@ -34,6 +34,42 @@ const CAP_SEARCH_LO: f64 = 1e-6;
  * Internal utilities
  * ============================================================================= */
 
+// Experimental cold fallback only. Raw digest sum is deliberately untouched.
+#[cold]
+#[inline(never)]
+fn scaled_compensated_cluster_mean<F: FloatLike + FloatCore>(
+    items: &[Centroid<F>],
+    total_weight: f64,
+) -> Option<f64> {
+    let mut scale = 0.0_f64;
+    for centroid in items {
+        let mean = centroid.mean_f64();
+        if !mean.is_finite() {
+            return None;
+        }
+        scale = scale.max(mean.abs());
+    }
+    if scale == 0.0 || !scale.is_finite() {
+        return None;
+    }
+    let mut sum = 0.0_f64;
+    let mut correction = 0.0_f64;
+    for centroid in items {
+        let term = (centroid.mean_f64() / scale) * (centroid.weight_f64() / total_weight);
+        let next = sum + term;
+        correction += if sum.abs() >= term.abs() {
+            (sum - next) + term
+        } else {
+            (term - next) + sum
+        };
+        sum = next;
+    }
+    // Scaled terms form a convex combination. Bound roundoff before restoring
+    // magnitude; this does not recover contributions lost to scaling underflow.
+    let mean = (sum + correction).clamp(-1.0, 1.0) * scale;
+    Some(mean.clamp(items[0].mean_f64(), items[items.len() - 1].mean_f64()))
+}
+
 #[derive(Clone, Copy, Debug, Default)]
 struct WeightedStats {
     w_sum: f64,
@@ -84,6 +120,16 @@ impl WeightedStats {
         } else {
             Centroid::<F>::new_mixed_f64(self.mean(), self.w_sum)
         }
+    }
+    #[inline]
+    fn centroid_with_inputs<F: FloatLike + FloatCore>(&self, items: &[Centroid<F>]) -> Centroid<F> {
+        let ordinary = self.centroid::<F>();
+        if self.items > 1 && self.w_sum.is_finite() && !ordinary.mean_f64().is_finite() {
+            if let Some(mean) = scaled_compensated_cluster_mean(items, self.w_sum) {
+                return Centroid::<F>::new_mixed_f64(mean, self.w_sum);
+            }
+        }
+        ordinary
     }
     #[inline]
     fn is_empty(&self) -> bool {
@@ -337,7 +383,7 @@ fn klimit_merge<F: FloatLike + FloatCore>(
     let mut q_l = c_acc / total_w;
     let mut k_left = q_to_k(q_l, d, family, n);
 
-    for c in items {
+    for (index, c) in items.iter().enumerate() {
         let w_next = c.weight_f64();
         let q_r = (c_acc + acc.w_sum + w_next) / total_w;
         let k_right = q_to_k(q_r, d, family, n);
@@ -345,7 +391,8 @@ fn klimit_merge<F: FloatLike + FloatCore>(
         if (k_right - k_left) <= 1.0 + tol {
             acc.add(c);
         } else {
-            flush_cluster::<F>(&mut clusters, &mut acc);
+            let start = index - acc.items;
+            flush_cluster::<F>(&mut clusters, &mut acc, &items[start..index]);
             if let Some(last) = clusters.last() {
                 c_acc += last.weight_f64();
             }
@@ -355,7 +402,8 @@ fn klimit_merge<F: FloatLike + FloatCore>(
             acc.add(c);
         }
     }
-    flush_cluster::<F>(&mut clusters, &mut acc);
+    let start = items.len() - acc.items;
+    flush_cluster::<F>(&mut clusters, &mut acc, &items[start..]);
 
     clusters
 }
@@ -460,10 +508,11 @@ fn bucketize_equal_weight<F: FloatLike + FloatCore>(
     let mut out = Vec::with_capacity(buckets);
     let mut acc = WeightedStats::default();
 
-    for c in cs {
+    for (index, c) in cs.iter().enumerate() {
         acc.add(c);
         if acc.w_sum >= target && acc.w_sum > 0.0 {
-            out.push(acc.centroid::<F>());
+            let start = index + 1 - acc.items;
+            out.push(acc.centroid_with_inputs::<F>(&cs[start..=index]));
             acc.clear();
             if out.len() == buckets {
                 break;
@@ -471,7 +520,8 @@ fn bucketize_equal_weight<F: FloatLike + FloatCore>(
         }
     }
     if !acc.is_empty() && out.len() < buckets {
-        out.push(acc.centroid::<F>());
+        let start = cs.len() - acc.items;
+        out.push(acc.centroid_with_inputs::<F>(&cs[start..]));
     }
     out
 }
@@ -542,11 +592,12 @@ fn edge_run_len<F: FloatLike + FloatCore>(cs: &[Centroid<F>], k: usize, from_lef
 fn flush_cluster<F: FloatLike + FloatCore>(
     clusters: &mut Vec<Centroid<F>>,
     acc: &mut WeightedStats,
+    items: &[Centroid<F>],
 ) {
     if acc.is_empty() {
         return;
     }
-    clusters.push(acc.centroid::<F>());
+    clusters.push(acc.centroid_with_inputs::<F>(items));
     acc.clear();
 }
 
@@ -556,7 +607,7 @@ fn weighted_collapse<F: FloatLike + FloatCore>(slice: &[Centroid<F>]) -> Centroi
     for c in slice {
         acc.add(c);
     }
-    acc.centroid::<F>()
+    acc.centroid_with_inputs::<F>(slice)
 }
 
 #[cfg(test)]

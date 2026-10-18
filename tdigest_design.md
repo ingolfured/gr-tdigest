@@ -164,6 +164,16 @@ accumulator tracks the last input mean; centroid storage and wire layouts do not
 change. The bound applies only when the weight sum, weighted sum, and quotient
 are all finite. It must not hide overflow or repair invalid aggregate state.
 
+The E15 experimental branch additionally screens a cold scaled-compensated
+fallback when a multi-input centroid mean is nonfinite but accumulated mass is
+finite. Emission supplies its source slice; ordinary results use the unchanged
+accumulator arithmetic. The fallback scales values and normalized weights and
+uses Neumaier compensation, then restores the mean magnitude. Scaling may
+underflow deeply cancelling residuals, so the exact-input oracle is a retention
+gate. Digest `sum()` and its derived `mean()` retain existing overflow behavior;
+TDIG/Polars still carry that metadata without a new format or hidden replacement.
+This prototype does not claim support for aggregate mass overflow.
+
 ### 4.2 Stage 2: policy slice
 
 Policy is derived from `SingletonPolicy` and current `max_size`.
