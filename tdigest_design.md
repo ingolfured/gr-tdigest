@@ -264,8 +264,14 @@ Concatenate without mutation:
 ### 5.1 CDF (`src/tdigest/cdf.rs`)
 
 `TDigest::cdf(vals)`:
+
+The scalar path finds the centroid bracket and accumulates the same ordered
+weight sum plus its one required prefix mass. It calls the shared interpolation
+kernel without allocating the full prefix array. Batch and subnormal semantics
+remain unchanged; the scalar output vector is still allocated.
+
 1. Empty digest -> vector of `NaN`.
-2. Build one prefix-weight array (`prefix[i] = cumulative weight before centroid i`).
+2. For batch probes, build one prefix-weight array (`prefix[i] = cumulative weight before centroid i`); for a scalar, retain only the one prefix mass its bracket needs.
 3. For each probe:
 - `NaN` probe -> `NaN`.
 - Else evaluate via `cdf_at_val_fast` (binary search by centroid mean).

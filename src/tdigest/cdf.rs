@@ -26,7 +26,8 @@
 //!
 //! # Performance
 //! - Per query is **O(log n)** due to a binary search on centroid means.
-//! - A single `prefix` array is built **once per call** (O(n)) and reused.
+//! - Scalar calls accumulate total and one prefix mass without a prefix allocation.
+//! - Batch calls build one `prefix` array (O(n)) and reuse it.
 //! - For very large batches, we switch to Rayon parallelism.
 
 use crate::tdigest::centroids::Centroid;
@@ -68,6 +69,38 @@ impl<F: FloatLike + FloatCore> TDigest<F> {
         }
         if vals.is_empty() {
             return Vec::new();
+        }
+
+        if vals.len() == 1 {
+            let val = vals[0];
+            if val.is_nan() {
+                return vec![f64::NAN];
+            }
+            let position = cents.binary_search_by(|c| c.mean_f64().partial_cmp(&val).unwrap());
+            let prefix_index = match position {
+                Ok(index) => index,
+                Err(index) => index.saturating_sub(1),
+            };
+            let mut total = 0.0;
+            let mut prefix_mass = 0.0;
+            for (index, centroid) in cents.iter().enumerate() {
+                if index == prefix_index {
+                    prefix_mass = total;
+                }
+                total += centroid.weight_f64();
+            }
+            if total > 0.0 && total < f64::MIN_POSITIVE {
+                return self.normalized_subnormal_mass_for_queries(total).cdf(vals);
+            }
+            return vec![cdf_at_position(
+                val,
+                cents,
+                position,
+                prefix_mass,
+                total,
+                self.min(),
+                self.max(),
+            )];
         }
 
         let mut prefix: Vec<f64> = Vec::with_capacity(n);
@@ -141,11 +174,37 @@ fn cdf_at_val_fast<F: FloatLike + FloatCore>(
     min_v: f64,
     max_v: f64,
 ) -> f64 {
+    let position = cents.binary_search_by(|c| c.mean_f64().partial_cmp(&val).unwrap());
+    let prefix_index = match position {
+        Ok(index) => index,
+        Err(index) => index.saturating_sub(1),
+    };
+    cdf_at_position(
+        val,
+        cents,
+        position,
+        prefix[prefix_index],
+        count_f64,
+        min_v,
+        max_v,
+    )
+}
+
+#[inline(always)]
+fn cdf_at_position<F: FloatLike + FloatCore>(
+    val: f64,
+    cents: &[Centroid<F>],
+    position: Result<usize, usize>,
+    prefix_mass: f64,
+    count_f64: f64,
+    min_v: f64,
+    max_v: f64,
+) -> f64 {
     let n = cents.len();
 
-    match cents.binary_search_by(|c| c.mean_f64().partial_cmp(&val).unwrap()) {
+    match position {
         // Exact centroid hit: midpoint semantics (half-weight).
-        Ok(idx) => (prefix[idx] + 0.5 * cents[idx].weight_f64()) / count_f64,
+        Ok(idx) => (prefix_mass + 0.5 * cents[idx].weight_f64()) / count_f64,
 
         Err(idx) => {
             // Left of first centroid mean
@@ -196,7 +255,7 @@ fn cdf_at_val_fast<F: FloatLike + FloatCore>(
             if gap <= 0.0 {
                 // Pathological/too-close: fall back to midpoint mass to preserve monotonicity.
                 let dw = 0.5 * (wl + wr);
-                return (prefix[li] + dw) / count_f64;
+                return (prefix_mass + dw) / count_f64;
             }
 
             // Atomic-aware exclusion: subtract w/2 for ANY atomic neighbor.
@@ -208,7 +267,7 @@ fn cdf_at_val_fast<F: FloatLike + FloatCore>(
             let dw_span = dw_center - left_excl - right_excl;
 
             // Base mass at left center plus any left exclusion.
-            let base = prefix[li] + wl * 0.5 + left_excl;
+            let base = prefix_mass + wl * 0.5 + left_excl;
             let frac = fraction_between(val, ml, mr);
 
             (base + dw_span * frac) / count_f64
@@ -396,5 +455,123 @@ mod tests {
             (exact - (2.5 / 12.0)).abs() <= 1e-12,
             "exact hit at left mean should be midpoint mass"
         );
+    }
+
+    fn scalar_batch_equivalence<
+        F: crate::tdigest::precision::FloatLike + ordered_float::FloatCore,
+    >() {
+        use crate::tdigest::{centroids::Centroid, singleton_policy::SingletonPolicy};
+
+        let values = [-10.0, -2.0, -0.0, 0.0, 1.0, 3.0, 10.0];
+        let weights = [0.125, 0.25, 0.5, 1.0, 2.0, 3.0, 4.0];
+        let typed: Vec<F> = values.iter().map(|&value| F::from_f64(value)).collect();
+        let probes = [
+            f64::NEG_INFINITY,
+            -20.0,
+            -10.0,
+            -9.0,
+            -2.0,
+            -1.0,
+            -0.0,
+            0.0,
+            0.5,
+            1.0,
+            3.0,
+            4.0,
+            9.0,
+            10.0,
+            20.0,
+            f64::INFINITY,
+            f64::NAN,
+        ];
+        let mut digests = Vec::new();
+        for cap in [3, 64] {
+            for policy in [SingletonPolicy::Off, SingletonPolicy::Use] {
+                digests.push(
+                    TDigestBuilder::<F>::new()
+                        .max_size(cap)
+                        .singleton_policy(policy)
+                        .build()
+                        .merge_weighted_unsorted(&typed, &weights)
+                        .unwrap(),
+                );
+            }
+        }
+        digests.push(TDigestBuilder::<F>::new().build());
+        digests.push(
+            TDigestBuilder::<F>::new()
+                .with_centroids(
+                    vec![Centroid::new_mixed_f64(0.0, 0.5)],
+                    0.0,
+                    0.5,
+                    F::from_f64(2.0),
+                    F::from_f64(-2.0),
+                    64,
+                )
+                .build(),
+        );
+        digests.push(
+            TDigestBuilder::<F>::new()
+                .with_centroids(
+                    vec![
+                        Centroid::new_atomic_f64(-2.0, f64::from_bits(4)),
+                        Centroid::new_mixed_f64(3.0, f64::from_bits(8)),
+                    ],
+                    0.0,
+                    f64::from_bits(12),
+                    F::from_f64(4.0),
+                    F::from_f64(-3.0),
+                    64,
+                )
+                .build(),
+        );
+        for digest in digests {
+            let expected = digest.cdf(&probes);
+            for (&probe, reference) in probes.iter().zip(expected) {
+                let actual = digest.cdf(&[probe])[0];
+                if reference.is_nan() {
+                    assert!(actual.is_nan());
+                } else {
+                    assert_eq!(
+                        actual.to_bits(),
+                        reference.to_bits(),
+                        "scalar/batch CDF at {probe}"
+                    );
+                }
+            }
+        }
+    }
+
+    #[test]
+    fn scalar_cdf_preserves_parallel_batch_bits() {
+        let digest = TDigestBuilder::<f64>::new()
+            .max_size(64)
+            .build()
+            .merge_sorted(
+                (0..1000)
+                    .map(|value| f64::from(value) / 4.0)
+                    .collect::<Vec<_>>(),
+            )
+            .unwrap();
+        let probes: Vec<f64> = (0..super::PAR_MIN)
+            .map(|index| (index % 300) as f64 - 10.0)
+            .collect();
+        let parallel = digest.cdf(&probes);
+        for (index, &expected) in parallel.iter().enumerate() {
+            assert_eq!(
+                digest.cdf(&[probes[index]])[0].to_bits(),
+                expected.to_bits()
+            );
+        }
+    }
+
+    #[test]
+    fn scalar_cdf_preserves_batch_bits_f64() {
+        scalar_batch_equivalence::<f64>();
+    }
+
+    #[test]
+    fn scalar_cdf_preserves_batch_bits_f32() {
+        scalar_batch_equivalence::<f32>();
     }
 }
