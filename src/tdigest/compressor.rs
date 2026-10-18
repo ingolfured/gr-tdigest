@@ -132,13 +132,18 @@ where
     // -- 2) Slice -------------------------------------------------------------
     let policy = policy_from(result.singleton_policy(), max_size);
     let delta = result.delta();
-    if delta.is_none() {
-        if let Some(v) = policy.fast_path(&norm.out) {
-            debug_assert!(crate::tdigest::centroids::is_sorted_strict_by_mean(&v));
-            return v;
+    let normalized = if delta.is_none() {
+        match policy.fast_path(norm.out) {
+            Ok(v) => {
+                debug_assert!(crate::tdigest::centroids::is_sorted_strict_by_mean(&v));
+                return v;
+            }
+            Err(out) => out,
         }
-    }
-    let slices = policy.slice(&norm.out);
+    } else {
+        norm.out
+    };
+    let slices = policy.slice(&normalized);
 
     // -- 3) Merge (k-limit) ---------------------------------------------------
     let family: ScaleFamily = result.scale();
@@ -197,26 +202,28 @@ fn policy_from(sp: SingletonPolicy, max: usize) -> Policy {
 }
 
 impl Policy {
-    /// Fast-path for trivial/exact cases (part of **2**). Returns `Some` when no further work is needed.
-    fn fast_path<F: FloatLike + FloatCore>(&self, out: &[Centroid<F>]) -> Option<Vec<Centroid<F>>> {
+    /// Return a finished exact/trivial result, or return ownership for the full pipeline.
+    fn fast_path<F: FloatLike + FloatCore>(
+        &self,
+        mut out: Vec<Centroid<F>>,
+    ) -> Result<Vec<Centroid<F>>, Vec<Centroid<F>>> {
         match *self {
             Policy::Off { max } => {
                 if out.len() <= max {
-                    return Some(out.to_vec());
+                    // The previous clone compacted capacity. Do not retain a
+                    // large normalization allocation in every stored digest.
+                    out.shrink_to_fit();
+                    return Ok(out);
                 }
                 if max == 1 {
-                    return Some(if out.len() == 1 {
-                        out.to_vec()
-                    } else {
-                        vec![weighted_collapse(out)]
-                    });
+                    return Ok(vec![weighted_collapse(&out)]);
                 }
                 if max == 2 {
-                    return Some(bucketize_equal_weight(out, 2));
+                    return Ok(bucketize_equal_weight(&out, 2));
                 }
-                None
+                Err(out)
             }
-            Policy::Use { .. } | Policy::UseProt { .. } => None,
+            Policy::Use { .. } | Policy::UseProt { .. } => Err(out),
         }
     }
 
@@ -479,9 +486,15 @@ fn bucketize_equal_weight<F: FloatLike + FloatCore>(
 /// **(5) Assemble** — concatenate `left`, `core`, `right` without element mutation.
 fn assemble_with_edges<F: FloatLike + FloatCore>(
     left: &[Centroid<F>],
-    core: Vec<Centroid<F>>,
+    mut core: Vec<Centroid<F>>,
     right: &[Centroid<F>],
 ) -> Vec<Centroid<F>> {
+    if left.is_empty() && right.is_empty() {
+        // K-limit output may still have capacity for every input centroid.
+        // Preserve the compact retained allocation of the previous assembly.
+        core.shrink_to_fit();
+        return core;
+    }
     let mut v = Vec::with_capacity(left.len() + core.len() + right.len());
     v.extend_from_slice(left);
     v.extend(core);
@@ -563,6 +576,54 @@ fn weighted_collapse<F: FloatLike + FloatCore>(slice: &[Centroid<F>]) -> Centroi
 mod tests {
     use super::*;
     use crate::tdigest::{singleton_policy::SingletonPolicy, ScaleFamily, TDigest};
+
+    fn check_owned_fast_paths<F: FloatLike + FloatCore + std::fmt::Debug>() {
+        let mut spare = Vec::with_capacity(256);
+        spare.extend([
+            Centroid::<F>::new_mixed_f64(-4.0, 0.1),
+            Centroid::<F>::new_atomic_f64(-0.0, 1e-310),
+            Centroid::<F>::new_atomic_f64(2.0, 0.3),
+        ]);
+        let expected = spare.clone();
+        let exact = Policy::Off { max: 3 }.fast_path(spare).unwrap();
+        assert_eq!(exact.capacity(), expected.capacity());
+        for (actual, old) in exact.iter().zip(&expected) {
+            assert_eq!(actual.mean_f64().to_bits(), old.mean_f64().to_bits());
+            assert_eq!(actual.weight_f64().to_bits(), old.weight_f64().to_bits());
+            assert_eq!(actual.is_atomic(), old.is_atomic());
+        }
+        let mut core = Vec::with_capacity(1024);
+        core.extend_from_slice(&expected);
+        let assembled = assemble_with_edges(&[], core, &[]);
+        assert_eq!(assembled.capacity(), expected.capacity());
+        assert_eq!(assembled, expected);
+
+        let left = [Centroid::<F>::new_atomic_f64(-5.0, 0.25)];
+        let right = [Centroid::<F>::new_atomic_f64(5.0, 0.5)];
+        let bounded = assemble_with_edges(&left, expected.clone(), &right);
+        assert_eq!(bounded.len(), expected.len() + 2);
+        assert_eq!(bounded.first(), left.first());
+        assert_eq!(bounded.last(), right.last());
+        assert_eq!(&bounded[1..bounded.len() - 1], expected.as_slice());
+
+        for policy in [
+            Policy::Use { max: 3 },
+            Policy::UseProt { max: 3, k: 2 },
+            Policy::Off { max: 0 },
+        ] {
+            assert_eq!(policy.fast_path(expected.clone()).unwrap_err(), expected);
+        }
+    }
+
+    #[test]
+    fn owned_fast_paths_f32_preserve_state_and_compact_capacity() {
+        check_owned_fast_paths::<f32>();
+    }
+
+    #[test]
+    fn owned_fast_paths_f64_preserve_state_and_compact_capacity() {
+        check_owned_fast_paths::<f64>();
+    }
 
     #[test]
     fn nonpositive_k2norm_domain_retains_existing_centroid_kinds_and_bits() {

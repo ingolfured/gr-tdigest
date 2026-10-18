@@ -241,6 +241,7 @@ Safety fallback:
 
 Concatenate without mutation:
 - `left + core_capped + right`.
+- When both edge slices are empty, move the core vector directly after shrinking spare capacity. This retains compact digest storage instead of keeping a temporary allocation sized for all input centroids. The Off-policy exact fast path likewise moves and compacts its normalized vector; numerical contents are unchanged.
 
 ### 4.6 Stage 6: post-policy finalize
 

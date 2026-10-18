@@ -44,6 +44,7 @@ All notable changes to this project are documented in this file.
 - Preserve the original upstream benchmark as a reference and provide a separate custom benchmark smoke target.
 
 ### Changed
+- Move modern compressor vectors through exact Off-policy and no-edge assembly paths instead of copying their centroids, while shrinking spare capacity to preserve compact retained digest storage. Compression and query arithmetic are unchanged.
 - Compressor Stage 4 cap strategy now uses a second k-limit merge with binary-searched `d'` (same scale-family geometry as Stage 3) instead of always using equal-weight bucketization.
 - Added Stage 4 unit coverage for cap/weight/order invariants under the new second-pass k-limit cap behavior.
 - Updated `tdigest_design.md` to document the new Stage 4 cap flow and fallback behavior.
