@@ -44,6 +44,7 @@ All notable changes to this project are documented in this file.
 - Preserve the original upstream benchmark as a reference and provide a separate custom benchmark smoke target.
 
 ### Changed
+- Count trial k-limit clusters without retaining centroid vectors during the modern cap binary search. Preserve accumulation, overflow validation and every search decision; materialize the selected final pass and fallback passes as before.
 - Compressor Stage 4 cap strategy now uses a second k-limit merge with binary-searched `d'` (same scale-family geometry as Stage 3) instead of always using equal-weight bucketization.
 - Added Stage 4 unit coverage for cap/weight/order invariants under the new second-pass k-limit cap behavior.
 - Updated `tdigest_design.md` to document the new Stage 4 cap flow and fallback behavior.

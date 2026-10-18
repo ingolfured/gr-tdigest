@@ -360,6 +360,60 @@ fn klimit_merge<F: FloatLike + FloatCore>(
     clusters
 }
 
+/// Execute the same k-limit decisions without retaining output centroids.
+/// Keep accumulation order and centroid validation identical to klimit_merge;
+/// only cap-search probes use this path, never the selected materialized pass.
+fn klimit_merge_count<F: FloatLike + FloatCore>(
+    items: &[Centroid<F>],
+    d: f64,
+    family: ScaleFamily,
+    tol: f64,
+) -> usize {
+    if items.is_empty() {
+        return 0;
+    }
+    let total_w: f64 = items.iter().map(|c| c.weight_f64()).sum();
+    let n = items.len() as f64;
+    if family == ScaleFamily::K2Norm && (n / d).ln().mul_add(4.0, 24.0) <= 0.0 {
+        return items.len();
+    }
+    let mut c_acc = 0.0_f64;
+    let mut acc = WeightedStats::default();
+    let mut count = 0;
+    let mut last_weight = None;
+    let mut q_l = c_acc / total_w;
+    let mut k_left = q_to_k(q_l, d, family, n);
+
+    for c in items {
+        let w_next = c.weight_f64();
+        let q_r = (c_acc + acc.w_sum + w_next) / total_w;
+        let k_right = q_to_k(q_r, d, family, n);
+        if (k_right - k_left) <= 1.0 + tol {
+            acc.add(c);
+        } else {
+            if !acc.is_empty() {
+                // Construct the centroid as before: this preserves rejection
+                // of overflowed mass, even though no output vector is stored.
+                let emitted = acc.centroid::<F>();
+                last_weight = Some(emitted.weight_f64());
+                count += 1;
+                acc.clear();
+            }
+            if let Some(weight) = last_weight {
+                c_acc += weight;
+            }
+            q_l = c_acc / total_w;
+            k_left = q_to_k(q_l, d, family, n);
+            acc.add(c);
+        }
+    }
+    if !acc.is_empty() {
+        let _ = acc.centroid::<F>();
+        count += 1;
+    }
+    count
+}
+
 /// **(4) Cap** — reduce to at most `core_cap` by running a second k-limit pass.
 ///
 /// We binary-search `d'` in `(0, d]` and choose the largest value that yields `<= core_cap`
@@ -402,7 +456,7 @@ fn cap_with_second_klimit<F: FloatLike + FloatCore>(
 
     for _ in 0..CAP_SEARCH_ITERS {
         let mid = 0.5 * (lo + hi);
-        let len_mid = klimit_merge(core, mid, family, KLIMIT_TOL).len();
+        let len_mid = klimit_merge_count(core, mid, family, KLIMIT_TOL);
         if len_mid <= core_cap {
             found = true;
             best = mid;
@@ -563,6 +617,136 @@ fn weighted_collapse<F: FloatLike + FloatCore>(slice: &[Centroid<F>]) -> Centroi
 mod tests {
     use super::*;
     use crate::tdigest::{singleton_policy::SingletonPolicy, ScaleFamily, TDigest};
+
+    // Frozen pre-experiment search control: materialize every trial pass.
+    fn reference_cap_with_second_klimit<F: FloatLike + FloatCore>(
+        core: &[Centroid<F>],
+        core_cap: usize,
+        d: f64,
+        family: ScaleFamily,
+    ) -> Vec<Centroid<F>> {
+        debug_assert!(core_cap > 0);
+        if core.len() <= core_cap {
+            return core.to_vec();
+        }
+
+        // Find the largest d' that satisfies the cap to preserve as much detail as possible.
+        let mut lo = CAP_SEARCH_LO;
+        let mut hi = d.max(CAP_SEARCH_LO);
+        let mut best = lo;
+        let mut found = false;
+
+        for _ in 0..CAP_SEARCH_ITERS {
+            let mid = 0.5 * (lo + hi);
+            let len_mid = klimit_merge(core, mid, family, KLIMIT_TOL).len();
+            if len_mid <= core_cap {
+                found = true;
+                best = mid;
+                lo = mid;
+            } else {
+                hi = mid;
+            }
+        }
+
+        let mut out = klimit_merge(
+            core,
+            if found { best } else { CAP_SEARCH_LO },
+            family,
+            KLIMIT_TOL,
+        );
+
+        // Guard against rare non-monotone/plateau effects.
+        let mut guard = 0usize;
+        let mut tuned = if found { best } else { CAP_SEARCH_LO };
+        while out.len() > core_cap && guard < CAP_FALLBACK_ITERS {
+            tuned *= 0.95;
+            out = klimit_merge(core, tuned, family, KLIMIT_TOL);
+            guard += 1;
+        }
+
+        if out.len() > core_cap {
+            return bucketize_equal_weight(core, core_cap);
+        }
+
+        out
+    }
+
+    fn check_count_only_search<F: FloatLike + FloatCore>() {
+        for len in [0, 1, 2, 3, 10, 100] {
+            for unit in [1.0, 0.1, 1e-309, 1e100] {
+                let items: Vec<_> = (0..len)
+                    .map(|i| {
+                        let weight = unit * (1 + (i * 17) % 11) as f64;
+                        let mean = i as f64 / 8.0;
+                        if i % 3 == 0 {
+                            Centroid::<F>::new_atomic_f64(mean, weight)
+                        } else {
+                            Centroid::<F>::new_mixed_f64(mean, weight)
+                        }
+                    })
+                    .collect();
+                for family in [
+                    ScaleFamily::Quad,
+                    ScaleFamily::K1,
+                    ScaleFamily::K2,
+                    ScaleFamily::K2Norm,
+                    ScaleFamily::K3,
+                ] {
+                    for d in [0.0, 0.0001, 1.0, 5.0, 8.0, 32.0, 1200.0] {
+                        for tol in [0.0, KLIMIT_TOL] {
+                            assert_eq!(
+                                klimit_merge_count(&items, d, family, tol),
+                                klimit_merge(&items, d, family, tol).len(),
+                                "len={len}, unit={unit}, family={family:?}, d={d}, tol={tol}"
+                            );
+                        }
+                        for cap in [1, 2, 5, 16] {
+                            let actual = cap_with_second_klimit(&items, cap, d, family);
+                            let expected = reference_cap_with_second_klimit(&items, cap, d, family);
+                            assert_eq!(actual.len(), expected.len());
+                            for (got, want) in actual.iter().zip(&expected) {
+                                assert_eq!(got.mean_f64().to_bits(), want.mean_f64().to_bits());
+                                assert_eq!(got.weight_f64().to_bits(), want.weight_f64().to_bits());
+                                assert_eq!(got.is_atomic(), want.is_atomic());
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    #[test]
+    fn count_only_f32_matches_materialized_counts_and_search_bits() {
+        check_count_only_search::<f32>();
+    }
+
+    #[test]
+    fn count_only_f64_matches_materialized_counts_and_search_bits() {
+        check_count_only_search::<f64>();
+    }
+
+    #[test]
+    fn count_only_preserves_overflowed_cluster_mass_rejection() {
+        let items = [
+            Centroid::<f64>::new_atomic_f64(0.0, 1e308),
+            Centroid::<f64>::new_atomic_f64(1.0, 1e308),
+        ];
+        assert!(std::panic::catch_unwind(|| klimit_merge(
+            &items,
+            0.0,
+            ScaleFamily::Quad,
+            KLIMIT_TOL
+        ))
+        .is_err());
+        assert!(std::panic::catch_unwind(|| klimit_merge_count(
+            &items,
+            0.0,
+            ScaleFamily::Quad,
+            KLIMIT_TOL
+        ))
+        .is_err());
+    }
 
     #[test]
     fn nonpositive_k2norm_domain_retains_existing_centroid_kinds_and_bits() {

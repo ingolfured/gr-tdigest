@@ -228,8 +228,8 @@ calculation path remains pinned.
 If interior count exceeds `core_cap`, run a second k-limit merge on the Stage-3 output:
 1. Keep scale family fixed (`K1`/`K2`/`K3`/`Quad`).
 2. Binary-search a smaller `d'` in `(0, d]` where `d` is the configured `max_size`.
-3. Pick the largest `d'` such that `klimit_merge(..., d')` yields `<= core_cap`.
-4. Use that result as the capped interior.
+3. Pick the largest `d'` whose k-limit pass yields `<= core_cap`. Trial passes count emitted clusters without allocating output vectors, using the same accumulation, scale expressions and centroid validation.
+4. Materialize the selected pass using `klimit_merge` as before; fallback passes remain unchanged.
 
 This keeps Stage 4 aligned with Stage 3 geometry (same `q_to_k` family + `Δk<=1` rule), while still enforcing the cap.
 
