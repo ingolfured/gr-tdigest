@@ -196,6 +196,11 @@ Definitions:
 - `q_to_k(q, d, family)` maps quantile position to k-space.
 - Keep cluster growth while `delta_k <= 1 + KLIMIT_TOL` (`KLIMIT_TOL = 1e-12`).
 
+Each pass prepares the selected scale's q-independent factor once. The q clamp,
+transcendental calls and final multiply retain their previous expression order;
+the K2Norm domain guard still runs before preparing the factor. The original
+per-call expression remains a test-only differential oracle.
+
 Loop sketch:
 1. Track completed cluster mass `c_acc`.
 2. For candidate item with weight `w_next`:

@@ -21,7 +21,7 @@ use ordered_float::FloatCore;
 use crate::tdigest::centroids::Centroid;
 use crate::tdigest::merges::normalize_stream;
 use crate::tdigest::precision::FloatLike;
-use crate::tdigest::scale::{q_to_k, ScaleFamily};
+use crate::tdigest::scale::{PreparedScale, ScaleFamily};
 use crate::tdigest::singleton_policy::SingletonPolicy;
 use crate::tdigest::TDigest;
 
@@ -334,13 +334,14 @@ fn klimit_merge<F: FloatLike + FloatCore>(
     let mut clusters: Vec<Centroid<F>> = Vec::with_capacity(items.len());
     let mut acc = WeightedStats::default();
 
+    let scale = PreparedScale::new(d, family, n);
     let mut q_l = c_acc / total_w;
-    let mut k_left = q_to_k(q_l, d, family, n);
+    let mut k_left = scale.q_to_k(q_l);
 
     for c in items {
         let w_next = c.weight_f64();
         let q_r = (c_acc + acc.w_sum + w_next) / total_w;
-        let k_right = q_to_k(q_r, d, family, n);
+        let k_right = scale.q_to_k(q_r);
 
         if (k_right - k_left) <= 1.0 + tol {
             acc.add(c);
@@ -350,7 +351,7 @@ fn klimit_merge<F: FloatLike + FloatCore>(
                 c_acc += last.weight_f64();
             }
             q_l = c_acc / total_w;
-            k_left = q_to_k(q_l, d, family, n);
+            k_left = scale.q_to_k(q_l);
 
             acc.add(c);
         }

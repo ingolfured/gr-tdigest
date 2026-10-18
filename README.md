@@ -15,7 +15,7 @@ T-Digest provides a mergeable summary of a distribution, enabling approximate qu
 - 📦 TDIG v3 wire default (flags + header length + precision code + checksum), with v1/v2 decode compatibility.
 - 🧭 Explicit wire-version encode controls (`to_bytes(version=1|2|3)`, `toBytes(version)`).
 - 🖥️ Rust CLI subcommands (`build`, `quantile`, `cdf`, `median`) with `text|csv|json|ndjson` ingestion.
-- 🎚️ Scale families: `Quad`, `K1`, `K2`, `K3`.
+- 🎚️ Scale families: `Quad`, `K1`, `K2`, `K3`, with compression constants prepared once per pass.
 - 🔩 Singleton handling policy: edge-precision (`keep N`), respect singletons, or uniform merge.
 
 ## Examples
