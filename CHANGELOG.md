@@ -5,6 +5,7 @@ All notable changes to this project are documented in this file.
 ## [Unreleased]
 
 ### Research handoff
+- Record completed cleanup: clean original and experimental checkouts, verified stash recovery refs, preserved upstream lockfile, and an intact relocated nested clone; current PR heads/bases and archived measurement bytes remain unchanged.
 - Preserve pre-existing local source, three complete stashes (including auto-scale research), historical branch heads and a generated lockfile before authorized Git-worktree cleanup; document recovery and historical-code limitations.
 - Record successful independent GitHub-clone extraction and checksum verification of all archived research files and branch mappings.
 - Add the entry-point guide, experimental branch map, portable archive verifier and current production priorities after preserving all research data.

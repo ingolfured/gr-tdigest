@@ -1,0 +1,397 @@
+{
+  "status": "complete",
+  "date": "2026-10-18",
+  "linux_checkouts_checked": [
+    {
+      "path": "/home/ingo/git/gr-tdigest",
+      "head": "8dea4cf5e336db03eeefc18cad4b5f8537822dd2",
+      "branch": "master",
+      "clean": true
+    },
+    {
+      "path": "/home/ingo/git/tdigest-rs",
+      "head": "52cda0f4341df6a2befbd32639f90846b18d60da",
+      "branch": "overwrite_snapshot_1of4_core_python",
+      "clean": true
+    },
+    {
+      "path": "/home/ingo/git/tdigest-rs-pr38",
+      "head": "e8562fd1c25a33cfd09359f671da126837c7bba4",
+      "branch": "pr38-docs-compat",
+      "clean": true
+    },
+    {
+      "path": "/home/ingo/git/tdigest-rs-upstream-original",
+      "head": "8d9cf1fe82c5c9254e5dc9593f01717e317f4333",
+      "branch": "main",
+      "clean": true
+    },
+    {
+      "path": "/var/tmp/codex-tdigest-pr3-20261014/day20261015/accuracy",
+      "head": "142df1280616f1851c25ad0f1d808314822a62d4",
+      "branch": "experiment/day20-accuracy",
+      "clean": true
+    },
+    {
+      "path": "/var/tmp/codex-tdigest-pr3-20261014/day20261015/baseline",
+      "head": "25c8c1642029a640b153c160c22a89795d29ad91",
+      "branch": "",
+      "clean": true
+    },
+    {
+      "path": "/var/tmp/codex-tdigest-pr3-20261014/day20261015/bucket-tail",
+      "head": "b46690ac2fbc366ff1ac35cc46be14d72dd19119",
+      "branch": "experiment/day20-bucket-tail",
+      "clean": true
+    },
+    {
+      "path": "/var/tmp/codex-tdigest-pr3-20261014/day20261015/cap-count",
+      "head": "a61fc430d0371e2323127e0d03952ebf5fa7a866",
+      "branch": "experiment/day20-cap-count",
+      "clean": true
+    },
+    {
+      "path": "/var/tmp/codex-tdigest-pr3-20261014/day20261015/cdf",
+      "head": "9809113def8c16a27427b1efc04f806a17726f49",
+      "branch": "experiment/day20-scalar-cdf",
+      "clean": true
+    },
+    {
+      "path": "/var/tmp/codex-tdigest-pr3-20261014/day20261015/direction",
+      "head": "bf700c6c31312c205cfb53c6a3644d1da03aa0b0",
+      "branch": "experiment/day20-direction",
+      "clean": true
+    },
+    {
+      "path": "/var/tmp/codex-tdigest-pr3-20261014/day20261015/finite-mean",
+      "head": "bfbd5f0ebb78c39dc8dab3ea54ba05acde5df168",
+      "branch": "experiment/day20-finite-mean",
+      "clean": true
+    },
+    {
+      "path": "/var/tmp/codex-tdigest-pr3-20261014/day20261015/frontend",
+      "head": "dadd511d9a44fabc1c60e58f4bf918157595076d",
+      "branch": "experiment/day20-frontend",
+      "clean": true
+    },
+    {
+      "path": "/var/tmp/codex-tdigest-pr3-20261014/day20261015/gap-cap",
+      "head": "0a3f4afcda62f641ad0dbaf53b188967b9d62e18",
+      "branch": "experiment/day20-gap-cap",
+      "clean": true
+    },
+    {
+      "path": "/var/tmp/codex-tdigest-pr3-20261014/day20261015/harness",
+      "head": "9bfc2d49542462b66d17bc93e16768b60fd5463d",
+      "branch": "experiment/day20-harness",
+      "clean": true
+    },
+    {
+      "path": "/var/tmp/codex-tdigest-pr3-20261014/day20261015/heap-root",
+      "head": "fd935c2d42f9b40c4f95ce80595377286500ed1c",
+      "branch": "experiment/day20-heap-root",
+      "clean": true
+    },
+    {
+      "path": "/var/tmp/codex-tdigest-pr3-20261014/day20261015/integration",
+      "head": "25c8c1642029a640b153c160c22a89795d29ad91",
+      "branch": "experiment/day20-integration",
+      "clean": true
+    },
+    {
+      "path": "/var/tmp/codex-tdigest-pr3-20261014/day20261015/integration-e12",
+      "head": "42d620428520a74fec8c57d5dc6d4db0f6b1920e",
+      "branch": "review/4-numpy-output-copy",
+      "clean": true
+    },
+    {
+      "path": "/var/tmp/codex-tdigest-pr3-20261014/day20261015/numpy-input",
+      "head": "f658994cf5cae45ac03a96d83fabb0adef11c946",
+      "branch": "experiment/day20-numpy-input",
+      "clean": true
+    },
+    {
+      "path": "/var/tmp/codex-tdigest-pr3-20261014/day20261015/numpy-output",
+      "head": "9633ab4834b0a7f17467d033a92fb80e6f5f38e6",
+      "branch": "experiment/day20-numpy-output",
+      "clean": true
+    },
+    {
+      "path": "/var/tmp/codex-tdigest-pr3-20261014/day20261015/polars-decode",
+      "head": "5e0667c3843bb03a7198039eb9dd1b42357b6130",
+      "branch": "experiment/day20-polars-decode",
+      "clean": true
+    },
+    {
+      "path": "/var/tmp/codex-tdigest-pr3-20261014/day20261015/python-bytes",
+      "head": "fdf69d14a333245a21ec04cef405f825b8c5e491",
+      "branch": "experiment/day20-python-bytes",
+      "clean": true
+    },
+    {
+      "path": "/var/tmp/codex-tdigest-pr3-20261014/day20261015/quantile-prefix",
+      "head": "40b0f23880c590499ea875780f11be9b345e0a3f",
+      "branch": "experiment/day20-quantile-prefix",
+      "clean": true
+    },
+    {
+      "path": "/var/tmp/codex-tdigest-pr3-20261014/day20261015/scale-hoist",
+      "head": "5722606d55825179bb3dd0ca48326deaafabc210",
+      "branch": "experiment/day20-scale-hoist",
+      "clean": true
+    },
+    {
+      "path": "/var/tmp/codex-tdigest-pr3-20261014/day20261015/sorted-cdf",
+      "head": "e42760fe173257981d8dc0efe9fab1dd5a5ea4f3",
+      "branch": "experiment/day20-sorted-cdf",
+      "clean": true
+    },
+    {
+      "path": "/var/tmp/codex-tdigest-pr3-20261014/day20261015/speed",
+      "head": "b001268d6559960d83b6959af154a33215c8ad9d",
+      "branch": "experiment/day20-speed",
+      "clean": true
+    },
+    {
+      "path": "/var/tmp/codex-tdigest-pr3-20261014/day20261015/subnormal-compress",
+      "head": "80aa1105bf55e68762615ff8b1de781ffbcfe4e5",
+      "branch": "experiment/day20-subnormal-compress",
+      "clean": true
+    },
+    {
+      "path": "/var/tmp/codex-tdigest-pr3-20261014/day20261015/two-run",
+      "head": "5eef8e0923ae0bb4a8bbe4ce9d5f588c2952753d",
+      "branch": "experiment/day20-two-run",
+      "clean": true
+    },
+    {
+      "path": "/var/tmp/codex-tdigest-pr3-20261014/day20261015/vector-move",
+      "head": "e8bad4555da2647059545e27b1343aa52435a144",
+      "branch": "experiment/day20-vector-move",
+      "clean": true
+    },
+    {
+      "path": "/var/tmp/codex-tdigest-pr3-20261014/handoff-clean-clone-20261018",
+      "head": "4b597e9e854c447bcd7f2e3b149db9658069f287",
+      "branch": "research/handoff-20261018",
+      "clean": true
+    },
+    {
+      "path": "/var/tmp/codex-tdigest-pr3-20261014/handoff20261018",
+      "head": "4b597e9e854c447bcd7f2e3b149db9658069f287",
+      "branch": "research/handoff-20261018",
+      "clean": true
+    },
+    {
+      "path": "/var/tmp/codex-tdigest-pr3-20261014/work/gr-tdigest",
+      "head": "25c8c1642029a640b153c160c22a89795d29ad91",
+      "branch": "review/3-upstream-compatibility-gate",
+      "clean": true
+    },
+    {
+      "path": "/var/tmp/codex-tdigest-pr3-20261014/work/gr-tdigest-f64-weights",
+      "head": "4bb78de91f7214cb811a35b3ed4bdcb7b2fe4685",
+      "branch": "review/candidate-original-rust-api",
+      "clean": true
+    },
+    {
+      "path": "/var/tmp/codex-tdigest-pr3-20261014/work/tdigest-rs-upstream38",
+      "head": "57e7978d0811baed4a546ff2f08dccaeff03c321",
+      "branch": "review/upstream38-compatible-refresh",
+      "clean": true
+    }
+  ],
+  "linux_clean_count": 33,
+  "original_stashes_remaining": 0,
+  "source_cleanup": {
+    "experiment_worktrees": [
+      {
+        "path": "/var/tmp/codex-tdigest-pr3-20261014/day20261015/accuracy",
+        "local_branch": "experiment/day20-accuracy",
+        "head": "142df1280616f1851c25ad0f1d808314822a62d4",
+        "remote_branch": "archive/20261018/day20-accuracy",
+        "clean": true
+      },
+      {
+        "path": "/var/tmp/codex-tdigest-pr3-20261014/day20261015/bucket-tail",
+        "local_branch": "experiment/day20-bucket-tail",
+        "head": "b46690ac2fbc366ff1ac35cc46be14d72dd19119",
+        "remote_branch": "archive/20261018/day20-bucket-tail",
+        "clean": true
+      },
+      {
+        "path": "/var/tmp/codex-tdigest-pr3-20261014/day20261015/cap-count",
+        "local_branch": "experiment/day20-cap-count",
+        "head": "a61fc430d0371e2323127e0d03952ebf5fa7a866",
+        "remote_branch": "archive/20261018/day20-cap-count",
+        "clean": true
+      },
+      {
+        "path": "/var/tmp/codex-tdigest-pr3-20261014/day20261015/cdf",
+        "local_branch": "experiment/day20-scalar-cdf",
+        "head": "9809113def8c16a27427b1efc04f806a17726f49",
+        "remote_branch": "archive/20261018/day20-scalar-cdf",
+        "clean": true
+      },
+      {
+        "path": "/var/tmp/codex-tdigest-pr3-20261014/day20261015/direction",
+        "local_branch": "experiment/day20-direction",
+        "head": "bf700c6c31312c205cfb53c6a3644d1da03aa0b0",
+        "remote_branch": "archive/20261018/day20-direction",
+        "clean": true
+      },
+      {
+        "path": "/var/tmp/codex-tdigest-pr3-20261014/day20261015/finite-mean",
+        "local_branch": "experiment/day20-finite-mean",
+        "head": "bfbd5f0ebb78c39dc8dab3ea54ba05acde5df168",
+        "remote_branch": "archive/20261018/day20-finite-mean",
+        "clean": true
+      },
+      {
+        "path": "/var/tmp/codex-tdigest-pr3-20261014/day20261015/frontend",
+        "local_branch": "experiment/day20-frontend",
+        "head": "dadd511d9a44fabc1c60e58f4bf918157595076d",
+        "remote_branch": "archive/20261018/day20-frontend",
+        "clean": true
+      },
+      {
+        "path": "/var/tmp/codex-tdigest-pr3-20261014/day20261015/gap-cap",
+        "local_branch": "experiment/day20-gap-cap",
+        "head": "0a3f4afcda62f641ad0dbaf53b188967b9d62e18",
+        "remote_branch": "archive/20261018/day20-gap-cap",
+        "clean": true
+      },
+      {
+        "path": "/var/tmp/codex-tdigest-pr3-20261014/day20261015/harness",
+        "local_branch": "experiment/day20-harness",
+        "head": "9bfc2d49542462b66d17bc93e16768b60fd5463d",
+        "remote_branch": "archive/20261018/day20-harness",
+        "clean": true
+      },
+      {
+        "path": "/var/tmp/codex-tdigest-pr3-20261014/day20261015/heap-root",
+        "local_branch": "experiment/day20-heap-root",
+        "head": "fd935c2d42f9b40c4f95ce80595377286500ed1c",
+        "remote_branch": "archive/20261018/day20-heap-root",
+        "clean": true
+      },
+      {
+        "path": "/var/tmp/codex-tdigest-pr3-20261014/day20261015/numpy-input",
+        "local_branch": "experiment/day20-numpy-input",
+        "head": "f658994cf5cae45ac03a96d83fabb0adef11c946",
+        "remote_branch": "archive/20261018/day20-numpy-input",
+        "clean": true
+      },
+      {
+        "path": "/var/tmp/codex-tdigest-pr3-20261014/day20261015/numpy-output",
+        "local_branch": "experiment/day20-numpy-output",
+        "head": "9633ab4834b0a7f17467d033a92fb80e6f5f38e6",
+        "remote_branch": "archive/20261018/day20-numpy-output",
+        "clean": true
+      },
+      {
+        "path": "/var/tmp/codex-tdigest-pr3-20261014/day20261015/polars-decode",
+        "local_branch": "experiment/day20-polars-decode",
+        "head": "5e0667c3843bb03a7198039eb9dd1b42357b6130",
+        "remote_branch": "archive/20261018/day20-polars-decode",
+        "clean": true
+      },
+      {
+        "path": "/var/tmp/codex-tdigest-pr3-20261014/day20261015/python-bytes",
+        "local_branch": "experiment/day20-python-bytes",
+        "head": "fdf69d14a333245a21ec04cef405f825b8c5e491",
+        "remote_branch": "archive/20261018/day20-python-bytes",
+        "clean": true
+      },
+      {
+        "path": "/var/tmp/codex-tdigest-pr3-20261014/day20261015/quantile-prefix",
+        "local_branch": "experiment/day20-quantile-prefix",
+        "head": "40b0f23880c590499ea875780f11be9b345e0a3f",
+        "remote_branch": "archive/20261018/day20-quantile-prefix",
+        "clean": true
+      },
+      {
+        "path": "/var/tmp/codex-tdigest-pr3-20261014/day20261015/scale-hoist",
+        "local_branch": "experiment/day20-scale-hoist",
+        "head": "5722606d55825179bb3dd0ca48326deaafabc210",
+        "remote_branch": "archive/20261018/day20-scale-hoist",
+        "clean": true
+      },
+      {
+        "path": "/var/tmp/codex-tdigest-pr3-20261014/day20261015/sorted-cdf",
+        "local_branch": "experiment/day20-sorted-cdf",
+        "head": "e42760fe173257981d8dc0efe9fab1dd5a5ea4f3",
+        "remote_branch": "archive/20261018/day20-sorted-cdf",
+        "clean": true
+      },
+      {
+        "path": "/var/tmp/codex-tdigest-pr3-20261014/day20261015/speed",
+        "local_branch": "experiment/day20-speed",
+        "head": "b001268d6559960d83b6959af154a33215c8ad9d",
+        "remote_branch": "archive/20261018/day20-speed",
+        "clean": true
+      },
+      {
+        "path": "/var/tmp/codex-tdigest-pr3-20261014/day20261015/subnormal-compress",
+        "local_branch": "experiment/day20-subnormal-compress",
+        "head": "80aa1105bf55e68762615ff8b1de781ffbcfe4e5",
+        "remote_branch": "archive/20261018/day20-subnormal-compress",
+        "clean": true
+      },
+      {
+        "path": "/var/tmp/codex-tdigest-pr3-20261014/day20261015/two-run",
+        "local_branch": "experiment/day20-two-run",
+        "head": "5eef8e0923ae0bb4a8bbe4ce9d5f588c2952753d",
+        "remote_branch": "archive/20261018/day20-two-run",
+        "clean": true
+      },
+      {
+        "path": "/var/tmp/codex-tdigest-pr3-20261014/day20261015/vector-move",
+        "local_branch": "experiment/day20-vector-move",
+        "head": "e8bad4555da2647059545e27b1343aa52435a144",
+        "remote_branch": "archive/20261018/day20-vector-move",
+        "clean": true
+      }
+    ],
+    "original": {
+      "path": "/home/ingo/git/gr-tdigest",
+      "branch": "master",
+      "head": "8dea4cf5e336db03eeefc18cad4b5f8537822dd2",
+      "archive_branch": "archive/20261018/original-dirty-checkout",
+      "archive_commit": "ea0b0dd46c5e39bca69c915c8be9cf1107852cf0",
+      "clean": true,
+      "removed_generated_directories": [
+        "/home/ingo/git/gr-tdigest/.tdigestrs-target",
+        "/home/ingo/git/gr-tdigest/.gradle-tdigestrs"
+      ],
+      "removed_empty_marker": ".codex",
+      "preserved_source_files": 34
+    },
+    "status": "source_cleanup_complete"
+  },
+  "upstream_cleanup": {
+    "path": "/home/ingo/git/tdigest-rs",
+    "clean": true,
+    "removed_generated_directories": [
+      "/home/ingo/git/tdigest-rs/.gradle-user-home",
+      "/home/ingo/git/tdigest-rs/bindings/java/.gradle"
+    ],
+    "lock_preserved_in_handoff": true,
+    "lock_sha256": "3cdf3703e3d8605c819a711206d86bc1e182b9268c3e290d22f7084e71f80082",
+    "nested_clone_moved_intact_from": "/home/ingo/git/tdigest-rs/tdigest-rs",
+    "nested_clone_moved_intact_to": "/home/ingo/git/tdigest-rs-upstream-original",
+    "nested_refs_preserved": true,
+    "ignored_build_outputs_and_reports_retained": true
+  },
+  "new_archive_ref_count": 7,
+  "personal_pr_heads_and_bases_unchanged": true,
+  "upstream_pr38": {
+    "baseRefName": "main",
+    "headRefOid": "57e7978d0811baed4a546ff2f08dccaeff03c321",
+    "isDraft": true,
+    "state": "OPEN"
+  },
+  "original_archive_payload_unchanged": true,
+  "builds_tests_benchmarks_run": false,
+  "local_only_ignored_context_preserved": true
+}

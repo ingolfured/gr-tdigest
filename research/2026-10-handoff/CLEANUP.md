@@ -2,6 +2,8 @@
 
 After the initial handoff, the user authorized preserving useful changes and cleaning all dirty tdigest checkouts, explicitly including the formerly protected original checkout. This supersedes the earlier instruction to leave that checkout dirty. Current product PRs remain the review path; nothing from this historical recovery is approved for integration.
 
+[Final cleanup receipt](cleanup/FINAL-RECEIPT.json): all 33 audited Linux checkouts are clean, the original stash list is empty, and PR #6/#7/#8/#9 and upstream #38 heads/bases are unchanged. The two Windows copies were independently audited clean before cleanup.
+
 ## What had value
 
 - The original checkout had 16 modified tracked files and 18 nonempty untracked source/document files. All 34 are preserved exactly in a separate archive commit. Eight untracked compatibility files match PR #9 byte for byte. The tracked changes are earlier delta/adapter work carried forward or superseded; the audit found no missing current production fix or regression test.
@@ -39,7 +41,7 @@ This intentionally recreates that old work in progress, not current production c
 - All 20 prototype worktrees and the harness are clean. Each existing `experiment/day20-*` local branch now points at its already-pushed archive snapshot; source bytes were checked before changing the branch/index. The harness additionally uses the archive's synthetic CHANGELOG entry. No new experiment was accepted by this operation.
 - `/home/ingo/git/gr-tdigest` is clean on its original `master` commit `8dea4cf5e336db03eeefc18cad4b5f8537822dd2`. Source restoration/removal followed remote publication and independent fetch/byte verification. Removed `.tdigestrs-target`, `.gradle-tdigestrs`, and the empty `.codex` marker. Its three stashes were cleared only after their full parent topology and extra source objects were fetched back from GitHub and verified.
 - Four already-missing `/tmp/gr-tdigest-review-prs/*` worktree registrations were pruned; their branch commits remain preserved.
-- The additional upstream checkout cleanup follows publication of its lockfile; the final cleanup receipt records completion and the nested-clone destination.
+- `/home/ingo/git/tdigest-rs` is clean. Its lockfile was removed only after being fetched back from GitHub and hash-verified. Removed only its untracked `.gradle-user-home` and `bindings/java/.gradle` caches. The clean nested clone was moved intact to `/home/ingo/git/tdigest-rs-upstream-original`; every ref remained identical. Ignored Java build outputs and reports were retained.
 - Ignored local settings, environments, existing build reports, and the explicitly local-only `typical_usecase.md` remain local. No blanket ignored-file deletion or upload was performed. Git-clean does not mean every generated file was removed from disk.
 
 ## Evidence and scope
