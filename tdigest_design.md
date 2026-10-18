@@ -39,6 +39,9 @@ Out of scope for this file:
 - Centroid means/weights are stored in `F`.
 - Digest stats `sum` and `count` are `f64`.
 - Digest min/max are stored in `F` and surfaced as `f64`.
+- Optional `legacy_delta` records old `tdigest-rs` delta mode. When set, it is
+  carried through add/merge/cast paths and switches compression to the legacy
+  K2 log merge rule.
 
 Centroid kind is explicit:
 - `Atomic`: exact identical-value mass (unit or pile).
@@ -93,7 +96,7 @@ Weighted constructor/merge helpers:
 
 `TDigest::merge_digests(digests)`:
 1. Scan digests and keep only non-empty runs (`count>0` and non-empty centroid vector).
-2. Pick the first non-empty digest as the config source (`max_size`, `scale`, `policy`).
+2. Pick the first non-empty digest as the config source (`max_size`, `scale`, `policy`, `legacy_delta`).
 3. Perform a streaming k-way merge of sorted centroid runs via `KWayCentroidMerge::from_runs`.
   - Implementation uses a min-heap over run heads (`O(total_len * log(k))`).
   - It avoids materializing one full concat+sort buffer before compression.
@@ -164,6 +167,14 @@ Cluster kind emission:
 - Single-item cluster stays atomic only if its head item was atomic.
 - Multi-item cluster is always emitted as mixed.
 
+Legacy delta mode:
+- If `legacy_delta` is set, Stage 3 uses the old `tdigest-rs` K2 log threshold:
+  `k(q) = delta / (4 ln(n/delta) + 24) * ln(q/(1-q))`.
+- The old rule uses `n = number of input centroids in this pass`, while `q`
+  uses cumulative weight over total weight.
+- This mode is constrained by the Python/frontends layer to `scale=K2` and
+  `singleton_policy=Off`.
+
 ### 4.4 Stage 4: cap
 
 If interior count exceeds `core_cap`, run a second k-limit merge on the Stage-3 output:
@@ -177,6 +188,8 @@ This keeps Stage 4 aligned with Stage 3 geometry (same `q_to_k` family + `Δk<=1
 Safety fallback:
 - If rare plateau behavior prevents converging under cap, Stage 4 tightens `d'` further for a bounded number of retries.
 - If still over cap, it falls back to order-preserving equal-weight bucketization as a last-resort guard.
+- Legacy delta mode bypasses Stage 4 capping; `delta` mode is intentionally an
+  alternative to the max-size cap path.
 
 ### 4.5 Stage 5: assemble
 
@@ -190,6 +203,9 @@ Concatenate without mutation:
 
 `Off` and `UseWithProtectedEdges(k)`:
 - No additional post cap.
+
+Legacy delta mode:
+- Stage 6 policy post-processing is bypassed to preserve old delta behavior.
 
 ### 4.7 How `max_size` actually applies
 
@@ -331,8 +347,9 @@ Decode behavior:
 `src/tdigest/frontends.rs` centralizes behavior used by Python/JNI/Polars/CLI:
 - Parse/normalize scale, policy, precision hints.
 - Validate training values.
+- Validate legacy delta mode constraints (`delta > 0`, K2 scale, Off policy).
 - Enforce strict quantile probes (`finite` + `[0,1]`).
-- Enforce strict merge compatibility (precision + config).
+- Enforce strict merge compatibility (precision + config, including legacy delta).
 - Provide explicit precision casting (`cast_precision`).
 - Provide precision-aware decode checks (`from_bytes_with_expected`).
 

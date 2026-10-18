@@ -4,10 +4,20 @@ All notable changes to this project are documented in this file.
 
 ## [Unreleased]
 
+### Added
+- Added deep maintainer docs under `docs/` for the compressor pipeline, query kernels, quality checks, wire/precision behavior, and review compatibility workflow.
+- Added a byte-for-byte copied upstream `tdigest-rs` Python test and benchmark snapshot under `compat/tdigest-rs-upstream/` with provenance/checksum metadata.
+- Added a Python `tdigest_rs` compatibility module and dedicated `make compat-test` / `make compat-bench` targets for upstream review parity.
+- Added real Python `delta` construction mode as an alternative to `max_size`, using the old `tdigest-rs` K2 delta merge behavior.
+- Added Python `from_means_weights`, centroid `means`/`weights`, `trimmed_mean`, and pickle/deepcopy support for reviewer-facing legacy API coverage.
+- Added a strict legacy adapter and failure report for running copied upstream Python tests against the real `gr_tdigest` extension.
+- Marked the abandoned 1/4 branch obsolete in review docs and added the first non-legacy duplication scan notes.
+
 ### Changed
 - Compressor Stage 4 cap strategy now uses a second k-limit merge with binary-searched `d'` (same scale-family geometry as Stage 3) instead of always using equal-weight bucketization.
 - Added Stage 4 unit coverage for cap/weight/order invariants under the new second-pass k-limit cap behavior.
 - Updated `tdigest_design.md` to document the new Stage 4 cap flow and fallback behavior.
+- `make compat-test` / `make legacy-strict-test` now run the copied upstream Python tests through the strict adapter instead of the old pure-Python shim.
 
 ## [0.2.4] - 2026-02-16
 

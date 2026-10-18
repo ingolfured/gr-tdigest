@@ -106,7 +106,7 @@ impl PyTDigest {
 #[pymethods]
 impl PyTDigest {
     #[staticmethod]
-    #[pyo3(signature = (values, max_size=1000, scale=None, f32_mode=false, singleton_policy=None, pin_per_side=None))]
+    #[pyo3(signature = (values, max_size=1000, scale=None, f32_mode=false, singleton_policy=None, pin_per_side=None, delta=None))]
     pub fn from_array(
         py: Python<'_>,
         values: PyObject,
@@ -115,19 +115,24 @@ impl PyTDigest {
         f32_mode: bool,
         singleton_policy: Option<&str>,
         pin_per_side: Option<usize>,
+        delta: Option<f64>,
     ) -> PyResult<Self> {
         if max_size == 0 {
             return Err(PyValueError::new_err("max_size must be > 0"));
         }
 
         let sc = parse_scale(scale)?;
-        let policy = parse_policy(singleton_policy, pin_per_side)?;
+        let mut policy = parse_policy(singleton_policy, pin_per_side)?;
+        if delta.is_some() && singleton_policy.is_none() {
+            policy = SingletonPolicy::Off;
+        }
         let (_ndim, values_f64) = array_values(py, values)?;
 
         let config = DigestConfig {
             max_size,
             scale: sc,
             policy,
+            legacy_delta: delta,
         };
         let precision = if f32_mode {
             DigestPrecision::F32
@@ -140,6 +145,58 @@ impl PyTDigest {
         Ok(Self { inner })
     }
 
+    #[staticmethod]
+    #[pyo3(signature = (means, weights, max_size=1000, scale=None, f32_mode=false, singleton_policy=None, pin_per_side=None, delta=None))]
+    pub fn from_means_weights(
+        py: Python<'_>,
+        means: PyObject,
+        weights: PyObject,
+        max_size: usize,
+        scale: Option<&str>,
+        f32_mode: bool,
+        singleton_policy: Option<&str>,
+        pin_per_side: Option<usize>,
+        delta: Option<f64>,
+    ) -> PyResult<Self> {
+        if max_size == 0 {
+            return Err(PyValueError::new_err("max_size must be > 0"));
+        }
+
+        let sc = parse_scale(scale)?;
+        let mut policy = parse_policy(singleton_policy, pin_per_side)?;
+        if delta.is_some() && singleton_policy.is_none() {
+            policy = SingletonPolicy::Off;
+        }
+        let (_ndim_m, means_f64) = array_values(py, means)?;
+        let (_ndim_w, weights_f64) = array_values(py, weights)?;
+        if means_f64.len() != weights_f64.len() {
+            return Err(PyValueError::new_err(format!(
+                "from_means_weights: means and weights must have the same length (got {} vs {})",
+                means_f64.len(),
+                weights_f64.len()
+            )));
+        }
+
+        let config = DigestConfig {
+            max_size,
+            scale: sc,
+            policy,
+            legacy_delta: delta,
+        };
+        let precision = if f32_mode {
+            DigestPrecision::F32
+        } else {
+            DigestPrecision::F64
+        };
+
+        let mut inner =
+            FrontendDigest::from_values(Vec::new(), config, precision).map_err(map_frontend_err)?;
+        inner
+            .add_weighted_f64(means_f64, weights_f64)
+            .map_err(map_frontend_err)?;
+        Ok(Self { inner })
+    }
+
     #[classmethod]
     pub fn merge_all(_cls: &Bound<'_, PyType>, digests: Bound<'_, PyAny>) -> PyResult<Self> {
         merge_all_impl(digests)
@@ -147,6 +204,30 @@ impl PyTDigest {
 
     pub fn median(&self) -> PyResult<f64> {
         Ok(self.inner.median())
+    }
+
+    pub fn trimmed_mean(&self, lower: f64, upper: f64) -> PyResult<f64> {
+        self.inner
+            .trimmed_mean_strict(lower, upper)
+            .map_err(map_frontend_err)
+    }
+
+    #[getter]
+    pub fn means(&self, py: Python<'_>) -> PyResult<PyObject> {
+        let np = py.import("numpy")?;
+        let arr = np.call_method1("asarray", (self.inner.centroid_means_f64(),))?;
+        Ok(arr.unbind())
+    }
+
+    #[getter]
+    pub fn weights(&self, py: Python<'_>) -> PyResult<PyObject> {
+        let np = py.import("numpy")?;
+        let arr = np.call_method1("asarray", (self.inner.centroid_weights_f64(),))?;
+        Ok(arr.unbind())
+    }
+
+    fn __len__(&self) -> usize {
+        self.inner.centroid_len()
     }
 
     pub fn quantile(&self, py: Python<'_>, q: PyObject) -> PyResult<PyObject> {
