@@ -1,0 +1,714 @@
+{
+  "schema": "day20-e03-e08-heldout-final-independent-review-v1",
+  "reviewer": "day_speed",
+  "created_utc": "2026-10-15T15:51:56.9755403Z",
+  "status": "passed",
+  "method": "Windows-only arithmetic and receipt review. Recompute all exported1440 classifications, paired ratios, medians, drifts and batch minima without tolerance. Raw Linux files are not reopened; their verification is bound to the reviewed exporter and its immutable receipt.",
+  "source_hashes": {
+    "day-e03-e08-heldout-summary.json": "5146c3f70dc4ce39cf58190a658a251797756b41cdfd4f1ec90b6fd9bf5badf5",
+    "export_day_e03_e08_heldout.py": "0152966402b7206ee795c1bab7a5854ca4e74040e6dc804c2d5776393d125a7c",
+    "day-e03-e08-heldout-export-review-r2.json": "1a27175fd27a9418cba05b91ac120da2bb8db324b11a4a9491122b4a7adcd5e6",
+    "day_e03_e08_heldout_batch.py": "b0972f7293f829baea89da29158dc2e394930798c0c5f5735ead627f5a848709",
+    "export_day_native_remaining_v2.py": "bcbe6f2163a5bf0f28a5b3e418aee13e7ccecbf7ad67b67dcdd79f6562f121b8",
+    "day-native-declared-controls-summary.json": "b0cb6d01cdbd356d302f759afedb64b347cd6636888f4355876c63a6f56fd374"
+  },
+  "reviewer_script_sha256": "46f3c0c2aba6026adfbaf8b2ce39654f146e80bd77eb10ead29f52cbcb407803",
+  "wsl_or_unc_access": false,
+  "builds_tests_benchmarks_run": false,
+  "source_protocol_main_state_modified": false,
+  "finished_utc": "2026-10-15T15:52:00.1443485Z",
+  "tallies": {
+    "E03": {
+      "classifications": {
+        "unstable_controls": 39,
+        "neutral_or_noisy": 515,
+        "short_batch_inconclusive": 17,
+        "regressed": 5
+      },
+      "measured_cells": 576,
+      "planned_cells": 1728,
+      "unmeasured_cells": 1152,
+      "operation_statuses": {
+        "build": "complete",
+        "p50": "complete",
+        "cdf_batch": "skipped_candidate_rejected",
+        "kway": "skipped_candidate_rejected",
+        "merge2": "skipped_candidate_rejected",
+        "merge": "skipped_candidate_rejected"
+      }
+    },
+    "E08": {
+      "classifications": {
+        "neutral_or_noisy": 796,
+        "unstable_controls": 34,
+        "short_batch_inconclusive": 26,
+        "regressed": 3,
+        "improved": 5
+      },
+      "measured_cells": 864,
+      "planned_cells": 1728,
+      "unmeasured_cells": 864,
+      "operation_statuses": {
+        "build": "complete",
+        "p50": "complete",
+        "cdf_batch": "complete",
+        "merge2": "skipped_candidate_rejected",
+        "merge": "skipped_candidate_rejected",
+        "kway": "skipped_candidate_rejected"
+      }
+    }
+  },
+  "operations": [
+    {
+      "experiment": "E03",
+      "operation": "build",
+      "status": "complete",
+      "planned_cells": 288,
+      "measured_cells": 288,
+      "classifications": {
+        "neutral_or_noisy": 268,
+        "short_batch_inconclusive": 2,
+        "unstable_controls": 18
+      }
+    },
+    {
+      "experiment": "E03",
+      "operation": "p50",
+      "status": "complete",
+      "planned_cells": 288,
+      "measured_cells": 288,
+      "classifications": {
+        "regressed": 5,
+        "short_batch_inconclusive": 15,
+        "unstable_controls": 21,
+        "neutral_or_noisy": 247
+      }
+    },
+    {
+      "experiment": "E03",
+      "operation": "cdf_batch",
+      "status": "skipped_candidate_rejected",
+      "planned_cells": 288,
+      "measured_cells": 0,
+      "classifications": {}
+    },
+    {
+      "experiment": "E03",
+      "operation": "kway",
+      "status": "skipped_candidate_rejected",
+      "planned_cells": 288,
+      "measured_cells": 0,
+      "classifications": {}
+    },
+    {
+      "experiment": "E03",
+      "operation": "merge2",
+      "status": "skipped_candidate_rejected",
+      "planned_cells": 288,
+      "measured_cells": 0,
+      "classifications": {}
+    },
+    {
+      "experiment": "E03",
+      "operation": "merge",
+      "status": "skipped_candidate_rejected",
+      "planned_cells": 288,
+      "measured_cells": 0,
+      "classifications": {}
+    },
+    {
+      "experiment": "E08",
+      "operation": "build",
+      "status": "complete",
+      "planned_cells": 288,
+      "measured_cells": 288,
+      "classifications": {
+        "neutral_or_noisy": 270,
+        "short_batch_inconclusive": 2,
+        "unstable_controls": 16
+      }
+    },
+    {
+      "experiment": "E08",
+      "operation": "p50",
+      "status": "complete",
+      "planned_cells": 288,
+      "measured_cells": 288,
+      "classifications": {
+        "neutral_or_noisy": 260,
+        "short_batch_inconclusive": 21,
+        "unstable_controls": 7
+      }
+    },
+    {
+      "experiment": "E08",
+      "operation": "cdf_batch",
+      "status": "complete",
+      "planned_cells": 288,
+      "measured_cells": 288,
+      "classifications": {
+        "neutral_or_noisy": 266,
+        "regressed": 3,
+        "short_batch_inconclusive": 3,
+        "unstable_controls": 11,
+        "improved": 5
+      }
+    },
+    {
+      "experiment": "E08",
+      "operation": "merge2",
+      "status": "skipped_candidate_rejected",
+      "planned_cells": 288,
+      "measured_cells": 0,
+      "classifications": {}
+    },
+    {
+      "experiment": "E08",
+      "operation": "merge",
+      "status": "skipped_candidate_rejected",
+      "planned_cells": 288,
+      "measured_cells": 0,
+      "classifications": {}
+    },
+    {
+      "experiment": "E08",
+      "operation": "kway",
+      "status": "skipped_candidate_rejected",
+      "planned_cells": 288,
+      "measured_cells": 0,
+      "classifications": {}
+    }
+  ],
+  "regressions": [
+    {
+      "experiment": "E03",
+      "operation": "p50",
+      "cell": 7,
+      "case": [
+        "uniform",
+        32,
+        "f64",
+        "delta300"
+      ],
+      "classification": "regressed",
+      "median_ratio": 1.041988537639969,
+      "percent_elapsed_change": 4.19885376399689,
+      "paired_ratios": [
+        1.0418346244696959,
+        1.0311765669184616,
+        1.0421424508102417,
+        1.0549216392156258
+      ],
+      "drift": {
+        "baseline": 1.0308297460246563,
+        "candidate": 1.0305252612124334
+      },
+      "minimum_retained_batch_ns": 68316591.0,
+      "baseline_only_rounds": 6208192,
+      "calibration_sha256": "6f1fcd3f400862ad0dbbe32fcbcb8d5ed73f4a6b13d6dfdb9e5d2972e01a9f4a"
+    },
+    {
+      "experiment": "E03",
+      "operation": "p50",
+      "cell": 47,
+      "case": [
+        "normal",
+        32,
+        "f64",
+        "cap256edges"
+      ],
+      "classification": "regressed",
+      "median_ratio": 1.0403747762244437,
+      "percent_elapsed_change": 4.037477622444374,
+      "paired_ratios": [
+        1.0367971032614558,
+        1.0318248313838678,
+        1.0541968842043559,
+        1.0439524491874317
+      ],
+      "drift": {
+        "baseline": 1.0397474462145044,
+        "candidate": 1.0176820378119416
+      },
+      "minimum_retained_batch_ns": 80422478.0,
+      "baseline_only_rounds": 7253912,
+      "calibration_sha256": "d41fc61829e2668be8bc4ce10eda9980019c9d334d0fbe713d5bb3ba21d6d145"
+    },
+    {
+      "experiment": "E03",
+      "operation": "p50",
+      "cell": 80,
+      "case": [
+        "exponential",
+        32,
+        "f64",
+        "delta1200"
+      ],
+      "classification": "regressed",
+      "median_ratio": 1.0374925567308335,
+      "percent_elapsed_change": 3.7492556730833515,
+      "paired_ratios": [
+        1.0435658200859779,
+        1.0314192933756892,
+        1.0845365120913788,
+        1.03086751340098
+      ],
+      "drift": {
+        "baseline": 1.0040808427127113,
+        "candidate": 1.0501725503023749
+      },
+      "minimum_retained_batch_ns": 66568343.0,
+      "baseline_only_rounds": 5995234,
+      "calibration_sha256": "93bc6469cf96cd736748875603f9ef3f9d7e72b72139396b056bcfef33aa4c91"
+    },
+    {
+      "experiment": "E03",
+      "operation": "p50",
+      "cell": 187,
+      "case": [
+        "ties",
+        32,
+        "f64",
+        "delta300"
+      ],
+      "classification": "regressed",
+      "median_ratio": 1.067125717338175,
+      "percent_elapsed_change": 6.712571733817496,
+      "paired_ratios": [
+        1.05594215660323,
+        1.0631118399247095,
+        1.0711395947516407,
+        1.1195704068064385
+      ],
+      "drift": {
+        "baseline": 1.0155856101259453,
+        "candidate": 1.0551075968104318
+      },
+      "minimum_retained_batch_ns": 64836673.0,
+      "baseline_only_rounds": 10306003,
+      "calibration_sha256": "9c92fa0c1e40c15952b0e9946f293d050d99f5a0891242d7f92813ca17a748a1"
+    },
+    {
+      "experiment": "E03",
+      "operation": "p50",
+      "cell": 189,
+      "case": [
+        "ties",
+        32,
+        "f64",
+        "cap64use"
+      ],
+      "classification": "regressed",
+      "median_ratio": 1.058326405680472,
+      "percent_elapsed_change": 5.832640568047198,
+      "paired_ratios": [
+        1.049707332896305,
+        1.0669454784646388,
+        1.0310626548146724,
+        1.0893467447631355
+      ],
+      "drift": {
+        "baseline": 1.032291103830584,
+        "candidate": 1.0457194795922864
+      },
+      "minimum_retained_batch_ns": 70819428.0,
+      "baseline_only_rounds": 11169129,
+      "calibration_sha256": "8aff87e521ef5f162721257dc77482cb97631efb8819c45f426e0abe0cc0c98f"
+    },
+    {
+      "experiment": "E08",
+      "operation": "cdf_batch",
+      "cell": 0,
+      "case": [
+        "uniform",
+        32,
+        "f32",
+        "delta100"
+      ],
+      "classification": "regressed",
+      "median_ratio": 1.0437413025223528,
+      "percent_elapsed_change": 4.374130252235275,
+      "paired_ratios": [
+        1.039752342522378,
+        1.0304082124847198,
+        1.0477302625223273,
+        1.060438557870527
+      ],
+      "drift": {
+        "baseline": 1.0398857931242236,
+        "candidate": 1.0274238021023607
+      },
+      "minimum_retained_batch_ns": 64200634.00000001,
+      "baseline_only_rounds": 55821,
+      "calibration_sha256": "1308a4cd66f0ad82126c80d6a1af5c60c8c821c30f7721de3397dd12857a4867"
+    },
+    {
+      "experiment": "E08",
+      "operation": "cdf_batch",
+      "cell": 4,
+      "case": [
+        "uniform",
+        32,
+        "f32",
+        "cap256off"
+      ],
+      "classification": "regressed",
+      "median_ratio": 1.0462004852492348,
+      "percent_elapsed_change": 4.620048524923481,
+      "paired_ratios": [
+        1.0301819488413164,
+        1.0484814930803747,
+        1.0482437604794383,
+        1.0441572100190315
+      ],
+      "drift": {
+        "baseline": 1.0199725004967095,
+        "candidate": 1.0273232713853022
+      },
+      "minimum_retained_batch_ns": 61232798.00000001,
+      "baseline_only_rounds": 52334,
+      "calibration_sha256": "a671a7e379650d72740c72b434e4c81e0e0b2f738b86504fd1aa48c1195e04fe"
+    },
+    {
+      "experiment": "E08",
+      "operation": "cdf_batch",
+      "cell": 253,
+      "case": [
+        "separated_modes",
+        32,
+        "f32",
+        "delta300"
+      ],
+      "classification": "regressed",
+      "median_ratio": 1.0502144935811886,
+      "percent_elapsed_change": 5.021449358118857,
+      "paired_ratios": [
+        1.0402879807397962,
+        1.0305618337549438,
+        1.060141006422581,
+        1.100337445537251
+      ],
+      "drift": {
+        "baseline": 1.0149909569919688,
+        "candidate": 1.0580533435937736
+      },
+      "minimum_retained_batch_ns": 60347251.0,
+      "baseline_only_rounds": 51635,
+      "calibration_sha256": "b9f1bfe3bece1986326a1694cdddca1cd7b41c9795320287abfb75860be926c6"
+    }
+  ],
+  "regression_ranges": {
+    "E03": {
+      "rejection_summary_sha256": "ed755e21cb95e4dffef5e366fc9783c7479db60323959f8d63ac47d2b07ea188",
+      "count": 5,
+      "rejection_summary": "/var/tmp/codex-tdigest-pr3-20261014/day20261015/evidence/v3/E03-e03-v3-confirm-p50-scale1/summary.json",
+      "maximum_percent_slower": 6.712571733817496,
+      "operation": "p50",
+      "minimum_batch_ms": 64.836673,
+      "minimum_percent_slower": 3.7492556730833515
+    },
+    "E08": {
+      "rejection_summary_sha256": "f47330c6a2f15237e3b76793044064d13fe3086cb5d1e91766381d6c207962bc",
+      "count": 3,
+      "rejection_summary": "/var/tmp/codex-tdigest-pr3-20261014/day20261015/evidence/v3/E08-e08-v3-confirm-cdf_batch-scale1/summary.json",
+      "maximum_percent_slower": 5.021449358118857,
+      "operation": "cdf_batch",
+      "minimum_batch_ms": 60.347251,
+      "minimum_percent_slower": 4.374130252235275
+    }
+  },
+  "current_qualified_gains_preserved": [
+    {
+      "experiment": "E08",
+      "operation": "cdf_batch",
+      "cell": 117,
+      "case": [
+        "lognormal",
+        32,
+        "f64",
+        "cap64use"
+      ],
+      "classification": "improved",
+      "median_ratio": 0.9420759238030239,
+      "percent_elapsed_change": -5.792407619697615,
+      "paired_ratios": [
+        0.9125407111109624,
+        0.959695456489251,
+        0.9297254227986734,
+        0.9544264248073743
+      ],
+      "drift": {
+        "baseline": 1.0665183499401696,
+        "candidate": 1.014114849545704
+      },
+      "minimum_retained_batch_ns": 65587762.0,
+      "baseline_only_rounds": 55669,
+      "calibration_sha256": "58ee87cb0efac9dfad91b1b4573e6bd11812da1454ada67295c055ec0972adf9"
+    },
+    {
+      "experiment": "E08",
+      "operation": "cdf_batch",
+      "cell": 181,
+      "case": [
+        "ties",
+        32,
+        "f32",
+        "delta300"
+      ],
+      "classification": "improved",
+      "median_ratio": 0.9631716189767656,
+      "percent_elapsed_change": -3.682838102323438,
+      "paired_ratios": [
+        0.9505752137067189,
+        0.9568492052515555,
+        0.9695849690359853,
+        0.9694940327019756
+      ],
+      "drift": {
+        "baseline": 1.029354515602995,
+        "candidate": 1.020691623925914
+      },
+      "minimum_retained_batch_ns": 65006115.0,
+      "baseline_only_rounds": 178842,
+      "calibration_sha256": "292a67e6d17b154f08d4ca64e0ad3b88314fce3ce4491689d1af7a935b5da48e"
+    },
+    {
+      "experiment": "E08",
+      "operation": "cdf_batch",
+      "cell": 182,
+      "case": [
+        "ties",
+        32,
+        "f32",
+        "delta1200"
+      ],
+      "classification": "improved",
+      "median_ratio": 0.9474625404140158,
+      "percent_elapsed_change": -5.253745958598421,
+      "paired_ratios": [
+        0.9502997500820705,
+        0.8934417821236265,
+        0.944625330745961,
+        0.9660495887711038
+      ],
+      "drift": {
+        "baseline": 1.0733989211251498,
+        "candidate": 1.0272657695272582
+      },
+      "minimum_retained_batch_ns": 61709772.0,
+      "baseline_only_rounds": 172225,
+      "calibration_sha256": "8502898a06b1d86b9b533ab9d669b88d509e3dd5ddbdc36f03d3f9163d2da672"
+    },
+    {
+      "experiment": "E08",
+      "operation": "cdf_batch",
+      "cell": 200,
+      "case": [
+        "ties",
+        1000,
+        "f64",
+        "delta1200"
+      ],
+      "classification": "improved",
+      "median_ratio": 0.9447996146336454,
+      "percent_elapsed_change": -5.520038536635463,
+      "paired_ratios": [
+        0.9488950709586798,
+        0.940704158308611,
+        0.9677405326206768,
+        0.9294532414801725
+      ],
+      "drift": {
+        "baseline": 1.0362680759634448,
+        "candidate": 1.0426823188923673
+      },
+      "minimum_retained_batch_ns": 61144201.00000001,
+      "baseline_only_rounds": 338118,
+      "calibration_sha256": "e2f0441d62d8906ceb1bcf540427e6167ea1582f558984e0f51baf6beea8fc74"
+    },
+    {
+      "experiment": "E08",
+      "operation": "cdf_batch",
+      "cell": 263,
+      "case": [
+        "separated_modes",
+        32,
+        "f64",
+        "cap256edges"
+      ],
+      "classification": "improved",
+      "median_ratio": 0.94789217603101,
+      "percent_elapsed_change": -5.210782396899005,
+      "paired_ratios": [
+        0.9454999641990074,
+        0.9570005662152891,
+        0.8991512628003929,
+        0.9502843878630125
+      ],
+      "drift": {
+        "baseline": 1.066086319110983,
+        "candidate": 1.0139050455888658
+      },
+      "minimum_retained_batch_ns": 60258836.99999999,
+      "baseline_only_rounds": 52300,
+      "calibration_sha256": "cba5600b4098dc6c070316980e8ae23e4beb0f942a46e2844fe5839f2e403d57"
+    }
+  ],
+  "earlier_primary_review": {
+    "evidence": [
+      {
+        "settings": [
+          {
+            "setting": "delta300",
+            "total_cells": 12,
+            "qualified_cells": 12,
+            "qualified_elapsed_time_reduction_percent": {
+              "minimum": 40.80795758279368,
+              "maximum": 44.05475821869524
+            }
+          },
+          {
+            "setting": "cap64use",
+            "total_cells": 12,
+            "qualified_cells": 9,
+            "qualified_elapsed_time_reduction_percent": {
+              "minimum": 3.4447318305525942,
+              "maximum": 44.67750035486249
+            }
+          }
+        ],
+        "source_sha256": "c0498efa53b6cc161f6b4c0de09411a2f072b25157d5c32d4ee2fcd0e9c104a5",
+        "classifications": {
+          "initial": {
+            "short_batch_inconclusive": 17,
+            "neutral_or_noisy": 6,
+            "improved": 1
+          },
+          "repeat": {
+            "improved": 21,
+            "neutral_or_noisy": 3
+          }
+        },
+        "experiment": "E03",
+        "operation": "merge2",
+        "source": "work/day-e03-primary-repeat-comparison.json"
+      },
+      {
+        "settings": [
+          {
+            "setting": "delta300",
+            "total_cells": 12,
+            "qualified_cells": 11,
+            "qualified_elapsed_time_reduction_percent": {
+              "minimum": 4.6310017624098805,
+              "maximum": 18.048264803071802
+            }
+          },
+          {
+            "setting": "cap64use",
+            "total_cells": 12,
+            "qualified_cells": 8,
+            "qualified_elapsed_time_reduction_percent": {
+              "minimum": 4.227141076333851,
+              "maximum": 8.624455277942843
+            }
+          }
+        ],
+        "source_sha256": "9279f70b358ce7af002b5d149ff401b09e64f542280b70260d2e1c4f45b92393",
+        "classifications": {
+          "initial": {
+            "short_batch_inconclusive": 8,
+            "unstable_controls": 4,
+            "improved": 6,
+            "neutral_or_noisy": 6
+          },
+          "repeat": {
+            "improved": 19,
+            "neutral_or_noisy": 4,
+            "unstable_controls": 1
+          }
+        },
+        "experiment": "E08",
+        "operation": "kway",
+        "source": "work/day-e08-primary-repeat-comparison.json"
+      }
+    ],
+    "path": "work/day-e03-e08-primary-repeat-review.json",
+    "sha256": "e730cdfb24af6e42b6d8b020e38d040a9503157e3f8dcfe2e1f844b0ec61ef4a"
+  },
+  "source_proof_receipts": {
+    "baseline-v3": {
+      "provenance": "/var/tmp/codex-tdigest-pr3-20261014/day20261015/evidence/v3/builds/baseline-v3/provenance.json",
+      "provenance_sha256": "0f50265f0fa7c411e7e29599ebb5184906935c7d02ab6aff82a2e1890c706a52",
+      "binary_sha256": "4722a9d83f68ddc7abebf7374e9a12cdb75007cb4ece3aa9838aae5e1466ae00",
+      "source_receipt": {
+        "path": "/var/tmp/codex-tdigest-pr3-20261014/day20261015/evidence/v3/builds/baseline-v3/source",
+        "file_count": 43,
+        "manifest_sha256": "4679561a8cacc38d5753edda3eac1a314a1345ef80d556a18b1416b8a5627cff"
+      },
+      "compile_proof": [
+        "   Compiling gr-tdigest v0.2.4 (/var/tmp/codex-tdigest-pr3-20261014/day20261015/evidence/v3/builds/baseline-v3/source)"
+      ]
+    },
+    "e03-v3": {
+      "provenance": "/var/tmp/codex-tdigest-pr3-20261014/day20261015/evidence/v3/builds/e03-v3/provenance.json",
+      "provenance_sha256": "474a4f2bffbb1fa9cc78f54f88811c49fe576016d718ae5b50e8b762c4847795",
+      "binary_sha256": "af1794b98372bded5e21ecf9f0b97b2e2e7d4b5f4a5341631ae1bb92c305e267",
+      "source_receipt": {
+        "path": "/var/tmp/codex-tdigest-pr3-20261014/day20261015/evidence/v3/builds/e03-v3/source",
+        "file_count": 43,
+        "manifest_sha256": "dfe288bf2b4910fc4c3906aa03f8488be9b705cd084d00ce4ed276917bfa5539"
+      },
+      "compile_proof": [
+        "   Compiling gr-tdigest v0.2.4 (/var/tmp/codex-tdigest-pr3-20261014/day20261015/evidence/v3/builds/e03-v3/source)"
+      ]
+    },
+    "e08-v3": {
+      "provenance": "/var/tmp/codex-tdigest-pr3-20261014/day20261015/evidence/v3/builds/e08-v3/provenance.json",
+      "provenance_sha256": "5ff15db56ea125f110e71195880cc19f0afe398b999944fb5502acd8a3c02df2",
+      "binary_sha256": "9f5baeab23a37976c41e99cd80a80cc6712953d7db6cb87387ec9bb011a5f045",
+      "source_receipt": {
+        "path": "/var/tmp/codex-tdigest-pr3-20261014/day20261015/evidence/v3/builds/e08-v3/source",
+        "file_count": 43,
+        "manifest_sha256": "348957f8dcaf62f2e56647242dd4d820e5fd01a7375b0e61bc82d18cb3f57e5f"
+      },
+      "compile_proof": [
+        "   Compiling gr-tdigest v0.2.4 (/var/tmp/codex-tdigest-pr3-20261014/day20261015/evidence/v3/builds/e08-v3/source)"
+      ]
+    }
+  },
+  "public_shape_receipt": {
+    "summary": "/var/tmp/codex-tdigest-pr3-20261014/day20261015/evidence/merge-shapes-v1/audit/summary.json",
+    "summary_sha256": "b87bfc58ed875478821c9f9651c7c2f02e1a6974589ac6048418aecb57617f67",
+    "cases_per_candidate": 52,
+    "timing": false,
+    "rerun": false
+  },
+  "batch_receipts": {
+    "protocol_sha256": "f19170e2951b59b5a30113c3724565a7ebc65dba8ca0d7caad543e69bff3d1d6",
+    "files_verified_by_exporter": 10860,
+    "plan_sha256": "e8acfc8995a5821bf3e1f3c58a3d1694c4a1d6ab23b65ca73995ec97dcf654fa",
+    "directories_verified_by_exporter": 28,
+    "index_sha256": "17cbc05480afe2a6068f9234fc7dbb27c9ce380c2b4b4571191a7c50e611cfc2"
+  },
+  "summary": "All1440 measured cells and2016 skipped cells reconcile. Eight stable regressions meet every original timing gate; both candidates are rejected. Earlier measured primary gains and five fresh E08CDF gains remain recorded but do not cancel regressions. No state, quality, invariant or logical-storage mismatch was reported in completed operations.",
+  "limits": [
+    "Read-only Windows audit of hash-bound exports; no fresh reading of Linux raw files or new measurement.",
+    "All stopped fresh target operations remain unmeasured, with no extrapolated confirmation.",
+    "Unchanged query-control regressions do not establish a causal mechanism; do not attribute them to the altered merge kernel without further evidence.",
+    "Earlier primary merge timings include their declared caller-reset cost. Logical bytes do not prove allocator peak/RSS.",
+    "Frozen original compatibility engine and E12 release evidence are separate; this review makes no new accuracy or global-speed claim."
+  ],
+  "preserved_attempts": [
+    {
+      "path": "work/day-e03-e08-heldout-final-review-attempt1.json",
+      "reason": "Invalid Set-Content -NoClobber writer parameter; no output or conclusion.",
+      "sha256": "bfa8354858b90aed29e018465e032383ed16c8991b4efd985f8cd09da2430b8d"
+    },
+    {
+      "path": "work/day-e03-e08-heldout-final-review-speed.json",
+      "reason": "PowerShell Group-Object treats ordered dictionaries differently from data objects; compact rows now explicitly PSCustomObject. Evidence and gates unchanged.",
+      "sha256": "5d2758799089400e520aceeaf4e714b53792056d674e3ff283b01bd7f8e8f631"
+    }
+  ]
+}

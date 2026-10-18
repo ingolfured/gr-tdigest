@@ -1,0 +1,626 @@
+{
+  "schema": "day20-final-portfolio-independent-audit-v1",
+  "created_utc": "2026-10-15T15:49:02.0808255Z",
+  "reviewer": "day_accuracy",
+  "status": "Final dispositions supported; no remaining experiment or composition work required.",
+  "method": "Windows-only read/hash review of preserved exports, prior reviewed quality reports and current ledger snapshot. Independently recomputed final E02/E03/E08 certified regression gates and medians. No Linux/UNC, builds, tests, benchmark execution, code/PR/main-state edits or new remote query.",
+  "source_files": [
+    {
+      "path": "work/day-portfolio-story-input-state-20261015T125731Z.json",
+      "sha256": "a66b6bd68d0b54aaf14f76baeb2b1e5a24c839d50b90bf5c5d0bc5ebf03ff673"
+    },
+    {
+      "path": "work/day-native-remaining-v2-summary.json",
+      "sha256": "d4d4927ccb53b3274fe4ad46d7b4129a9d7608a1cffda711c7cd9b53025c7119"
+    },
+    {
+      "path": "work/day-supplement-untimed-result.json",
+      "sha256": "17dbc07a5cde592348bce3d28c33b140fefa77e1a91e67a24bd1edd9624f4470"
+    },
+    {
+      "path": "work/day-breadth-summary.json",
+      "sha256": "c8fa2efcc0105e9ee9dd08435268d9758b6ea2b27fd6b52c44d0768179b81db1"
+    },
+    {
+      "path": "work/day-native-followup-b-summary.json",
+      "sha256": "da17784d5214ef30adf1f582287e9180597e598b6cf55d9a63c5bedc9dbfa311"
+    },
+    {
+      "path": "work/day-lifecycle-screen-summary.json",
+      "sha256": "d0f376f7a019933944c4d38cfb39f02ea01002ded701cb201fe8f60a9ce744f1"
+    },
+    {
+      "path": "work/day-e09-inventory-result.json",
+      "sha256": "23d32b8b360f3fd9a2d7993d4281c8d2fec7dd0ebd691dd0d836c5aa495f7a55"
+    },
+    {
+      "path": "work/day-wheel-summary-v2.json",
+      "sha256": "2bdf787d8f70c15a1f684e765ad1cd87bb5e82f1312a0b388eccd8175dd6e4ea"
+    },
+    {
+      "path": "work/day-wheel-repeat-summary.json",
+      "sha256": "d93a9554d6f8fe8bfec4bb8150244535f7a54bb6414cef5d8682ba1526117ed9"
+    },
+    {
+      "path": "work/day-e12-final-validation-result.json",
+      "sha256": "97bf2d2459b7155e80c50c045c92b66205adfef65ff90e1d1e85f26aa546ed85"
+    },
+    {
+      "path": "work/day-e12-root-publication-check.json",
+      "sha256": "b3935d4a5003f7037de9c305dc59a95b4f043a17354881d57f6c0ee8ecacebf4"
+    },
+    {
+      "path": "work/day-e12-heldout-repeat-result.json",
+      "sha256": "3af0b7c10db60cb5eef625b8706c2fbf4ec3adc6c3e5e170e8af97cf559dcd12"
+    },
+    {
+      "path": "work/day-e12-acceptance-interpretation.json",
+      "sha256": "a2c86a91c87ddf3b22fb8fc2d126619b28e233fca4d3006cd7e92ad565575ba1"
+    },
+    {
+      "path": "work/day-survivor-memory-storage-checklist.json",
+      "sha256": "de366b655e2a54168bc7b5e06988ad0a4c4a64f91441950f8e7f5b11d0e031d2"
+    },
+    {
+      "path": "work/index_quality_rejections.py",
+      "sha256": "11db89e271fee01c4dfc210854b5622eb591bd3c05c06b9c1bedefb89c0fa328"
+    },
+    {
+      "path": "work/pr-descriptions-final/6-applied.json",
+      "sha256": "1c357963628f56ebe4654cb4f27ac702efbc3a441e10ab435cac210c0efa3117"
+    },
+    {
+      "path": "work/pr-descriptions-final/7-applied.json",
+      "sha256": "8bd4b5ef15192d140ae133fdaaff27b411195bf53f2f5c2b71e74ba645f5529a"
+    },
+    {
+      "path": "work/pr-descriptions-final/8-applied.json",
+      "sha256": "376bf85ba4ac06dbfe390c3467650bd0ca287823ef76bb786c64ce65fb044f11"
+    },
+    {
+      "path": "work/day-final-portfolio-input-state-accuracy.json",
+      "sha256": "0e8dfd48328bb5b8eef0baeeb0d5809929cdce859f8c1b83b6f6ff4ba8d23fcb"
+    },
+    {
+      "path": "work/day-portfolio-story-20261015T125731Z-v2.json",
+      "sha256": "25a8a2eae44759ef18a10e3a56adb7d887622794fe9445237511b26dd4c3e49a"
+    },
+    {
+      "path": "work/day-e03-e08-heldout-summary.json",
+      "sha256": "5146c3f70dc4ce39cf58190a658a251797756b41cdfd4f1ec90b6fd9bf5badf5"
+    },
+    {
+      "path": "work/day-e02-heldout-rejection-summary.json",
+      "sha256": "a977934c9379dd0bfc3139259c0a84d8e24a7ed568d0a04dda2bdbe6e5d36da2"
+    },
+    {
+      "path": "work/day-e13-native-rejection-summary-v2.json",
+      "sha256": "543461cde680b88ff4a9020372e694d4e1ad49f35a4cbdc353aba83e8efbfd2f"
+    },
+    {
+      "path": "work/day-e12-documentation-amendment.json",
+      "sha256": "ed81c696d22d3196268c97ae5ed1052e1c94c88814397bb13ddc5ad817495e0f"
+    },
+    {
+      "path": "work/day-e03-e08-heldout-export-review-r2.json",
+      "sha256": "1a27175fd27a9418cba05b91ac120da2bb8db324b11a4a9491122b4a7adcd5e6"
+    }
+  ],
+  "ledger_snapshot": {
+    "updated_utc": "2026-10-15T15:46:49.442625Z",
+    "sha256": "0e8dfd48328bb5b8eef0baeeb0d5809929cdce859f8c1b83b6f6ff4ba8d23fcb",
+    "path": "work/day-final-portfolio-input-state-accuracy.json"
+  },
+  "counts": {
+    "pending": 0,
+    "speed_prototypes_rejected": 12,
+    "native_winners": 0,
+    "quality_prototypes_rejected": 7,
+    "rejected": 19,
+    "prototypes": 20,
+    "retained": 1
+  },
+  "conclusion": "Retain only E12 in personal PR9. Discard the other19 prototypes from integration. No native winner set exists, so the conditional interaction/composition plan has no eligible inputs and should not execute. Completed screening is not a claim that every rejected candidate finished every later matrix.",
+  "candidates": [
+    {
+      "id": "E01",
+      "title": "Tiny-cap Use policy retains all mass",
+      "kind": "quality",
+      "decision": "rejected",
+      "current_status": "Rejected: missing mass repaired but worst rank/CDF errors regress at matched stored size",
+      "reason": "288 repair comparisons: maximum rank error worsens12 and maximum CDF error18; [0,1,2,100] cap2 median0→25.75 versus exact1.5. Underlying missing-mass defect remains unresolved.",
+      "prior_reviewed_finding": "Mass retention improved, but 288 matched-storage comparisons include 12 worse maximum-rank and 18 worse maximum-CDF cases. For [0,1,2,100] at cap2, median 0 becomes 25.75 against exact 1.5.",
+      "evidence_refs": [
+        "/var/tmp/codex-tdigest-pr3-20261014/day20261015/validation/E01/RESULT.json",
+        "/var/tmp/codex-tdigest-pr3-20261014/day20261015/evidence/smoke-baseline",
+        "/var/tmp/codex-tdigest-pr3-20261014/day20261015/evidence/repair-quality/comparison.json"
+      ]
+    },
+    {
+      "id": "E02",
+      "title": "Borrowed digest merge removes operand clones",
+      "kind": "speed",
+      "decision": "rejected",
+      "current_status": "Rejected: certified p50 regression in fresh heldout controls; all prior screen gains preserved, remaining294confirmationcells skipped",
+      "reason": null,
+      "prior_reviewed_finding": "Primary 24 merge cells: 8 qualified gains, 11 neutral/noisy, 5 unstable; no certified regression. All 12 controls completed: 9 neutral/noisy, 2 unstable build and 1 short p50. All 108 direct borrowed-many public audit cases are exact.",
+      "evidence_refs": [
+        "/var/tmp/codex-tdigest-pr3-20261014/day20261015/evidence/E02-e02-screen-merge-audit-scale1/summary.json",
+        "/var/tmp/codex-tdigest-pr3-20261014/day20261015/evidence/E02-e02-screen-merge-limit1-scale1/summary.json",
+        "/var/tmp/codex-tdigest-pr3-20261014/day20261015/evidence/E02-e02-screen-merge-scale1/summary.json",
+        "/var/tmp/codex-tdigest-pr3-20261014/day20261015/evidence/supplement-v2/E02-e02-v3-public-audit/summary.json",
+        "work/day-native-remaining-v2-summary.json",
+        "work/day-supplement-untimed-result.json",
+        "work/day-breadth-summary.json",
+        "work/day-e02-heldout-rejection-summary.json"
+      ]
+    },
+    {
+      "id": "E03",
+      "title": "Two-run merge bypasses heap",
+      "kind": "speed",
+      "decision": "rejected",
+      "current_status": "Rejected: fresh p50full288 contains5 certified regressions(3.75–6.71%) despite primarymerge2gains. All576measuredcells exact, remaining1152cells skipped; full raw export awaits batch exit",
+      "reason": null,
+      "prior_reviewed_finding": "Primary 24 merge2 cells: 1 qualified gain, 6 neutral/noisy, 17 short/inconclusive. Focused differential tests pass.",
+      "evidence_refs": [
+        "/var/tmp/codex-tdigest-pr3-20261014/day20261015/validation/first-speed-both-profile-guard/RESULT.json",
+        "work/day-breadth-summary.json",
+        "work/day-e03-e08-heldout-summary.json"
+      ]
+    },
+    {
+      "id": "E04",
+      "title": "Scalar CDF avoids prefix allocation",
+      "kind": "speed",
+      "decision": "rejected",
+      "current_status": "Rejected by stable unchanged-operation speed regression after full54-cell screen",
+      "reason": "Batch CDF, ties100000,f32,cap64Use: ratios1.0596,1.0852,1.0614,1.1432; median1.0733 (7.33% slower), baseline/candidate drift1.0141/1.0733. Full54 cells exact in state/quality/storage. All42 scalar targets short/inconclusive; no further repeat permitted to erase control regression.",
+      "prior_reviewed_finding": "Full54-cell screen is exact, but the unchanged batch-CDF control on ties100000/f32/cap64Use regresses 7.33% median; all four paired ratios exceed 1.03. All42 scalar targets are short/inconclusive.",
+      "evidence_refs": [
+        "/var/tmp/codex-tdigest-pr3-20261014/day20261015/validation/first-speed/RESULT.json",
+        "/var/tmp/codex-tdigest-pr3-20261014/day20261015/evidence/E04-e04-screen-cdf_atomic-scale1/summary.json",
+        "/var/tmp/codex-tdigest-pr3-20261014/day20261015/evidence/v3/followup-20261015-b/INDEX.json",
+        "work/day-native-followup-b-summary.json"
+      ]
+    },
+    {
+      "id": "E05",
+      "title": "Move compressor vectors through no-edge paths",
+      "kind": "speed",
+      "decision": "rejected",
+      "current_status": "Rejected: full16-cell lifecycle screen contains a certified speed regression;11 neutral/noisy,4 unstable,0 gains.",
+      "reason": "Singleton f64 build+drop cap64Off regressed13.23% median (all4paired ratios1.0724-1.1841; stablearms, minimum batch61.8ms).16cells:0gains,11neutral/noisy,4unstable,1regression. Reduced allocations did not yield an accepted speed benefit.",
+      "prior_reviewed_finding": "Full16 lifecycle cells: 0 qualified gains, 11 neutral/noisy, 4 unstable, 1 certified regression. Singleton f64 build+drop regresses 13.23% median.",
+      "evidence_refs": [
+        "/var/tmp/codex-tdigest-pr3-20261014/day20261015/validation/first-speed-both-profile-guard/RESULT.json",
+        "/var/tmp/codex-tdigest-pr3-20261014/day20261015/evidence/supplement-v2/E05-e05-v3-allocation/summary.json",
+        "/var/tmp/codex-tdigest-pr3-20261014/day20261015/evidence/supplement-v2/E05-e05-v3-lifecycle-screen-scale1/summary.json",
+        "work/day-lifecycle-screen-summary.json",
+        "work/day-supplement-untimed-result.json"
+      ]
+    },
+    {
+      "id": "E06",
+      "title": "Bucketizer retains positive residual tail",
+      "kind": "quality",
+      "decision": "rejected",
+      "current_status": "Rejected: moment repaired but rank/value/CDF accuracy worsens at matched stored size",
+      "reason": "144 repair comparisons: maximum rank/value error worsen54 each, CDF36. Far-tail fixture p90 goes1→6e16 versus exact1; centroid count and wire size unchanged. Dropped-tail defect remains unresolved.",
+      "prior_reviewed_finding": "The positive residual tail's moment is restored, but 144 matched-storage comparisons include 54 worse maximum-rank/value and 36 worse maximum-CDF cases. Far-tail p90 changes from1 to about6e16 against exact1.",
+      "evidence_refs": [
+        "/var/tmp/codex-tdigest-pr3-20261014/day20261015/validation/E06/RESULT.json",
+        "/var/tmp/codex-tdigest-pr3-20261014/day20261015/evidence/repair-quality/comparison.json"
+      ]
+    },
+    {
+      "id": "E07",
+      "title": "Hoist scale constants per compression pass",
+      "kind": "speed",
+      "decision": "rejected",
+      "current_status": "Rejected by stable primary speed regression",
+      "reason": "Separated modes,1000 values,f64,cap64 Use: all4 paired ratios1.0549–1.0939,median1.0724 (7.24%slower), botharmdrift<4.1%; no certified improvements in24buildcells.",
+      "prior_reviewed_finding": "Separated modes1000/f64/cap64Use build regresses 7.24% median with all four ratios1.0549-1.0939 and stable arms. No qualified gains among24 build cells.",
+      "evidence_refs": [
+        "/var/tmp/codex-tdigest-pr3-20261014/day20261015/validation/first-speed-both-profile-guard/RESULT.json",
+        "/var/tmp/codex-tdigest-pr3-20261014/day20261015/evidence/v3/E07-e07-v3-screen-build-scale1/summary.json",
+        "work/day-breadth-summary.json"
+      ]
+    },
+    {
+      "id": "E08",
+      "title": "Heap root replacement for k-way merge",
+      "kind": "speed",
+      "decision": "rejected",
+      "current_status": "Rejected: fresh batchCDFfull288 contains3 certified regressions4.37–5.02%;864measuredcells exact,864skipped. Prior kwaygains preserved.",
+      "reason": null,
+      "prior_reviewed_finding": "Primary24 k-way cells: 6 qualified gains, 6 neutral/noisy, 8 short and4 unstable; no certified regression. Focused differential tests pass.",
+      "evidence_refs": [
+        "/var/tmp/codex-tdigest-pr3-20261014/day20261015/validation/second-speed-both-profile-guard/RESULT.json",
+        "work/day-breadth-summary.json",
+        "work/day-e03-e08-heldout-summary.json"
+      ]
+    },
+    {
+      "id": "E09",
+      "title": "Count-only cap search before final materialization",
+      "kind": "speed",
+      "decision": "rejected",
+      "current_status": "Rejected:2 certified p50 query-control regressions;7 merge gains and allocation reductions do not erase them.",
+      "reason": "Rejected: unchanged p50 controls regress 6.64% for ties1000 f32 delta300 and 5.79% for ties100000 f32 cap64Use; all4 ratios>1.03 in each, stablearms, min65.3ms. Allocation savings and7merge gains do not erase certified regressions. LaterCDF/codec/heldout skipped.",
+      "prior_reviewed_finding": "Two unchanged p50 controls regress6.64% and5.79% median, despite7 merge gains. All four ratios exceed1.03 in both cells. Later controls/heldout were explicitly skipped.",
+      "evidence_refs": [
+        "/var/tmp/codex-tdigest-pr3-20261014/day20261015/validation/second-speed-both-profile-guard/RESULT.json",
+        "/var/tmp/codex-tdigest-pr3-20261014/day20261015/evidence/e09-entry-allocation-v1/inventory/summary.json",
+        "/var/tmp/codex-tdigest-pr3-20261014/day20261015/evidence/v3/E09-e09-v3-screen-p50-scale1/summary.json",
+        "work/day-native-remaining-v2-summary.json",
+        "work/day-e09-inventory-result.json"
+      ]
+    },
+    {
+      "id": "E10",
+      "title": "Frontend merge_all consumes first owned digest",
+      "kind": "speed",
+      "decision": "rejected",
+      "current_status": "Rejected: full54-cell lifecycle screen has5 certified regressions despite4 gains;33neutral/noisy,5short,7unstable.",
+      "reason": "Five stable lifecycle regressions: empty single-input clone+drop6.60-7.44% bothprecisions;8-centroid plus trailingempty return3.59-4.26% bothprecisions and f32drop11.14%. All4paired ratios exceed1.03, sufficiently long batches and stablearms. Four other gains do not erase these failures.",
+      "prior_reviewed_finding": "Full54 lifecycle cells: 4 improved,33 neutral/noisy,5 regressed,5 short,7 unstable. Regressions cover empty single-input clone+drop and a small digest followed by an empty digest.",
+      "evidence_refs": [
+        "/var/tmp/codex-tdigest-pr3-20261014/day20261015/validation/first-speed-both-profile-guard/RESULT.json",
+        "/var/tmp/codex-tdigest-pr3-20261014/day20261015/validation/E10-capacity/RESULT.json",
+        "/var/tmp/codex-tdigest-pr3-20261014/day20261015/evidence/supplement-v2/E10-e10-v3-allocation/summary.json",
+        "/var/tmp/codex-tdigest-pr3-20261014/day20261015/evidence/supplement-v2/E10-e10-v3-lifecycle-screen-scale1/summary.json",
+        "work/day-lifecycle-screen-summary.json",
+        "work/day-supplement-untimed-result.json",
+        "work/day-native-remaining-v2-summary.json"
+      ]
+    },
+    {
+      "id": "E11",
+      "title": "Contiguous NumPy training input fast path",
+      "kind": "speed",
+      "decision": "rejected",
+      "current_status": "Rejected: exact behavior, but stable speed regressions in three small strided-input cases",
+      "reason": "8-value strided input: f32 add median6.02% slower, f64 train4.77% slower, f64 weighted_add6.81% slower. All four paired ratios exceed1.03, all retained batches long enough, within-arm drift below10%. Large contiguous-path possibilities cannot erase fallback regressions.",
+      "prior_reviewed_finding": "Installed behavior is exact on NumPy1/2, but three8-value strided-input controls regress: f32 add6.02%, f64 train4.77%, f64 weighted_add6.81% median.",
+      "evidence_refs": [
+        "/var/tmp/codex-tdigest-pr3-20261014/day20261015/evidence/numpy-wheels/RESULT.json",
+        "/var/tmp/codex-tdigest-pr3-20261014/day20261015/evidence/wheel-screen-v2/E11-e11-screen-all-np2-scale1/summary.json",
+        "work/day-wheel-summary-v2.json"
+      ]
+    },
+    {
+      "id": "E12",
+      "title": "Bulk-copy NumPy outputs without Python scalar/list boxing",
+      "kind": "speed",
+      "decision": "retained",
+      "current_status": "Retained: independently reviewed, canonical and actual installed release gates passed; personalPR9 open",
+      "reason": null,
+      "prior_reviewed_finding": "PR9 contains the independently reviewed frozen production patch. Canonical and actual installed-release gates pass. Fresh qualified nonempty CDF calls take44.86-54.76% less time, and quantile calls36.53-51.39% less time, within the specific scope below.",
+      "evidence_refs": [
+        "/var/tmp/codex-tdigest-pr3-20261014/day20261015/evidence/numpy-wheels/RESULT.json",
+        "/var/tmp/codex-tdigest-pr3-20261014/day20261015/evidence/wheel-screen-v2/E12-e12-screen-all-np2-scale1/summary.json",
+        "/var/tmp/codex-tdigest-pr3-20261014/day20261015/evidence/wheel-screen-v2/E12-e12-screen-all-np2-scale10/summary.json",
+        "/var/tmp/codex-tdigest-pr3-20261014/day20261015/evidence/wheel-screen-v2/root-e12-heldout-repeat10-batch/INDEX.json",
+        "work/day-e12-final-validation-result.json",
+        "work/day-e12-root-publication-check.json",
+        "work/day-e12-heldout-repeat-result.json",
+        "work/day-e12-acceptance-interpretation.json",
+        "work/day-e12-documentation-amendment.json"
+      ]
+    },
+    {
+      "id": "E13",
+      "title": "Encode TDIG directly into Python bytes storage",
+      "kind": "speed",
+      "decision": "rejected",
+      "current_status": "Rejected:10 native Rust encoder speed regressions despite PythonENCODE gains; no furtherheldout/explicitcodecbuild.",
+      "reason": "10 native encode cells regressed6.7803–11.5966% median; all4pairedratios>1.03, armsdrift<=1.10,minbatch>=50ms.24state/quality/storageexact; decode24skipped. Python42.87–57.28%screenENCODEgain doesnotwaivenativeregression.",
+      "prior_reviewed_finding": "All6 Python-encode target cells in the full10x screen improve42.9-57.3%;8 other cells are neutral/noisy and2 unchanged controls are unstable. Bytes are exact and there is no certified regression so far.",
+      "evidence_refs": [
+        "/var/tmp/codex-tdigest-pr3-20261014/day20261015/evidence/numpy-wheels/e13/VALIDATION.json",
+        "/var/tmp/codex-tdigest-pr3-20261014/day20261015/evidence/wheel-screen-v2/E13-e13-screen-all-np2-scale1/summary.json",
+        "/var/tmp/codex-tdigest-pr3-20261014/day20261015/evidence/wheel-screen-v2/E13-e13-screen-all-np2-scale10/summary.json",
+        "work/day-wheel-repeat-summary.json",
+        "work/day-e13-native-rejection-summary-v2.json"
+      ]
+    },
+    {
+      "id": "E14",
+      "title": "Polars precision validation and decode in one pass",
+      "kind": "speed",
+      "decision": "rejected",
+      "current_status": "Rejected: no demonstrated meaningful benefit after complete fullscreen and registered10x repeat",
+      "reason": "Initial12 timedcells:5short,2unstable,5neutral/noisy. Fullrepeat12:9neutral/noisy,3unstable,0certifiedgains; exactbehavior. No further fishing for gains.",
+      "prior_reviewed_finding": "Full12-cell initial screen and registered10x repeat show no qualified gain; repeat has9 neutral/noisy and3 unstable cells. Exact behavior alone does not justify retention.",
+      "evidence_refs": [
+        "/var/tmp/codex-tdigest-pr3-20261014/day20261015/evidence/numpy-wheels/e14/VALIDATION.json",
+        "/var/tmp/codex-tdigest-pr3-20261014/day20261015/evidence/wheel-screen-v2/E14-e14-screen-all-np2-scale1/summary.json",
+        "/var/tmp/codex-tdigest-pr3-20261014/day20261015/evidence/wheel-screen-v2/E14-e14-screen-all-np2-scale10/summary.json",
+        "work/day-wheel-repeat-summary.json"
+      ]
+    },
+    {
+      "id": "E15",
+      "title": "Finite weighted means survive product overflow",
+      "kind": "quality",
+      "decision": "rejected",
+      "current_status": "rejected: scaledcompensated fallback losesdeepcancellation residual; preserved highprecisionoracle failure",
+      "reason": "means[-1e308,1e-150,1e308],weights[2,1,2]: expectedmean2e-151,actual0. Raw sum overflow also remains; do not ship.",
+      "prior_reviewed_finding": "The scaled compensated mean fallback fails the exact cancellation oracle: values[-1e308,1e-150,1e308], weights[2,1,2], correctly rounded mean2e-151 becomes0. Eight passing oracle cases do not offset it.",
+      "evidence_refs": [
+        "/var/tmp/codex-tdigest-pr3-20261014/day20261015/validation/E15/RESULT.json",
+        "/var/tmp/codex-tdigest-pr3-20261014/day20261015/evidence/quality-hypotheses/INDEX.json"
+      ]
+    },
+    {
+      "id": "E16",
+      "title": "Wholly subnormal mass compression invariance",
+      "kind": "quality",
+      "decision": "rejected",
+      "current_status": "Rejected by independent exact tiny-value oracle",
+      "reason": "With u=min-subnormal, values[-3u,2u] and weights[u,u], exact mean -u/2 rounds to zero. Baseline center0 passes; normalized candidate gives -2u. Earlier ordinary-value improvements do not justify this regression.",
+      "prior_reviewed_finding": "With u=minimum subnormal, values[-3u,2u] and weights[u,u], exact mean -u/2 rounds to negative zero. Baseline positive zero is numerically equal under this oracle, which deliberately ignores the zero sign; the proposed mass-normalization fix produces -2u and fails.",
+      "evidence_refs": [
+        "/var/tmp/codex-tdigest-pr3-20261014/day20261015/validation/E16/RESULT.json",
+        "/var/tmp/codex-tdigest-pr3-20261014/day20261015/validation/E16/tiny-value-rejection/RESULT.json",
+        "/var/tmp/codex-tdigest-pr3-20261014/day20261015/evidence/quality-hypotheses/INDEX.json"
+      ]
+    },
+    {
+      "id": "E17",
+      "title": "Cumulative mass quantile brackets",
+      "kind": "quality",
+      "decision": "rejected",
+      "current_status": "Rejected; independent equal-weight median regression confirmed",
+      "reason": "Six values0..5 weighted0.1: exact median2.5, baseline2.5, candidate2.0 in both precisions. Existing CDF gap roundtrip also regresses.",
+      "prior_reviewed_finding": "Equal0.1 weights on values0..5 have exact median2.5. Baseline2.5 becomes2.0 in both precisions; an existing CDF-gap roundtrip also worsens.",
+      "evidence_refs": [
+        "/var/tmp/codex-tdigest-pr3-20261014/day20261015/validation/E17/v2-proposal-rejection/RESULT.json"
+      ]
+    },
+    {
+      "id": "E18",
+      "title": "Symmetric compression direction",
+      "kind": "quality",
+      "decision": "rejected",
+      "current_status": "Rejected by matched-size quality regressions",
+      "reason": "72states same storage: rankmax worsens1,value-max3,CDF-max1. Worst value-max10.6450→11.2848. SUM metadata changes in7states; maxabsdelta0.053931.",
+      "prior_reviewed_finding": "Across72 states at equal storage, maximum rank/value/CDF error worsens in1/3/1 states. Separated-modes100k/f32/sequential maximum value error10.6450 becomes11.2848. Sum metadata changes in7 states.",
+      "evidence_refs": [
+        "/var/tmp/codex-tdigest-pr3-20261014/day20261015/patches/E18/validation-20261015T090552Z/RESULT.json",
+        "/var/tmp/codex-tdigest-pr3-20261014/day20261015/evidence/v3/quality-screen-e18-e19-20261015/E18-quality.json",
+        "work/day-breadth-summary.json"
+      ]
+    },
+    {
+      "id": "E19",
+      "title": "Gap-aware adjacent cap coalescing",
+      "kind": "quality",
+      "decision": "rejected",
+      "current_status": "Rejected: better rank/CDF comes with worse value accuracy",
+      "reason": "72states same storage: rank/CDF improve24, but value max/mean worsen9. Normal100k f32 kway value-max0.0143598→0.4402001. SUM metadata changes12states; maxabsdelta0.0112392.",
+      "prior_reviewed_finding": "Across72 equal-storage states, rank/CDF improve in24, but maximum and mean value errors worsen in9. Normal100k/f32/k-way maximum value error0.0143598 becomes0.4402001. Sum metadata changes in12 states.",
+      "evidence_refs": [
+        "/var/tmp/codex-tdigest-pr3-20261014/day20261015/patches/E19/validation-20261015T090750Z/RESULT.json",
+        "/var/tmp/codex-tdigest-pr3-20261014/day20261015/evidence/v3/quality-screen-e18-e19-20261015/E19-quality.json",
+        "work/day-breadth-summary.json"
+      ]
+    },
+    {
+      "id": "E20",
+      "title": "Sorted batch CDF sweep",
+      "kind": "speed",
+      "decision": "rejected",
+      "current_status": "Rejected:1 certified sorted4096 batch-CDF regression. Later matrices/capacity witness/heldout unnecessary and recordedskipped.",
+      "reason": "Rejected: sorted4096 CDF requests on ties1000 f32 cap64Use regress4.80% median; all4 pairedratios1.0314-1.0881, stablearms, min66.9ms. Later57cells and capacity supplement/heldout skipped.",
+      "prior_reviewed_finding": "All216 public boundary cases are exact, but sorted4096 CDF requests on ties1000/f32/cap64Use regress4.80% median with stable arms and all four ratios>1.03. Later57 cells and conditional capacity/heldout work were skipped.",
+      "evidence_refs": [
+        "/var/tmp/codex-tdigest-pr3-20261014/day20261015/validation/E20-focused-fixed/RESULT.json",
+        "/var/tmp/codex-tdigest-pr3-20261014/day20261015/evidence/supplement-v2/E20-e20-v3-public-audit/summary.json",
+        "/var/tmp/codex-tdigest-pr3-20261014/day20261015/evidence/v3/E20-e20-v3-screen-batch_sorted_4096-scale1/summary.json",
+        "work/day-native-remaining-v2-summary.json",
+        "work/day-supplement-untimed-result.json"
+      ]
+    }
+  ],
+  "latest_native_evidence": {
+    "E02": {
+      "regression_percent": 9.713340625975864,
+      "measured_cells": 12,
+      "skipped_cells": 294
+    },
+    "all1440_E03_E08_measured_state_quality_invariant_storage_checks_exact": true,
+    "E03_E08": [
+      {
+        "experiment": "E03",
+        "certified_regressions": 5,
+        "skipped_cells": 1152,
+        "measured_cells": 576,
+        "elapsed_time_increase_percent": {
+          "minimum": 3.7492556730833515,
+          "maximum": 6.712571733817496
+        }
+      },
+      {
+        "experiment": "E08",
+        "certified_regressions": 3,
+        "skipped_cells": 864,
+        "measured_cells": 864,
+        "elapsed_time_increase_percent": {
+          "minimum": 4.374130252235275,
+          "maximum": 5.021449358118857
+        }
+      }
+    ],
+    "reason": "Prior target improvements cannot erase certified unchanged-operation regressions under the frozen acceptance rule. Remaining matrices were explicitly skipped after rejection."
+  },
+  "retained_result": {
+    "experiment": "E12",
+    "pr": "https://github.com/ingolfured/gr-tdigest/pull/9",
+    "head": "42d620428520a74fec8c57d5dc6d4db0f6b1920e",
+    "tested_commit": "d54096087a9e975ab07faf71ab2db412a48edcfa",
+    "head_difference": "README-only clarification; production/test hashes unchanged.",
+    "implementation": "Bulk-copy existing Float64 outputs into independent NumPy-owned arrays instead of Python float/list boxing. No arithmetic, compression or centroid-state change.",
+    "behavior": "When a query returns an ndarray, it remains an independent writable/resizable Float64 snapshot. Centroid snapshots remain independent. Scalar behavior, including one-element NumPy query fast paths, is unchanged.",
+    "performance_scope": "Installed NumPy2.3.4, single-thread WSL, f32/f64 digest modes,8192-input heldout ties/separated fixtures;64,1000,32768 NumPy queries. Ratios are medians of the four paired process-median ratios.",
+    "qualified_CDF_cells": 6,
+    "CDF_elapsed_reduction_percent": [
+      44.86005893180427,
+      54.755471953177604
+    ],
+    "qualified_quantile_cells": 6,
+    "quantile_elapsed_reduction_percent": [
+      36.5280106599309,
+      51.39207976609457
+    ],
+    "full36_repeat_counts": {
+      "improved": 25,
+      "neutral_or_noisy": 7,
+      "unstable": 2,
+      "short": 2
+    },
+    "confirmed_regressions": 0,
+    "unresolved": [
+      "NumPy2.3.4 single-thread WSL Linux batch outputs only; not a Rust arithmetic/accuracy gain.",
+      "One f64 encode control is inconclusive in the longer repeat (ratio1.1269; candidate drift1.1285); original heldout was stable/neutral.",
+      "Empty f32 CDF and two large weights-getter heldout cells are inconclusive; screen unresolved cells are retained.",
+      "NumPy1 compatibility only; no NumPy1 performance claim.",
+      "Equal array payload/ownership is checked; allocator usable bytes and peak RSS were not measured."
+    ],
+    "canonical_tests": {
+      "rust_passed": 121,
+      "rust_existing_ignored": 3,
+      "python_coherence_passed": 352,
+      "java_passed": 13,
+      "untouched_upstream_passed": 91
+    },
+    "installed_test_instances": 2022,
+    "runtime_cells": 7,
+    "extra_E12_regression_instances": 36,
+    "frozen_baseline_exact_audits": 72,
+    "actual_release_wheel": {
+      "wheel": "/var/tmp/codex-tdigest-pr3-20261014/day20261015/integration-e12/dist/gr_tdigest-0.2.4-cp310-abi3-manylinux_2_28_x86_64.whl",
+      "sha256": "dab5447ed271cf99478d4546b00ab21c7c5dfc5e2c1c1c92aa8c1d66d37742b0"
+    },
+    "deployment": "Tested CPython3.10/3.11/3.12 with NumPy1.26.4 and supported NumPy2 variants, Polars1.34.0 plus one no-Polars cell. Actual manylinux_2_28 ABI3 wheel installed. Source archive validated; no separate source-rebuilt wheel claimed. No NumPy1 performance, other-platform, allocator-peak or RSS claim.",
+    "remote_ci": "Cached root ledger records GitHub run38737554737 success at42d6204. This independent audit made no fresh remote lookup."
+  },
+  "compatibility_boundary": {
+    "public_module": "tdigest_rs",
+    "policy": "Preserve existing names, constructors, API and original numerical engine; modern behavior is separately exposed. Passing legacy tests does not imply all modern algorithms match legacy outputs.",
+    "pinned_oracle": "8d9cf1fe82c5c9254e5dc9593f01717e317f4333",
+    "upstream_suite_passed": 91,
+    "oracle_files_unchanged": 35,
+    "oracle_cases": 70,
+    "per_recorded_profile": {
+      "exact_bit_comparisons": 1762,
+      "nan_classifications": 126
+    },
+    "profiles": [
+      "debug",
+      "release"
+    ],
+    "verification_scope": "Final integration verified preserved source, lock, runner, golden, logs/output and binary hashes; preserved outputs were re-compared. Installed golden numerical tests ran in every runtime cell. No oracle fixture regeneration or fresh benchmark claim.",
+    "original_scope_limit": "The unresolved defect inventory above is about the separate modern core; this review does not attribute those defects to the frozen upstream engine or prove the old algorithm universally correct."
+  },
+  "unresolved_modern_quality_inventory": [
+    {
+      "id": "tiny_use_cap_mass",
+      "status": "confirmed_baseline_defect_unresolved",
+      "experiments": [
+        "E01"
+      ],
+      "issue": "Use capacities1/2 can drop interior mass; one recorded four-unit input retains only two units.",
+      "guardrail": "Do not market the rejected repair as implemented, or label the old invalid state a valid speed comparator."
+    },
+    {
+      "id": "positive_bucket_tail",
+      "status": "confirmed_baseline_defect_unresolved",
+      "experiments": [
+        "E06",
+        "E19"
+      ],
+      "issue": "Equal-weight bucketization can stop before a positive residual tail. On values[0,1,1e17], weights[0.5,0.5,5e-17], retained centroid moment can be0.5 rather than5.5.",
+      "guardrail": "A tail smaller than the total-weight ULP can be unrepresentable after aggregation; report moment retention separately from exact mass. E19 helper coverage does not imply a public Off/cap2 fix."
+    },
+    {
+      "id": "finite_extreme_mean_and_sum",
+      "status": "confirmed_baseline_defect_unresolved",
+      "experiments": [
+        "E15"
+      ],
+      "issue": "Finite input values and weights can overflow weighted products, centroid means or raw sum metadata. A repair must also preserve deep cancellation residuals.",
+      "guardrail": "The candidate's2e-151-tozero failure is evidence against that repair, not proof that baseline arithmetic was correct."
+    },
+    {
+      "id": "wholly_subnormal_compression",
+      "status": "confirmed_baseline_defect_unresolved",
+      "experiments": [
+        "E16"
+      ],
+      "issue": "With wholly subnormal weights, intermediate weighted products can underflow or round coarsely during compression, corrupting centroid means for ordinary-valued inputs. Query normalization cannot recover information already lost. Raw-sum underflow is a separate limitation.",
+      "guardrail": "Keep the ordinary-value baseline defect separate from candidate-only tiny-value regression [-3u,2u] with weights[u,u]."
+    },
+    {
+      "id": "fractional_quantile_symmetry",
+      "status": "confirmed_baseline_defect_unresolved",
+      "experiments": [
+        "E17"
+      ],
+      "issue": "Fractional quantile accumulation can violate reflection symmetry; selected symmetric fixtures return3 instead of2.5.",
+      "guardrail": "The equal0.1-weight fixture is a new failure in the proposed fix, not a baseline failure. No CDF-pairing redesign was implemented."
+    },
+    {
+      "id": "tight_storage_repeated_merge_accuracy",
+      "status": "measured_accuracy_limitation",
+      "experiments": [
+        "E18",
+        "E19"
+      ],
+      "issue": "Tight-storage separated-mode and repeated-merge accuracy remains limited. Better rank/CDF metrics can accompany much worse value errors at identical storage.",
+      "guardrail": "This is an approximation tradeoff/limitation, not by itself an API-contract defect; neither alternative establishes a universally better compressor."
+    }
+  ],
+  "exact_wording_guardrails": [
+    {
+      "avoid": "All modern correctness defects are fixed, or the new algorithm is numerically identical to upstream.",
+      "use": "The public tdigest_rs compatibility path preserves the original engine/API and passes the untouched91-test suite plus pinned oracle checks. The separately exposed modern engine retains the disclosed edge-case defects."
+    },
+    {
+      "avoid": "Subnormal mass makes ordinary-valued means underflow to zero.",
+      "use": "With wholly subnormal weights, intermediate weighted products can underflow or round coarsely during compression, corrupting ordinary-valued centroid means. Raw-sum underflow is separate."
+    },
+    {
+      "avoid": "The [-3u,2u] or six equal0.1-weight examples are baseline failures.",
+      "use": "Those are candidate-only rejection fixtures. E16 baseline+0 is numerically equal to exact rounded-0 under its stated zero-sign-insensitive oracle; E17 baseline median2.5 becomes2 only in the rejected prototype."
+    },
+    {
+      "avoid": "The finite raw sum can always be preserved exactly as finite f64.",
+      "use": "Finite inputs can produce unrepresentable total moments; centroid mean overflow and raw-sum representability must be disclosed separately. E15 deep-cancellation failure rejects that particular fallback."
+    },
+    {
+      "avoid": "CDF is55% faster everywhere, accuracy improved, or this is best in the world.",
+      "use": "In the qualified installed NumPy2.3.4 batch-output cells, elapsed CDF time fell44.86–54.76% and quantile time36.53–51.39%, versus pinned modern baseline. No new core accuracy or competitor superiority claim follows."
+    },
+    {
+      "avoid": "Every E12 control passed stable timing.",
+      "use": "No certified regression was observed. One f64 encode repeat was inconclusive from drift; empty-f32CDF and two large weight-getter cells also remain inconclusive. Earlier observations remain preserved."
+    },
+    {
+      "avoid": "All20 completed full heldout validation.",
+      "use": "All20 prototypes received evidence-based dispositions. Rejected candidates stopped at their decisive gate and later measurements were explicitly skipped."
+    }
+  ],
+  "review_order": [
+    6,
+    7,
+    8,
+    9
+  ],
+  "publication_scope": "Only PR9 is the new retained experiment; no experiment was merged and no release was published by this campaign. UpstreamPR38 remains a separate review/integration decision.",
+  "evidence_reference_gap": "Current E15/E16 ledger evidence arrays are empty. This audit supplies their exact existing validation/quality-index paths above. Those Linux artifacts were reviewed earlier and were not re-read or re-hashed during this Windows-only audit.",
+  "no_further_speculative_work": "Stop new experiments and do not execute the conditional interaction plan. Preserve rejected patches and raw evidence for future, separately scoped numerical repairs.",
+  "wsl_or_unc_access": false,
+  "candidate_code_or_mainstate_modified": false
+}

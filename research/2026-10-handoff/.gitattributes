@@ -1,0 +1,6 @@
+# Preserve checksum-bound historical bytes across every checkout.
+archives/** binary
+reports/** -text whitespace=blank-at-eol,blank-at-eof,space-before-tab,cr-at-eol
+document-review.json -text whitespace=blank-at-eol,blank-at-eof,space-before-tab,cr-at-eol
+*.md text eol=lf
+*.py text eol=lf

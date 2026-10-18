@@ -1,0 +1,49 @@
+{
+  "schema": "tdigest-research-archive-v2",
+  "archive_count": 9,
+  "part_count": 67,
+  "file_count": 92680,
+  "uncompressed_bytes": 5910778736,
+  "archive_bytes": 2477526741,
+  "manifest_sha256": "0057f9591407010fc3cd92a0a1cae11883194606d9cab1672b88225a46c6d73e",
+  "exclusion_count": 97,
+  "credential_scan": {
+    "patterns": [
+      "github-token",
+      "private-key",
+      "aws-access-key",
+      "url-userinfo",
+      "bearer-value"
+    ],
+    "findings": []
+  },
+  "relocation": {
+    "work": "C:/Users/ingol/Documents/Codex/2026-10-14/hi/work",
+    "day": "/var/tmp/codex-tdigest-pr3-20261014/day20261015",
+    "overnight": "/var/tmp/codex-tdigest-pr3-20261014/overnight",
+    "logs": "/var/tmp/codex-tdigest-pr3-20261014/logs",
+    "numerical-parity": "/var/tmp/codex-tdigest-pr3-20261014/numerical-parity"
+  },
+  "explicit_exceptions": [
+    {
+      "path": "day/integration-e12/dist/gr_tdigest-0.2.4-cp310-abi3-manylinux_2_28_x86_64.whl",
+      "sha256": "dab5447ed271cf99478d4546b00ab21c7c5dfc5e2c1c1c92aa8c1d66d37742b0",
+      "reason": "Exact validated artifact or independent oracle binary referenced by receipts"
+    },
+    {
+      "path": "overnight/numerical-review/original-committed-lock-oracle/target/release/examples/committed_lock_oracle",
+      "sha256": "df9ba5f181fb109bc652699b1cf930bc25fb09ce916aa47bdc30935db504d275",
+      "reason": "Exact validated artifact or independent oracle binary referenced by receipts"
+    },
+    {
+      "path": "overnight/numerical-review/original-committed-lock-oracle/target/debug/examples/committed_lock_oracle",
+      "sha256": "e3f23d6de6854c7f74e6554ccc3430c68ef37fc3d59b6a4c774354482a6a5261",
+      "reason": "Exact validated artifact or independent oracle binary referenced by receipts"
+    }
+  ],
+  "scope_notes": [
+    "Retains original results, failed attempts, frozen binaries and release wheels. Standard caches/environments excluded; one historical isolated-target validation tree remains preserved.",
+    "Clean Windows source clone commits verified reachable from preserved remote history; source-only legacy-fix included in full.",
+    "Source paths inside evidence are historical; use relocation.json without rewriting original bytes."
+  ]
+}

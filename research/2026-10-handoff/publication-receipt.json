@@ -1,0 +1,55 @@
+{
+  "branch": "research/handoff-20261018",
+  "base": "42d620428520a74fec8c57d5dc6d4db0f6b1920e",
+  "batches": [
+    {
+      "batch": 1,
+      "commit": "19dd82bfa7a6fa4b8563f48cd7b8d876d97277d4",
+      "parts": 8,
+      "bytes": 335544320
+    },
+    {
+      "batch": 2,
+      "commit": "ff77e3546e352602e5f9f8836b41de5ad931afe4",
+      "parts": 8,
+      "bytes": 335544320
+    },
+    {
+      "batch": 3,
+      "commit": "7c3aa1f9a821a836a1cb38a32e1e4f5a507c16a5",
+      "parts": 14,
+      "bytes": 308033183
+    },
+    {
+      "batch": 4,
+      "commit": "847fdddf1268d4793d1ebcb30d7c5670abf2cf1c",
+      "parts": 8,
+      "bytes": 335544320
+    },
+    {
+      "batch": 5,
+      "commit": "6614503662f63f45f53a45149ab6aa89dc40eb1f",
+      "parts": 8,
+      "bytes": 335544320
+    },
+    {
+      "batch": 6,
+      "commit": "50aabbf7dac4918a56ece6d2d62a31ac225b9d6e",
+      "parts": 8,
+      "bytes": 335544320
+    },
+    {
+      "batch": 7,
+      "commit": "24ff3005a3a9885ac276f34d3767a05832d5d51a",
+      "parts": 8,
+      "bytes": 335544320
+    },
+    {
+      "batch": 8,
+      "commit": "d8b856270dafe51bebfdab2e6417d80116cafb9a",
+      "parts": 5,
+      "bytes": 156227638
+    }
+  ],
+  "scope": "Historical archive and docs only; no product source/test/manifest/lock edits."
+}

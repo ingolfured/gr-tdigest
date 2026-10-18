@@ -1,0 +1,27 @@
+{
+  "schema": "day20-e12-readme-only-amendment-v1",
+  "created": "2026-10-15T12:46:39.630966+00:00",
+  "tested_commit": "d54096087a9e975ab07faf71ab2db412a48edcfa",
+  "amended_commit": "42d620428520a74fec8c57d5dc6d4db0f6b1920e",
+  "branch": "review/4-numpy-output-copy",
+  "base": "25c8c1642029a640b153c160c22a89795d29ad91",
+  "remote_preflight": "25c8c1642029a640b153c160c22a89795d29ad91\trefs/heads/review/3-upstream-compatibility-gate",
+  "changed_files": [
+    "README.md"
+  ],
+  "exact_diff": "diff --git a/README.md b/README.md\nindex 4b067ad..31ebca3 100644\n--- a/README.md\n+++ b/README.md\n@@ -159,6 +159,6 @@ The repository root remains the separate modern `gr-tdigest` package. Registry\n publication requires publishing the matching `tdigest_core` version first; this\n workspace layout does not itself publish either package.\n \n-Modern Python NumPy query results and centroid arrays are independent writable Float64 snapshots; they retain ordinary NumPy ownership and resizing behavior.\n+When a query returns an ndarray, it is an independent writable Float64 snapshot with ordinary NumPy ownership and resizing behavior. Centroid means and weights are also independent Float64 snapshots. Scalar results, including the existing one-element NumPy query fast path, retain their current behavior.\n \n The NumPy output conversion measurements and their scope are recorded in [the validation note](compat/performance/numpy-output-20261015/README.md).\n",
+  "readme_before_sha256": "885bc8793fe0474c050bcb592875ee8d877552337dd9654dc778d53c17b0501e",
+  "readme_after_sha256": "4737bee7341e2f33d1fc980b7b517c5d502a8fee9a111a83acdc8967bd657659",
+  "all_other_tracked_file_hashes_unchanged": true,
+  "production_sha256": "478241e7a7573cec3e6cfc613d3c67e1ac3832e23e59ea1266174d1883154884",
+  "regression_test_sha256": "75da1c2785b7c935bd8c63cc39b598e1bf1b45d059be6ec5d2b64674f9aa1b1a",
+  "changelog_sha256": "e583cd0104304ede9ece3319aa89606ac46eb4c4009878e2faba8ed9487b0fbd",
+  "original_validation_receipt_sha256": "97bf2d2459b7155e80c50c045c92b66205adfef65ff90e1d1e85f26aa546ed85",
+  "amend_log_sha256": "733184eafe736f358f6514fa6932fbbb24ba48e8500007e0049df9b4fd66cbf4",
+  "pr_draft_sha256": "d365fbd94aa773dcdd44ceb4fc3993eb63f741bb0823a86bceb1ea7afd4a8f88",
+  "diff_check_passed": true,
+  "clean": true,
+  "builds_or_timings_repeated": false,
+  "published": false,
+  "publication_pending_root": true
+}

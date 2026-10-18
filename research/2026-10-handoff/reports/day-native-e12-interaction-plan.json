@@ -1,0 +1,174 @@
+{
+  "schema": "day20-native-e12-interaction-plan-v1",
+  "status": "Windows-only preregistration proposal; no combined source, harness, builds or measurements exist",
+  "purpose": "Validate a fixed set of independently successful E02/E03/E08 changes together with retained E12 without letting one improvement hide another change's regression, neutral contribution, numerical difference or storage growth.",
+  "authorization_boundary": "Root must review this plan and the later source-bound companion before execution. This document does not retain a native candidate, change an existing protocol, create a branch/PR, run a build or authorize a release.",
+  "context_snapshot": {
+    "observed_state_sha256": "c46175a297f93d4aea5cb226ca8e7f38b2f27137ac202373b55d9526cb987354",
+    "state_at_read": "E12 retained in PR9; E02/E03/E08 still under evaluation; the other16 candidates rejected, including E13.",
+    "baseline": "25c8c1642029a640b153c160c22a89795d29ad91",
+    "original_oracle": "8d9cf1fe82c5c9254e5dc9593f01717e317f4333",
+    "E12_PR": "https://github.com/ingolfured/gr-tdigest/pull/9",
+    "E12_recorded_PR_head": "42d620428520a74fec8c57d5dc6d4db0f6b1920e",
+    "E12_validated_local_commit": "d54096087a9e975ab07faf71ab2db412a48edcfa",
+    "E12_recorded_production_sha256": "478241e7a7573cec3e6cfc613d3c67e1ac3832e23e59ea1266174d1883154884",
+    "E12_validated_wheel_sha256": "dab5447ed271cf99478d4546b00ab21c7c5dfc5e2c1c1c92aa8c1d66d37742b0",
+    "warning": "The PR head differs from the local qualification commit. Verify their exact production projection and current remote before reuse; do not infer equality from commit descriptions. The state file is mutable context, not a future pinned prerequisite."
+  },
+  "existing_evidence": [
+    {"path": "work/day-e12-final-validation-result.json", "sha256": "97bf2d2459b7155e80c50c045c92b66205adfef65ff90e1d1e85f26aa546ed85"},
+    {"path": "work/day-e12-acceptance-interpretation.json", "sha256": "a2c86a91c87ddf3b22fb8fc2d126619b28e233fca4d3006cd7e92ad565575ba1"},
+    {"path": "work/day-e12-integration-release-plan.json", "sha256": "c7276b28b4f0dcd072cebf3c15e00d28ac81b11ac37db04ad93afbcd682dc484"},
+    {"path": "work/day-survivor-memory-storage-checklist.json", "sha256": "de366b655e2a54168bc7b5e06988ad0a4c4a64f91441950f8e7f5b11d0e031d2"},
+    {"path": "work/day-merge-shapes-validation-result.json", "sha256": "36ffd27c101a364bc8fbba59a768f1a60fe706f6e7594a808fe0ba452aac0224"},
+    {"path": "work/day-survivor-validation-checklist.json", "sha256": "a89e288aef54fac3895eab6f72309ad8ba8001ede43039cd8d0eb6678f94ac9a"}
+  ],
+  "unchanged_protocols": {
+    "native_v3": "f19170e2951b59b5a30113c3724565a7ebc65dba8ca0d7caad543e69bff3d1d6",
+    "wheel_v2": "db42f6c233adfd6db8cd196e6974fe9d5e177716ec24a66415c7fba922e593d1",
+    "borrowed_supplement_v2": "3fe48f496960bd3e3aec59486db14cf4510bbaa1f6765332ad449c27d1ebe566",
+    "public_merge_shapes_v1": "d9be6c075a9a40d7ac623746632a7fdd1a6bb050cbf9607f1e9dfdde83999db1",
+    "rule": "Reuse reviewed kernels and case constructors by hash in a new interaction namespace. Do not edit frozen source/protocol files, relabel existing reports or compare different harness versions. Existing full individual confirmations remain required; this is an additional interaction supplement."
+  },
+  "entry_gates": [
+    "If no native candidate qualifies independently, stop: E12 PR9 remains the sole result and no interaction experiment is needed.",
+    "Before constructing any combined source, root records a fixed winner set W from E02/E03/E08. Every member needs its full original screen/eligible repeat, unchanged controls, fresh full confirmation, exactness/public API gates, meaningful gain and no sticky certified regression. Unresolved rows remain disclosed; no candidate is presumed successful here.",
+    "Preserve all rejected prototypes and existing adverse evidence. E13 and every other rejected experiment are excluded; an aggregate gain cannot revive them.",
+    "Freeze W, sources, comparison arms, cases, seeds, required operations, source hashes and this plan's reviewed implementation before seeing interaction timings. Do not search subsets or reorder/drop members after interaction results.",
+    "Read isolated branch/remote/HEAD/status and repository instructions. Use a new isolated integration checkout; never alter /home/ingo/git/gr-tdigest or any immutable baseline/candidate snapshot.",
+    "Verify E12 PR9 production equals its qualified source, and each native source equals its measured manifest. Preserve patches and exact diff. Resolving textual overlap may only compose the already reviewed semantics; a substantive algorithm change needs a new candidate and fresh registration, not reuse of old heldout claims."
+  ],
+  "source_arms": {
+    "B": "Original25c8 baseline, pinned original API source and locks unchanged.",
+    "P": "B plus exact retained E12 production delta, with PR9 production/qualification identity verified.",
+    "S_i": "B plus the exact independently qualified native candidate i, for each i in W. Reuse immutable measured source snapshots; never substitute the current mutable prototype worktree.",
+    "N": "B plus all native changes in fixed W, with no E12 output delta. If W has one member, N is that existing S_i.",
+    "C": "B plus all changes in W plus exact E12. This is the proposed integration source and final wheel source.",
+    "L_i": "C with only native change i omitted. With one native winner this is P; with two, its native code projection equals the other S_j; with three, the pairwise native projection is new. These controls prevent neutral/redundant additions being hidden by other winners.",
+    "deduplication": "Deduplicate only a comparison with exactly identical compiled production inputs, features, toolchain and profile, with an explicit source-projection proof before measurements. Similar results or shared branch names never justify deduplication. Preserve separate Python-feature wheel identity.",
+    "known_patch_sha256": {
+      "E02": "5b8d502df14b6ddc0938d0b0d7ce04e0f9a3bf5c6eed664d105eb76c9b08d0a0",
+      "E03": "ffad113ead049feaec85fb3ed56629768dfb302b0e5ac4be9f849893e6027a69",
+      "E08": "bf27f1aafebfcfacb9defbe53f070e3ad18eae8f8acad27e25393a8d580cb89f",
+      "E12": "baf291501695654a6ff8b35f56a072570d1d5a9416a451cfcc65b8af2f1ecd3e"
+    },
+    "build_identity": "Capture complete tracked/untracked production manifests, toolchain, features, Cargo/UV locks, environment and profile. Force package invalidation or use per-arm target directories; require exact source compilation paths in logs. Preserve new binaries and actual wheels by SHA256. Never overwrite original benchmark artifacts."
+  },
+  "fresh_seeds": {
+    "screen": 1030970593,
+    "confirm": 1974536786,
+    "derivation": "Unsigned integer from the first8 hex digits of SHA256 of the listed UTF8 domain string.",
+    "screen_domain": "tdigest-day20-native-e12-interaction-v1-screen",
+    "confirm_domain": "tdigest-day20-native-e12-interaction-v1-confirm",
+    "screen_sha256": "3d735ce1562d4f122eb565009b7462094fc1dea29f24ee63f58db1a6e84ed1c4",
+    "confirm_sha256": "75b10a523060f0a864e39f3393f4e5491314072b304971cd914d89b925493b01",
+    "preflight": "Windows cached .py/.json sources had no prior occurrence. Check Linux protocol seed registrations before freeze; a collision blocks registration before any results. No seed replacement after results. Wheel row offsets retain the frozen worker's i*7919 rule."
+  },
+  "untimed_exactness": {
+    "native_distribution_grid": {
+      "distributions": ["uniform", "normal", "exponential", "lognormal", "pareto", "ties", "spike_tail", "separated_modes"],
+      "sizes": [32, 1000, 100000],
+      "precisions": ["f32", "f64"],
+      "settings": ["delta100", "delta300", "delta1200", "cap64use", "cap256off", "cap256edges"],
+      "states": 288,
+      "operations_to_close_route_shapes": ["merge", "merge2", "kway"],
+      "coverage": "For each operation, compare direct construction, repeated sequential merges and owned k-way routes. Include canonical state, mean/weight/kind/stats bits, scalar CDF, batch CDF, quantile bits, exact wire bytes, raw per-probe rank/value/CDF errors and logical storage. Use shared independent baseline inputs/query grids; no candidate-built expected values."
+    },
+    "public_routes": [
+      "Run the existing full52 merge-shape case definitions against new C and its relevant reference arms, preserving baseline-defined grids. Include empty lists, zero/one/two/many nonempty runs, unequal lengths, ties/kinds, exhaustion and repeated merges in both precisions; no randomized replacement for registered cases.",
+      "If E02 is in W, reuse all108 borrowed-many case definitions for C and relevant reference arms, checking borrowed sources are unchanged. This is new combined-source validation, not rerunning or overwriting completed single-candidate evidence.",
+      "Exercise fractional and non-unit weighted valid states and V3 state continuity through the already registered weighted/fixture cases and cross-language tests; compare exact mass/support/state/error results with B. Keep the known rejected E01/E06 repair findings visible and do not call an unchanged baseline defect fixed. Any new invariant failure blocks integration."
+    ],
+    "wire_and_languages": "Compare existing V1/V2/V3 valid and invalid state/error behavior through current canonical codec tests, plus Rust/Python/Polars/Java state coherence. Core state must remain bit-identical, so default V3 bytes are equal. Do not introduce E13's rejected encoder delta or resurrect its unbuilt supplement merely for an unchanged encoder.",
+    "quality_gate": "Pure speed integration permits no changed modern finite/signed-zero bits or NaN classes, no changed raw rank/value/CDF rows, no new invariant failure, no hidden logical-storage increase and no blanket epsilon. A failure stops the candidate stack before timing. Do not average errors across data scales or improve one route by worsening another."
+  },
+  "native_timing_supplement": {
+    "scope": "A predeclared interaction matrix, not a replacement for the original complete individual288-cell-per-operation confirmations. Result claims are limited to these integration scenarios.",
+    "screen_cases": "The complete original generic24-cell screen: normal/ties/separated_modes x sizes1000/100000 x f32/f64 x delta300/cap64use, using the new interaction screen seed.",
+    "confirm_strata": [
+      {"distribution": "normal", "size": 32},
+      {"distribution": "ties", "size": 1000},
+      {"distribution": "separated_modes", "size": 100000},
+      {"distribution": "pareto", "size": 100000}
+    ],
+    "confirm_precisions": ["f32", "f64"],
+    "confirm_settings": ["delta100", "delta300", "delta1200", "cap64use", "cap256off", "cap256edges"],
+    "confirm_cells_per_operation": 48,
+    "comparison_jobs": [
+      {"reference": "B", "candidate": "C", "operations_in_order": ["build", "p50", "cdf_batch", "merge2", "merge", "kway"]},
+      {"reference": "P", "candidate": "C", "operations_in_order": ["build", "p50", "cdf_batch", "merge2", "merge", "kway"]},
+      {"reference": "Every distinct S_i and L_i native projection", "candidate": "C", "operations_in_order": ["merge2", "merge", "kway"]}
+    ],
+    "operation_roles": {"E02": {"affected": ["merge", "merge2"], "dispatch_control": ["kway"]}, "E03": {"affected": ["merge2", "merge"], "dispatch_control": ["kway"]}, "E08": {"affected": ["kway"], "dispatch_controls": ["merge2", "merge"]}},
+    "lifecycle": "Reuse the reviewed native runner's actual lifecycle, including reset clones for build/merge/kway. Intermediate outputs drop inside and final output drops outside the clock. Exact post-batch checks remain outside timing. Label these measurements accordingly; no pure-kernel, allocator-count or RSS claim.",
+    "incremental_gate": "Require a qualified target gain against the relevant L_i in screen and fresh confirm for every included native member, and a qualified native target gain against P and B. No confirmed regression in any declared comparison cell. An included member with no demonstrated incremental benefit is not justified by the combined average; preserve the fixed-stack result and keep standalone decisions separate. Do not search a better subset using this heldout seed."
+  },
+  "installed_wheel_interaction": {
+    "arms": ["B", "P", "N", "C"],
+    "artifact_identity": "Build/reuse only actual manylinux_2_28 release wheels with matching flags, locks, features, compiler and dependencies. Reuse an old wheel only if its production and complete build identity match the registered comparison. Install into fresh isolated environments outside source imports; verify installed .py/native bytes against ZIP members, package paths and dependency freezes.",
+    "support": "Correctness on NumPy1.26.4 and2.3.4; timings on pinned NumPy2.3.4 only. Retain Python/NumPy1 compatibility but make no NumPy1 speed claim.",
+    "E12_exactness": "Run the full36 frozen E12 cases and the18 explicit ownership regressions on C for both NumPy versions, comparing exact values/types to B and ownership/resizability/source independence to P. Preserve one-element scalar behavior. Compare dtype/shape/strides/contiguity/OWNDATA/base/writable flags and explicit ndarray nbytes; no hidden payload increase.",
+    "E12_timing": "For C versus B, P and N, run all36 E12 screen cases and all36 confirmation cases with this supplement's fresh seeds and original distributions/row offsets. Controls train/encode remain included. This is not a retry of the old E12 runs; every previous uncertain or adverse observation remains linked.",
+    "merge_then_query_timing": {
+      "screen_input": {"distribution": "normal", "values": 4096},
+      "confirm_input": {"values": 8192, "distribution_by_fixed_row_ordinal": "even=ties; odd=separated (the frozen wheel generator's distribution name)"},
+      "precisions": ["f32", "f64"],
+      "settings": ["delta300", "cap64use"],
+      "fanins": [2, 40],
+      "outputs": ["cdf", "quantile"],
+      "query_counts": [64, 32768],
+      "cells_per_phase_per_comparison": 32,
+      "row_order": "precision, setting, fanin, output, query_count in the listed order",
+      "references": ["B", "P", "N"],
+      "timed_work": "Use the actual existing Python public merge API and NumPy output route. Construct a bounded64-entry pool of independent baseline-wire-decoded operands outside the clock, consume each pool entry exactly once, merge and query inside, and drop the returned arrays and result digest inside. Pool reset/decoding and all exact checks remain outside. Identical lifecycle in every arm; publish that scope.",
+      "audit": "Baseline alone defines operand bytes, query bits and expected result. Compare all arrays, resulting digest bytes and operand independence for every arm. Record logical pool/output bytes without treating them as allocator peak. Verify public API signatures before implementing the worker; no production API additions."
+    },
+    "incremental_gate": "C must retain a qualified E12 output gain over N and native merge/query benefit over P on declared targets in both phases, with no confirmed regression versus any reference. Comparing only C to B is insufficient because one improvement can conceal another regression. Neutral controls are acceptable; short/unstable rows remain inconclusive and restrict claims."
+  },
+  "unchanged_measurement_rules": {
+    "execution": "Linux/WSL only, one heavy CPU owner and shared flock, fixed CPU0, RAYON/BLAS/OMP thread counts1. No other WSL/UNC/build work during quiet timing. Fresh independent subprocesses with ABBA BAAB order.",
+    "batches": "Two warmups and five retained samples per process; baseline-reference-only calibration targets60ms, with identical frozen iteration count for candidate. Every retained batch must be at least50ms to qualify.",
+    "gain": "All four paired candidate/reference ratios <=0.97, no within-arm drift above1.10, and minimum-duration gate satisfied.",
+    "regression": "All four paired ratios >1.03 under the same drift/duration gates. Any certified regression remains sticky; no average hides a bad cell.",
+    "uncertainty": "Drift above1.10 is unstable; a retained batch below50ms is short/inconclusive. Preserve original precedence, four ratios and raw samples. Never reinterpret uncertainty as a pass or regression.",
+    "single_escalation": "Only the existing once-per-complete-matrix10x option is allowed after short batches, with original reference calibration times10 and unchanged sources/fixtures/binaries. Requires separate root review, preserves both results and never erases an adverse cell. No automatic escalation, third attempt, looser threshold or selected-cell retry.",
+    "stop": "Exactness/storage failures stop timing eligibility. Finish an active operation before stopping later operations on a certified speed regression. At23:59 Europe/London stop and preserve unfinished work, including any already-certified adverse rows. No partial matrix qualifies."
+  },
+  "storage_interpretation": {
+    "required_observations": "Exact centroid count/kinds/weight/state and wire length; exact NumPy dtype/shape/nbytes/ownership; same source input lifetime semantics. Final combined diff must preserve the unchanged compress/result allocation path and add no retained digest field.",
+    "existing_source_argument": "E02 borrows unchanged runs, E03 changes the two-run producer, E08 replaces a heap root; all feed the existing compression/output construction. E12 copies into NumPy-owned payload of the same size. Re-review this argument on the actual combined source, not individual patch descriptions.",
+    "limits": "No empirical Rust Vec spare-capacity, allocator usable-byte, transient peak or RSS claim follows from logical bytes. Existing source-based no-retained-growth proof is sufficient only if the combined result path remains unchanged. If composition changes that path or the proof fails, stop and preregister the smallest necessary capacity/lifecycle check before measurement; do not silently expand claims or add an allocator experiment."
+  },
+  "final_artifact_gates": [
+    "Run current canonical make lint/build/test on C in Linux, with appropriate focused retained-candidate tests and exact compile-path proof. Verify any lint/doc/test-format changes leave frozen production bytes unchanged.",
+    "Verify the unchanged35-file original upstream export, source guards, tdigest_rs public API, locks and independent pinned oracle artifacts. Run the untouched91 upstream tests and existing original numerical golden tests on the actual final installed wheel. Keep70 oracle cases/1762 exact bits/126 NaN classes per recorded profile; never regenerate expected fixtures with C.",
+    "Build the actual C manylinux wheel and sdist; run current source-archive hygiene, supported CPython3.10/3.11/3.12 x NumPy1/2 and Polars-free support gates plus Java/JNI/Python/Polars/Rust coherence. Existing E12 release qualification does not qualify C's new native code.",
+    "Record final commit/tree/manifests, commands, environment, logs, wheel/native hashes, installed identities, every comparison outcome and remaining uncertainty. Prepare coherent review documentation/CHANGELOG only after evidence; no merge or release."
+  ],
+  "missing_before_execution": [
+    "Final independent winner decisions and complete fresh confirmation evidence for E02/E03/E08; currently none may be assumed retained.",
+    "Verified production projection between E12 local qualification and current PR9 head, plus full immutable PR9 source snapshot/common build identity suitable for comparison.",
+    "New N and C snapshots; when3 native winners qualify, the distinct two-native leave-one-out snapshots. Their patches/manifests do not exist yet and must be independently reviewed before compilation.",
+    "Separately frozen interaction companion/coordinator implementing these exact cases, references, fresh seeds, lifecycle and source-bound gates. Existing frozen runners must remain byte-for-byte unchanged.",
+    "Source-bound native companion binaries and C/N actual manylinux wheels; B/P comparison wheels may need rebuilding if old build identities differ.",
+    "New combined-source correctness, installed-artifact and interaction timing evidence. Existing single-candidate success is insufficient to fill these records."
+  ],
+  "runtime_forecast": {
+    "native_cell_formula": "72(screen24+confirm48) * [12 operations across B/P comparisons + 3 operations for each distinct S_i/L_i native reference]. Identical compiled-input projections may be deduplicated before timing with proof.",
+    "native_nominal_minutes": {"one_native_winner_upper_bound": 60.48, "two_native_winners_upper_bound": 72.576, "three_native_winners_upper_bound": 120.96},
+    "wheel_cells": "3 reference arms * [72 full E12 output/control cells +64 merge/query cells] =408 timing cells; identical source-arm comparisons may be deduplicated before timing.",
+    "wheel_nominal_minutes": 22.848,
+    "build_exactness_release_overhead_minutes_estimate": [20, 45],
+    "overall_before_optional_10x_minutes_estimate": {"one_native": [105, 135], "two_native": [120, 150], "three_native": [165, 200]},
+    "limitations": "Nominal timers assume every arm around60ms per batch. Slow operations, pilots, process startup, file hashing or a registered10x can materially extend runtime; certified failures can shorten it. These are planning estimates, not an assurance the work fits before tonight's cutoff. If time is insufficient, leave the combination unqualified and preserve standalone PR9/individual results; never reduce this matrix after seeing results."
+  },
+  "claim_limits": [
+    "This plan can qualify the tested integration scope only; it does not establish best-in-world performance, all fan-ins, default multithread throughput, NumPy1 speed, peak memory savings or additive percentages.",
+    "Exact bit equality means no new numerical-quality claim. Existing original API behavior and baseline numerical defects remain unchanged unless separately repaired and qualified.",
+    "Every isolated native candidate still needs its original complete confirmation. The smaller, predeclared interaction supplement closes composition risks and does not retroactively replace those matrices.",
+    "If the fixed combined stack fails, retain the evidence and preserve independently valid standalone work. Selecting another subset based on this heldout is retuning and needs a new independent registration/holdout; do not automate that search."
+  ],
+  "executed": false,
+  "wsl_or_unc_access": false,
+  "existing_protocols_or_evidence_modified": false
+}

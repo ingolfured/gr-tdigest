@@ -1,0 +1,59 @@
+[
+  {
+    "repository": "ingolfured/gr-tdigest",
+    "new_refs": 24,
+    "verified_mappings": 35,
+    "heads": {
+      "archive/20261018/day20-accuracy": "142df1280616f1851c25ad0f1d808314822a62d4",
+      "archive/20261018/day20-bucket-tail": "b46690ac2fbc366ff1ac35cc46be14d72dd19119",
+      "archive/20261018/day20-cap-count": "a61fc430d0371e2323127e0d03952ebf5fa7a866",
+      "archive/20261018/day20-direction": "bf700c6c31312c205cfb53c6a3644d1da03aa0b0",
+      "archive/20261018/day20-finite-mean": "bfbd5f0ebb78c39dc8dab3ea54ba05acde5df168",
+      "archive/20261018/day20-frontend": "dadd511d9a44fabc1c60e58f4bf918157595076d",
+      "archive/20261018/day20-gap-cap": "0a3f4afcda62f641ad0dbaf53b188967b9d62e18",
+      "archive/20261018/day20-harness": "9bfc2d49542462b66d17bc93e16768b60fd5463d",
+      "archive/20261018/day20-heap-root": "fd935c2d42f9b40c4f95ce80595377286500ed1c",
+      "archive/20261018/day20-numpy-input": "f658994cf5cae45ac03a96d83fabb0adef11c946",
+      "archive/20261018/day20-numpy-output": "9633ab4834b0a7f17467d033a92fb80e6f5f38e6",
+      "archive/20261018/day20-polars-decode": "5e0667c3843bb03a7198039eb9dd1b42357b6130",
+      "archive/20261018/day20-python-bytes": "fdf69d14a333245a21ec04cef405f825b8c5e491",
+      "archive/20261018/day20-quantile-prefix": "40b0f23880c590499ea875780f11be9b345e0a3f",
+      "archive/20261018/day20-scalar-cdf": "9809113def8c16a27427b1efc04f806a17726f49",
+      "archive/20261018/day20-scale-hoist": "5722606d55825179bb3dd0ca48326deaafabc210",
+      "archive/20261018/day20-sorted-cdf": "e42760fe173257981d8dc0efe9fab1dd5a5ea4f3",
+      "archive/20261018/day20-speed": "b001268d6559960d83b6959af154a33215c8ad9d",
+      "archive/20261018/day20-subnormal-compress": "80aa1105bf55e68762615ff8b1de781ffbcfe4e5",
+      "archive/20261018/day20-two-run": "5eef8e0923ae0bb4a8bbe4ce9d5f588c2952753d",
+      "archive/20261018/day20-vector-move": "e8bad4555da2647059545e27b1343aa52435a144",
+      "archive/20261018/review-candidate-f64-weights": "fae92a4aa31231e054c88e12a9c8502c629bf2bd",
+      "archive/20261018/review-candidate-original-rust-api": "4bb78de91f7214cb811a35b3ed4bdcb7b2fe4685",
+      "archive/20261018/review-overnight-first-batch": "52e345eaae754472a4ea7db7e46ae17f3b02f4fa",
+      "codex/legacy-compatibility": "402c24c8f4c374d3a143697cfed91de06a428130",
+      "master": "cd4f14c4924ec31264db3a3e8243011b204d268a",
+      "review/1-digest-correctness": "6eb4203fe1c4ad8d337636d5aca549e0fec155b3",
+      "review/2-legacy-python-api": "911dc35493f1774fed1320f9da30d553b41f59b2",
+      "review/3-upstream-compatibility-gate": "25c8c1642029a640b153c160c22a89795d29ad91",
+      "review/4-numpy-output-copy": "42d620428520a74fec8c57d5dc6d4db0f6b1920e",
+      "review/archive-before-overnight-20261014": "b89527187219c83768f50416fa8ac61fe3ca2f6d",
+      "review/evidence-numerical-boundaries-20261014": "c5dec35059990b40fe6f036dc83590bf0cdf2a70",
+      "review/evidence-scaling-packaging-20261015": "52f6212008111b62fa07374278b850868b9ea77e",
+      "tmp/bigbang-review-3-legacy-harness": "dd2e4d6039726f3a66fbf0b464235456a0adcf0b",
+      "tmp/bigbang-review-4-docs-plumbing": "850ebba40b514dbf869477856c62076b1dfb0df2"
+    }
+  },
+  {
+    "repository": "ingolfured/tdigest-rs",
+    "new_refs": 1,
+    "verified_mappings": 2,
+    "heads": {
+      "archive/20261018/overwrite_snapshot_v1_0_0": "e8562fd1c25a33cfd09359f671da126837c7bba4",
+      "danielfr/claude-optimize": "940f54777c9961950869ff44be0450edb70f9dae",
+      "danielfr/torch-backend": "a87275ecb396f8866d19d230c0fe4c9ff70c3b1a",
+      "dependabot/cargo/anyhow-1.0.101": "60c1854d5c0cae3f19baf4877e7d61b4534bea56",
+      "felixs/perf": "e95ef3724a33b2e647f39cd26bd3ddcc0e720288",
+      "main": "8d9cf1fe82c5c9254e5dc9593f01717e317f4333",
+      "overwrite_snapshot_1of4_core_python": "52cda0f4341df6a2befbd32639f90846b18d60da",
+      "overwrite_snapshot_v1_0_0": "57e7978d0811baed4a546ff2f08dccaeff03c321"
+    }
+  }
+]

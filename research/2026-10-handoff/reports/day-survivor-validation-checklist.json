@@ -1,0 +1,152 @@
+{
+  "schema": "day20-seven-survivor-validation-checklist-v1",
+  "status": "Windows-only coverage audit; no execution, protocol edits, gate waivers, or retention",
+  "state_snapshot_updated_utc": "2026-10-15T11:37:40.2686664Z",
+  "active_batch": "Root E12 heldout10x session41131; all other WSL/UNC calls paused",
+  "baseline": "25c8c1642029a640b153c160c22a89795d29ad91",
+  "protocols": {
+    "native_v3": "f19170e2951b59b5a30113c3724565a7ebc65dba8ca0d7caad543e69bff3d1d6",
+    "wheel_v2": "db42f6c233adfd6db8cd196e6974fe9d5e177716ec24a66415c7fba922e593d1"
+  },
+  "evidence_sources": {
+    "work/day-experiments-state.json": "fc7c5e8323a8837fd74334c9d72087917209d22134a1336f45b95a9c1bbfbd12",
+    "work/day-breadth-summary.json": "c8fa2efcc0105e9ee9dd08435268d9758b6ea2b27fd6b52c44d0768179b81db1",
+    "work/day-supplement-untimed-result.json": "17dbc07a5cde592348bce3d28c33b140fefa77e1a91e67a24bd1edd9624f4470",
+    "work/day-wheel-repeat-summary.json": "d93a9554d6f8fe8bfec4bb8150244535f7a54bb6414cef5d8682ba1526117ed9",
+    "work/day-speed-supplementary-validation-proposal.json": "8191d8b810da8bf3b4de2ab2ee23226333576f4ee9da87110818f0dcb8c510c1",
+    "work/prepare_day_harness_v3.py": "b5623136120c54b2fa8e8f399d1e05f83c379aa9baf0222e364c0087537c55e0",
+    "work/day_native_remaining_screens.py": "07a4b10ab7e482782d114ddb31e359358f3c83e6eeb3e1f00b314362ef685e50"
+  },
+  "interpretation": [
+    "A completed exactness audit is satisfied for its frozen candidate and fixture scope; it does not establish speed or fresh heldout behavior.",
+    "Every certified regression is sticky across original/repeated/heldout results. Short or unstable measurements remain inconclusive, including after the one allowed tenfold repeat.",
+    "Full required operation matrices remain required; do not invent small favorable control subsets. Cheap complete control screens can run before expensive eligible repeats and heldout.",
+    "No candidate is retained yet. E12 may proceed to its own coherent follow-up PR after its own complete gates; unrelated native experiments need not delay it.",
+    "Existing source-bound native binaries need no rebuild merely to execute pending frozen operations. Separate approved correctness companions require their scheduled builds."
+  ],
+  "candidates": {
+    "E02": {
+      "satisfied": [
+        "Independent static review by root/day_accuracy and source-bound native smoke.",
+        "Full24-cell v3 merge screen exact in state/query/quality/logical storage:8 improved,11 neutral/noisy,5 unstable,0 certified regressions.",
+        "All108 declared public borrowed merge_many correctness/source-immutability cases exact; summary SHA487f66e2016ba3f46964dfda5b57d623df9cf1cc883e66d41940032872bad8a8."
+      ],
+      "outstanding": [
+        {"gate":"unchanged_operation_screen","operations":["build","p50","cdf_batch"],"cells_per_operation":4,"total_cells":12,"driver":"work/day_native_remaining_screens.py:23","status":"prepared, not run"},
+        {"gate":"fresh_full_heldout","operations":{"merge":288,"build":6,"p50":6,"cdf_batch":6},"total_cells":306,"status":"not run; complete required controls first"},
+        {"gate":"interpretation","requirement":"Preserve5 unstable initial target rows; no automatic tenfold eligibility without an initial short batch. Public borrowed-many audit supplies correctness only; claim no directly measured borrowed-many speed."}
+      ],
+      "declaration":"work/prepare_day_harness_v3.py mandatory_controls.E02; work/day-speed-operational-queue.json priority3",
+      "do_not_duplicate":["The108 borrowed-many audit is complete despite stale pending text in remaining-screen driver.","Do not repeat the completed24 merge screen under a new label or substitute the older v2 results."]
+    },
+    "E03": {
+      "satisfied": [
+        "Root independent static review; focused two_way differential tests debug/release passed with exact source compile proof.",
+        "Full24-cell merge2 screen exact:1 improved,6 neutral/noisy,17 short,0 certified regressions."
+      ],
+      "outstanding": [
+        {"gate":"additional_full_screen_operations","target":["merge"],"controls":["kway","build","p50","cdf_batch"],"cells_per_operation":24,"total_cells":120,"status":"declared, not in prepared remaining-screen batch; complete controls may precede primary10x"},
+        {"gate":"registered_primary_repeat","operation":"merge2","cells":24,"scale":10,"driver":"work/day_native_followup.py batchA","status":"prepared, not run; skip if another screen rejects"},
+        {"gate":"public_shape_correctness","cases_per_candidate":52,"shared_companion_binaries":3,"freeze":"work/day-merge-shapes-frozen-v1/freeze.json","freeze_sha256":"35fadda604be671081b3ff2f92d3f608c4e9fc5dcb24f1faed4bb23d56eb26c2","status":"independently reviewed; Linux prepare/build/smoke/full audit pending"},
+        {"gate":"fresh_full_heldout","operations":["merge2","merge","kway","build","p50","cdf_batch"],"cells_per_operation":288,"total_cells":1728,"status":"not run; only after complete screens and required checks"}
+      ],
+      "declaration":{"file":"work/day-speed-supplementary-validation-proposal.json","lines":[69,70,71],"json_pointer":"/operation_control_map/E03","rule":"merge2 and sequential40 are targets; kway40/build/p50/cdf_batch are controls. Generic frozen run.py cases supplies24 screen or288 confirm per operation."},
+      "do_not_duplicate":["Do not rerun the existing random iterator differential suite; the52-shape companion closes public routing/exhaustion gaps.","Shared baseline shape outputs can serve both E03 and E08 as the frozen companion already specifies."]
+    },
+    "E08": {
+      "satisfied": [
+        "Root independent static review; focused heap_root differential tests debug/release passed with exact source compile proof.",
+        "Full24-cell kway screen exact:6 improved,6 neutral/noisy,4 unstable,8 short,0 certified regressions."
+      ],
+      "outstanding": [
+        {"gate":"additional_full_control_screens","operations":["merge2","merge","build","p50","cdf_batch"],"cells_per_operation":24,"total_cells":120,"status":"declared, not in prepared remaining-screen batch; can reject before expensive primary10x"},
+        {"gate":"registered_primary_repeat","operation":"kway","cells":24,"scale":10,"driver":"work/day_native_followup.py batchA","status":"prepared, not run; skip if another screen rejects"},
+        {"gate":"public_shape_correctness","cases_per_candidate":52,"freeze":"work/day-merge-shapes-frozen-v1/freeze.json","status":"same reviewed companion as E03; builds/smoke/full audit pending"},
+        {"gate":"fresh_full_heldout","operations":["kway","merge2","merge","build","p50","cdf_batch"],"cells_per_operation":288,"total_cells":1728,"status":"not run; conditional on complete screens"}
+      ],
+      "declaration":{"file":"work/day-speed-supplementary-validation-proposal.json","lines":[87,88,89],"json_pointer":"/operation_control_map/E08","rule":"kway40 target plus five named control operations; generic matrices remain full24/288."},
+      "do_not_duplicate":["Existing fan-in0/1/2/3/4/40 random iterator tests already cover internal heap equivalence; public52-shape evidence is the missing gate, not another random iterator suite."]
+    },
+    "E09": {
+      "satisfied": [
+        "Root independent static review and focused count-only cap differential tests debug/release passed.",
+        "Full24-cell build screen exact:1 improved,21 neutral/noisy,2 unstable,0 certified regressions.",
+        "All156 frozen entry/allocation diagnostics complete: independent controls exact, five fresh repeats per arm deterministic;84 actual search-entry rows and72 bypass/no-entry rows; allocation requests reduced84, tied72; retained bytes and allocation-boundary peaks tied156.",
+        "Original72 native screen fixture/state/query records independently mapped exactly;24 of72 enter the search. All5 scale families and caps3/64/256 diagnostic coverage complete; no diagnostic speed inference."
+      ],
+      "outstanding": [
+        {"gate":"queued_full_screens","operations":["merge","kway","p50","cdf_batch"],"cells_per_operation":24,"total_cells":96,"driver":"work/day_native_remaining_screens.py:24","status":"prepared, not run"},
+        {"gate":"missing_declared_codec_controls","operations":["encode","decode"],"cells_per_operation":24,"total_cells":48,"status":"genuinely missing from prepared batch; declared before measurement"},
+        {"gate":"fresh_full_heldout","operations":["build","merge","kway","p50","cdf_batch","encode","decode"],"cells_per_operation":288,"total_cells":2016,"status":"not run; conditional on complete affected-path/control screen"},
+        {"gate":"claim_mapping","requirement":"Use the saved actual-entry map for claimed screen improvements; do not label cap-bypass results as cap-search optimization evidence. No new hit-selected timing workloads."}
+      ],
+      "declaration":{"file":"work/day-speed-supplementary-validation-proposal.json","lines":[93,94,95],"json_pointer":"/operation_control_map/E09","rule":"build/merge/kway cap targets and delta bypass, p50/cdf_batch/encode/decode controls."},
+      "diagnostic_export":"work/day-e09-inventory-result.json",
+      "diagnostic_export_sha256":"23d32b8b360f3fd9a2d7993d4281c8d2fec7dd0ebd691dd0d836c5aa495f7a55",
+      "do_not_duplicate":["Do not rerun the156 diagnostic grid or original72 mapping; those requirements are satisfied.","Do not create a new cap/scale timing matrix based on observed hits; the expanded84 rows were explicitly untimed diagnostics.","No new build10x is eligible solely because two rows are unstable; original build screen has no short cells."]
+    },
+    "E12": {
+      "satisfied": [
+        "Independent static review; actual manylinux wheel installed with identity/ZIP-byte checks on NumPy1.26.4 and2.3.4.",
+        "163 compatibility/binding/coherence tests per registered baseline/E12 environment, including the untouched91-test upstream suite, passed as recorded in state.",
+        "Full36-case screen audits exact on both NumPy versions; scale1 plus one full10x screen preserved. Repeat:22 improved,8 neutral/noisy,2 unstable,4 short; no sticky certified regressions.",
+        "Full36-case heldout audits exact on both NumPy versions; complete36-cell heldout scale1:32 short,4 neutral/noisy,0 certified regressions."
+      ],
+      "outstanding": [
+        {"gate":"one_registered_heldout10x","cells":36,"session":41131,"driver":"work/day_e12_heldout_repeat.py","driver_sha256":"277a9eca7668b583f4a340936bbe3d6a4c73b212401544ef29767611d44f0adf","status":"running; export and check all initial-to-repeat rows after completion"},
+        {"gate":"honest_result_scope","requirement":"Six unresolved screen target rows remain evidence:2 empty-f32 outputs unstable,4 large getters short. All4 unchanged train/encode controls were neutral/noisy. No third screen/heldout retry or blanket equivalence claim."},
+        {"gate":"standalone_release_and_review","requirement":"If heldout supports retention, validate exact final E12 patch with required build/test/lint, fresh installed release artifact compatibility and untouched upstream suite; accurate CHANGELOG/design/PR story. This can finish independently of unrelated native candidates."}
+      ],
+      "do_not_duplicate":["No new unrelated native speed matrix is required for this Python output-conversion-only candidate; final applicable release/integration gates still apply.","Do not repeat the two completed NumPy audit matrices solely to fill a stale checklist; verify their identities, then test the actual final release artifact."]
+    },
+    "E13": {
+      "satisfied": [
+        "Independent shared Vec/slice encoder static review and focused native tests; actual installed manylinux wheel compatibility/ZIP identity and untouched91 upstream tests on NumPy1/2 passed.",
+        "Full76-case wheel screen audits exact on each NumPy version; full16-cell scale1 and10x screens preserved with0 sticky regressions. All6 Python ENCODE targets improved42.9–57.3%;8 neutral/noisy and2 unstable unchanged-control observations remain.",
+        "Exact pinned-source proof confirms delta+widepins is invalid in all versions. Root-approved R3 retains its6 validation-only records, removes its4 impossible timings without replacements, and keeps prior proposals."
+      ],
+      "outstanding": [
+        {"gate":"default_V3_native_screen","operations":{"encode":24,"decode":24},"total_cells":48,"driver":"work/day_e13_native_controls.py","status":"root-reviewed, not prepared/run; short/unstable rows do not pass its gate"},
+        {"gate":"full_wheel_heldout","audits_per_numpy":76,"numpy_audits":["np1","np2"],"timed_np2_cells":16,"driver":"work/day_e13_heldout_batch.py","status":"root-reviewed; gated on full defaultV3 native screen; no automatic10x"},
+        {"gate":"default_V3_native_heldout","operations":{"encode":288,"decode":288},"total_cells":576,"status":"separately scheduled after prerequisite screen; declared before full shared-code retention"},
+        {"gate":"explicit_public_version_supplement","validation_rows_per_phase":66,"malformed_fixtures_per_phase":28,"timed_cells_per_phase":60,"phases":["screen","confirm"],"status":"R3 source/driver independent review and freeze pending, then scheduled companion builds/audits/timing; combined invalid state stays validation-only"},
+        {"gate":"neutral_control_interpretation","requirement":"Native Vec/decode paths may be neutral controls because Python ENCODE already has a certified target gain. Do not require an invented native speed gain; still require exactness and all existing no-regression/minimum-duration/drift gates. Unresolved controls remain inconclusive."}
+      ],
+      "declarations":["work/day_e13_native_controls.py docstring and prepare policy/scope:48 defaultV3 screen and576 confirm","work/day-e13-native-coverage-plan.json","work/day-e13-codec-supplement-proposal.json R3; source proof work/day-e13-pinned-validator-proof.json"],
+      "do_not_duplicate":["Native explicit versions are genuinely missing: Python slice-route checks and two new shared-encoder paths agreeing cannot replace an independent old native Vec oracle.","Generic native V3 and explicit-version supplement overlap API names but use different declared fixtures, config/extension boundaries and complete-drop lifecycles; neither discharges the other as currently approved.","No third wheel screen repeat; decode observations cannot substitute for a Python ENCODE benefit."]
+    },
+    "E20": {
+      "satisfied": [
+        "Independent static review and focused2 tests in debug/release passed after preserved harness type repair.",
+        "Existing v3 broad exact audits for six batch orders at256 probes plus sorted8 passed.",
+        "All216 declared public boundary correctness cases passed exactly, including63/64/65 probes, centroid eligibility boundaries and actual late disorder; summary SHA80a8c65bf457e453bec097aeae4f847f5e12b85b55dd034ac6933d8c96422ff9."
+      ],
+      "outstanding": [
+        {"gate":"full_batch_screen","orders":["sorted","reverse","random","nan","ties","nearlysorted"],"probe_counts":[8,256,4096],"states_per_operation":3,"target_cells":54,"controls":{"build":4,"p50":4,"cdf":4},"total_cells":66,"driver":"work/day_native_remaining_screens.py:27","status":"prepared, not run"},
+        {"gate":"fresh_full_heldout","required":{"orders":["sorted","reverse","random","nan","ties","nearlysorted"],"probe_counts":[1,8,256],"operations":18},"parallel_threshold_controls":{"orders":["sorted","reverse","random","nan","nearlysorted"],"probe_counts":[32767,32768,65536],"operations":15},"states_per_operation":6,"batch_cells":198,"controls":{"build":6,"p50":6,"cdf":6},"total_cells":216,"status":"not run; exact enumeration is already declared, not a newly selected subset"}
+      ],
+      "declaration":{"file":"work/prepare_day_harness_v3.py","lines":[73,80,81,82],"protocol_fields":["batch_cdf.screen_required","batch_cdf.confirm_required","batch_cdf.confirm_parallel_threshold_controls","mandatory_controls.E20"]},
+      "do_not_duplicate":["The216 public boundary audit is already complete despite stale pending prose in the remaining-screen wrapper.","Do not widen to every available probe count or re-run a random boundary grid; execute the declared33 confirm batch operations.","Single-thread evidence establishes no default multithread throughput claim; threshold coverage remains required even with one Rayon thread."]
+    }
+  },
+  "cheap_complete_rejection_order": [
+    "After root releases session41131, export E12 complete heldout repeat and preserve any sticky regression before further E12 work.",
+    "Run additive reviewed remaining-screen wrapper: E02 12 controls, E09 96 queued operations, E20 66 full screen cells; record all6 E10 jobs/48 cells skipped against pinned lifecycle rejection. Original prepared plan remains unchanged.",
+    "Complete already-declared E03 and E08 five-operation screens (120 cells each) and E09 missing encode/decode controls (48 cells), with per-candidate rejection stopping further work. These can precede the eligible E03/E08 full24-cell10x repeats.",
+    "Run E13 full48 defaultV3 native screen before expensive wheel/native confirmation; do not read defaultV3 as full public version coverage.",
+    "Schedule shared52-shape companion and frozen R3 codec supplement after their preparation/review prerequisites; no need to repeat completed E02/E09/E20 audits.",
+    "Fresh heldout only for candidates with the required target gain and completed prerequisite controls. Reject/no-benefit decisions may save large full288-per-operation confirmation costs; do not reduce those matrices after observing results."
+  ],
+  "common_final_gates": [
+    "Keep original tdigest_rs public API/source/arithmetic and independent pinned oracle unchanged; run untouched upstream tests on the actual final artifact.",
+    "Complete required repository build/test/lint and relevant Rust/Python/Polars/Java/install/release-wheel checks in Linux. Prior individual-wheel results do not certify a newly combined or packaged artifact.",
+    "Revalidate retained combinations where code paths overlap: E02/E03/E08 merge dispatch, native query plus E12 outputs, and E12/E13 Python boundary changes. Individual gains are not additive.",
+    "Document actual measured lifecycle/reset costs, storage limits, neutral/inconclusive cells and unchanged accuracy; compare against the frozen modern baseline only, with no world-best claim.",
+    "Prepare coherent follow-up PRs and accurate CHANGELOG/design/validation descriptions. No merge or release. A validated standalone E12 PR need not wait for unrelated native experiments."
+  ],
+  "not_to_run_again": [
+    "E05 and E10 certified lifecycle regressions reject them. Keep all completed allocation/lifecycle evidence; skip their unused generic timing jobs and do not repeat to seek favorable outcomes.",
+    "Other rejected prototypes remain rejected; no new quality alternatives under this validation batch.",
+    "Do not rerun already passed focused tests on unchanged snapshots merely because their results are old; final retained/integration changes justify new appropriate checks."
+  ]
+}

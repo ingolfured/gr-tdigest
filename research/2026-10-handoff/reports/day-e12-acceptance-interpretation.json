@@ -1,0 +1,67 @@
+{
+  "schema": "day20-e12-independent-acceptance-interpretation-v1",
+  "reviewer": "day_accuracy",
+  "method": "Windows-only source/evidence reads and arithmetic reduction; no WSL, builds, timing, candidate change or new gate",
+  "evidence": "work/day-e12-heldout-repeat-result.json",
+  "evidence_sha256": "3af0b7c10db60cb5eef625b8706c2fbf4ec3adc6c3e5e170e8af97cf559dcd12",
+  "wheel_protocol_sha256": "db42f6c233adfd6db8cd196e6974fe9d5e177716ec24a66415c7fba922e593d1",
+  "recommendation": "Advance E12 unchanged to final release validation. Reproducible qualified gains and no confirmed regressions satisfy the original advancement criterion. This is not automatic retention, release approval, proof that every control is stable, or a universal no-regression claim.",
+  "original_clauses": [
+    {"source":"work/prepare_day_harness.py:23","field":"timing.acceptance","quote":"Fresh held-out repeated timing must confirm meaningful gain and no confirmed >3% regression in claimed scope. Neutral or noisy candidates discarded."},
+    {"source":"work/prepare_day_wheel_harness.py:46","field":"timing.improvement","quote":"Every adjacent paired process-median ratio <=0.97, confirmed on fresh held-out cases and unchanged-operation controls. No automatic retention on screening."},
+    {"source":"work/prepare_day_wheel_harness.py:47","field":"timing.regression","quote":"Every paired ratio >1.03 is a confirmed per-cell regression; reject general claimed scope. Never average it away."},
+    {"source":"work/prepare_day_wheel_harness.py:48","field":"timing.noise","quote":"Either arm max/min process-median ratio >1.10 is inconclusive, as is any retained sub50ms batch."},
+    {"source":"work/prepare_day_wheel_harness.py:63","field":"limitations","quote":"All targets and control cells must be considered individually; --limit is diagnostic only."},
+    {"source":"work/prepare_day_wheel_harness.py:64","field":"limitations","quote":"Both NumPy versions must pass installed-wheel binding and untouched original compatibility suites before retention."},
+    {"source":"work/prepare_day_wheel_harness.py:81","field":"README","quote":"--suite target and --suite control split work, but acceptance requires both."}
+  ],
+  "interpretation": [
+    "No clause requires every control to be stable in every retained run. The separate inconclusive class is not automatically a candidate rejection, nor a successful no-regression measurement. Requiring all control repeats to be stable now would add a gate after seeing results.",
+    "The full target/control matrices were executed in screen and fresh confirmation. E12 is not a noise-only or neutral candidate:12 nonempty CDF/quantile cells have qualified fresh gains, and these same12 cell IDs are outside all neutral/unresolved screen lists.",
+    "The f64 ENCODE control's original heldout observation remains a valid stable, long neutral observation. Its later unstable observation also remains evidence. Neither replaces the other, and no median averaging is used to dismiss the adverse pair.",
+    "The f64 ENCODE repeat has only one of four ratios above1.03; therefore it would not meet the regression rule even before the drift gate. The drift gate makes the repeat inconclusive. Do not claim it passed or that its final1.1269 ratio is harmless.",
+    "Advancement means completing the existing final artifact/release/test gates and preparing an honest PR. It does not authorize an extra retry, revised workload, threshold change, candidate edit or suppression of the unresolved cells."
+  ],
+  "counts": {"heldout_repeat_improved":25,"heldout_repeat_neutral_or_noisy":7,"heldout_repeat_unstable":2,"heldout_repeat_short":2,"sticky_regressions":0,"exactness_failures":0},
+  "f64_encode_control": {
+    "cell":35,
+    "case":{"op":"encode","precision":"f64","n":4096,"distribution":"separated"},
+    "initial":{"classification":"neutral_or_noisy","paired_ratios":[0.9681898035301594,0.940279555743478,0.9845739042224885,1.0063240014851678],"baseline_drift":1.0418937526302754,"candidate_drift":1.0381597333001706,"minimum_retained_batch_ns":52568017},
+    "repeat":{"classification":"unstable_controls","paired_ratios":[0.9916711747031616,0.976855280103326,0.9914612100252697,1.1268786277418716],"baseline_drift":1.0221829517869245,"candidate_drift":1.1285434395802063,"minimum_retained_batch_ns":534904649},
+    "disclosure":"One unchanged-operation control was inconclusive in the longer heldout repeat because candidate drift exceeded10%; the earlier heldout run was stable and neutral. No confirmed regression was observed."
+  },
+  "qualified_fresh_batch_gains": {
+    "scope":"Installed NumPy2.3.4, single-thread WSL, f32/f64 digest modes,8192-input heldout ties/separated fixtures;64,1000,32768 NumPy queries. Ratios are medians of the four paired process-median ratios.",
+    "selection":"Only repeat.certified_improvement=true and queries>=2. Every included cell passed all four<=0.97 ratios, both arm drift<=1.10 and minimum retained batch>=50ms. Exclude scalar, empty, unstable and short cases.",
+    "formula":{"time_reduction_percent":"100*(1-median_ratio)","speedup_factor":"1/median_ratio"},
+    "cdf":{"cells":6,"time_reduction_percent_range":[44.86005893180427,54.755471953177604],"speedup_factor_range":[1.813567407994188,2.210212026004837]},
+    "quantile":{"cells":6,"time_reduction_percent_range":[36.5280106599309,51.39207976609457],"speedup_factor_range":[1.5754981219230701,2.0572778987208573]},
+    "rows":[
+      {"cell":2,"op":"cdf","precision":"f32","queries":64,"median_ratio":0.5513994106819573},
+      {"cell":3,"op":"cdf","precision":"f32","queries":1000,"median_ratio":0.4820237733156125},
+      {"cell":4,"op":"cdf","precision":"f32","queries":32768,"median_ratio":0.454321989676173},
+      {"cell":7,"op":"quantile","precision":"f32","queries":64,"median_ratio":0.634719893400691},
+      {"cell":8,"op":"quantile","precision":"f32","queries":1000,"median_ratio":0.4860792023390543},
+      {"cell":9,"op":"quantile","precision":"f32","queries":32768,"median_ratio":0.5826366790765395},
+      {"cell":20,"op":"cdf","precision":"f64","queries":64,"median_ratio":0.548030523476319},
+      {"cell":21,"op":"cdf","precision":"f64","queries":1000,"median_ratio":0.4648570384555034},
+      {"cell":22,"op":"cdf","precision":"f64","queries":32768,"median_ratio":0.45244528046822396},
+      {"cell":25,"op":"quantile","precision":"f64","queries":64,"median_ratio":0.6141165397467064},
+      {"cell":26,"op":"quantile","precision":"f64","queries":1000,"median_ratio":0.48608953707439007},
+      {"cell":27,"op":"quantile","precision":"f64","queries":32768,"median_ratio":0.5748235038956406}
+    ]
+  },
+  "other_inconclusive_cells": {
+    "heldout_repeat":[{"cell":0,"case":"f32 CDF with0 queries","reason":"candidate drift1.1297477477"},{"cell":15,"case":"f32 weights,8192 inputs","reason":"minimum retained batch35.49ms"},{"cell":33,"case":"f64 weights,8192 inputs","reason":"minimum retained batch32.67ms"}],
+    "screen_unresolved_ids":[0,12,13,15,30,33],
+    "rule":"Preserve these unqualified observations and do not quote their large apparent ratios as confirmed gains."
+  },
+  "required_final_work":"Validate the exact unchanged E12 patch/final wheel under applicable repository tests/lint/release packaging and both NumPy compatibility suites, including untouched upstream. Document equal behavior/owned payload, qualified gains, all unresolved observations and scope. No native algorithm accuracy or global fastest claim.",
+  "source_sha256": {
+    "work/prepare_day_harness.py":"e460179fbe21739aa4d986dd40377061492476f9465923e8418b9ff607f1abaf",
+    "work/prepare_day_wheel_harness.py":"b41789099361ef46197598b959590ff87651ecbb20be48df42b9a842eca6907a",
+    "work/revise_day_wheel_harness.py":"d4985e62f2563ba4c74567561edb1f158b7c1d56adeda3717c1783fd9fae5454",
+    "work/prepare_day_wheel_v2.py":"aa23ff661595ea8076e61e3208ebf7a47673d8d2dbf3f606f8994299697a2354",
+    "work/day_wheel_run.py":"c6ca9930f8954fad8906d1c29707996000e7a36bea46b928fbe1756e45d8eb71"
+  }
+}

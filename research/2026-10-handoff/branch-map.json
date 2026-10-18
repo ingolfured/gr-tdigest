@@ -1,0 +1,525 @@
+{
+  "schema": "migration-branch-map-v1",
+  "handoff_branch": "research/handoff-20261018",
+  "handoff_base": "42d620428520a74fec8c57d5dc6d4db0f6b1920e",
+  "entries": [
+    {
+      "repository": "ingolfured/gr-tdigest",
+      "local_branch": "experiment/day20-accuracy",
+      "original_head": "25c8c1642029a640b153c160c22a89795d29ad91",
+      "remote_branch": "archive/20261018/day20-accuracy",
+      "commit": "142df1280616f1851c25ad0f1d808314822a62d4",
+      "kind": "unvalidated_worktree_snapshot",
+      "source_worktree": "/var/tmp/codex-tdigest-pr3-20261014/day20261015/accuracy",
+      "changed_files": [
+        " M CHANGELOG.md",
+        " M src/tdigest/compressor.rs",
+        " M tdigest_design.md",
+        "?? integration/api_coherence/test_tiny_capacity_mass.py",
+        "?? tests/tiny_capacity_mass.rs"
+      ]
+    },
+    {
+      "repository": "ingolfured/gr-tdigest",
+      "local_branch": "experiment/day20-bucket-tail",
+      "original_head": "25c8c1642029a640b153c160c22a89795d29ad91",
+      "remote_branch": "archive/20261018/day20-bucket-tail",
+      "commit": "b46690ac2fbc366ff1ac35cc46be14d72dd19119",
+      "kind": "unvalidated_worktree_snapshot",
+      "source_worktree": "/var/tmp/codex-tdigest-pr3-20261014/day20261015/bucket-tail",
+      "changed_files": [
+        " M CHANGELOG.md",
+        " M src/tdigest/compressor.rs",
+        " M tdigest_design.md",
+        "?? integration/api_coherence/test_bucket_tail_mass.py",
+        "?? tests/bucket_tail_mass.rs"
+      ]
+    },
+    {
+      "repository": "ingolfured/gr-tdigest",
+      "local_branch": "experiment/day20-cap-count",
+      "original_head": "25c8c1642029a640b153c160c22a89795d29ad91",
+      "remote_branch": "archive/20261018/day20-cap-count",
+      "commit": "a61fc430d0371e2323127e0d03952ebf5fa7a866",
+      "kind": "unvalidated_worktree_snapshot",
+      "source_worktree": "/var/tmp/codex-tdigest-pr3-20261014/day20261015/cap-count",
+      "changed_files": [
+        " M CHANGELOG.md",
+        " M README.md",
+        " M src/tdigest/compressor.rs",
+        " M tdigest_design.md"
+      ]
+    },
+    {
+      "repository": "ingolfured/gr-tdigest",
+      "local_branch": "experiment/day20-scalar-cdf",
+      "original_head": "25c8c1642029a640b153c160c22a89795d29ad91",
+      "remote_branch": "archive/20261018/day20-scalar-cdf",
+      "commit": "9809113def8c16a27427b1efc04f806a17726f49",
+      "kind": "unvalidated_worktree_snapshot",
+      "source_worktree": "/var/tmp/codex-tdigest-pr3-20261014/day20261015/cdf",
+      "changed_files": [
+        " M CHANGELOG.md",
+        " M src/tdigest/cdf.rs",
+        " M tdigest_design.md"
+      ]
+    },
+    {
+      "repository": "ingolfured/gr-tdigest",
+      "local_branch": "experiment/day20-direction",
+      "original_head": "25c8c1642029a640b153c160c22a89795d29ad91",
+      "remote_branch": "archive/20261018/day20-direction",
+      "commit": "bf700c6c31312c205cfb53c6a3644d1da03aa0b0",
+      "kind": "unvalidated_worktree_snapshot",
+      "source_worktree": "/var/tmp/codex-tdigest-pr3-20261014/day20261015/direction",
+      "changed_files": [
+        " M CHANGELOG.md",
+        " M README.md",
+        " M src/tdigest/compressor.rs",
+        " M tdigest_design.md"
+      ]
+    },
+    {
+      "repository": "ingolfured/gr-tdigest",
+      "local_branch": "experiment/day20-finite-mean",
+      "original_head": "25c8c1642029a640b153c160c22a89795d29ad91",
+      "remote_branch": "archive/20261018/day20-finite-mean",
+      "commit": "bfbd5f0ebb78c39dc8dab3ea54ba05acde5df168",
+      "kind": "unvalidated_worktree_snapshot",
+      "source_worktree": "/var/tmp/codex-tdigest-pr3-20261014/day20261015/finite-mean",
+      "changed_files": [
+        " M CHANGELOG.md",
+        " M src/tdigest/compressor.rs",
+        " M tdigest_design.md",
+        "?? tests/finite_cluster_mean.rs",
+        "?? tests/fixtures/finite_cluster_mean_oracle.json"
+      ]
+    },
+    {
+      "repository": "ingolfured/gr-tdigest",
+      "local_branch": "experiment/day20-frontend",
+      "original_head": "25c8c1642029a640b153c160c22a89795d29ad91",
+      "remote_branch": "archive/20261018/day20-frontend",
+      "commit": "dadd511d9a44fabc1c60e58f4bf918157595076d",
+      "kind": "unvalidated_worktree_snapshot",
+      "source_worktree": "/var/tmp/codex-tdigest-pr3-20261014/day20261015/frontend",
+      "changed_files": [
+        " M CHANGELOG.md",
+        " M src/tdigest/frontends.rs",
+        " M src/tdigest/tdigest.rs",
+        " M tdigest_design.md",
+        " A tests/frontend_owned_merge.rs"
+      ]
+    },
+    {
+      "repository": "ingolfured/gr-tdigest",
+      "local_branch": "experiment/day20-gap-cap",
+      "original_head": "25c8c1642029a640b153c160c22a89795d29ad91",
+      "remote_branch": "archive/20261018/day20-gap-cap",
+      "commit": "0a3f4afcda62f641ad0dbaf53b188967b9d62e18",
+      "kind": "unvalidated_worktree_snapshot",
+      "source_worktree": "/var/tmp/codex-tdigest-pr3-20261014/day20261015/gap-cap",
+      "changed_files": [
+        " M CHANGELOG.md",
+        " M README.md",
+        " M src/tdigest/compressor.rs",
+        " M tdigest_design.md"
+      ]
+    },
+    {
+      "repository": "ingolfured/gr-tdigest",
+      "local_branch": "experiment/day20-harness",
+      "original_head": "25c8c1642029a640b153c160c22a89795d29ad91",
+      "remote_branch": "archive/20261018/day20-harness",
+      "commit": "9bfc2d49542462b66d17bc93e16768b60fd5463d",
+      "kind": "unvalidated_worktree_snapshot",
+      "source_worktree": "/var/tmp/codex-tdigest-pr3-20261014/day20261015/harness",
+      "changed_files": [
+        "?? day_experiments/protocol.json",
+        "?? day_experiments/reference.rs",
+        "?? day_experiments/run.py",
+        "?? day_experiments/tail.rs",
+        "?? day_experiments_v3/README.md",
+        "?? day_experiments_v3/protocol.json",
+        "?? day_experiments_v3/reference.rs",
+        "?? day_experiments_v3/run.py",
+        "?? day_experiments_v3/tail.rs",
+        "?? day_supplement_v1/allocator.rs",
+        "?? day_supplement_v1/approval.json",
+        "?? day_supplement_v1/proposal.json",
+        "?? day_supplement_v1/protocol.json",
+        "?? day_supplement_v1/reference.rs",
+        "?? day_supplement_v1/run.py",
+        "?? day_supplement_v1/tail.rs",
+        "?? day_supplement_v1/timing-erratum.json",
+        "?? day_supplement_v1/timing-matrix.json",
+        "?? day_supplement_v2/allocator.rs",
+        "?? day_supplement_v2/approval.json",
+        "?? day_supplement_v2/proposal.json",
+        "?? day_supplement_v2/protocol.json",
+        "?? day_supplement_v2/reference.rs",
+        "?? day_supplement_v2/run.py",
+        "?? day_supplement_v2/tail.rs",
+        "?? day_supplement_v2/timing-erratum.json",
+        "?? day_supplement_v2/timing-matrix.json",
+        "?? e09-entry-allocation-v1/day-e09-entry-allocation-proposal-v2.json",
+        "?? e09-entry-allocation-v1/day-e09-entry-allocation-proposal.json",
+        "?? e09-entry-allocation-v1/day_e09_probe.rs",
+        "?? e09-entry-allocation-v1/day_e09_selfcheck.rs",
+        "?? e09-entry-allocation-v1/day_e09_tail.rs",
+        "?? e09-entry-allocation-v1/day_e09_validate.py",
+        "?? e09-entry-allocation-v1/day_supplement_allocator.rs",
+        "?? e09-entry-allocation-v1/freeze.json",
+        "?? e09-entry-allocation-v1/protocol.json",
+        "?? e09-entry-allocation-v1/reference.rs",
+        "?? merge-shapes-v1/day-merge-shape-audit-proposal.json",
+        "?? merge-shapes-v1/day_merge_shapes.py",
+        "?? merge-shapes-v1/day_merge_shapes.rs",
+        "?? merge-shapes-v1/freeze.json",
+        "?? merge-shapes-v1/protocol.json",
+        "?? repair-quality/baseline-v3/Cargo.lock",
+        "?? repair-quality/baseline-v3/Cargo.toml",
+        "?? repair-quality/baseline-v3/src/main.rs",
+        "?? repair-quality/e01-v3/Cargo.lock",
+        "?? repair-quality/e01-v3/Cargo.toml",
+        "?? repair-quality/e01-v3/src/main.rs",
+        "?? repair-quality/e06-v3/Cargo.lock",
+        "?? repair-quality/e06-v3/Cargo.toml",
+        "?? repair-quality/e06-v3/src/main.rs",
+        "?? repair-quality/main.rs",
+        "?? repair-quality/protocol.json",
+        "?? wheel_experiments_v1/README.md",
+        "?? wheel_experiments_v1/probe.py",
+        "?? wheel_experiments_v1/protocol.json",
+        "?? wheel_experiments_v1/run.py",
+        "?? wheel_experiments_v2/README.md",
+        "?? wheel_experiments_v2/probe.py",
+        "?? wheel_experiments_v2/protocol.json",
+        "?? wheel_experiments_v2/run.py"
+      ]
+    },
+    {
+      "repository": "ingolfured/gr-tdigest",
+      "local_branch": "experiment/day20-heap-root",
+      "original_head": "25c8c1642029a640b153c160c22a89795d29ad91",
+      "remote_branch": "archive/20261018/day20-heap-root",
+      "commit": "fd935c2d42f9b40c4f95ce80595377286500ed1c",
+      "kind": "unvalidated_worktree_snapshot",
+      "source_worktree": "/var/tmp/codex-tdigest-pr3-20261014/day20261015/heap-root",
+      "changed_files": [
+        " M CHANGELOG.md",
+        " M README.md",
+        " M src/tdigest/merges.rs",
+        " M tdigest_design.md"
+      ]
+    },
+    {
+      "repository": "ingolfured/gr-tdigest",
+      "local_branch": "experiment/day20-numpy-input",
+      "original_head": "25c8c1642029a640b153c160c22a89795d29ad91",
+      "remote_branch": "archive/20261018/day20-numpy-input",
+      "commit": "f658994cf5cae45ac03a96d83fabb0adef11c946",
+      "kind": "unvalidated_worktree_snapshot",
+      "source_worktree": "/var/tmp/codex-tdigest-pr3-20261014/day20261015/numpy-input",
+      "changed_files": [
+        " M CHANGELOG.md",
+        " M README.md",
+        " M src/py.rs",
+        " M tdigest_design.md",
+        "?? bindings/python/tests/test_day_numpy_input.py"
+      ]
+    },
+    {
+      "repository": "ingolfured/gr-tdigest",
+      "local_branch": "experiment/day20-numpy-output",
+      "original_head": "25c8c1642029a640b153c160c22a89795d29ad91",
+      "remote_branch": "archive/20261018/day20-numpy-output",
+      "commit": "9633ab4834b0a7f17467d033a92fb80e6f5f38e6",
+      "kind": "unvalidated_worktree_snapshot",
+      "source_worktree": "/var/tmp/codex-tdigest-pr3-20261014/day20261015/numpy-output",
+      "changed_files": [
+        " M CHANGELOG.md",
+        " M README.md",
+        " M src/py.rs",
+        " M tdigest_design.md",
+        "?? bindings/python/tests/test_day_numpy_output.py"
+      ]
+    },
+    {
+      "repository": "ingolfured/gr-tdigest",
+      "local_branch": "experiment/day20-polars-decode",
+      "original_head": "25c8c1642029a640b153c160c22a89795d29ad91",
+      "remote_branch": "archive/20261018/day20-polars-decode",
+      "commit": "5e0667c3843bb03a7198039eb9dd1b42357b6130",
+      "kind": "unvalidated_worktree_snapshot",
+      "source_worktree": "/var/tmp/codex-tdigest-pr3-20261014/day20261015/polars-decode",
+      "changed_files": [
+        " M CHANGELOG.md",
+        " M README.md",
+        " M src/polars_expr.rs",
+        " M src/tdigest/frontends.rs",
+        " M src/tdigest/wire.rs",
+        " M tdigest_design.md",
+        "?? bindings/python/tests/test_day_polars_decode.py"
+      ]
+    },
+    {
+      "repository": "ingolfured/gr-tdigest",
+      "local_branch": "experiment/day20-python-bytes",
+      "original_head": "25c8c1642029a640b153c160c22a89795d29ad91",
+      "remote_branch": "archive/20261018/day20-python-bytes",
+      "commit": "fdf69d14a333245a21ec04cef405f825b8c5e491",
+      "kind": "unvalidated_worktree_snapshot",
+      "source_worktree": "/var/tmp/codex-tdigest-pr3-20261014/day20261015/python-bytes",
+      "changed_files": [
+        " M CHANGELOG.md",
+        " M README.md",
+        " M src/py.rs",
+        " M src/tdigest/frontends.rs",
+        " M src/tdigest/wire.rs",
+        " M tdigest_design.md",
+        "?? bindings/python/tests/test_day_direct_bytes.py"
+      ]
+    },
+    {
+      "repository": "ingolfured/gr-tdigest",
+      "local_branch": "experiment/day20-quantile-prefix",
+      "original_head": "25c8c1642029a640b153c160c22a89795d29ad91",
+      "remote_branch": "archive/20261018/day20-quantile-prefix",
+      "commit": "40b0f23880c590499ea875780f11be9b345e0a3f",
+      "kind": "unvalidated_worktree_snapshot",
+      "source_worktree": "/var/tmp/codex-tdigest-pr3-20261014/day20261015/quantile-prefix",
+      "changed_files": [
+        " M CHANGELOG.md",
+        " M src/tdigest/quantile.rs",
+        " M tdigest_design.md",
+        "?? tests/quantile_prefix.rs",
+        "?? tests/quantile_prefix_equal_weights.rs"
+      ]
+    },
+    {
+      "repository": "ingolfured/gr-tdigest",
+      "local_branch": "experiment/day20-scale-hoist",
+      "original_head": "25c8c1642029a640b153c160c22a89795d29ad91",
+      "remote_branch": "archive/20261018/day20-scale-hoist",
+      "commit": "5722606d55825179bb3dd0ca48326deaafabc210",
+      "kind": "unvalidated_worktree_snapshot",
+      "source_worktree": "/var/tmp/codex-tdigest-pr3-20261014/day20261015/scale-hoist",
+      "changed_files": [
+        " M CHANGELOG.md",
+        " M README.md",
+        " M src/tdigest/compressor.rs",
+        " M src/tdigest/scale.rs",
+        " M tdigest_design.md"
+      ]
+    },
+    {
+      "repository": "ingolfured/gr-tdigest",
+      "local_branch": "experiment/day20-sorted-cdf",
+      "original_head": "25c8c1642029a640b153c160c22a89795d29ad91",
+      "remote_branch": "archive/20261018/day20-sorted-cdf",
+      "commit": "e42760fe173257981d8dc0efe9fab1dd5a5ea4f3",
+      "kind": "unvalidated_worktree_snapshot",
+      "source_worktree": "/var/tmp/codex-tdigest-pr3-20261014/day20261015/sorted-cdf",
+      "changed_files": [
+        " M CHANGELOG.md",
+        " M src/tdigest/cdf.rs",
+        " M tdigest_design.md"
+      ]
+    },
+    {
+      "repository": "ingolfured/gr-tdigest",
+      "local_branch": "experiment/day20-speed",
+      "original_head": "25c8c1642029a640b153c160c22a89795d29ad91",
+      "remote_branch": "archive/20261018/day20-speed",
+      "commit": "b001268d6559960d83b6959af154a33215c8ad9d",
+      "kind": "unvalidated_worktree_snapshot",
+      "source_worktree": "/var/tmp/codex-tdigest-pr3-20261014/day20261015/speed",
+      "changed_files": [
+        " M CHANGELOG.md",
+        " M README.md",
+        " M src/tdigest/frontends.rs",
+        " M src/tdigest/tdigest.rs",
+        " M tdigest_design.md",
+        "?? tests/borrowed_merge_regressions.rs"
+      ]
+    },
+    {
+      "repository": "ingolfured/gr-tdigest",
+      "local_branch": "experiment/day20-subnormal-compress",
+      "original_head": "25c8c1642029a640b153c160c22a89795d29ad91",
+      "remote_branch": "archive/20261018/day20-subnormal-compress",
+      "commit": "80aa1105bf55e68762615ff8b1de781ffbcfe4e5",
+      "kind": "unvalidated_worktree_snapshot",
+      "source_worktree": "/var/tmp/codex-tdigest-pr3-20261014/day20261015/subnormal-compress",
+      "changed_files": [
+        " M CHANGELOG.md",
+        " M src/tdigest/compressor.rs",
+        " M tdigest_design.md",
+        "?? integration/api_coherence/test_subnormal_compression_coherence.py",
+        "?? tests/subnormal_compression.rs",
+        "?? tests/subnormal_value_compression.rs"
+      ]
+    },
+    {
+      "repository": "ingolfured/gr-tdigest",
+      "local_branch": "experiment/day20-two-run",
+      "original_head": "25c8c1642029a640b153c160c22a89795d29ad91",
+      "remote_branch": "archive/20261018/day20-two-run",
+      "commit": "5eef8e0923ae0bb4a8bbe4ce9d5f588c2952753d",
+      "kind": "unvalidated_worktree_snapshot",
+      "source_worktree": "/var/tmp/codex-tdigest-pr3-20261014/day20261015/two-run",
+      "changed_files": [
+        " M CHANGELOG.md",
+        " M README.md",
+        " M src/tdigest/merges.rs",
+        " M src/tdigest/tdigest.rs",
+        " M tdigest_design.md"
+      ]
+    },
+    {
+      "repository": "ingolfured/gr-tdigest",
+      "local_branch": "experiment/day20-vector-move",
+      "original_head": "25c8c1642029a640b153c160c22a89795d29ad91",
+      "remote_branch": "archive/20261018/day20-vector-move",
+      "commit": "e8bad4555da2647059545e27b1343aa52435a144",
+      "kind": "unvalidated_worktree_snapshot",
+      "source_worktree": "/var/tmp/codex-tdigest-pr3-20261014/day20261015/vector-move",
+      "changed_files": [
+        " M CHANGELOG.md",
+        " M README.md",
+        " M src/tdigest/compressor.rs",
+        " M tdigest_design.md"
+      ]
+    },
+    {
+      "repository": "ingolfured/gr-tdigest",
+      "local_branch": "codex/legacy-compatibility",
+      "original_head": "402c24c8f4c374d3a143697cfed91de06a428130",
+      "remote_branch": "codex/legacy-compatibility",
+      "commit": "402c24c8f4c374d3a143697cfed91de06a428130",
+      "kind": "already_remote"
+    },
+    {
+      "repository": "ingolfured/gr-tdigest",
+      "local_branch": "experiment/day20-integration",
+      "original_head": "25c8c1642029a640b153c160c22a89795d29ad91",
+      "remote_branch": "review/3-upstream-compatibility-gate",
+      "commit": "25c8c1642029a640b153c160c22a89795d29ad91",
+      "kind": "already_remote"
+    },
+    {
+      "repository": "ingolfured/gr-tdigest",
+      "local_branch": "master",
+      "original_head": "cd4f14c4924ec31264db3a3e8243011b204d268a",
+      "remote_branch": "master",
+      "commit": "cd4f14c4924ec31264db3a3e8243011b204d268a",
+      "kind": "already_remote"
+    },
+    {
+      "repository": "ingolfured/gr-tdigest",
+      "local_branch": "review/1-digest-correctness",
+      "original_head": "6eb4203fe1c4ad8d337636d5aca549e0fec155b3",
+      "remote_branch": "review/1-digest-correctness",
+      "commit": "6eb4203fe1c4ad8d337636d5aca549e0fec155b3",
+      "kind": "already_remote"
+    },
+    {
+      "repository": "ingolfured/gr-tdigest",
+      "local_branch": "review/2-legacy-python-api",
+      "original_head": "911dc35493f1774fed1320f9da30d553b41f59b2",
+      "remote_branch": "review/2-legacy-python-api",
+      "commit": "911dc35493f1774fed1320f9da30d553b41f59b2",
+      "kind": "already_remote"
+    },
+    {
+      "repository": "ingolfured/gr-tdigest",
+      "local_branch": "review/3-upstream-compatibility-gate",
+      "original_head": "25c8c1642029a640b153c160c22a89795d29ad91",
+      "remote_branch": "review/3-upstream-compatibility-gate",
+      "commit": "25c8c1642029a640b153c160c22a89795d29ad91",
+      "kind": "already_remote"
+    },
+    {
+      "repository": "ingolfured/gr-tdigest",
+      "local_branch": "review/4-numpy-output-copy",
+      "original_head": "42d620428520a74fec8c57d5dc6d4db0f6b1920e",
+      "remote_branch": "review/4-numpy-output-copy",
+      "commit": "42d620428520a74fec8c57d5dc6d4db0f6b1920e",
+      "kind": "already_remote"
+    },
+    {
+      "repository": "ingolfured/gr-tdigest",
+      "local_branch": "review/archive-before-overnight-20261014",
+      "original_head": "b89527187219c83768f50416fa8ac61fe3ca2f6d",
+      "remote_branch": "review/archive-before-overnight-20261014",
+      "commit": "b89527187219c83768f50416fa8ac61fe3ca2f6d",
+      "kind": "already_remote"
+    },
+    {
+      "repository": "ingolfured/gr-tdigest",
+      "local_branch": "review/candidate-f64-weights",
+      "original_head": "fae92a4aa31231e054c88e12a9c8502c629bf2bd",
+      "remote_branch": "archive/20261018/review-candidate-f64-weights",
+      "commit": "fae92a4aa31231e054c88e12a9c8502c629bf2bd",
+      "kind": "preserved_local_commit"
+    },
+    {
+      "repository": "ingolfured/gr-tdigest",
+      "local_branch": "review/candidate-numerical-boundaries",
+      "original_head": "c5dec35059990b40fe6f036dc83590bf0cdf2a70",
+      "remote_branch": "review/evidence-numerical-boundaries-20261014",
+      "commit": "c5dec35059990b40fe6f036dc83590bf0cdf2a70",
+      "kind": "already_remote"
+    },
+    {
+      "repository": "ingolfured/gr-tdigest",
+      "local_branch": "review/candidate-original-rust-api",
+      "original_head": "4bb78de91f7214cb811a35b3ed4bdcb7b2fe4685",
+      "remote_branch": "archive/20261018/review-candidate-original-rust-api",
+      "commit": "4bb78de91f7214cb811a35b3ed4bdcb7b2fe4685",
+      "kind": "preserved_local_commit"
+    },
+    {
+      "repository": "ingolfured/gr-tdigest",
+      "local_branch": "review/candidate-safe-scaling-packaging",
+      "original_head": "52f6212008111b62fa07374278b850868b9ea77e",
+      "remote_branch": "review/evidence-scaling-packaging-20261015",
+      "commit": "52f6212008111b62fa07374278b850868b9ea77e",
+      "kind": "already_remote"
+    },
+    {
+      "repository": "ingolfured/gr-tdigest",
+      "local_branch": "review/overnight-first-batch",
+      "original_head": "52e345eaae754472a4ea7db7e46ae17f3b02f4fa",
+      "remote_branch": "archive/20261018/review-overnight-first-batch",
+      "commit": "52e345eaae754472a4ea7db7e46ae17f3b02f4fa",
+      "kind": "preserved_local_commit"
+    },
+    {
+      "repository": "ingolfured/gr-tdigest",
+      "local_branch": "tmp/bigbang-review-3-legacy-harness",
+      "original_head": "dd2e4d6039726f3a66fbf0b464235456a0adcf0b",
+      "remote_branch": "tmp/bigbang-review-3-legacy-harness",
+      "commit": "dd2e4d6039726f3a66fbf0b464235456a0adcf0b",
+      "kind": "already_remote"
+    },
+    {
+      "repository": "ingolfured/tdigest-rs",
+      "local_branch": "overwrite_snapshot_v1_0_0",
+      "original_head": "e8562fd1c25a33cfd09359f671da126837c7bba4",
+      "remote_branch": "archive/20261018/overwrite_snapshot_v1_0_0",
+      "commit": "e8562fd1c25a33cfd09359f671da126837c7bba4",
+      "kind": "preserved_local_commit"
+    },
+    {
+      "repository": "ingolfured/tdigest-rs",
+      "local_branch": "review/upstream38-compatible-refresh",
+      "original_head": "57e7978d0811baed4a546ff2f08dccaeff03c321",
+      "remote_branch": "overwrite_snapshot_v1_0_0",
+      "commit": "57e7978d0811baed4a546ff2f08dccaeff03c321",
+      "kind": "already_remote"
+    }
+  ],
+  "note": "Snapshot refs are newly created archive refs; original local indexes, branches and worktree files remain unchanged. Existing review and upstream PR heads are unchanged. Archives are not validated production branches."
+}

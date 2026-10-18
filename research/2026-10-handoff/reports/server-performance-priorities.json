@@ -1,0 +1,38 @@
+{
+  "recorded_utc": "2026-10-16T12:27:20Z",
+  "source": "Direct user clarification in this chat after relaxing the original zero-regression performance rule.",
+  "production_target": "Large servers, often with access to more than 100 CPUs and abundant RAM. Exact physical-core, logical-CPU and NUMA topology is not yet specified.",
+  "primary_objective": "More available cores should deliver meaningfully higher end-to-end throughput on representative production workloads.",
+  "tradeoffs": {
+    "performance": "Accept measured local slowdowns when a representative end-to-end workload benefits materially; report both gains and costs rather than applying a blanket per-microbenchmark veto.",
+    "memory": "Additional working memory may be justified by throughput or accuracy gains. Measure and disclose peak memory and memory per concurrent worker; abundant RAM is not an unlimited budget.",
+    "compatibility": "Preserve the original public tdigest_rs API and arithmetic, pinned independent oracle, and untouched original suite. This hardware preference does not authorize silent numerical or wire changes.",
+    "numerics": "Quantify and disclose any proposed modern-engine numerical differences by data scale and route, retaining separate rank, value and CDF error checks. Preserve correctness requirements.",
+    "history": "Keep all prior benchmark observations and original-policy dispositions unchanged. Reconsideration is a new workload-based evaluation, not retroactive acceptance."
+  },
+  "next_validation_priorities": [
+    "Complete missing validation for E03 and E08, and assess their relevance to worker-result aggregation; E03 targets two-way merges and E08 targets multiway merges. Neither patch itself introduces parallelism or has demonstrated many-core scaling.",
+    "Assess E09 capped-merge allocation savings under concurrency. Keep E13 conditional on Python serialization being a material end-to-end cost.",
+    "Evaluate retained candidates individually and in combinations with PR #9 before recommending follow-up PRs."
+  ],
+  "scaling_plan": {
+    "routes": [
+      "Many independent digests or groups processed concurrently.",
+      "One large dataset partitioned across workers, including the cost and numerical effects of merging worker results.",
+      "Mixed production-style workloads including ingestion, merge, query, serialization and language-boundary costs."
+    ],
+    "worker_counts": "Use increasing available worker counts, for example 1, 2, 4, 8, 16, 32, 64 and 128, restricted to actual allocated hardware; report physical cores, SMT, quotas and topology separately.",
+    "dataset_sizes": "Measure both fixed-total-data completion time and throughput as data grows with worker count. Include skewed groups and unequal shards.",
+    "metrics": [
+      "End-to-end records per second and elapsed time",
+      "Speedup and throughput per allocated core",
+      "Latency distribution and merge/serialization contribution",
+      "Peak resident memory, memory per worker and allocation activity",
+      "Accuracy, mass, extrema, state and wire behavior across worker counts and merge orders"
+    ],
+    "execution": "All library builds, tests and benchmarks remain on Linux/WSL. Benchmark fixed input/settings with controlled repeated baseline/candidate runs. Investigate memory bandwidth, NUMA placement, lock contention, Python GIL boundaries and nested thread-pool oversubscription as applicable.",
+    "threading_policy": "Design configurable concurrency that can cooperate with caller-managed pools. Parallel execution must not silently replace the original arithmetic path.",
+    "evidence_limit": "Existing local single-worker results do not establish performance or scaling on a server with more than 100 CPUs. No such measurement has been made by recording this preference."
+  },
+  "execution_status": "Preference and next-validation plan recorded only. No new builds, benchmarks, code changes, PR changes or automation started in this update."
+}

@@ -1,0 +1,373 @@
+{
+  "schema": "day20-e12-final-release-summary-v1",
+  "created": "2026-10-15T12:39:01.186856+00:00",
+  "status": "validated_locally_pending_root_review",
+  "source_commit": "d54096087a9e975ab07faf71ab2db412a48edcfa",
+  "base": "25c8c1642029a640b153c160c22a89795d29ad91",
+  "base_branch": "review/3-upstream-compatibility-gate",
+  "head_branch": "review/4-numpy-output-copy",
+  "repo": "/var/tmp/codex-tdigest-pr3-20261014/day20261015/integration-e12",
+  "source_tree": "ad31780766fc42593fcb530f08fbe5b51340866c",
+  "clean": true,
+  "published": false,
+  "production_sha256": "478241e7a7573cec3e6cfc613d3c67e1ac3832e23e59ea1266174d1883154884",
+  "frozen_patch_sha256": "baf291501695654a6ff8b35f56a072570d1d5a9416a451cfcc65b8af2f1ecd3e",
+  "phase_receipts": [
+    {
+      "name": "setup-dependencies",
+      "command": [
+        "uv",
+        "sync",
+        "--locked",
+        "--offline",
+        "--all-groups",
+        "--no-install-project",
+        "--python",
+        "/var/tmp/codex-tdigest-pr3-20261014/work/gr-tdigest/.venv/bin/python"
+      ],
+      "cwd": "/var/tmp/codex-tdigest-pr3-20261014/day20261015/integration-e12/bindings/python",
+      "exit_code": 0,
+      "elapsed_seconds": 0.6435608863830566,
+      "finished": "2026-10-15T12:19:50.640793+00:00",
+      "log": "/var/tmp/codex-tdigest-pr3-20261014/day20261015/evidence/e12-final-release/setup-dependencies.log",
+      "log_sha256": "9bed11fe21a43c228b5299aa2b56b34f66ae56535c64244d80ac2ee345498302"
+    },
+    {
+      "name": "clean-debug",
+      "command": [
+        "cargo",
+        "clean",
+        "--offline",
+        "--package",
+        "gr-tdigest"
+      ],
+      "cwd": "/var/tmp/codex-tdigest-pr3-20261014/day20261015/integration-e12",
+      "exit_code": 0,
+      "elapsed_seconds": 0.81711745262146,
+      "finished": "2026-10-15T12:19:51.565378+00:00",
+      "log": "/var/tmp/codex-tdigest-pr3-20261014/day20261015/evidence/e12-final-release/clean-debug.log",
+      "log_sha256": "ef85729851d5d2f51d6588ff0377528e731dace35b23be6f354559004b3786af"
+    },
+    {
+      "name": "clean-release",
+      "command": [
+        "cargo",
+        "clean",
+        "--release",
+        "--offline",
+        "--package",
+        "gr-tdigest"
+      ],
+      "cwd": "/var/tmp/codex-tdigest-pr3-20261014/day20261015/integration-e12",
+      "exit_code": 0,
+      "elapsed_seconds": 0.4425208568572998,
+      "finished": "2026-10-15T12:19:52.123361+00:00",
+      "log": "/var/tmp/codex-tdigest-pr3-20261014/day20261015/evidence/e12-final-release/clean-release.log",
+      "log_sha256": "057002b3faccd6130aedadf719e2d073fc4e5658bc08d28bbf6285519eb22f86"
+    },
+    {
+      "name": "lint",
+      "command": [
+        "make",
+        "lint"
+      ],
+      "cwd": "/var/tmp/codex-tdigest-pr3-20261014/day20261015/integration-e12",
+      "exit_code": 0,
+      "elapsed_seconds": 7.945201873779297,
+      "finished": "2026-10-15T12:20:30.096903+00:00",
+      "log": "/var/tmp/codex-tdigest-pr3-20261014/day20261015/evidence/e12-final-release/lint.log",
+      "log_sha256": "2ed3ad805a12e8567ba751a2e96fb0060b3d7077330caf6a1c1bf750c91bba1d"
+    },
+    {
+      "name": "build",
+      "command": [
+        "make",
+        "build"
+      ],
+      "cwd": "/var/tmp/codex-tdigest-pr3-20261014/day20261015/integration-e12",
+      "exit_code": 0,
+      "elapsed_seconds": 85.04783391952515,
+      "finished": "2026-10-15T12:22:22.230587+00:00",
+      "log": "/var/tmp/codex-tdigest-pr3-20261014/day20261015/evidence/e12-final-release/build.log",
+      "log_sha256": "460a108ff9b40cc7bb8b84c4dbc7ab55bb9e6e23bd6014a7692eec31c0bb0d47"
+    },
+    {
+      "name": "test",
+      "command": [
+        "make",
+        "test"
+      ],
+      "cwd": "/var/tmp/codex-tdigest-pr3-20261014/day20261015/integration-e12",
+      "exit_code": 0,
+      "elapsed_seconds": 59.04199290275574,
+      "finished": "2026-10-15T12:23:30.708525+00:00",
+      "log": "/var/tmp/codex-tdigest-pr3-20261014/day20261015/evidence/e12-final-release/test.log",
+      "log_sha256": "f674f739401664766f706cd817316ffd5764112b698cf1b5ffdef6d9f3c4d08c"
+    },
+    {
+      "name": "diff-check",
+      "command": [
+        "git",
+        "diff",
+        "--check"
+      ],
+      "cwd": "/var/tmp/codex-tdigest-pr3-20261014/day20261015/integration-e12",
+      "exit_code": 0,
+      "elapsed_seconds": 0.03627181053161621,
+      "finished": "2026-10-15T12:24:57.492534+00:00",
+      "log": "/var/tmp/codex-tdigest-pr3-20261014/day20261015/evidence/e12-final-release/diff-check.log",
+      "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "release-wheel",
+      "command": [
+        "make",
+        "release-wheel"
+      ],
+      "cwd": "/var/tmp/codex-tdigest-pr3-20261014/day20261015/integration-e12",
+      "exit_code": 0,
+      "elapsed_seconds": 303.0870759487152,
+      "finished": "2026-10-15T12:30:35.443445+00:00",
+      "log": "/var/tmp/codex-tdigest-pr3-20261014/day20261015/evidence/e12-final-release/release-wheel.log",
+      "log_sha256": "a98199cf19186e5f1e2fb16aac300e3387ec3e50bb912b8daab42a52058f8369"
+    },
+    {
+      "name": "source-archive",
+      "command": [
+        "uv",
+        "run",
+        "--project",
+        "/var/tmp/codex-tdigest-pr3-20261014/day20261015/integration-e12/bindings/python",
+        "--no-sync",
+        "maturin",
+        "sdist",
+        "-o",
+        "/var/tmp/codex-tdigest-pr3-20261014/day20261015/evidence/e12-final-release/sdist"
+      ],
+      "cwd": "/var/tmp/codex-tdigest-pr3-20261014/day20261015/integration-e12/bindings/python",
+      "exit_code": 0,
+      "elapsed_seconds": 1.745286226272583,
+      "finished": "2026-10-15T12:32:55.634134+00:00",
+      "log": "/var/tmp/codex-tdigest-pr3-20261014/day20261015/evidence/e12-final-release/source-archive.log",
+      "log_sha256": "0568f1ec8074b608dedd262b50f0d17e7dc6dd3ef30acbf0a7c4256194567430"
+    },
+    {
+      "name": "source-archive-check",
+      "command": [
+        "/var/tmp/codex-tdigest-pr3-20261014/day20261015/integration-e12/.venv/bin/python",
+        "-c",
+        "import sys; from pathlib import Path; sys.path.insert(0,\"scripts\"); from check_python_sdist import verify_sdist_contents; verify_sdist_contents(Path(sys.argv[1]),Path.cwd())",
+        "/var/tmp/codex-tdigest-pr3-20261014/day20261015/evidence/e12-final-release/sdist/gr_tdigest-0.2.4.tar.gz"
+      ],
+      "cwd": "/var/tmp/codex-tdigest-pr3-20261014/day20261015/integration-e12",
+      "exit_code": 0,
+      "elapsed_seconds": 0.21170568466186523,
+      "finished": "2026-10-15T12:32:55.922460+00:00",
+      "log": "/var/tmp/codex-tdigest-pr3-20261014/day20261015/evidence/e12-final-release/source-archive-check.log",
+      "log_sha256": "703c3f5b9dc9f1bf23caaf043174a078f5c3f250ae686fbf0340dd7f7478b82d"
+    },
+    {
+      "name": "runtime-support",
+      "command": [
+        "/var/tmp/codex-tdigest-pr3-20261014/day20261015/integration-e12/.venv/bin/python",
+        "scripts/test_python_support.py",
+        "--wheel",
+        "/var/tmp/codex-tdigest-pr3-20261014/day20261015/integration-e12/dist/gr_tdigest-0.2.4-cp310-abi3-manylinux_2_28_x86_64.whl",
+        "--sdist",
+        "/var/tmp/codex-tdigest-pr3-20261014/day20261015/evidence/e12-final-release/sdist/gr_tdigest-0.2.4.tar.gz",
+        "--output-dir",
+        "/var/tmp/codex-tdigest-pr3-20261014/day20261015/evidence/e12-final-release/runtime-support"
+      ],
+      "cwd": "/var/tmp/codex-tdigest-pr3-20261014/day20261015/integration-e12",
+      "exit_code": 0,
+      "elapsed_seconds": 38.951756715774536,
+      "finished": "2026-10-15T12:34:22.739488+00:00",
+      "log": "/var/tmp/codex-tdigest-pr3-20261014/day20261015/evidence/e12-final-release/runtime-support.log",
+      "log_sha256": "73a93bd206fd3228df0d935b3fbbe6e7ecfcf570d03656d71c185b0c7eea44f7"
+    },
+    {
+      "name": "installed-e12",
+      "command": [
+        "python3",
+        "/mnt/c/Users/ingol/Documents/Codex/2026-10-14/hi/work/day_e12_installed_final.py"
+      ],
+      "cwd": "/var/tmp/codex-tdigest-pr3-20261014/day20261015/integration-e12",
+      "exit_code": 0,
+      "elapsed_seconds": 9.492565870285034,
+      "finished": "2026-10-15T12:36:09.095704+00:00",
+      "log": "/var/tmp/codex-tdigest-pr3-20261014/day20261015/evidence/e12-final-release/installed-e12.log",
+      "log_sha256": "1aa12f21e5302912beb92a03ec86eea7e75caaf4d6837735114d8d0487886ca2"
+    }
+  ],
+  "canonical_tests": {
+    "rust_passed": 121,
+    "rust_existing_ignored": 3,
+    "python_coherence_passed": 352,
+    "java_passed": 13,
+    "untouched_upstream_passed": 91,
+    "java_receipts": [
+      {
+        "file": "/var/tmp/codex-tdigest-pr3-20261014/day20261015/integration-e12/bindings/java/build/test-results/test/TEST-gr.TDigestMergeTest.xml",
+        "sha256": "13bf8d95c1e2605253d278cc16c7f47e18392e80251c13a1bd6cfafcef0c6c35",
+        "name": "gr.TDigestMergeTest",
+        "tests": "8",
+        "skipped": "0",
+        "failures": "0",
+        "errors": "0",
+        "timestamp": "2026-10-15T12:23:14.476Z",
+        "hostname": "Ingo",
+        "time": "0.048"
+      },
+      {
+        "file": "/var/tmp/codex-tdigest-pr3-20261014/day20261015/integration-e12/bindings/java/build/test-results/test/TEST-gr.TDigestSerializationTest.xml",
+        "sha256": "7e32773690a85ede5d51f08ff20b004a8af69ce0952f976cf3b026d602afb67f",
+        "name": "gr.TDigestSerializationTest",
+        "tests": "5",
+        "skipped": "0",
+        "failures": "0",
+        "errors": "0",
+        "timestamp": "2026-10-15T12:23:14.526Z",
+        "hostname": "Ingo",
+        "time": "0.015"
+      }
+    ]
+  },
+  "release_wheel": {
+    "wheel": "/var/tmp/codex-tdigest-pr3-20261014/day20261015/integration-e12/dist/gr_tdigest-0.2.4-cp310-abi3-manylinux_2_28_x86_64.whl",
+    "sha256": "dab5447ed271cf99478d4546b00ab21c7c5dfc5e2c1c1c92aa8c1d66d37742b0"
+  },
+  "source_archive": {
+    "sdist": "/var/tmp/codex-tdigest-pr3-20261014/day20261015/evidence/e12-final-release/sdist/gr_tdigest-0.2.4.tar.gz",
+    "sha256": "16e878af092c5a37765e49508e3108d69ad7fcd9ac5635ba9d813ab5b2568714",
+    "source_commit": "d54096087a9e975ab07faf71ab2db412a48edcfa"
+  },
+  "installed_runtime_test_instances": 2022,
+  "runtime_cells": [
+    {
+      "label": "py310-numpy1",
+      "python": "3.10",
+      "numpy": "1.26.4",
+      "scipy": "1.15.3",
+      "polars": "1.34.0",
+      "pytest": "8.4.2",
+      "status": "PASS",
+      "compatibility_passed": 208,
+      "modern_passed": 90
+    },
+    {
+      "label": "py310-numpy2",
+      "python": "3.10",
+      "numpy": "2.2.6",
+      "scipy": "1.15.3",
+      "polars": "1.34.0",
+      "pytest": "8.4.2",
+      "status": "PASS",
+      "compatibility_passed": 208,
+      "modern_passed": 90
+    },
+    {
+      "label": "py311-numpy1",
+      "python": "3.11",
+      "numpy": "1.26.4",
+      "scipy": "1.17.1",
+      "polars": "1.34.0",
+      "pytest": "8.4.2",
+      "status": "PASS",
+      "compatibility_passed": 208,
+      "modern_passed": 90
+    },
+    {
+      "label": "py311-numpy2",
+      "python": "3.11",
+      "numpy": "2.3.4",
+      "scipy": "1.17.1",
+      "polars": "1.34.0",
+      "pytest": "8.4.2",
+      "status": "PASS",
+      "compatibility_passed": 208,
+      "modern_passed": 90
+    },
+    {
+      "label": "py312-numpy1",
+      "python": "3.12",
+      "numpy": "1.26.4",
+      "scipy": "1.17.1",
+      "polars": "1.34.0",
+      "pytest": "8.4.2",
+      "status": "PASS",
+      "compatibility_passed": 208,
+      "modern_passed": 90
+    },
+    {
+      "label": "py312-numpy2",
+      "python": "3.12",
+      "numpy": "2.3.4",
+      "scipy": "1.17.1",
+      "polars": "1.34.0",
+      "pytest": "8.4.2",
+      "status": "PASS",
+      "compatibility_passed": 208,
+      "modern_passed": 90
+    },
+    {
+      "label": "py310-numpy1-no-polars",
+      "python": "3.10",
+      "numpy": "1.26.4",
+      "scipy": "1.15.3",
+      "polars": null,
+      "pytest": "8.4.2",
+      "status": "PASS",
+      "compatibility_passed": 208,
+      "modern_python_passed": 26
+    }
+  ],
+  "installed_E12_regression_instances": 36,
+  "frozen_baseline_exact_audits": 72,
+  "installed_gate_sha256": "4b6aad1281336844cccc4d00c9c0a46a696b12385b5fded5bfd8b83c01b24173",
+  "oracle_verification_sha256": "43dd03bf56581a38cd03f3d0c61132e6fb3471a161a1400bee891692f2af519b",
+  "original_oracle": {
+    "pinned_commit": "8d9cf1fe82c5c9254e5dc9593f01717e317f4333",
+    "original_files_unchanged": 35,
+    "cases": 70,
+    "each_recorded_profile": {
+      "exact_bits": 1762,
+      "nan_classification": 126
+    },
+    "profiles": [
+      "debug",
+      "release"
+    ],
+    "final_scope": "Preserved source, lock, runner, golden, log/output and binary hashes verified; preserved outputs re-compared. Final installed golden numerical tests ran in every runtime support cell. No fixture regeneration."
+  },
+  "performance_evidence": {
+    "interpretation_file": "/mnt/c/Users/ingol/Documents/Codex/2026-10-14/hi/work/day-e12-acceptance-interpretation.json",
+    "interpretation_sha256": "a2c86a91c87ddf3b22fb8fc2d126619b28e233fca4d3006cd7e92ad565575ba1",
+    "source_report_sha256": "3af0b7c10db60cb5eef625b8706c2fbf4ec3adc6c3e5e170e8af97cf559dcd12",
+    "new_timings_during_integration": false,
+    "qualified_nonempty_CDF_time_reduction_percent": [
+      44.86005893180427,
+      54.755471953177604
+    ],
+    "qualified_nonempty_quantile_time_reduction_percent": [
+      36.5280106599309,
+      51.39207976609457
+    ],
+    "qualified_cells_per_operation": 6,
+    "heldout_classes": {
+      "improved": 25,
+      "neutral_or_noisy": 7,
+      "unstable": 2,
+      "short": 2
+    },
+    "confirmed_regressions": 0,
+    "limitations": [
+      "NumPy2.3.4 single-thread WSL Linux batch outputs only; not a Rust arithmetic/accuracy gain.",
+      "One f64 encode control is inconclusive in the longer repeat (ratio1.1269; candidate drift1.1285); original heldout was stable/neutral.",
+      "Empty f32 CDF and two large weights-getter heldout cells are inconclusive; screen unresolved cells are retained.",
+      "NumPy1 compatibility only; no NumPy1 performance claim.",
+      "Equal array payload/ownership is checked; allocator usable bytes and peak RSS were not measured."
+    ]
+  },
+  "artifact_scope": "Genuine optimized manylinux_2_28 ABI3 wheel built, installed and tested. Genuine sdist checked against committed source and lock; no separate source-rebuilt wheel was required by the current artifact gate and none is claimed.",
+  "next_action": "Root final validation/diff review before any push or personal stacked PR creation; no merge or release."
+}

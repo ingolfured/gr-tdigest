@@ -1,0 +1,76 @@
+{
+  "schema": "day20-survivor-memory-storage-supplement-v1",
+  "status": "Windows-only source/evidence review; no execution, new allocation matrix, protocol change or candidate retention",
+  "supplements": {
+    "path": "work/day-survivor-validation-checklist.json",
+    "sha256": "a89e288aef54fac3895eab6f72309ad8ba8001ede43039cd8d0eb6678f94ac9a",
+    "rule": "The original checklist is preserved byte-for-byte. This additive document distinguishes logical storage, retained allocations and transient memory."
+  },
+  "definitions": {
+    "logical_storage": "Centroid count/element size, wire length and exact serialized contents. These do not measure a Vec's spare capacity, allocator size class or process memory.",
+    "retained_capacity": "Actual Vec capacity, or an ndarray's public owned payload shape/dtype/nbytes; these are separate representations and should be named precisely.",
+    "retained_requested_and_usable": "For the instrumented Jemalloc studies, live allocation bytes at return minus live bytes after result drop. Requested layout bytes and backend usable size are separately recorded.",
+    "boundary_peak": "Instrumented live bytes observed at GlobalAlloc boundaries. This excludes allocator-internal realloc overlap, native allocations bypassing this allocator and RSS.",
+    "static_no_growth": "An unchanged retained-output construction/compaction path can support a structural no-growth conclusion; it is not an empirical allocator count, usable-byte or peak-memory measurement."
+  },
+  "candidates": {
+    "E02": {
+      "observed": ["Exact logical digest state/wire and unchanged borrowed sources in native screens and all108 public borrowed-many cases."],
+      "not_observed": ["Returned centroid Vec capacity or Jemalloc requested/usable bytes for E02", "Transient allocation peak or RSS"],
+      "source_assessment": "The helper borrows the same ordered centroid runs and retains the existing result construction/compression. Owned merge_digests remains an owned API. In-place merge and merge_many stop cloning input digests; the replacement digest follows the same allocation/compaction path. The temporary runs Vec uses the exact lower size hint for the actual array/slice/once-chain callers, replacing the old owned-vector length. No extra storage is retained in TDigest.",
+      "remaining": "No dedicated allocation matrix is needed merely to establish unchanged retained representation. Bind this source argument to the final patch/manifests during integration. Say avoids input clones, not measured peak RSS reduction. Actual allocator-byte claims would require separate evidence and are not currently proposed."
+    },
+    "E03": {
+      "observed": ["Exact native state/wire and source-centroid sequence in differential tests; public52-shape audit remains scheduled."],
+      "not_observed": ["Returned centroid capacity/usable bytes for E03", "Transient peak or RSS"],
+      "source_assessment": "Only the two-nonempty-run producer changes. TwoWayCentroidMerge stores two borrowed slices and returns the same exact sequence and remaining length; both branches feed unchanged compress_into and result construction. It removes the temporary heap for this branch, without adding retained digest fields or a new output allocation policy.",
+      "remaining": "Structural retained-allocation argument is sufficient for this unchanged output path; retain the existing public-shape gate. Do not infer an empirical peak or exact allocation savings from source inspection. No extra capacity grid is warranted."
+    },
+    "E08": {
+      "observed": ["Exact native state/wire and heap iterator sequence/exhaustion; public52-shape audit remains scheduled."],
+      "not_observed": ["Returned centroid capacity/usable bytes for E08", "Transient peak or RSS"],
+      "source_assessment": "Heap construction/capacity and compression/result allocation are unchanged. Continuing runs replace the existing heap root through PeekMut instead of pop then push; exhausted runs pop. No added vector, retained field or output ownership change is present.",
+      "remaining": "Use the source-based retained no-growth argument and scheduled exact public-shape audit. No new allocation matrix is needed. Do not convert this into a claim of observed peak/RSS reduction."
+    },
+    "E09": {
+      "observed": ["All156 rows have actual centroid capacity observations, retained requested/usable bytes and allocation-boundary requested/usable peaks.", "Capacity and retained/peak byte metrics tie baseline in every row. Allocation requests/requested totals fall in84 actual search-entry rows and tie in72 bypass/no-entry rows.", "Five fresh instrumented repeats per arm are deterministic and independent uninstrumented controls are exact."],
+      "not_observed": ["Allocator-internal transient realloc overlap", "Uninstrumented exact allocation counts", "Peak RSS or native allocations outside Rust GlobalAlloc"],
+      "remaining": "The declared allocation/retained-storage gate is satisfied for the frozen156 diagnostic rows. Do not rerun it. Carry its scope/limitations into any final E09 claim; speed and other controls remain outstanding as listed in the original checklist.",
+      "evidence": "work/day-e09-inventory-result.json",
+      "evidence_sha256": "23d32b8b360f3fd9a2d7993d4281c8d2fec7dd0ebd691dd0d836c5aa495f7a55"
+    },
+    "E12": {
+      "observed": ["Installed NumPy1/2 audits compare dtype, shape, exact values, OWNDATA, base=None, contiguity and writability; source independence and resize behavior also pass.", "Thus returned NumPy payload nbytes is identical, derived from equal shape and dtype; the existing report does not contain a separately named nbytes field."],
+      "not_observed": ["NumPy/Python allocator usable bytes or total live allocation counts", "Transient peak or RSS"],
+      "source_assessment": "PyArray1::from_slice copies the existing f64 result into NumPy-owned storage, removing intermediate Python list/float boxing. It does not transfer Rust Vec spare capacity to the ndarray. TDigest state and core vectors are unchanged; list/tuple/scalar routes retain their established behavior.",
+      "remaining": "Returned-output ownership and payload no-growth evidence is already adequate; no new allocation grid is required for this candidate. State the concrete removed boxing/copy path and equal NumPy payload, without claiming a quantified allocator or peak-memory saving. Recheck applicable ownership/compatibility on the final installed artifact."
+    },
+    "E13": {
+      "observed": ["Installed-wheel Python bytes are exactly equal, hence equal public payload length, across the declared formats/states."],
+      "not_observed": ["Native returned Vec capacity in the pending public-version companion", "Python allocator usable bytes or native transient peak/RSS"],
+      "source_assessment": "The Python direct-bytes route avoids an intermediate Rust Vec, while the shared native Vec encoder changed internally. Equal wire length alone cannot close the native Vec spare-capacity gate.",
+      "remaining": "Run the already-declared R3 companion capacity comparisons, which record core/frontend/wire/default returned Vec capacities and reject increases. No additional allocation grid is needed. This does not measure transient peaks or Python allocator size classes.",
+      "reviewed_companion_freeze_sha256": "7aab4896da1c7546e87f3056ce6304a3a8230454f1036892331ea35cafffa573"
+    },
+    "E20": {
+      "observed": ["Exact CDF outputs and digest state in broad/focused tests and216 public boundary cases."],
+      "not_observed": ["Actual public CDF return Vec capacity", "Jemalloc requested/usable bytes, transient peak or RSS"],
+      "source_assessment": "The new branch uses the existing prefix Vec and an allocation-free forward cursor. Its result uses slice iter().map().collect() with exact length, replacing the scalar branch's Vec::with_capacity(vals.len()) and pushes. No digest state is retained or changed. The allocator policy is structurally bounded to the same output length, but exact returned capacity has not been recorded.",
+      "remaining": "If E20 survives speed gates, a small public Vec len/capacity check using existing target/fallback boundary requests is the only useful extra no-growth witness; this needs no production instrumentation or timing. Propose it as an additive validation-only check, not an altered frozen216-case report or a new broad allocation matrix. Do not label the currently unmeasured capacity or peaks as observed."
+    }
+  },
+  "rejected_memory_experiments": {
+    "E05": "64 allocation rows passed, including retained capacity/usable-byte checks, but lifecycle speed rejected the candidate; no further measurements needed.",
+    "E10": "188 allocation rows passed after the capacity repair, including retained capacity/usable-byte checks, but lifecycle speed rejected the candidate; no further measurements needed.",
+    "evidence_sha256": "17dbc07a5cde592348bce3d28c33b140fefa77e1a91e67a24bd1edd9624f4470"
+  },
+  "source_review_inputs": {
+    "work/day_e02_patch.py": "c9ab257743b55e877847f6df360d09c7ef43d519c24ca2321bf1881d6abfd009",
+    "work/day_e03_patch.py": "bac06cab27e77dd7f48d5b01f32b05dcbc067ab390e4f8d3d94f5da58878a9b3",
+    "work/day_e08_patch.py": "9eaa8f7e80b6a708d74ce9ab13085156e4b296606524429b764862a73a866f98",
+    "work/prepare_numpy_candidates.py": "78e3cac113dd78e90fe70236adfc9f852f51b21081dd5a9b7ad26cde65b50693",
+    "work/prepare_day_e20.py": "dc691865df0e52f3f112b4e72ea03f7cab69c6ce1f2b8e2173422aad7ecf1295",
+    "work/day_wheel_probe.py": "9dd3e6272876268fe306d1ac38a81f2e29aa32bf6b78f639e54d24c501fcb5a7",
+    "limit": "These are cached preparation/source-review inputs, not a replacement for final immutable source-manifest verification. Completed runtime evidence is tied to its own frozen source identity."
+  }
+}

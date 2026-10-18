@@ -1,0 +1,1839 @@
+{
+  "follow_up_preferences": {
+    "recorded_utc": "2026-10-16T12:27:20Z",
+    "path": "work/server-performance-priorities.json",
+    "scope": "User now prioritizes large-server throughput and scaling beyond 100 CPUs, accepts measured workload-based speed and memory tradeoffs. Historical experiment evidence and dispositions remain unchanged; new validation is required before recommending revived candidates."
+  },
+  "created_utc": "2026-10-15T07:36:52Z",
+  "updated_utc": "2026-10-15T15:55:44.3244515Z",
+  "deadline": "2026-10-15T23:59:00+01:00",
+  "automation_id": "daytime-tdigest-top-20-experiments",
+  "status": "COMPLETE: all20 prototypes dispositioned,19rejected and1retained(E12,PR9). No pending experiments or combinations.",
+  "baseline": "25c8c1642029a640b153c160c22a89795d29ad91",
+  "baseline_modern_source": "ff73cfab31d6368d203c1a361b8efaaea29d735b",
+  "original_oracle": "8d9cf1fe82c5c9254e5dc9593f01717e317f4333",
+  "root": "/var/tmp/codex-tdigest-pr3-20261014/day20261015",
+  "worktrees": {
+    "baseline": "/var/tmp/codex-tdigest-pr3-20261014/day20261015/baseline",
+    "speed": "/var/tmp/codex-tdigest-pr3-20261014/day20261015/speed",
+    "accuracy": "/var/tmp/codex-tdigest-pr3-20261014/day20261015/accuracy",
+    "harness": "/var/tmp/codex-tdigest-pr3-20261014/day20261015/harness",
+    "integration": "/var/tmp/codex-tdigest-pr3-20261014/day20261015/integration",
+    "cdf": "/var/tmp/codex-tdigest-pr3-20261014/day20261015/cdf",
+    "two-run": "/var/tmp/codex-tdigest-pr3-20261014/day20261015/two-run",
+    "bucket-tail": "/var/tmp/codex-tdigest-pr3-20261014/day20261015/bucket-tail",
+    "frontend": "/var/tmp/codex-tdigest-pr3-20261014/day20261015/frontend",
+    "finite-mean": "/var/tmp/codex-tdigest-pr3-20261014/day20261015/finite-mean",
+    "vector-move": "/var/tmp/codex-tdigest-pr3-20261014/day20261015/vector-move",
+    "cap-count": "/var/tmp/codex-tdigest-pr3-20261014/day20261015/cap-count",
+    "heap-root": "/var/tmp/codex-tdigest-pr3-20261014/day20261015/heap-root",
+    "sorted-cdf": "/var/tmp/codex-tdigest-pr3-20261014/day20261015/sorted-cdf",
+    "scale-hoist": "/var/tmp/codex-tdigest-pr3-20261014/day20261015/scale-hoist",
+    "numpy-input": "/var/tmp/codex-tdigest-pr3-20261014/day20261015/numpy-input",
+    "numpy-output": "/var/tmp/codex-tdigest-pr3-20261014/day20261015/numpy-output"
+  },
+  "protected_original": "/home/ingo/git/gr-tdigest",
+  "existing_review_prs": [
+    6,
+    7,
+    8
+  ],
+  "upstream_pr": 38,
+  "follow_up_prs": [
+    {
+      "head": "42d620428520a74fec8c57d5dc6d4db0f6b1920e",
+      "status": "Open and mergeable; local fullvalidation and GitHubCI run38737554737success",
+      "url": "https://github.com/ingolfured/gr-tdigest/pull/9",
+      "experiment": "E12",
+      "number": 9,
+      "base": "review/3-upstream-compatibility-gate"
+    }
+  ],
+  "cpu_owner": "Released; no active builds, benchmarks or evidence sessions.",
+  "cpu_lock": "/var/tmp/codex-tdigest-pr3-20261014/day20261015/cpu.lock",
+  "acceptance": {
+    "compatibility": "Original source bytes/API/arithmetic and untouched suite/oracle unchanged.",
+    "speed_only": "Exact modern bytes/query-bit equivalence on frozen adversarial corpus before timing.",
+    "retention": "At least one reproducible meaningful speed or quality gain; no confirmed regression in the other dimension or hidden storage increase. Noise-only or neutral candidates rejected.",
+    "timing": "Release, fixed CPU, single heavy owner, ABBA/BAAB paired repeats and unchanged controls; confirm on fresh heldout workloads. Freeze exact gates in evidence/protocol before measuring.",
+    "quality": "Rank/value/CDF and mass/extrema/monotonic/state/wire checks across f32/f64 and direct/sequential/kway routes, same settings and matched actual storage. No blanket epsilon.",
+    "final": "Validate retained combinations, make build/test/lint, relevant cross-language suites and actual installed wheel; CHANGELOG and design docs. No merge or release.",
+    "supplement_pending": "E03/E05/E07/E08/E09 explicit controls map before interpretation; E05/E10 actual capacity/allocation and overcapacity lifecycle checks. Logical storage is not peak memory.",
+    "supplement_proposal_sha256": "8191d8b810da8bf3b4de2ab2ee23226333576f4ee9da87110818f0dcb8c510c1",
+    "supplement_status": "70 declared lifecycle timing cells approved before any supplemental build/measurement; full252allocation and324directaudit cells retained. Retainedusable gate and originalseed lifetime corrections reviewed.",
+    "supplement_timing_matrix": "C:/Users/ingol/Documents/Codex/2026-10-14/hi/work/day-supplement-timing-matrix-v1.json"
+  },
+  "candidates": [
+    {
+      "id": "E01",
+      "rank": 1,
+      "title": "Tiny-cap Use policy retains all mass",
+      "kind": "quality",
+      "owner": "accuracy",
+      "status": "Rejected: missing mass repaired but worst rank/CDF errors regress at matched stored size",
+      "patch": "/var/tmp/codex-tdigest-pr3-20261014/day20261015/patches/E01/candidate.patch",
+      "evidence": [
+        "/var/tmp/codex-tdigest-pr3-20261014/day20261015/validation/E01/RESULT.json",
+        "/var/tmp/codex-tdigest-pr3-20261014/day20261015/evidence/smoke-baseline",
+        "/var/tmp/codex-tdigest-pr3-20261014/day20261015/evidence/repair-quality/comparison.json"
+      ],
+      "decision": "rejected",
+      "static_review": "root",
+      "patch_sha256": "082aa911a35ce0f8e26aee0409b437fbad6c5884b87204c0feed5f5995e1d3cd",
+      "reason": "288 repair comparisons: maximum rank error worsens12 and maximum CDF error18; [0,1,2,100] cap2 median0→25.75 versus exact1.5. Underlying missing-mass defect remains unresolved."
+    },
+    {
+      "id": "E02",
+      "rank": 2,
+      "title": "Borrowed digest merge removes operand clones",
+      "kind": "speed",
+      "owner": "speed",
+      "status": "Rejected: certified p50 regression in fresh heldout controls; all prior screen gains preserved, remaining294confirmationcells skipped",
+      "patch": "/var/tmp/codex-tdigest-pr3-20261014/day20261015/patches/E02/candidate.patch",
+      "evidence": [
+        "/var/tmp/codex-tdigest-pr3-20261014/day20261015/evidence/E02-e02-screen-merge-audit-scale1/summary.json",
+        "/var/tmp/codex-tdigest-pr3-20261014/day20261015/evidence/E02-e02-screen-merge-limit1-scale1/summary.json",
+        "/var/tmp/codex-tdigest-pr3-20261014/day20261015/evidence/E02-e02-screen-merge-scale1/summary.json",
+        "/var/tmp/codex-tdigest-pr3-20261014/day20261015/evidence/supplement-v2/E02-e02-v3-public-audit/summary.json"
+      ],
+      "decision": "rejected",
+      "static_review": "root and day_accuracy",
+      "patch_sha256": "5b8d502df14b6ddc0938d0b0d7ce04e0f9a3bf5c6eed664d105eb76c9b08d0a0",
+      "supplement_audit": "108 declared public cases exact",
+      "control_screen_status": "All12 full controls complete/exact:9neutral/noisy,2unstable build,1short p50;0regressions. Preserve unresolved results; freshheldout stillrequired.",
+      "heldout_export_status": "Complete and verified",
+      "heldout_export": "work/day-e02-heldout-rejection-summary.json"
+    },
+    {
+      "id": "E03",
+      "rank": 3,
+      "title": "Two-run merge bypasses heap",
+      "kind": "speed",
+      "owner": "speed",
+      "status": "Rejected and independently verified:5 fresh p50 regressions3.75–6.71%;576exact measured/1152skipped; prior primarygains preserved.",
+      "patch": "/var/tmp/codex-tdigest-pr3-20261014/day20261015/patches/E03/candidate.patch",
+      "evidence": [
+        "/var/tmp/codex-tdigest-pr3-20261014/day20261015/validation/first-speed-both-profile-guard/RESULT.json"
+      ],
+      "decision": "rejected",
+      "patch_sha256": "ffad113ead049feaec85fb3ed56629768dfb302b0e5ac4be9f849893e6027a69",
+      "static_review": "root (confirmed by day_speed; ledger updated)",
+      "repeat_comparison": "work/day-e03-primary-repeat-comparison.json",
+      "public_shape_audit": "work/day-merge-shapes-validation-result.json",
+      "declared_controls": "work/day-native-declared-controls-summary.json",
+      "heldout_summary_sha256": "ed755e21cb95e4dffef5e366fc9783c7479db60323959f8d63ac47d2b07ea188",
+      "heldout_export": "work/day-e03-e08-heldout-summary.json",
+      "heldout_export_sha256": "5146c3f70dc4ce39cf58190a658a251797756b41cdfd4f1ec90b6fd9bf5badf5"
+    },
+    {
+      "id": "E04",
+      "rank": 4,
+      "title": "Scalar CDF avoids prefix allocation",
+      "kind": "speed",
+      "owner": "speed",
+      "status": "Rejected by stable unchanged-operation speed regression after full54-cell screen",
+      "patch": "/var/tmp/codex-tdigest-pr3-20261014/day20261015/patches/E04/candidate.patch",
+      "evidence": [
+        "/var/tmp/codex-tdigest-pr3-20261014/day20261015/validation/first-speed/RESULT.json",
+        "/var/tmp/codex-tdigest-pr3-20261014/day20261015/evidence/E04-e04-screen-cdf_atomic-scale1/summary.json",
+        "/var/tmp/codex-tdigest-pr3-20261014/day20261015/evidence/v3/followup-20261015-b/INDEX.json"
+      ],
+      "decision": "rejected",
+      "static_review": "day_accuracy",
+      "patch_sha256": "b19d5dee6fa871db3e87c855f4ea24e2e55208976d9cfedc11bc5d5789a705a2",
+      "reason": "Batch CDF, ties100000,f32,cap64Use: ratios1.0596,1.0852,1.0614,1.1432; median1.0733 (7.33% slower), baseline/candidate drift1.0141/1.0733. Full54 cells exact in state/quality/storage. All42 scalar targets short/inconclusive; no further repeat permitted to erase control regression."
+    },
+    {
+      "id": "E05",
+      "rank": 5,
+      "title": "Move compressor vectors through no-edge paths",
+      "kind": "speed",
+      "owner": "speed",
+      "status": "Rejected: full16-cell lifecycle screen contains a certified speed regression;11 neutral/noisy,4 unstable,0 gains.",
+      "patch": null,
+      "evidence": [
+        "/var/tmp/codex-tdigest-pr3-20261014/day20261015/validation/first-speed-both-profile-guard/RESULT.json",
+        "/var/tmp/codex-tdigest-pr3-20261014/day20261015/evidence/supplement-v2/E05-e05-v3-allocation/summary.json",
+        "/var/tmp/codex-tdigest-pr3-20261014/day20261015/evidence/supplement-v2/E05-e05-v3-lifecycle-screen-scale1/summary.json"
+      ],
+      "decision": "rejected",
+      "static_review": "root",
+      "allocation_observations": {
+        "retained_requested": {
+          "decreased": 0,
+          "equal": 64,
+          "increased": 0
+        },
+        "retained_usable": {
+          "decreased": 0,
+          "equal": 64,
+          "increased": 0
+        },
+        "centroid_capacity": {
+          "decreased": 0,
+          "equal": 64,
+          "increased": 0
+        },
+        "allocation_requests": {
+          "decreased": 12,
+          "equal": 52,
+          "increased": 0
+        },
+        "incremental_requested_boundary_peak": {
+          "decreased": 30,
+          "equal": 34,
+          "increased": 0
+        },
+        "incremental_usable_boundary_peak": {
+          "decreased": 30,
+          "equal": 34,
+          "increased": 0
+        }
+      },
+      "allocation_status": "Full declared cells ×5 fresh repeats per arm passed exactness, retained requested/usable bytes, capacity and GlobalAlloc-boundary peak gates. Instrumented observations, no speed conclusion.",
+      "reason": "Singleton f64 build+drop cap64Off regressed13.23% median (all4paired ratios1.0724-1.1841; stablearms, minimum batch61.8ms).16cells:0gains,11neutral/noisy,4unstable,1regression. Reduced allocations did not yield an accepted speed benefit.",
+      "lifecycle_summary_sha256": "2c6de8fafcb856bf34487fdbe02dbbcd5f3b34f64ba81b5480f89608267af50a",
+      "lifecycle_regressions": [
+        {
+          "id": "e23d34e05da4982cabe6",
+          "case": {
+            "kind": "distinct",
+            "n": 1,
+            "setting": "cap64off",
+            "operation": "build",
+            "fan_in": 40,
+            "experiment": "E05",
+            "precision": "f64",
+            "lifecycle": "drop"
+          },
+          "classification": "regressed",
+          "paired_ratios": [
+            1.1840726843542209,
+            1.1623974440969038,
+            1.1022112883603445,
+            1.07236592823499
+          ],
+          "median_ratio": 1.1323043662286243,
+          "drift": {
+            "baseline": 1.082929474694487,
+            "candidate": 1.0385955720848339
+          },
+          "minimum_retained_batch_ns": 61820661.0,
+          "rounds": 916031
+        }
+      ]
+    },
+    {
+      "id": "E06",
+      "rank": 6,
+      "title": "Bucketizer retains positive residual tail",
+      "kind": "quality",
+      "owner": "accuracy",
+      "status": "Rejected: moment repaired but rank/value/CDF accuracy worsens at matched stored size",
+      "patch": "/var/tmp/codex-tdigest-pr3-20261014/day20261015/patches/E06/candidate.patch",
+      "evidence": [
+        "/var/tmp/codex-tdigest-pr3-20261014/day20261015/validation/E06/RESULT.json",
+        "/var/tmp/codex-tdigest-pr3-20261014/day20261015/evidence/repair-quality/comparison.json"
+      ],
+      "decision": "rejected",
+      "patch_sha256": "f4f5dfe6ac452ff6e2896f72de52a6905bba6b782bf70c9815e77d5befcf6d1e",
+      "reason": "144 repair comparisons: maximum rank/value error worsen54 each, CDF36. Far-tail fixture p90 goes1→6e16 versus exact1; centroid count and wire size unchanged. Dropped-tail defect remains unresolved."
+    },
+    {
+      "id": "E07",
+      "rank": 7,
+      "title": "Hoist scale constants per compression pass",
+      "kind": "speed",
+      "owner": "speed",
+      "status": "Rejected by stable primary speed regression",
+      "patch": null,
+      "evidence": [
+        "/var/tmp/codex-tdigest-pr3-20261014/day20261015/validation/first-speed-both-profile-guard/RESULT.json",
+        "/var/tmp/codex-tdigest-pr3-20261014/day20261015/evidence/v3/E07-e07-v3-screen-build-scale1/summary.json"
+      ],
+      "decision": "rejected",
+      "static_review": "root",
+      "reason": "Separated modes,1000 values,f64,cap64 Use: all4 paired ratios1.0549–1.0939,median1.0724 (7.24%slower), botharmdrift<4.1%; no certified improvements in24buildcells."
+    },
+    {
+      "id": "E08",
+      "rank": 8,
+      "title": "Heap root replacement for k-way merge",
+      "kind": "speed",
+      "owner": "speed",
+      "status": "Rejected and independently verified:3 fresh batchCDF regressions4.37–5.02%;864exact measured/864skipped; prior primarygains preserved.",
+      "patch": "/var/tmp/codex-tdigest-pr3-20261014/day20261015/patches/E08/candidate.patch",
+      "evidence": [
+        "/var/tmp/codex-tdigest-pr3-20261014/day20261015/validation/second-speed-both-profile-guard/RESULT.json"
+      ],
+      "decision": "rejected",
+      "static_review": "root (confirmed by day_speed; ledger updated)",
+      "repeat_comparison": "work/day-e08-primary-repeat-comparison.json",
+      "public_shape_audit": "work/day-merge-shapes-validation-result.json",
+      "declared_controls": "work/day-native-declared-controls-summary.json",
+      "heldout_export": "work/day-e03-e08-heldout-summary.json",
+      "heldout_export_sha256": "5146c3f70dc4ce39cf58190a658a251797756b41cdfd4f1ec90b6fd9bf5badf5"
+    },
+    {
+      "id": "E09",
+      "rank": 9,
+      "title": "Count-only cap search before final materialization",
+      "kind": "speed",
+      "owner": "speed",
+      "status": "Rejected:2 certified p50 query-control regressions;7 merge gains and allocation reductions do not erase them.",
+      "patch": "/var/tmp/codex-tdigest-pr3-20261014/day20261015/patches/E09/candidate.patch",
+      "evidence": [
+        "/var/tmp/codex-tdigest-pr3-20261014/day20261015/validation/second-speed-both-profile-guard/RESULT.json",
+        "/var/tmp/codex-tdigest-pr3-20261014/day20261015/evidence/e09-entry-allocation-v1/inventory/summary.json",
+        "/var/tmp/codex-tdigest-pr3-20261014/day20261015/evidence/v3/E09-e09-v3-screen-p50-scale1/summary.json"
+      ],
+      "decision": "rejected",
+      "static_review": "root (confirmed by day_speed; ledger updated)",
+      "entry_allocation_status": "All156declaredrows pass exactness, branchparity, fiverepeatdeterminism, retainedandboundarymemorygates. Trialallocationseliminatedin84actualhitrows; original72nativeauditstate/queriesalsoexact. No speedclaim.",
+      "rejection_summary_sha256": "d94fb47d4f51261b932c0527c1d3d5eee8db172838d7c192ad1ea6c7343162f0",
+      "certified_regressions": [
+        {
+          "experiment": "E09",
+          "operation": "p50",
+          "cell": 8,
+          "case": [
+            "ties",
+            1000,
+            "f32",
+            "delta300"
+          ],
+          "classification": "regressed",
+          "paired_ratios": [
+            1.0656929254452276,
+            1.1220114818727482,
+            1.0383014718147319,
+            1.0670471977689415
+          ],
+          "median_ratio": 1.0663700616070846,
+          "within_binary_drift_ratio": {
+            "baseline": 1.0698558195986168,
+            "candidate": 1.022785602496739
+          },
+          "calibration": "/var/tmp/codex-tdigest-pr3-20261014/day20261015/evidence/v3/E09-e09-v3-screen-p50-scale1/008-ties-1000-f32-delta300/calibration.json",
+          "calibration_sha256": "4309d238409d00d4e9c609c6348728ecb88c9fac8db40f843c38538c95811b9c",
+          "baseline_only_rounds": 10594811,
+          "minimum_retained_batch_ns": 69523919.0,
+          "median_ns_per_op_by_arm": {
+            "baseline": 7.0973458611012505,
+            "candidate": 7.521231714279755
+          },
+          "samples": [
+            {
+              "order": 0,
+              "label": "baseline",
+              "median_ns_per_op": 7.114324172465182,
+              "retained_samples": 5,
+              "minimum_batch_ns": 71311754.0,
+              "maximum_batch_ns": 77101568.0,
+              "pool_peak_logical_bytes_estimate": null
+            },
+            {
+              "order": 1,
+              "label": "candidate",
+              "median_ns_per_op": 7.581684939920118,
+              "retained_samples": 5,
+              "minimum_batch_ns": 76828713.0,
+              "maximum_batch_ns": 81237564.0,
+              "pool_peak_logical_bytes_estimate": null
+            },
+            {
+              "order": 2,
+              "label": "candidate",
+              "median_ns_per_op": 7.487377075438156,
+              "retained_samples": 5,
+              "minimum_batch_ns": 77226319.0,
+              "maximum_batch_ns": 81270087.0,
+              "pool_peak_logical_bytes_estimate": null
+            },
+            {
+              "order": 3,
+              "label": "baseline",
+              "median_ns_per_op": 6.673173310972702,
+              "retained_samples": 5,
+              "minimum_batch_ns": 69523919.0,
+              "maximum_batch_ns": 76629874.0,
+              "pool_peak_logical_bytes_estimate": null
+            },
+            {
+              "order": 4,
+              "label": "candidate",
+              "median_ns_per_op": 7.412780275174328,
+              "retained_samples": 5,
+              "minimum_batch_ns": 73420018.0,
+              "maximum_batch_ns": 80491172.0,
+              "pool_peak_logical_bytes_estimate": null
+            },
+            {
+              "order": 5,
+              "label": "baseline",
+              "median_ns_per_op": 7.139333301934315,
+              "retained_samples": 5,
+              "minimum_batch_ns": 74258425.0,
+              "maximum_batch_ns": 79520755.0,
+              "pool_peak_logical_bytes_estimate": null
+            },
+            {
+              "order": 6,
+              "label": "baseline",
+              "median_ns_per_op": 7.0803675497373195,
+              "retained_samples": 5,
+              "minimum_batch_ns": 73126190.0,
+              "maximum_batch_ns": 76320274.0,
+              "pool_peak_logical_bytes_estimate": null
+            },
+            {
+              "order": 7,
+              "label": "candidate",
+              "median_ns_per_op": 7.555086353121354,
+              "retained_samples": 5,
+              "minimum_batch_ns": 78923404.0,
+              "maximum_batch_ns": 80357116.0,
+              "pool_peak_logical_bytes_estimate": null
+            }
+          ]
+        },
+        {
+          "experiment": "E09",
+          "operation": "p50",
+          "cell": 13,
+          "case": [
+            "ties",
+            100000,
+            "f32",
+            "cap64use"
+          ],
+          "classification": "regressed",
+          "paired_ratios": [
+            1.071618891194717,
+            1.0401407709102042,
+            1.0644240173654922,
+            1.0513993713323257
+          ],
+          "median_ratio": 1.0579116943489089,
+          "within_binary_drift_ratio": {
+            "baseline": 1.0064585646731428,
+            "candidate": 1.0319281068087893
+          },
+          "calibration": "/var/tmp/codex-tdigest-pr3-20261014/day20261015/evidence/v3/E09-e09-v3-screen-p50-scale1/013-ties-100000-f32-cap64use/calibration.json",
+          "calibration_sha256": "f69059cd06853914d686276bc5344880f6788dd3fc3c614a77dc1a1477832bdc",
+          "baseline_only_rounds": 9998417,
+          "minimum_retained_batch_ns": 65265250.0,
+          "median_ns_per_op_by_arm": {
+            "baseline": 7.011192321744533,
+            "candidate": 7.399320112373788
+          },
+          "samples": [
+            {
+              "order": 0,
+              "label": "baseline",
+              "median_ns_per_op": 7.0357032518247635,
+              "retained_samples": 5,
+              "minimum_batch_ns": 69318027.0,
+              "maximum_batch_ns": 71126765.0,
+              "pool_peak_logical_bytes_estimate": null
+            },
+            {
+              "order": 1,
+              "label": "candidate",
+              "median_ns_per_op": 7.539592517495519,
+              "retained_samples": 5,
+              "minimum_batch_ns": 73250706.0,
+              "maximum_batch_ns": 76928182.0,
+              "pool_peak_logical_bytes_estimate": null
+            },
+            {
+              "order": 2,
+              "label": "candidate",
+              "median_ns_per_op": 7.306315689773691,
+              "retained_samples": 5,
+              "minimum_batch_ns": 71386031.0,
+              "maximum_batch_ns": 74013576.0,
+              "pool_peak_logical_bytes_estimate": null
+            },
+            {
+              "order": 3,
+              "label": "baseline",
+              "median_ns_per_op": 7.024352755041123,
+              "retained_samples": 5,
+              "minimum_batch_ns": 65265250.0,
+              "maximum_batch_ns": 70333342.0,
+              "pool_peak_logical_bytes_estimate": null
+            },
+            {
+              "order": 4,
+              "label": "candidate",
+              "median_ns_per_op": 7.4409138966698425,
+              "retained_samples": 5,
+              "minimum_batch_ns": 70980593.0,
+              "maximum_batch_ns": 75133339.0,
+              "pool_peak_logical_bytes_estimate": null
+            },
+            {
+              "order": 5,
+              "label": "baseline",
+              "median_ns_per_op": 6.990554304746442,
+              "retained_samples": 5,
+              "minimum_batch_ns": 68901548.0,
+              "maximum_batch_ns": 70194507.0,
+              "pool_peak_logical_bytes_estimate": null
+            },
+            {
+              "order": 6,
+              "label": "baseline",
+              "median_ns_per_op": 6.998031888447941,
+              "retained_samples": 5,
+              "minimum_batch_ns": 69486115.0,
+              "maximum_batch_ns": 71256345.0,
+              "pool_peak_logical_bytes_estimate": null
+            },
+            {
+              "order": 7,
+              "label": "candidate",
+              "median_ns_per_op": 7.357726328077734,
+              "retained_samples": 5,
+              "minimum_batch_ns": 71984484.0,
+              "maximum_batch_ns": 77433338.0,
+              "pool_peak_logical_bytes_estimate": null
+            }
+          ]
+        }
+      ],
+      "reason": "Rejected: unchanged p50 controls regress 6.64% for ties1000 f32 delta300 and 5.79% for ties100000 f32 cap64Use; all4 ratios>1.03 in each, stablearms, min65.3ms. Allocation savings and7merge gains do not erase certified regressions. LaterCDF/codec/heldout skipped."
+    },
+    {
+      "id": "E10",
+      "rank": 10,
+      "title": "Frontend merge_all consumes first owned digest",
+      "kind": "speed",
+      "owner": "harness",
+      "status": "Rejected: full54-cell lifecycle screen has5 certified regressions despite4 gains;33neutral/noisy,5short,7unstable.",
+      "patch": "/var/tmp/codex-tdigest-pr3-20261014/day20261015/patches/E10/candidate.patch",
+      "evidence": [
+        "/var/tmp/codex-tdigest-pr3-20261014/day20261015/validation/first-speed-both-profile-guard/RESULT.json",
+        "/var/tmp/codex-tdigest-pr3-20261014/day20261015/validation/E10-capacity/RESULT.json",
+        "/var/tmp/codex-tdigest-pr3-20261014/day20261015/evidence/supplement-v2/E10-e10-v3-allocation/summary.json",
+        "/var/tmp/codex-tdigest-pr3-20261014/day20261015/evidence/supplement-v2/E10-e10-v3-lifecycle-screen-scale1/summary.json"
+      ],
+      "decision": "rejected",
+      "patch_sha256": "809b0495b5ca7077ed6a7d96422127710c4a15ca79e26645c79a3211c784fef7",
+      "static_review": "day_accuracy: final capacity-repair patch and current git diff both hash809b0495b5ca7077ed6a7d96422127710c4a15ca79e26645c79a3211c784fef7; no semantic blocker. Allocation/lifecycle gates pending.",
+      "allocation_observations": {
+        "retained_requested": {
+          "decreased": 0,
+          "equal": 188,
+          "increased": 0
+        },
+        "retained_usable": {
+          "decreased": 0,
+          "equal": 188,
+          "increased": 0
+        },
+        "centroid_capacity": {
+          "decreased": 0,
+          "equal": 188,
+          "increased": 0
+        },
+        "allocation_requests": {
+          "decreased": 120,
+          "equal": 68,
+          "increased": 0
+        },
+        "incremental_requested_boundary_peak": {
+          "decreased": 120,
+          "equal": 68,
+          "increased": 0
+        },
+        "incremental_usable_boundary_peak": {
+          "decreased": 120,
+          "equal": 68,
+          "increased": 0
+        }
+      },
+      "allocation_status": "Full declared cells ×5 fresh repeats per arm passed exactness, retained requested/usable bytes, capacity and GlobalAlloc-boundary peak gates. Instrumented observations, no speed conclusion.",
+      "reason": "Five stable lifecycle regressions: empty single-input clone+drop6.60-7.44% bothprecisions;8-centroid plus trailingempty return3.59-4.26% bothprecisions and f32drop11.14%. All4paired ratios exceed1.03, sufficiently long batches and stablearms. Four other gains do not erase these failures.",
+      "lifecycle_summary_sha256": "e74f526d0763b2656ffe2173862052ec7db1d99acb8322caceec8f0df17e804b",
+      "lifecycle_regressions": [
+        {
+          "id": "6504205f4a4fd2369eac",
+          "case": {
+            "fan_in": 1,
+            "length": 0,
+            "capacity": "65536",
+            "layout": "all_empty",
+            "kind": "distinct",
+            "n": 0,
+            "setting": "cap256off",
+            "operation": "frontend",
+            "experiment": "E10",
+            "precision": "f32",
+            "lifecycle": "clone_drop"
+          },
+          "classification": "regressed",
+          "paired_ratios": [
+            1.0641167484308798,
+            1.0596552541753603,
+            1.0971998969542909,
+            1.0847205655844616
+          ],
+          "median_ratio": 1.0744186570076706,
+          "drift": {
+            "baseline": 1.0228586142771676,
+            "candidate": 1.0279642885745248
+          },
+          "minimum_retained_batch_ns": 68208752.0,
+          "rounds": 1600000
+        },
+        {
+          "id": "b343e5036f8b2b278db3",
+          "case": {
+            "fan_in": 1,
+            "length": 0,
+            "capacity": "65536",
+            "layout": "all_empty",
+            "kind": "distinct",
+            "n": 0,
+            "setting": "cap256off",
+            "operation": "frontend",
+            "experiment": "E10",
+            "precision": "f64",
+            "lifecycle": "clone_drop"
+          },
+          "classification": "regressed",
+          "paired_ratios": [
+            1.0561586764069009,
+            1.0758720032246103,
+            1.0803160521125172,
+            1.0553799586391277
+          ],
+          "median_ratio": 1.0660153398157557,
+          "drift": {
+            "baseline": 1.0185085232301578,
+            "candidate": 1.0136225782070327
+          },
+          "minimum_retained_batch_ns": 71709943.0,
+          "rounds": 1663058
+        },
+        {
+          "id": "95e9deb0d3e9901c7d6e",
+          "case": {
+            "fan_in": 2,
+            "length": 8,
+            "capacity": "16x",
+            "layout": "trailing_empty",
+            "kind": "distinct",
+            "n": 0,
+            "setting": "cap256off",
+            "operation": "frontend",
+            "experiment": "E10",
+            "precision": "f32",
+            "lifecycle": "return"
+          },
+          "classification": "regressed",
+          "paired_ratios": [
+            1.1176852463382052,
+            1.0310646240633288,
+            1.0405120218640633,
+            1.044763322762752
+          ],
+          "median_ratio": 1.0426376723134076,
+          "drift": {
+            "baseline": 1.0154622827389153,
+            "candidate": 1.0877426829045345
+          },
+          "minimum_retained_batch_ns": 63976514.99999999,
+          "rounds": 911033
+        },
+        {
+          "id": "67862ceb948ad670f516",
+          "case": {
+            "fan_in": 2,
+            "length": 8,
+            "capacity": "16x",
+            "layout": "trailing_empty",
+            "kind": "distinct",
+            "n": 0,
+            "setting": "cap256off",
+            "operation": "frontend",
+            "experiment": "E10",
+            "precision": "f32",
+            "lifecycle": "drop"
+          },
+          "classification": "regressed",
+          "paired_ratios": [
+            1.057536458693374,
+            1.1302891755994935,
+            1.1371709986407545,
+            1.0925093894509865
+          ],
+          "median_ratio": 1.1113992825252401,
+          "drift": {
+            "baseline": 1.0298146861800286,
+            "candidate": 1.044170322873612
+          },
+          "minimum_retained_batch_ns": 59424640.00000001,
+          "rounds": 866036
+        },
+        {
+          "id": "1e5ee37559c6e69b83cb",
+          "case": {
+            "fan_in": 2,
+            "length": 8,
+            "capacity": "16x",
+            "layout": "trailing_empty",
+            "kind": "distinct",
+            "n": 0,
+            "setting": "cap256off",
+            "operation": "frontend",
+            "experiment": "E10",
+            "precision": "f64",
+            "lifecycle": "return"
+          },
+          "classification": "regressed",
+          "paired_ratios": [
+            1.036552846093226,
+            1.0352130135512554,
+            1.0702407544607009,
+            1.0344672409509255
+          ],
+          "median_ratio": 1.0358829298222407,
+          "drift": {
+            "baseline": 1.0292824472370188,
+            "candidate": 1.0298692568556
+          },
+          "minimum_retained_batch_ns": 52674500.0,
+          "rounds": 799834
+        }
+      ]
+    },
+    {
+      "id": "E11",
+      "rank": 11,
+      "title": "Contiguous NumPy training input fast path",
+      "kind": "speed",
+      "owner": "harness",
+      "status": "Rejected: exact behavior, but stable speed regressions in three small strided-input cases",
+      "patch": "/var/tmp/codex-tdigest-pr3-20261014/day20261015/patches/E11-candidate.patch",
+      "evidence": [
+        "/var/tmp/codex-tdigest-pr3-20261014/day20261015/evidence/numpy-wheels/RESULT.json",
+        "/var/tmp/codex-tdigest-pr3-20261014/day20261015/evidence/wheel-screen-v2/E11-e11-screen-all-np2-scale1/summary.json"
+      ],
+      "decision": "rejected",
+      "static_review": "day_speed",
+      "screen_classifications": {
+        "short_batch_inconclusive": 25,
+        "neutral_or_noisy": 16,
+        "regressed": 3
+      },
+      "reason": "8-value strided input: f32 add median6.02% slower, f64 train4.77% slower, f64 weighted_add6.81% slower. All four paired ratios exceed1.03, all retained batches long enough, within-arm drift below10%. Large contiguous-path possibilities cannot erase fallback regressions."
+    },
+    {
+      "id": "E12",
+      "rank": 12,
+      "title": "Bulk-copy NumPy outputs without Python scalar/list boxing",
+      "kind": "speed",
+      "owner": "harness",
+      "status": "Retained: independently reviewed, canonical and actual installed release gates passed; personalPR9 open",
+      "patch": "/var/tmp/codex-tdigest-pr3-20261014/day20261015/patches/E12-candidate.patch",
+      "evidence": [
+        "/var/tmp/codex-tdigest-pr3-20261014/day20261015/evidence/numpy-wheels/RESULT.json",
+        "/var/tmp/codex-tdigest-pr3-20261014/day20261015/evidence/wheel-screen-v2/E12-e12-screen-all-np2-scale1/summary.json",
+        "/var/tmp/codex-tdigest-pr3-20261014/day20261015/evidence/wheel-screen-v2/E12-e12-screen-all-np2-scale10/summary.json",
+        "/var/tmp/codex-tdigest-pr3-20261014/day20261015/evidence/wheel-screen-v2/E12-e12-screen-all-np2-scale10/summary.json",
+        "/var/tmp/codex-tdigest-pr3-20261014/day20261015/evidence/wheel-screen-v2/root-e12-heldout-repeat10-batch/INDEX.json"
+      ],
+      "decision": "retained",
+      "static_review": "day_speed",
+      "screen_classifications": {
+        "short_batch_inconclusive": 33,
+        "unstable_controls": 2,
+        "neutral_or_noisy": 1
+      },
+      "repeat_classifications": {
+        "unstable_controls": 2,
+        "neutral_or_noisy": 8,
+        "improved": 22,
+        "short_batch_inconclusive": 4
+      },
+      "screen_speed_percent": {
+        "cdf": {
+          "cells": 7,
+          "min": 23.417353136711494,
+          "max": 54.489538429129745
+        },
+        "quantile": {
+          "cells": 8,
+          "min": 22.70875912129697,
+          "max": 42.4854248854571
+        },
+        "means": {
+          "cells": 4,
+          "min": 72.17265902187276,
+          "max": 82.82444648519689
+        },
+        "weights": {
+          "cells": 3,
+          "min": 72.12200622155088,
+          "max": 82.16309404791299
+        }
+      },
+      "pr": "https://github.com/ingolfured/gr-tdigest/pull/9",
+      "final_validation": "work/day-e12-final-validation-result.json"
+    },
+    {
+      "id": "E13",
+      "rank": 13,
+      "title": "Encode TDIG directly into Python bytes storage",
+      "kind": "speed",
+      "owner": "harness",
+      "status": "Rejected:10 native Rust encoder speed regressions despite PythonENCODE gains; no furtherheldout/explicitcodecbuild.",
+      "patch": "/var/tmp/codex-tdigest-pr3-20261014/day20261015/patches/E13/candidate.patch",
+      "evidence": [
+        "/var/tmp/codex-tdigest-pr3-20261014/day20261015/evidence/numpy-wheels/e13/VALIDATION.json",
+        "/var/tmp/codex-tdigest-pr3-20261014/day20261015/evidence/wheel-screen-v2/E13-e13-screen-all-np2-scale1/summary.json",
+        "/var/tmp/codex-tdigest-pr3-20261014/day20261015/evidence/wheel-screen-v2/E13-e13-screen-all-np2-scale10/summary.json"
+      ],
+      "decision": "rejected",
+      "static_review": "day_accuracy",
+      "screen_classifications": {
+        "short_batch_inconclusive": 6,
+        "unstable_controls": 3,
+        "improved": 1,
+        "neutral_or_noisy": 6
+      },
+      "repeat_classifications": {
+        "improved": 6,
+        "unstable_controls": 2,
+        "neutral_or_noisy": 8
+      },
+      "screen_speed_percent": {
+        "encode": {
+          "cells": 6,
+          "min": 42.8683168894144,
+          "max": 57.28293888908992
+        }
+      },
+      "reason": "10 native encode cells regressed6.7803–11.5966% median; all4pairedratios>1.03, armsdrift<=1.10,minbatch>=50ms.24state/quality/storageexact; decode24skipped. Python42.87–57.28%screenENCODEgain doesnotwaivenativeregression."
+    },
+    {
+      "id": "E14",
+      "rank": 14,
+      "title": "Polars precision validation and decode in one pass",
+      "kind": "speed",
+      "owner": "harness",
+      "status": "Rejected: no demonstrated meaningful benefit after complete fullscreen and registered10x repeat",
+      "patch": "/var/tmp/codex-tdigest-pr3-20261014/day20261015/patches/E14/candidate.patch",
+      "evidence": [
+        "/var/tmp/codex-tdigest-pr3-20261014/day20261015/evidence/numpy-wheels/e14/VALIDATION.json",
+        "/var/tmp/codex-tdigest-pr3-20261014/day20261015/evidence/wheel-screen-v2/E14-e14-screen-all-np2-scale1/summary.json",
+        "/var/tmp/codex-tdigest-pr3-20261014/day20261015/evidence/wheel-screen-v2/E14-e14-screen-all-np2-scale10/summary.json"
+      ],
+      "decision": "rejected",
+      "static_review": "day_accuracy",
+      "screen_classifications": {
+        "short_batch_inconclusive": 5,
+        "unstable_controls": 2,
+        "neutral_or_noisy": 5
+      },
+      "repeat_classifications": {
+        "neutral_or_noisy": 9,
+        "unstable_controls": 3
+      },
+      "screen_speed_percent": {},
+      "reason": "Initial12 timedcells:5short,2unstable,5neutral/noisy. Fullrepeat12:9neutral/noisy,3unstable,0certifiedgains; exactbehavior. No further fishing for gains."
+    },
+    {
+      "id": "E15",
+      "rank": 15,
+      "title": "Finite weighted means survive product overflow",
+      "kind": "quality",
+      "owner": "accuracy",
+      "status": "rejected: scaledcompensated fallback losesdeepcancellation residual; preserved highprecisionoracle failure",
+      "patch": "/var/tmp/codex-tdigest-pr3-20261014/day20261015/patches/E15/candidate.patch",
+      "evidence": [
+        "/var/tmp/codex-tdigest-pr3-20261014/day20261015/validation/E15/RESULT.json",
+        "/var/tmp/codex-tdigest-pr3-20261014/day20261015/evidence/quality-hypotheses/INDEX.json"
+      ],
+      "decision": "rejected",
+      "reason": "means[-1e308,1e-150,1e308],weights[2,1,2]: expectedmean2e-151,actual0. Raw sum overflow also remains; do not ship."
+    },
+    {
+      "id": "E16",
+      "rank": 16,
+      "title": "Wholly subnormal mass compression invariance",
+      "kind": "quality",
+      "owner": "accuracy",
+      "status": "Rejected by independent exact tiny-value oracle",
+      "patch": "/var/tmp/codex-tdigest-pr3-20261014/day20261015/patches/E16/candidate.patch",
+      "evidence": [
+        "/var/tmp/codex-tdigest-pr3-20261014/day20261015/validation/E16/RESULT.json",
+        "/var/tmp/codex-tdigest-pr3-20261014/day20261015/validation/E16/tiny-value-rejection/RESULT.json",
+        "/var/tmp/codex-tdigest-pr3-20261014/day20261015/evidence/quality-hypotheses/INDEX.json"
+      ],
+      "decision": "rejected",
+      "patch_sha256": "1c62ba9bbdf0f31d6c52e1934d8086dfb8089e6fd9cad2b29594f45f2df880bd",
+      "reason": "With u=min-subnormal, values[-3u,2u] and weights[u,u], exact mean -u/2 rounds to zero. Baseline center0 passes; normalized candidate gives -2u. Earlier ordinary-value improvements do not justify this regression."
+    },
+    {
+      "id": "E17",
+      "rank": 17,
+      "title": "Cumulative mass quantile brackets",
+      "kind": "quality",
+      "owner": "accuracy",
+      "status": "Rejected; independent equal-weight median regression confirmed",
+      "patch": null,
+      "evidence": [
+        "/var/tmp/codex-tdigest-pr3-20261014/day20261015/validation/E17/v2-proposal-rejection/RESULT.json"
+      ],
+      "decision": "rejected",
+      "reason": "Six values0..5 weighted0.1: exact median2.5, baseline2.5, candidate2.0 in both precisions. Existing CDF gap roundtrip also regresses."
+    },
+    {
+      "id": "E18",
+      "rank": 18,
+      "title": "Symmetric compression direction",
+      "kind": "quality",
+      "owner": "accuracy",
+      "status": "Rejected by matched-size quality regressions",
+      "patch": "/var/tmp/codex-tdigest-pr3-20261014/day20261015/patches/E18/candidate.patch",
+      "evidence": [
+        "/var/tmp/codex-tdigest-pr3-20261014/day20261015/patches/E18/validation-20261015T090552Z/RESULT.json",
+        "/var/tmp/codex-tdigest-pr3-20261014/day20261015/evidence/v3/quality-screen-e18-e19-20261015/E18-quality.json"
+      ],
+      "decision": "rejected",
+      "patch_sha256": "02eb6d428f36b33d1ba69fb39efb993fa53e4dea1823367773c9fbbeacb1063c",
+      "reason": "72states same storage: rankmax worsens1,value-max3,CDF-max1. Worst value-max10.6450→11.2848. SUM metadata changes in7states; maxabsdelta0.053931."
+    },
+    {
+      "id": "E19",
+      "rank": 19,
+      "title": "Gap-aware adjacent cap coalescing",
+      "kind": "quality",
+      "owner": "accuracy",
+      "status": "Rejected: better rank/CDF comes with worse value accuracy",
+      "patch": "/var/tmp/codex-tdigest-pr3-20261014/day20261015/patches/E19/candidate.patch",
+      "evidence": [
+        "/var/tmp/codex-tdigest-pr3-20261014/day20261015/patches/E19/validation-20261015T090750Z/RESULT.json",
+        "/var/tmp/codex-tdigest-pr3-20261014/day20261015/evidence/v3/quality-screen-e18-e19-20261015/E19-quality.json"
+      ],
+      "decision": "rejected",
+      "patch_sha256": "c3f4ca446dfab62a5d18f4c16e6a79bc7cbac8766c9775d1d4c66098b9cac913",
+      "reason": "72states same storage: rank/CDF improve24, but value max/mean worsen9. Normal100k f32 kway value-max0.0143598→0.4402001. SUM metadata changes12states; maxabsdelta0.0112392."
+    },
+    {
+      "id": "E20",
+      "rank": 20,
+      "title": "Sorted batch CDF sweep",
+      "kind": "speed",
+      "owner": "harness",
+      "status": "Rejected:1 certified sorted4096 batch-CDF regression. Later matrices/capacity witness/heldout unnecessary and recordedskipped.",
+      "patch": "/var/tmp/codex-tdigest-pr3-20261014/day20261015/patches/E20/candidate.patch",
+      "evidence": [
+        "/var/tmp/codex-tdigest-pr3-20261014/day20261015/validation/E20-focused-fixed/RESULT.json",
+        "/var/tmp/codex-tdigest-pr3-20261014/day20261015/evidence/supplement-v2/E20-e20-v3-public-audit/summary.json",
+        "/var/tmp/codex-tdigest-pr3-20261014/day20261015/evidence/v3/E20-e20-v3-screen-batch_sorted_4096-scale1/summary.json"
+      ],
+      "decision": "rejected",
+      "static_review": "day_accuracy",
+      "supplement_audit": "216 declared public cases exact",
+      "rejection_summary_sha256": "0cd9007c64bc85dafc69168276cd0d5ab737b8989ea5ef4b6d91724d6f1f26cf",
+      "certified_regressions": [
+        {
+          "experiment": "E20",
+          "operation": "batch_sorted_4096",
+          "cell": 1,
+          "case": [
+            "ties",
+            1000,
+            "f32",
+            "cap64use"
+          ],
+          "classification": "regressed",
+          "paired_ratios": [
+            1.0463093008281295,
+            1.0880589591457768,
+            1.0497753000192604,
+            1.0313806311470135
+          ],
+          "median_ratio": 1.048042300423695,
+          "within_binary_drift_ratio": {
+            "baseline": 1.064602082249836,
+            "candidate": 1.0266537397088995
+          },
+          "calibration": "/var/tmp/codex-tdigest-pr3-20261014/day20261015/evidence/v3/E20-e20-v3-screen-batch_sorted_4096-scale1/001-ties-1000-f32-cap64use/calibration.json",
+          "calibration_sha256": "c5e7ceacc6acb0d8a4424d5b8529bd8492117e01b553af8ab329ce0fb4cc4bdd",
+          "baseline_only_rounds": 5335,
+          "minimum_retained_batch_ns": 66866198.0,
+          "median_ns_per_op_by_arm": {
+            "baseline": 12983.268228678538,
+            "candidate": 13723.99212746017
+          },
+          "samples": [
+            {
+              "order": 0,
+              "label": "baseline",
+              "median_ns_per_op": 13098.977694470477,
+              "retained_samples": 5,
+              "minimum_batch_ns": 68662551.0,
+              "maximum_batch_ns": 70345558.0,
+              "pool_peak_logical_bytes_estimate": null
+            },
+            {
+              "order": 1,
+              "label": "candidate",
+              "median_ns_per_op": 13705.582193064667,
+              "retained_samples": 5,
+              "minimum_batch_ns": 72548315.0,
+              "maximum_batch_ns": 73889400.0,
+              "pool_peak_logical_bytes_estimate": null
+            },
+            {
+              "order": 2,
+              "label": "candidate",
+              "median_ns_per_op": 13742.40206185567,
+              "retained_samples": 5,
+              "minimum_batch_ns": 71785034.0,
+              "maximum_batch_ns": 74654118.0,
+              "pool_peak_logical_bytes_estimate": null
+            },
+            {
+              "order": 3,
+              "label": "baseline",
+              "median_ns_per_op": 12630.199812558576,
+              "retained_samples": 5,
+              "minimum_batch_ns": 67041840.0,
+              "maximum_batch_ns": 68566437.0,
+              "pool_peak_logical_bytes_estimate": null
+            },
+            {
+              "order": 4,
+              "label": "candidate",
+              "median_ns_per_op": 13508.045360824743,
+              "retained_samples": 5,
+              "minimum_batch_ns": 70348594.0,
+              "maximum_batch_ns": 74785880.0,
+              "pool_peak_logical_bytes_estimate": null
+            },
+            {
+              "order": 5,
+              "label": "baseline",
+              "median_ns_per_op": 12867.558762886598,
+              "retained_samples": 5,
+              "minimum_batch_ns": 67115561.0,
+              "maximum_batch_ns": 69460076.0,
+              "pool_peak_logical_bytes_estimate": null
+            },
+            {
+              "order": 6,
+              "label": "baseline",
+              "median_ns_per_op": 13446.13701968135,
+              "retained_samples": 5,
+              "minimum_batch_ns": 66866198.0,
+              "maximum_batch_ns": 74180549.0,
+              "pool_peak_logical_bytes_estimate": null
+            },
+            {
+              "order": 7,
+              "label": "candidate",
+              "median_ns_per_op": 13868.085285848172,
+              "retained_samples": 5,
+              "minimum_batch_ns": 71785925.0,
+              "maximum_batch_ns": 76548703.0,
+              "pool_peak_logical_bytes_estimate": null
+            }
+          ]
+        }
+      ],
+      "reason": "Rejected: sorted4096 CDF requests on ties1000 f32 cap64Use regress4.80% median; all4 pairedratios1.0314-1.0881, stablearms, min66.9ms. Later57cells and capacity supplement/heldout skipped."
+    }
+  ],
+  "next": [
+    "No additional autonomous experiment work: all20dispositionscomplete; preserveprototypes/evidence.",
+    "Human review order6→7→8→9. Upstream38remains draftandunchanged; PR9notyetincorporated.",
+    "Unresolved modernnumerical/deployment limitations recorded in finalreport; originalAPI/oracle remainsfrozen."
+  ],
+  "previous_upstream_ci": {
+    "id": 38693154198,
+    "status": "completed",
+    "conclusion": "success",
+    "head_sha": "57e7978d0811baed4a546ff2f08dccaeff03c321",
+    "html_url": "https://github.com/ingolfured/tdigest-rs/actions/runs/38693154198"
+  },
+  "baseline_smoke": {
+    "binary_sha256": "333d90d421ece7d637c7bdeb8b805d68c1c3187bc833723bd39bac9814b177fc",
+    "path": "/var/tmp/codex-tdigest-pr3-20261014/day20261015/evidence/smoke-baseline",
+    "states": 18,
+    "ordinary_invariants": "PASS",
+    "confirmed_defects": [
+      "E01 tinycaps losemass",
+      "E06 residualtail loses weightedmoment"
+    ],
+    "timing_eligible": false,
+    "reason": "v2 harness repairs required before timing"
+  },
+  "harness": {
+    "path": "/var/tmp/codex-tdigest-pr3-20261014/day20261015/harness/day_experiments",
+    "status": "Native v3 built 13 binaries; 74 smoke states per binary passed ordinary invariants. Wheel protocol reviewed, two malformed-fixture corrections pending before execution.",
+    "v1_timing_eligible": false,
+    "premeasurement_repairs": [
+      "scalarCDF exactcomparisons",
+      "matchingbinaryharness/toolchain/lock/protocol",
+      "untrackedproductionmodules captured",
+      "baseline-only calibratedtiming",
+      "write-once outputpaths",
+      "rawquality/tailrecords",
+      "postbatchstatechecks"
+    ],
+    "v3_protocol_sha256": "f19170e2951b59b5a30113c3724565a7ebc65dba8ca0d7caad543e69bff3d1d6",
+    "native_build_batch": "/var/tmp/codex-tdigest-pr3-20261014/day20261015/evidence/v3/build-batch-20261015/RESULT.json",
+    "wheel_protocol_sha256": "e1f2ad08cefa47b11a955b19ce612493760856844170f9d3a487257f49795e97",
+    "wheel_status": "Premeasurement R2 reviewed and approved: fixed f32 kind offset and opposite-precision malformed fixture.",
+    "quality_build_batch": "/var/tmp/codex-tdigest-pr3-20261014/day20261015/evidence/v3/build-batch-quality-20261015/RESULT.json",
+    "wheel_repair": "Create independent wheel_experiments_v2 and wheel-screen-v2; scalar type+bits support only, preserve workloads/gates and original v1 files. Newhash/review required.",
+    "wheel_v2_protocol_sha256": "db42f6c233adfd6db8cd196e6974fe9d5e177716ec24a66415c7fba922e593d1",
+    "wheel_v2_status": "Scalar repair independently reviewed;24 baseline/E12 comparisons pass across NumPy1/2, f32/f64, CDF/quantile,0/1/2 queries. V1 sources and failure records preserved."
+  },
+  "build_cache_guard": "Shared Cargo target can reuse a different worktree when mtimes predate artifacts. Clean gr-tdigest package for each active profile, verify compile manifest path, require nonzero matched tests. Preserved binaries outside target.",
+  "wheel_validation": {
+    "labels": [
+      "baseline",
+      "e11",
+      "e12"
+    ],
+    "numpy": [
+      "1.26.4",
+      "2.3.4"
+    ],
+    "status": "PASS in all six environments",
+    "identity_registered": true,
+    "original_upstream_tests": 91,
+    "tests_per_environment": 163,
+    "path": "/var/tmp/codex-tdigest-pr3-20261014/day20261015/evidence/numpy-wheels/RESULT.json",
+    "extra_labels": [
+      "e13",
+      "e14"
+    ],
+    "extra_status": "Focused native tests, actual manylinux install and ZIP-byte integrity, binding/coherence subsets and separate untouched91 suite pass on NumPy1 and NumPy2."
+  },
+  "remote_check": {
+    "heads": {
+      "pr7": "911dc35493f1774fed1320f9da30d553b41f59b2",
+      "pr8": "25c8c1642029a640b153c160c22a89795d29ad91",
+      "pr6": "6eb4203fe1c4ad8d337636d5aca549e0fec155b3",
+      "master": "cd4f14c4924ec31264db3a3e8243011b204d268a"
+    },
+    "clean": true,
+    "note": "Read-only gitstatus andoriginls-remote; unchangedstack, noexistingPR codechanges",
+    "utc": "2026-10-15T10:58:00Z",
+    "isolated_branch": "review/3-upstream-compatibility-gate"
+  },
+  "quiet_batch": {
+    "timing_cells": 144,
+    "status": "Complete; compact report work/day-breadth-summary.json. No retention decisions from screening alone.",
+    "evidence": "/var/tmp/codex-tdigest-pr3-20261014/day20261015/evidence/v3/breadth-20261015",
+    "audit_cells": 243,
+    "candidates": [
+      "E02",
+      "E03",
+      "E05",
+      "E07",
+      "E08",
+      "E09"
+    ],
+    "driver": "C:/Users/ingol/Documents/Codex/2026-10-14/hi/work/day_native_breadth.py",
+    "session_id": 66372
+  },
+  "wheel_screen_batch": {
+    "no_retention": true,
+    "status": "complete; all full audits exact on both NumPy versions and all four full screens complete",
+    "driver": "C:/Users/ingol/Documents/Codex/2026-10-14/hi/work/day_wheel_screen_batch_v2.py",
+    "index": "/var/tmp/codex-tdigest-pr3-20261014/day20261015/evidence/wheel-screen-v2/root-screen-batch/INDEX.json",
+    "protocol_sha256": "db42f6c233adfd6db8cd196e6974fe9d5e177716ec24a66415c7fba922e593d1",
+    "session_id": 49604,
+    "summary_export": "C:/Users/ingol/Documents/Codex/2026-10-14/hi/work/day-wheel-summary-v2.json"
+  },
+  "quality_rejection_index": "/var/tmp/codex-tdigest-pr3-20261014/day20261015/evidence/quality-hypotheses/INDEX.json",
+  "wheel_screen_batch_v1": {
+    "protocol_sha256": "e1f2ad08cefa47b11a955b19ce612493760856844170f9d3a487257f49795e97",
+    "no_retention": true,
+    "status": "Stopped before any timing: E11 44cases exact on both NumPy versions; E12 scalar1 CDF result unhandled by checker, both arms same Python float/TypeError. Preserve v1 evidence.",
+    "index": "/var/tmp/codex-tdigest-pr3-20261014/day20261015/evidence/wheel-screen-v1/root-screen-batch/INDEX.json",
+    "driver": "C:/Users/ingol/Documents/Codex/2026-10-14/hi/work/day_wheel_screen_batch.py",
+    "session_id": null
+  },
+  "supplement": {
+    "reviewer": "day_accuracy",
+    "freeze": "C:/Users/ingol/Documents/Codex/2026-10-14/hi/work/day-supplement-frozen-v1/freeze.json",
+    "clone_drop_fix": "Caller-held original fixture seeds destroyed after elapsed capture.",
+    "retained_memory_gate": "Requested and allocator-usable bytes observed through return minus post-drop live bytes, plus output Vec capacity and boundary peaks.",
+    "freeze_sha256": "13e684b3b914154558e4816e2e3f8b63c99f75cae3fca9928abf111178d44c50",
+    "status": "Full untimed matrices complete:252 allocationcells and324 directaudits exact;zero memorygateviolations; lifecycle timing pending",
+    "protocol_sha256": "3fe48f496960bd3e3aec59486db14cf4510bbaa1f6765332ad449c27d1ebe566",
+    "first_batch": "C:/Users/ingol/Documents/Codex/2026-10-14/hi/work/day-supplement-first-batch-result.json",
+    "first_batch_sha256": "41e4a1acb2204adfdc484174db3e480720cfc1c0c985b0e1028459712424420c",
+    "counts": {
+      "builds": 8,
+      "allocator_selfchecks": 15,
+      "smoke_cases": 34
+    },
+    "untimed_driver_sha256": "aeed944e2a83ba0cf7b4a2d623a6ecae6e173df4fdf8fd78e8328dd6c2e02bfa",
+    "untimed_summary": "C:/Users/ingol/Documents/Codex/2026-10-14/hi/work/day-supplement-untimed-result.json",
+    "untimed_summary_sha256": "17dbc07a5cde592348bce3d28c33b140fefa77e1a91e67a24bd1edd9624f4470",
+    "untimed_counts": {
+      "allocation_cases": 252,
+      "allocation_fresh_processes": 2520,
+      "direct_audit_cases": 324,
+      "direct_audit_fresh_processes": 648
+    }
+  },
+  "native_followup": {
+    "batch_a": "E03 merge2 and E08 kway full24-cell registered tenfold repeats each",
+    "driver": "C:/Users/ingol/Documents/Codex/2026-10-14/hi/work/day_native_followup.py",
+    "batch_b": "E04 full54-cell scale1 targets and controls",
+    "sha256": "a9317c2531ae61b5bdcc48ab1483c7ec7b6272ef87203ddbc365b6bee68ed6f4",
+    "status": "BatchA complete exit0; full initial/repeat evidence exported and root-reviewed, both eligible for fresh confirmation only. No sticky regressions; original uncertainty preserved.",
+    "repeat_interpretation": "Show initial and repeated results side by side. A certified regression from either run is sticky and cannot be erased by the repeat; E07 remains rejected. E03/E08 original runs had zero certified regressions.",
+    "repeat_export": {
+      "status": "Both full primary comparisons exported and root reviewed; zero sticky regressions, no automatic retention",
+      "sha256": "517dbb74b223a0bc9d2044d78f77f1c094c0151850da2a7e5c0f47562a8fd0e7",
+      "path": "C:/Users/ingol/Documents/Codex/2026-10-14/hi/work/export_day_repeats.py",
+      "E03": {
+        "path": "work/day-e03-primary-repeat-comparison.json",
+        "gain": 21,
+        "sha256": "c0498efa53b6cc161f6b4c0de09411a2f072b25157d5c32d4ee2fcd0e9c104a5",
+        "neutral": 3
+      },
+      "E08": {
+        "unstable": 1,
+        "path": "work/day-e08-primary-repeat-comparison.json",
+        "sha256": "9279f70b358ce7af002b5d149ff401b09e64f542280b70260d2e1c4f45b92393",
+        "neutral": 4,
+        "uncertain_cell": "ties100000f64cap64use baseline drift1.1563035579733423; not a qualified gain or regression",
+        "gain": 19
+      },
+      "independent_review": {
+        "sha256": "e730cdfb24af6e42b6d8b020e38d040a9503157e3f8dcfe2e1f844b0ec61ef4a",
+        "path": "work/day-e03-e08-primary-repeat-review.json",
+        "result": "Both eligible for fresh fullconfirmation, neither retained; all96 classifications and48 calibrationx10 verified; initial and repeat uncertainty preserved"
+      }
+    },
+    "batch_b_session": 67430,
+    "batch_b_export": "C:/Users/ingol/Documents/Codex/2026-10-14/hi/work/day-native-followup-b-summary.json",
+    "batch_a_session": 79918,
+    "batch_a_started_utc": "2026-10-15T13:31:44.6044199Z",
+    "last_poll_utc": "2026-10-15T13:51:57.3946614Z",
+    "batch_a_partial": {
+      "E03": {
+        "sha256": "567f8ea0e66aecb8fde82e5f08a5e8a97458b9e0c827a316ca036cae9c2e60ed",
+        "neutral_or_noisy": 3,
+        "exactness_quality_storage_failures": 0,
+        "certified_regressions": 0,
+        "interpretation": "Promising screen repeat only. Full fresh confirmation and final gates still required; preserve original rows.",
+        "operation": "merge2",
+        "rounds_scale": 10,
+        "summary": "/var/tmp/codex-tdigest-pr3-20261014/day20261015/evidence/v3/E03-e03-v3-screen-merge2-scale10/summary.json",
+        "improved": 21,
+        "cells": 24
+      },
+      "status": "Both complete; no automatic retention",
+      "E08": {
+        "unstable_controls": 1,
+        "improved": 19,
+        "sha256": "fcda33bf3761991b38441eb75aa96fa3152e42375b2f424f13d9f85453289ee8",
+        "cells": 24,
+        "exactness_quality_storage_failures": 0,
+        "certified_regressions": 0,
+        "rounds_scale": 10,
+        "neutral_or_noisy": 4,
+        "summary": "/var/tmp/codex-tdigest-pr3-20261014/day20261015/evidence/v3/E08-e08-v3-screen-kway-scale10/summary.json",
+        "operation": "kway"
+      }
+    },
+    "batch_a_completed_utc": "2026-10-15T14:00:13.991205Z"
+  },
+  "wheel_repeat": {
+    "driver": "C:/Users/ingol/Documents/Codex/2026-10-14/hi/work/day_wheel_repeat_batch.py",
+    "sha256": "7a3f3724afedc78eadf3b7154ca0c299eab2f7ce335269fc8972580768559ceb",
+    "experiments": [
+      "E12",
+      "E13",
+      "E14"
+    ],
+    "timed_cells": 64,
+    "original_calibration_scale": 10,
+    "status": "complete; all64 timedcells finished, exactoutputs, no stickyregressions. E14rejected no demonstratedgain; E12/E13freshconfirmationpending.",
+    "session_id": 72655,
+    "last_poll_utc": "2026-10-15T10:37:21Z",
+    "completed_experiments": [
+      "E12",
+      "E13",
+      "E14"
+    ],
+    "e12_repeat": {
+      "classifications": {
+        "short_batch_inconclusive": 4,
+        "neutral_or_noisy": 8,
+        "unstable_controls": 2,
+        "improved": 22
+      },
+      "summary": "/var/tmp/codex-tdigest-pr3-20261014/day20261015/evidence/wheel-screen-v2/E12-e12-screen-all-np2-scale10/summary.json",
+      "sticky_regressions": 0,
+      "exactness_failures": 0,
+      "sha256": "875844018a01f8e41adcf092d286d8f23c87062f6af401adc80aaf7c0490bf4f",
+      "comparison_sha256": "92856e179f6b3fe436a278d41fbf04ca69ff77a18277f00fbfae7d1fadc6ff1e"
+    },
+    "compact_summary": "C:/Users/ingol/Documents/Codex/2026-10-14/hi/work/day-wheel-repeat-summary.json",
+    "compact_sha256": "d93a9554d6f8fe8bfec4bb8150244535f7a54bb6414cef5d8682ba1526117ed9"
+  },
+  "e09_diagnostics": {
+    "proposal": "C:/Users/ingol/Documents/Codex/2026-10-14/hi/work/day-e09-entry-allocation-proposal.json",
+    "sha256": "087be14ef0d120742c10747727bb46da4b22f526a4b96bedfbb452b7c6826dd4",
+    "constraints": "Separate immutable-source copies; frozen allocator unchanged; branch/trial counters; independent uninstrumented exactness; no new timing workloads",
+    "status": "Full156row untimedgridcomplete; independentuninstcontrolsexact,5repeatsdeterministic;zero storageviolations. Speedgatesstillpending.",
+    "rows": 156,
+    "seed_correction": "Resolved before implementation/build: corrected proposalv2 fixes native screen104729; originalproposal preserved.",
+    "preparation_state": "C:/Users/ingol/Documents/Codex/2026-10-14/hi/work/day-e09-preparation-state.json",
+    "freeze_sha256": "7e659428c942ac27b9781983f8c340e56318cc20723a456f0ef3f5e7f8db7724",
+    "corrected_proposal_sha256": "ef0a5ead9bdca5750a4c7e7cb7dcc6f1f40e7859f3f6cd022fd44c6a8c62a5b9",
+    "protocol_sha256": "27173dee09dba0a5615ddf50d60f2d6d5d24359de437bfd34674410582aa51f1",
+    "preparation_result": "C:/Users/ingol/Documents/Codex/2026-10-14/hi/work/day-e09-preparation-result.json",
+    "preparation_result_sha256": "f6955ec18328bedcabbcd4fac165b3090c3c0a50507b9a8005ed1f685e53ea22",
+    "inventory_report": "C:/Users/ingol/Documents/Codex/2026-10-14/hi/work/day-e09-inventory-result.json",
+    "inventory_sha256": "23d32b8b360f3fd9a2d7993d4281c8d2fec7dd0ebd691dd0d836c5aa495f7a55",
+    "original72_map": "C:/Users/ingol/Documents/Codex/2026-10-14/hi/work/day-e09-original72-entry-map.json",
+    "original72_map_sha256": "ef645bab413a137c6814141cc7a792992bb1199803783dffbda62dc2b1bf4e1b",
+    "counts": {
+      "searchhitrows": 84,
+      "controlprocesses": 312,
+      "deltabypassrows": 36,
+      "instrumentedprocesses": 1560,
+      "original72hitrows": 24,
+      "storageviolations": 0,
+      "rows": 156
+    }
+  },
+  "automation_interval_minutes": 15,
+  "automation_note": "Active until23:59London, finalrun>=23:15. Quiet scheduled checks nowevery15min; poll recorded active session before any newWSL work.",
+  "remaining_native_screens": {
+    "maximum_cells": 222,
+    "sha256": "07a4b10ab7e482782d114ddb31e359358f3c83e6eeb3e1f00b314362ef685e50",
+    "operations": 34,
+    "driver": "C:/Users/ingol/Documents/Codex/2026-10-14/hi/work/day_native_remaining_screens.py",
+    "policy": "Full operation matrices; certified regression or exactness/storagefailure rejects candidate and skips its later operations. No automaticretention.",
+    "status": "Linuxplan prepared andverified; noexecutionyet"
+  },
+  "lifecycle_screen": {
+    "policy": "Full16E05 and54E10 screen, noautomatic10x/heldout/retention",
+    "sha256": "c6e0595db25ac023a2fc69fbcf3e5b444a975ebc2f61611edd0c4bebeb1f8e8d",
+    "cells": 70,
+    "driver": "C:/Users/ingol/Documents/Codex/2026-10-14/hi/work/day_supplement_lifecycle_screen.py",
+    "memory_prerequisite": "Full252cells passed; pinned summary and all binaryprovenance checked by driver",
+    "status": "Complete70: E05 rejected1 regression, E10 rejected5 regressions. All evidence preserved; no repeats.",
+    "session_id": null,
+    "completed_experiments": [
+      "E05",
+      "E10"
+    ],
+    "last_poll_utc": "2026-10-15T11:20:36.1930281Z",
+    "export_driver": "work/export_day_lifecycle_screen.py",
+    "export": "work/day-lifecycle-screen-summary.json",
+    "export_sha256": "d0f376f7a019933944c4d38cfb39f02ea01002ded701cb201fe8f60a9ce744f1"
+  },
+  "e12_confirm_preparation": {
+    "planned_timing": 36,
+    "driver": "C:/Users/ingol/Documents/Codex/2026-10-14/hi/work/day_e12_heldout_batch.py",
+    "scope": "Exactsamefrozenwheelprotocol; freshconfirmseedandties/separatedstates; noautomaticrepeat/retention",
+    "sha256": "3cff88922493d5d93871706d05691b1ac338ae1401f50e8168eca44b920027a4",
+    "status": "Complete:72 audits exact;36 timings:32 short,4 neutral/noisy,0 regressions. One registered full10x repeat being prepared.",
+    "planned_audits": 72,
+    "session_id": null,
+    "scale1_summary_sha256": "199f21c8cd0c58e57cd20f6eaa40d85f17fda61c06e2e2ce52f81df7c761f71e",
+    "index_sha256": "cd63b87dbe70e2413933609453da0659f5cfb8a8e43736c9bdfdf5d7e7eb1685"
+  },
+  "e12_screen_interpretation": "All4unchangedtrain/encodecontrols neutral/noisy in repeat. Unresolved6cellsare targets:2emptyf32outputsunstable,4largegettersstillshort. Theseare not certified gains.",
+  "e13_extra_controls": "Exact immutable source confirms delta requires K2Norm+Off. R3 approved before freeze: combinedstate stays validation-only,66records/60timings; native Vec/decode control neutral acceptable with certified Python ENCODE gain, exactness/no native regressions required. day_harness drafting, peer review pending.",
+  "merge_shape_audit": {
+    "proposal": "work/day-merge-shape-audit-proposal.json",
+    "sha256": "a00dc7b00fc64ec0d526c73b5f69c624ceaf45c4d8d711ea19a1863e6a569397",
+    "status": "Complete:3releasebuilds,12smoke+52fullcasesperbinary exact;52baseline/E03/E08publicroutes/state/wire/sourceimmutability exact. CPUreleased.",
+    "freeze": "work/day-merge-shapes-frozen-v1/freeze.json",
+    "freeze_sha256": "35fadda604be671081b3ff2f92d3f608c4e9fc5dcb24f1faed4bb23d56eb26c2",
+    "progress_state": "work/day-merge-shapes-validation-state.json",
+    "cpu_handoff_utc": "2026-10-15T13:17:35.9916785Z",
+    "result": "work/day-merge-shapes-validation-result.json",
+    "result_sha256": "36ffd27c101a364bc8fbba59a768f1a60fe706f6e7594a808fe0ba452aac0224"
+  },
+  "e12_confirm_repeat": {
+    "status": "Complete36:25improved,7neutral/noisy,2unstable,2short;0stickyregressions. Export and control-row review before provisional acceptance.",
+    "cells": 36,
+    "driver": "C:/Users/ingol/Documents/Codex/2026-10-14/hi/work/day_e12_heldout_repeat.py",
+    "sha256": "277a9eca7668b583f4a340936bbe3d6a4c73b212401544ef29767611d44f0adf",
+    "policy": "Full original heldout baseline calibration times10, one repeat only, sticky regressions preserved; no automatic retention",
+    "session_id": null,
+    "forecast_seconds": 855.20888922,
+    "last_poll_utc": "2026-10-15T11:50:22.6556053Z",
+    "comparison_sha256": "6a19815338930c6a4a0e3caba93c623939a81a0659de52284cf0f2f9ac805973",
+    "export": "work/day-e12-heldout-repeat-result.json",
+    "export_sha256": "3af0b7c10db60cb5eef625b8706c2fbf4ec3adc6c3e5e170e8af97cf559dcd12",
+    "summary_sha256": "6bf2b6264385b12c2e58e601852c5c9d7d632a1d6d42e9f640fe20ec5ddd3fbe",
+    "interpretation": "Independent originalrulecheck permitsfinalvalidation: meaningful freshgain and no confirmed>3% regression. No predeclared allcontrols-every-repeat stability rule. One noisyf64encodecontrol explicitlyinconclusive; earlierstable neutralcontrolpreserved. Not automaticretention."
+  },
+  "e13_default_controls": {
+    "status": "Complete: encode24exact,10certifiedregressions7unstable6neutral1short; decode24skipped. E13rejected; detailedexportpending.",
+    "driver": "work/day_e13_native_controls.py",
+    "sha256": "8e1d3924538ba0d1f82f895d6988a7c8979fd7dfb9e99b2dd63a14074c4d75d1",
+    "session_id": null,
+    "started_utc": "2026-10-15T13:07:19.3456735Z",
+    "encode_summary_sha256": "98b57097d665c984b3342d46b7d4720c564a5a651404db96c6bdf900585780fa",
+    "export": "work/day-e13-native-rejection-summary-v2.json",
+    "export_sha256": "543461cde680b88ff4a9020372e694d4e1ad49f35a4cbdc353aba83e8efbfd2f"
+  },
+  "e13_wheel_heldout": {
+    "status": "Notrun: prerequisite E13nativecontrolrejected; preservepreparedworker and priorPython screen evidence",
+    "driver": "work/day_e13_heldout_batch.py",
+    "sha256": "57f054357e89cbc872e9e0e67ca533a9193c091c5db1661b128c1a79c9c588d6"
+  },
+  "next_batch_order": [
+    "No additional autonomous experiment work: all20dispositionscomplete; preserveprototypes/evidence.",
+    "Human review order6→7→8→9. Upstream38remains draftandunchanged; PR9notyetincorporated.",
+    "Unresolved modernnumerical/deployment limitations recorded in finalreport; originalAPI/oracle remainsfrozen."
+  ],
+  "e13_validator_proof": {
+    "sha256": "6b573cfaff8ceeca63c6fc78bea7d6cb77d0847d03590390e11eb18c0d2c1143",
+    "path": "work/day-e13-pinned-validator-proof.json"
+  },
+  "survivor_checklist": {
+    "sha256": "a89e288aef54fac3895eab6f72309ad8ba8001ede43039cd8d0eb6678f94ac9a",
+    "status": "Independent Windows inventory; completed audits satisfied, missing exact control/heldout matrices identified",
+    "path": "work/day-survivor-validation-checklist.json"
+  },
+  "remaining_native_screens_v2": {
+    "skipped_e10_jobs": 6,
+    "preserved_job_intents": 34,
+    "status": "Complete. AllE02controls ran;E09 rejected by2 p50 regressions;E20 rejected by1 sorted4096 regression. Lateroperations recordedskipped;E10 remainsrejected.",
+    "sha256": "27f994c60e9acb1f5765b4f44d4b2dd846bee94416da9e5fb3a0fe757618497f",
+    "driver": "work/day_native_remaining_screens_v2.py",
+    "maximum_executed_cells": 174,
+    "session_id": null,
+    "last_poll_utc": "2026-10-15T11:59:40.2058403Z",
+    "completed_operations": [
+      "E02build4",
+      "E02p50_4",
+      "E02cdf_batch4",
+      "E09merge24"
+    ],
+    "e09_merge": {
+      "exactness_failures": 0,
+      "certified_regressions": 0,
+      "cells": 24,
+      "classifications": {
+        "improved": 7,
+        "unstable_controls": 2,
+        "neutral_or_noisy": 15
+      },
+      "summary_sha256": "608be4ee6ad3204a2b0a7f6acc08c7e7ccb9bd721f46f32c88d2220dfd6682d6"
+    },
+    "export": "work/day-native-remaining-v2-summary.json",
+    "export_sha256": "d4d4927ccb53b3274fe4ad46d7b4129a9d7608a1cffda711c7cd9b53025c7119",
+    "measured_cells": 93,
+    "skipped_cells": 129
+  },
+  "missing_native_controls": {
+    "cells_per_operation": 24,
+    "status": "Complete240 E03/E08timings exact and no certifiedregression;48E09codec cells skipped duepriorrejection. Export pending. Primary10x+heldout still required.",
+    "e03_operations": [
+      "merge",
+      "kway",
+      "build",
+      "p50",
+      "cdf_batch"
+    ],
+    "e08_operations": [
+      "merge2",
+      "merge",
+      "build",
+      "p50",
+      "cdf_batch"
+    ],
+    "e09_operations": [
+      "encode",
+      "decode"
+    ],
+    "source": "Original supplementary-validation proposal operation_control_map, no new workloads",
+    "policy": "Require remaining-v2 completion and ingest prior rejections. Complete controls before expensive repetitions; no gate changes.",
+    "owner": "day_speed",
+    "total_cells": 288,
+    "driver": "work/day_native_declared_controls.py",
+    "sha256": "caee5021d5dc03f3abbf64ac3215feb462e6b483a184d6881bc70d2e62e76a8c",
+    "session_id": null,
+    "started_utc": "2026-10-15T12:51:02.3139279Z",
+    "last_poll_utc": "2026-10-15T12:59:43.5220427Z",
+    "completed_operations": [
+      "E03build24",
+      "E03p50_24",
+      "E03cdf_batch24",
+      "E03kway24",
+      "E03merge24",
+      "E08build24"
+    ],
+    "completed_timing_cells": 240,
+    "partial_interpretation": "All120 E03 controls/merge rows exact and no certified regression; E03merge2gains6neutral16short. E08build24 exact20neutral4unstable. Batchstillactive; unresolved rows remaininconclusive, noacceptance.",
+    "classes_e03": {
+      "improved": 2,
+      "neutral_or_noisy": 82,
+      "short_batch_inconclusive": 25,
+      "unstable_controls": 11
+    },
+    "classes_e08": {
+      "improved": 16,
+      "neutral_or_noisy": 73,
+      "short_batch_inconclusive": 21,
+      "unstable_controls": 10
+    },
+    "export": "work/day-native-declared-controls-summary.json",
+    "export_sha256": "b0cb6d01cdbd356d302f759afedb64b347cd6636888f4355876c63a6f56fd374"
+  },
+  "e13_codec_review": {
+    "freeze": "work/day-e13-codec-supplement-review-freeze.json",
+    "status": "Preserved reviewedR3 source; notbuilt/measured becauseE13nativecertifiedregressionsrejectcandidate",
+    "proposal_sha256": "748c86d594177102dc84029c1b65cf9f5c6613d6aba410ee5648fb3494f6d260",
+    "freeze_sha256": "7aab4896da1c7546e87f3056ce6304a3a8230454f1036892331ea35cafffa573",
+    "rust_sha256": "d5691ef5a87ef4b5a98fe602b21416622ca7bea045ae1490aa2b6cf16f48516a",
+    "coordinator_sha256": "6492d6fd8c09343d8bbd45cb875271c1f3ed6451e11b0184b9454035fead5cdb"
+  },
+  "survivor_memory_checklist": {
+    "limits": "E09 actual retained/usable/boundary peaks measured; E02/E03/E08 unchanged retained construction source-backed, not peak RSS. E12 same owned NumPy payload. E13R3 Vec capacity pending. E20 if speed survives needs minimal capacity witness on existing boundary requests.",
+    "path": "work/day-survivor-memory-storage-checklist.json",
+    "status": "Independent additive audit; original checklist unchanged",
+    "sha256": "de366b655e2a54168bc7b5e06988ad0a4c4a64f91441950f8e7f5b11d0e031d2"
+  },
+  "e12_final_validation": {
+    "required": "make build/test/lint, original91+exact oracle, actual installed releasewheel, relevantRust/Python/Polars/Java; accurateCHANGELOG/design/README and evidence",
+    "constraints": "Exact frozen productionpatch, preserve prototype/source snapshots; clean isolated integration checkout based25c8; read branch/remotes before changes; existingPRs untouched.",
+    "control_caveat": "Original f64encodeheldout neutral/stable/long; repeat drift1.1285 yieldsinconclusive, notconfirmedregression orpass. Allhistoricalrows preserved; no retry.",
+    "pr_base": "review/3-upstream-compatibility-gate",
+    "publication": "Root final diff/validation review before push/createPR; attach eventualPR; no merge/release",
+    "status": "Complete: root receipt/hash review passed, README-only amendment42d6204, pushed andPR9created/attached",
+    "owner": "day_accuracy",
+    "interpretation_artifact": "work/day-e12-acceptance-interpretation.json",
+    "interpretation_sha256": "a2c86a91c87ddf3b22fb8fc2d126619b28e233fca4d3006cd7e92ad565575ba1",
+    "plan": "work/day-e12-integration-release-plan.json",
+    "plan_sha256": "c7276b28b4f0dcd072cebf3c15e00d28ac81b11ac37db04ad93afbcd682dc484",
+    "progress_state": "work/day-e12-final-validation-state.json",
+    "cpu_handoff_utc": "2026-10-15T12:16:26.4940504Z",
+    "local_commit": "d54096087a9e975ab07faf71ab2db412a48edcfa",
+    "result": "work/day-e12-final-validation-result.json",
+    "result_sha256": "97bf2d2459b7155e80c50c045c92b66205adfef65ff90e1d1e85f26aa546ed85",
+    "publication_commit": "42d620428520a74fec8c57d5dc6d4db0f6b1920e",
+    "root_review_receipt": "work/day-e12-root-publication-check.json",
+    "root_review_receipt_sha256": "b3935d4a5003f7037de9c305dc59a95b4f043a17354881d57f6c0ee8ecacebf4",
+    "remote_ci": {
+      "url": "https://github.com/ingolfured/gr-tdigest/actions/runs/38737554737",
+      "status": "completed",
+      "head": "42d620428520a74fec8c57d5dc6d4db0f6b1920e",
+      "run_id": 38737554737,
+      "conclusion": "success",
+      "jobs": [
+        {
+          "name": "Build and test",
+          "runtime_matrix": "passed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Lint",
+          "conclusion": "success"
+        }
+      ]
+    }
+  },
+  "e02_heldout": {
+    "cells": 306,
+    "review": "work/day-e02-heldout-review.json",
+    "driver": "work/day_e02_heldout_batch.py",
+    "status": "Complete, independently raw-verified and rejected; Linux slot released. No further E02 measurement.",
+    "review_sha256": "fe294c86c61b04f0625aeed76161c41414056033070ab1b521d4d2ecd2f8840b",
+    "driver_sha256": "f487b898814e9567c3f989cfc7f6d869f802780409aa0b80be047ab687a4282a",
+    "operations": [
+      "build6",
+      "p50_6",
+      "cdf_batch6",
+      "merge288"
+    ],
+    "session": 45407,
+    "started_utc": "2026-10-15T14:02:23.7469006Z",
+    "completed_utc": "2026-10-15T14:03:58.4358915Z",
+    "observed": {
+      "build": {
+        "unstable": 4,
+        "neutral": 2
+      },
+      "skipped_cells": 294,
+      "exactness_quality_storage_failures": 0,
+      "p50": {
+        "neutral": 4,
+        "short": 1,
+        "regressed": 1
+      },
+      "measured_cells": 12,
+      "skipped": [
+        "cdf_batch6",
+        "merge288"
+      ]
+    },
+    "export": {
+      "sha256": "a977934c9379dd0bfc3139259c0a84d8e24a7ed568d0a04dda2bdbe6e5d36da2",
+      "path": "work/day-e02-heldout-rejection-summary.json",
+      "driver_sha256": "c01cda558b4755a35a53d3dd3aa08a783ad040c4e5b611d5eb04ec32a52a8ce6",
+      "driver": "work/export_day_e02_heldout_rejection.py",
+      "review_sha256": "de473882e3290c706fdc2ce6a8120ece8fd93a9874c3c084dbd8891699cd7668",
+      "review": "work/day-e02-heldout-export-review-harness-r2.json"
+    },
+    "certified_rejection": {
+      "paired_ratios": [
+        1.075939,
+        1.110366,
+        1.083901,
+        1.132838
+      ],
+      "operation": "p50",
+      "case": [
+        "ties",
+        100000,
+        "f32",
+        "cap64use"
+      ],
+      "percent_slower": 9.71334,
+      "drift": [
+        1.073612,
+        1.049603
+      ],
+      "minimum_retained_batch_ns": 70101585,
+      "note": "Rounded here; exact full values and raw proofs in immutable export. Old screen gains never erase this regression."
+    }
+  },
+  "portfolio_snapshot": {
+    "scope": "12:57 snapshot, beforeE13rejection; preservedreviewstory andbaselinequalityinventory. Use currentledger fornewcounts.",
+    "sha256": "25a8a2eae44759ef18a10e3a56adb7d887622794fe9445237511b26dd4c3e49a",
+    "path": "work/day-portfolio-story-20261015T125731Z-v2.json"
+  },
+  "pending_confirm_preparation": {
+    "status": "Complete exit0: E03 andE08 rejected. Independent final raw export complete1440measured/2016unmeasured,8certifiedregressions. No native survivors.",
+    "scope": "Full original E03/E08 sixoperations x288 freshcases each; prepareonlyafterprimaryA,declaredcontrols,publicshape prerequisites; independentreview before execution",
+    "owner": "day_harness",
+    "driver": "work/day_e03_e08_heldout_batch.py",
+    "driver_sha256": "b0972f7293f829baea89da29158dc2e394930798c0c5f5735ead627f5a848709",
+    "review": "work/day-e03-e08-heldout-review-accuracy.json",
+    "review_sha256": "aefbe01b7ab44a6adf0a3abcb0057af1229ed16d4bf6f17b60470135af3f7af5",
+    "preparation_sha256": "e04d6d7c95e7dcefbf0815bfb075306781e5291c3c2bf70281f4b7f3a00fe23f",
+    "linux_plan": "/var/tmp/codex-tdigest-pr3-20261014/day20261015/evidence/v3/root-e03-e08-heldout-batch/PLAN.json",
+    "session": 98598,
+    "started_utc": "2026-10-15T14:10:54.3858846Z",
+    "last_poll_utc": "2026-10-15T15:29:51.857451Z",
+    "last_poll_status": "Session98598 active: E08 p50full288 complete exact/no confirmed regression; cdf_batch/merge2/merge/kway remain. Quiet window preserved.",
+    "completed_operations_observed": [
+      {
+        "experiment": "E03",
+        "short_batch_inconclusive": 2,
+        "storage_increases": 0,
+        "neutral_or_noisy": 268,
+        "unstable_controls": 18,
+        "invariant_failures": 0,
+        "operation": "build",
+        "interpretation": "Unchanged operation control;20 uncertain rows remain inconclusive, no retention decision.",
+        "timed_cells": 288,
+        "candidate_rejected": false,
+        "quality_changes": 0,
+        "state_changes": 0
+      },
+      {
+        "unstable_controls": 21,
+        "summary": "/var/tmp/codex-tdigest-pr3-20261014/day20261015/evidence/v3/E03-e03-v3-confirm-p50-scale1/summary.json",
+        "summary_sha256": "ed755e21cb95e4dffef5e366fc9783c7479db60323959f8d63ac47d2b07ea188",
+        "elapsed_increase_percent_range": [
+          3.74925567308335,
+          6.7125717338175
+        ],
+        "short_batch_inconclusive": 15,
+        "neutral_or_noisy": 247,
+        "state_changes": 0,
+        "quality_changes": 0,
+        "invariant_failures": 0,
+        "regression_cells": [
+          7,
+          47,
+          80,
+          187,
+          189
+        ],
+        "storage_increases": 0,
+        "operation": "p50",
+        "interpretation": "Frozen gate rejectedE03; independent raw export awaits actual batch exit. Four subsequent full288operations skipped; no remeasurement.",
+        "timed_cells": 288,
+        "candidate_rejected": true,
+        "experiment": "E03",
+        "regressed": 5
+      },
+      {
+        "quality_changes": 0,
+        "invariant_failures": 0,
+        "neutral_or_noisy": 270,
+        "short_batch_inconclusive": 2,
+        "storage_increases": 0,
+        "experiment": "E08",
+        "interpretation": "Unchanged operation control;18uncertain cells remain inconclusive, no retention decision.",
+        "operation": "build",
+        "state_changes": 0,
+        "candidate_rejected": false,
+        "timed_cells": 288,
+        "unstable_controls": 16
+      },
+      {
+        "storage_increases": 0,
+        "candidate_rejected": false,
+        "state_changes": 0,
+        "operation": "p50",
+        "quality_changes": 0,
+        "short_batch_inconclusive": 21,
+        "timed_cells": 288,
+        "invariant_failures": 0,
+        "neutral_or_noisy": 260,
+        "unstable_controls": 7,
+        "experiment": "E08",
+        "interpretation": "Unchanged query control;28uncertain rows remain inconclusive. Full candidate confirmation is unfinished."
+      },
+      {
+        "short_batch_inconclusive": 3,
+        "quality_changes": 0,
+        "storage_increases": 0,
+        "state_changes": 0,
+        "experiment": "E08",
+        "neutral_or_noisy": 266,
+        "improved": 5,
+        "operation": "cdf_batch",
+        "timed_cells": 288,
+        "summary_sha256": "f47330c6a2f15237e3b76793044064d13fe3086cb5d1e91766381d6c207962bc",
+        "elapsed_increase_percent_range": [
+          4.37413025223528,
+          5.02144935811886
+        ],
+        "candidate_rejected": true,
+        "regression_cells": [
+          0,
+          4,
+          253
+        ],
+        "unstable_controls": 11,
+        "invariant_failures": 0,
+        "regressed": 3,
+        "summary": "/var/tmp/codex-tdigest-pr3-20261014/day20261015/evidence/v3/E08-e08-v3-confirm-cdf_batch-scale1/summary.json"
+      }
+    ],
+    "export_preparation": {
+      "owner": "day_speed",
+      "scope": "Full12x288 intents, all actual raw completed evidence and preserved prior/skipped/cutoff/rejected/uncertain outcomes; no automatic retention",
+      "status": "R2 prepared; root full staticreview and independent accuracy review passed. Run only after actual98598exit; no execution yet",
+      "cpu_constraint": "NO WSL/UNC/build/test while root98598 active",
+      "draft_path": "work/export_day_e03_e08_heldout.py",
+      "initial_draft_sha256": "5253335329079ccac95957c6af311f7a3761bc20164bff66729d34bc762f84de",
+      "sha256": "0152966402b7206ee795c1bab7a5854ca4e74040e6dc804c2d5776393d125a7c",
+      "preparation": "work/day-e03-e08-heldout-export-preparation.json",
+      "preparation_sha256": "57955c608b172e64691abcec18ffee47e909e57ac45bbfbc7e67092f662e8e9a",
+      "review": "work/day-e03-e08-heldout-export-review-r2.json",
+      "review_sha256": "1a27175fd27a9418cba05b91ac120da2bb8db324b11a4a9491122b4a7adcd5e6"
+    },
+    "completed_utc": "2026-10-15T15:46:49.442625Z",
+    "final_export": {
+      "batch_status": "complete",
+      "unmeasured_cells": 2016,
+      "sha256": "5146c3f70dc4ce39cf58190a658a251797756b41cdfd4f1ec90b6fd9bf5badf5",
+      "status": "export_complete",
+      "measured_cells": 1440,
+      "certified_regressions": 8,
+      "path": "work/day-e03-e08-heldout-summary.json"
+    }
+  },
+  "interaction_plan_preparation": {
+    "exclusion_sha256": "9bc41b8efcb899a302512712e864abb5fe8bca8fd59bf125186813a8b600a7e3",
+    "owner": "day_harness",
+    "status": "Not applicable: no native survivors. Conditional proposal and exclusions preserved UNEXECUTED. E12alone already qualified; no combined claim.",
+    "exclusion": "work/day-native-e12-interaction-disposition-20261015T140347Z.json",
+    "pending": "Independent staticreview, eventualsourceboundcompanion, exact compiled-input dedup and pool aggregate timing review; no speculativeimplementation",
+    "path": "work/day-native-e12-interaction-plan.json",
+    "sha256": "58ea30dfbc5696bab0887248a682644bfc4d9bcfe0064381b369ea503c3b8894",
+    "cpu_constraint": "Agents remain Windows-only except day_speed brief E02 evidence export slot",
+    "implementation_notes": "work/day-native-e12-interaction-implementation-notes.json",
+    "implementation_notes_sha256": "17d790c0bdbb9520f0abd358edd9df2d6d2ff748464ea1efa65cebb93cb7a238",
+    "independent_review": {
+      "path": "work/day-native-e12-interaction-review-accuracy.json",
+      "status": "Conditional static proposal review passed; implementation remains unbuilt/unvalidated",
+      "sha256": "8a1a27d136cf456837dca45ab250d8873f941d2dd03816b0745cffd0f0df1213",
+      "dispatch_requirement": "Pin Python public merge dispatch. Sequential merge_all40 is not native owned kway40. E08 incremental native C-vs-L_E08 kway gate remains; no E08 Python40-way claim without dispatch proof."
+    },
+    "route_notes": {
+      "path": "work/day-native-e12-interaction-route-notes.json",
+      "scope": "Static proposal only. Cached frontend sequential merge_all route established; full Python source-bound dispatch remains required before any interaction worker.",
+      "sha256": "78A86233EABAE2D144E8B7C4C6A244C51D86ED8593B8E59F27FF3943E58D7CFC"
+    },
+    "e03_exclusion": {
+      "sha256": "b2bc96f6965f1259f6a503e7c09d318e7b94614e5cfffa4fe03d47b50bce151f",
+      "scope": "Only possible E08+E12 composition now; conditional/unimplemented; E03 raw export awaits active batch exit.",
+      "path": "work/day-native-e12-interaction-disposition-20261015T150120Z.json"
+    }
+  },
+  "final_portfolio_audit": {
+    "sha256": "80ba516cdeae02314d999c9d9fd006f30f91cbe102c848971a250a0a6ed4d1ec",
+    "status": "Independent final audit passed; nineteen rejected, one retained; no composition work remains.",
+    "path": "work/day-final-portfolio-audit-accuracy.json"
+  },
+  "final_remote_verification": {
+    "path": "work/day-final-remote-verification.json",
+    "pr9_head": "42d620428520a74fec8c57d5dc6d4db0f6b1920e",
+    "sha256": "af1da583725eabfb0124805cecf75d59e5bd0243c9461ef291e270a9a7729bec",
+    "existing_pr_heads_unchanged": true,
+    "ci_run": 38737554737,
+    "ci_conclusion": "success"
+  },
+  "final_branch_verification": {
+    "path": "work/day-final-branch-verification.json",
+    "original_checkout_accessed": false,
+    "remote_heads_match": true,
+    "sha256": "1cadee661f53da28a9d2ad2790371b31ca072e32d5ab076f9d06d00a75684711",
+    "isolated_main_clean": true,
+    "retained_worktree_clean": true
+  },
+  "active_session": null,
+  "completed_utc": "2026-10-15T15:55:44.3244515Z",
+  "completion_report": {
+    "decisions": 20,
+    "pending": 0,
+    "retained": 1,
+    "evidence_references_verified": 8,
+    "path": "work/day-experiments-completion.json",
+    "rejected": 19,
+    "sha256": "5e2d15341c0d7f9323b4210ec92e47efae62067de44c6acd1c62c778ab39e6a0"
+  },
+  "automation_closeout": {
+    "id": "daytime-tdigest-top-20-experiments",
+    "time_utc": "2026-10-15T15:55:44.3244515Z",
+    "status": "deleted",
+    "verified_response": "Deleted automation in the app; deleteStatus deleted",
+    "reason": "All20 candidates have evidence-based dispositions and sole retained candidate is fully qualified; stop early as instructed."
+  },
+  "final_native_independent_review": {
+    "prior_review_script_failures": "Preserved: unsupported output flag and OrderedDictionary grouping; metadata-only reviewer fixes, no evidence or thresholds changed.",
+    "status": "passed",
+    "certified_regressions": 8,
+    "exact_arithmetic_rows": 1440,
+    "path": "work/day-e03-e08-heldout-final-review-speed-r3.json",
+    "sha256": "8cedd513d2f34795263f892cb321029ccf72f81ffd4f98dcb11944a7d9da9bae"
+  },
+  "final_remote_independent_review": {
+    "sha256": "35fc9a530d501ace6582bf467c7213614ad09d09fb4a9d26c0b82cc80b0f427b",
+    "path": "work/day-final-portfolio-audit-accuracy-remote.json",
+    "status": "passed"
+  }
+}

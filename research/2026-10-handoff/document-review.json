@@ -1,0 +1,67 @@
+{
+  "schema": "handoff-final-documentation-review-v1",
+  "created_utc": "2026-10-18T07:59:17.8819604Z",
+  "reviewer": "day_accuracy",
+  "worktree": "/var/tmp/codex-tdigest-pr3-20261014/handoff20261018",
+  "status": "No factual or link blocker found; one optional verifier-version clarification.",
+  "method": "Read-only WSL reads of Markdown, PR/branch records and archive metadata; compared guides with previously reviewed Windows drafts. No library builds, tests, benchmarks, source edits, extraction or upload verification performed.",
+  "reviewed_files": [
+    {
+      "path": "HANDOFF.md",
+      "sha256": "7b598cd42e7536ef9cfd30286b44db4a55b7211557612fe84f8b64b03c8839f7"
+    },
+    {
+      "path": "research/2026-10-handoff/COMPATIBILITY.md",
+      "sha256": "ee34e4fc5b3db7513699e8b943e7368cc2b68dba9e74941e9bc60d6df962fda1"
+    },
+    {
+      "path": "research/2026-10-handoff/EXPERIMENTS.md",
+      "sha256": "a41d6984b2386cf9e37a75c1ec26175e2d6ca6fa772590800694d4b231ac0ecb"
+    },
+    {
+      "path": "research/2026-10-handoff/EXPERIMENT-BRANCHES.md",
+      "sha256": "0e6e631a12c03faa18e4498b08675defb976099a31c8879f876fa689fcdcc73b"
+    },
+    {
+      "path": "research/2026-10-handoff/branch-map.json",
+      "sha256": "141756a573e5ad9f6b63c4b7ff20ddf5b0a416856db592edce8a0bfe2086bc48"
+    },
+    {
+      "path": "research/2026-10-handoff/archive-summary.json",
+      "sha256": "14fad77b451f1572851fdb328a6b99a2adabd6d712905383466650b473c6db88"
+    },
+    {
+      "path": "research/2026-10-handoff/relocation.json",
+      "sha256": "ce19b5cf8dd85ef1e86b395c5279edfbe1d0615151c9f1a2b8d553f012f0beaa"
+    },
+    {
+      "path": "research/2026-10-handoff/pull-requests.json",
+      "sha256": "6fb79599f75739f1928e760df66b5a40de7cbcec713e27cb771ace857be120bf"
+    },
+    {
+      "path": "research/2026-10-handoff/reports/server-performance-priorities.json",
+      "sha256": "0db8184a1c2aaa55af97fe75ef833a3e08e45336afe6923c787f719605bdcd99"
+    }
+  ],
+  "checks": [
+    "HANDOFF current branch table matches recorded18October PR metadata:1/2 merged;3/4/5 closed;6/7/8/9 open;38 open and draft; correct heads and stacked base names.",
+    "All20 experiment rows match archive-ref and commit entries in branch-map; each records original baseline25c8. Snapshot code is explicitly distinguished from frozen measured patches and validated integration.",
+    "Nine local Markdown links checked across root HANDOFF and handoff guides; none missing.",
+    "COMPATIBILITY equals the peer-reviewed Windows draft; EXPERIMENTS differs only by the final migration provenance sentence.",
+    "Both guides preserve the revised many-core throughput policy without retroactively validating historical rejections or relaxing compatibility/numerical requirements. No claim that all19 rejected candidates failed correctness or completed every later gate.",
+    "Modern unresolved mass/tail/extreme-product/subnormal/fractional-quantile issues remain separate from original-engine compatibility. E12 speed ranges, uncertainty, source-specific artifacts and NumPy1/memory limits remain accurate.",
+    "Archive summary and manifest report92680files,2477526741compressedbytes and5910778736uncompressedbytes. Manifest entries match the exact E12 release wheel and both independent oracle binary exception hashes.",
+    "Relocation table retains historical evidence bytes and separates reconstructed Git checkouts from extracted data; protected dirty checkout remains outside this migration.",
+    "Verifier source behavior supports prose: verifies manifest/part/file hashes, restores modes, refuses existing extraction destination and checks personal mapped refs. This review did not execute it or verify archive payload bytes."
+  ],
+  "nonblocking_clarification": {
+    "suggestion": "State Python3.9+ is required for the standalone archive verifier because it calls Path.is_relative_to. This is separate from the library validated CPython3.10–3.12 support range.",
+    "location": "HANDOFF.md: Resume from a fresh Linux clone"
+  },
+  "remaining_root_gates": [
+    "Complete upload and actual clean-clone archive/branch verification before reporting backup complete.",
+    "If documentation changes, preserve this receipt and bind any revision separately."
+  ],
+  "source_mutations": false,
+  "review_receipt_only_write": "Windows work/handoff-final-doc-review.json"
+}

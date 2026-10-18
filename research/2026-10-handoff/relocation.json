@@ -1,0 +1,43 @@
+{
+  "status": "historical prefixes, not executable substitutions",
+  "aliases": [
+    {
+      "original": "C:/Users/ingol/Documents/Codex/2026-10-14/hi/work",
+      "restored": "<extraction>/work"
+    },
+    {
+      "original": "/mnt/c/Users/ingol/Documents/Codex/2026-10-14/hi/work",
+      "restored": "<extraction>/work"
+    },
+    {
+      "original": "/var/tmp/codex-tdigest-pr3-20261014/day20261015",
+      "restored": "<extraction>/day; source worktrees from archive refs"
+    },
+    {
+      "original": "/var/tmp/codex-tdigest-pr3-20261014/overnight",
+      "restored": "<extraction>/overnight"
+    },
+    {
+      "original": "/var/tmp/codex-tdigest-pr3-20261014/logs",
+      "restored": "<extraction>/logs"
+    },
+    {
+      "original": "/var/tmp/codex-tdigest-pr3-20261014/numerical-parity",
+      "restored": "<extraction>/numerical-parity"
+    },
+    {
+      "original": "/var/tmp/codex-tdigest-pr3-20261014/work/gr-tdigest",
+      "restored": "new clone of ingolfured/gr-tdigest at the named source commit"
+    },
+    {
+      "original": "/var/tmp/codex-tdigest-pr3-20261014/work/tdigest-rs-upstream38",
+      "restored": "new clone of ingolfured/tdigest-rs at the named source commit"
+    }
+  ],
+  "rules": [
+    "Do not rewrite original evidence bytes or protocols; preserve checksums.",
+    "Adapt runners in a new source file/config before execution.",
+    "Frozen native binaries retain original executable mode and exact bytes; host/runtime compatibility is not guaranteed.",
+    "Do not extract over a checkout or the protected original /home/ingo/git/gr-tdigest."
+  ]
+}

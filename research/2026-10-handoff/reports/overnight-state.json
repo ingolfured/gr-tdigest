@@ -1,0 +1,756 @@
+{
+  "updated_utc": "2026-10-15T07:45:48Z",
+  "deadline": "2026-10-15T08:00:00+01:00",
+  "automation_id": "overnight-tdigest-review-and-improvements",
+  "repository": "/var/tmp/codex-tdigest-pr3-20261014/work/gr-tdigest",
+  "wsl": "ArchFresh, user ingo",
+  "protected_checkout": "/home/ingo/git/gr-tdigest",
+  "branch": "review/3-upstream-compatibility-gate",
+  "local_validated_heads": {
+    "source": "ff73cfab31d6368d203c1a361b8efaaea29d735b",
+    "evidence_head": "25c8c1642029a640b153c160c22a89795d29ad91",
+    "equivalence": "Current25c8c16 adds docs/evidence and exact13-file LF checkout attributes atop testedff73 source. Numerical/build sources unchanged. Both originalrawguards pass; LinuxGitautocrlf negative/positive/mutationcontrols pass."
+  },
+  "pushed": true,
+  "requirements": [
+    "Linux builds/tests only.",
+    "Do not merge PRs or publish releases.",
+    "Preserve tdigest_rs public API and original arithmetic; quantify justified differences, no blanket epsilon.",
+    "Run untouched91 upstream tests and independent exact oracle.",
+    "Update CHANGELOG in every commit.",
+    "No world-best claims without broad fair comparisons.",
+    "Do not touch original dirty checkout /home/ingo/git/gr-tdigest."
+  ],
+  "first_batch": {
+    "status": "Validated, committed, restacked, and pushed; PR descriptions updated. CI in progress as of21:52 UTC.",
+    "validation": "makebuild/test/lint, cargocheck--benches pass. Rust/Java+233Pythoncoherence+91original. InstalledoptimizedLinuxwheel176 pass.",
+    "logs": "/var/tmp/codex-tdigest-pr3-20261014/logs/overnight",
+    "commits": "work/overnight-commits.json"
+  },
+  "candidate": {
+    "status": "ff73cfa validated; 188 new evidence blobs verified and committed at 4bb78de, fast-forwarded PR8. PR6/7 unchanged.",
+    "branch": "review/candidate-original-rust-api",
+    "path": "/var/tmp/codex-tdigest-pr3-20261014/work/gr-tdigest-f64-weights",
+    "base": "7d9e13250772f7bbe7ae2433d3401efe326e07f3",
+    "head": "4bb78de91f7214cb811a35b3ed4bdcb7b2fe4685",
+    "narrow_validation": "/var/tmp/codex-tdigest-pr3-20261014/overnight/numerical-review/original-rust-api-option/validation/"
+  },
+  "agents": {
+    "compatibility_audit": "Complete; launcher fix Linux300+2 and unchanged-source checks passed.",
+    "numerical_review": "Complete; independently approved exact patch and controls.",
+    "release_benchmarks": "Complete; final matched budget evidence published8fff555; no new experiments."
+  },
+  "upstream38": {
+    "head": "57e7978d0811baed4a546ff2f08dccaeff03c321",
+    "repo": "ingolfured/tdigest-rs",
+    "branch": "overwrite_snapshot_v1_0_0",
+    "status": "Draft current57e7978; minimal launcher fix independently reviewed, validated Linux300+2 and pushed normally. Descriptions refreshed with current CI status.",
+    "rollout_plan": "work/overnight-compat/rollout-plan.json",
+    "blockers": [
+      "Upstream workflow90553253 remains disabled_inactivity; maintainer must enable/run upstream current-head checks and approve. Fork CI cannot create the required app-backed upstream check.",
+      "Version2.0.0 and publication sequence provisional; independent gr-tdigest/tdigest-rs coinstallation unsafe.",
+      "Python3.13+ excluded pending verification; NumPy2 protocol5 rollback to NumPy1 unsupported; original default-delta restore semantics retained."
+    ],
+    "rollout_inventory": "work/overnight-compat/rollout-audit/contract-inventory.json",
+    "body_file": "/mnt/c/Users/ingol/Documents/Codex/2026-10-14/hi/work/morning-delivery/20261015T074543Z/38-applied.json",
+    "draft": true,
+    "checkout": "/var/tmp/codex-tdigest-pr3-20261014/work/tdigest-rs-upstream38",
+    "current_main_note": "Current upstream main32a49203d6fdbc80e3ea4a381265e83762f87faa. Exact diff from pinned8d9cf1 over src,Cargo.toml,Cargo.lock,bindings/python is empty; only six CI workflow files changed. Preserve current pinned actions/platform constraints.",
+    "local_candidate": "daad315 fully tested actual numerical/build source; later evidence, LF policy and launcher-only fix57e7978. Numerical source/manifests unchanged.",
+    "artifact_reuse_patch": "c387308e5148c011e56b68951fe62065a45ea4725c8c74f11c8a14cf1d4aeb3b appliedlocallyafter148filehashverification; independentlyreviewed; no builds/push; remotee8562fdverifiedunchanged.",
+    "validated_artifacts": "daad315 direct wheel e12e812f8964809b98fc90a1e272c7e73949ea05fa14a52a4189c4a019701256, native c5b776c813ba5352b4f7386c4709dc129b98977edb8a4bd87c0dfe3a1220b498, sdist3efffead0a74c138043cdbf8acec26c31868f4c3fc0e9cf9b78e8f95468d1cf9. Canonical336+91,121Rust3ignored,Java,2036actualwheelinstances and unchanged numericalauditsPASS.",
+    "lifecycle_evidence": "/var/tmp/codex-tdigest-pr3-20261014/overnight/package-hygiene/upstream-lifecycle-daad315-v2/RESULT.json; v1preparationfailure retained separately beforeanyinstallation.",
+    "rebuilt_artifact": "/var/tmp/codex-tdigest-pr3-20261014/overnight/package-hygiene/upstream-normalized-sdist-daad315/execution.json; rebuiltwheel1c31eb58d9ed15b43296690f562226522f85fb20d9cc19f772ad925337fdd840,own2036PASS.",
+    "remote_ci": "The [current fork CI run](https://github.com/ingolfured/tdigest-rs/actions/runs/38693154198) passes at `57e7978`: Rust tests on all configured platforms, Python 3.10\u20133.12 source-interface tests on Linux/macOS/Windows, all seven wheel builds, and the installed GNU x86_64 wheel / NumPy matrix. The other platform wheels were built, not individually installation-tested."
+  },
+  "next": [
+    "Human review:PR6 weighted/state correctness \u2192PR7 original Python API/engine \u2192PR8 Rust/runtime/artifact and measured evidence. Preserve stacked bases when merging/restacking.",
+    "Maintainer must re-enable upstream CI, run currentPR38 and provide required approval; inspect final fork run38693154198 if still pending at closeout.",
+    "Resolve provisional2.0.0/publication sequence, shared-namespace distribution ownership, and original Rust root-path migration before release.",
+    "No further scheduled speculative changes; no merge or release authorized."
+  ],
+  "scratch_scalar_cdf": "/var/tmp/codex-tdigest-pr3-20261014/overnight/scalar-cdf-plan",
+  "old_findings": "/var/tmp/codex-tdigest-pr3-20261014/overnight/numerical-review/unresolved-findings.json",
+  "evidence": "compat/performance;sourcepin8d9cf1fe82c5c9254e5dc9593f01717e317f4333",
+  "local_heads": {
+    "6": "6eb4203fe1c4ad8d337636d5aca549e0fec155b3",
+    "7": "911dc35493f1774fed1320f9da30d553b41f59b2",
+    "8": "25c8c1642029a640b153c160c22a89795d29ad91"
+  },
+  "remote_heads": {
+    "6": "6eb4203fe1c4ad8d337636d5aca549e0fec155b3",
+    "7": "911dc35493f1774fed1320f9da30d553b41f59b2",
+    "8": "25c8c1642029a640b153c160c22a89795d29ad91"
+  },
+  "published_pickle": {
+    "commit": "faed3ee61e8159181ba6337e7eace4ecbbda188e",
+    "status": "Complete: actual tdigest-rs upgrade from published0.1.0 passes32 exact old-restored states and208 compatibility cases after upgrade and reinstall. Original loader defaultdelta/recompression semantics and NumPy2protocol5rollback limitation retained.",
+    "release": "PyPI tdigest-rs0.1.0, wheel SHA25662ee8d5a01226d020a2ab11a956292c38beab3f34d2d9fa7a8fca22c3e5d4bbf",
+    "notes": "Forward32/32 exact versus old-restored state. Old wrapper loses delta on restore. Reverse protocol4 passes16/16; protocol5 fails16/16 on NumPy1.26.4 because NumPy2 uses numpy._core.numeric."
+  },
+  "active_process": {
+    "cpu": "none",
+    "session": 0,
+    "scope": "No local build/test/benchmark or source-change batch remains active. Current-head remote CI status recorded in morning_remote_ci_current."
+  },
+  "ci_previous_push": "All three previously pushed review heads passed GitHub build/test and lint. PR8 successful run38643086400; duplicate38643086318 cancelled.",
+  "property_audit": "compat/weighted-point-audit committed at22867bd, preserves successful800-digest/33536-query/304-mass run and failing baseline control; known extreme probes labeled separately.",
+  "final_mass_validation": {
+    "status": "All passed at clean22867bd",
+    "canonical": "/var/tmp/codex-tdigest-pr3-20261014/overnight/validation-22867bd.json",
+    "wheel": "/var/tmp/codex-tdigest-pr3-20261014/overnight/release-wheel-22867bd",
+    "counts": "Rust/Java,284 Python/coherence plus91 original; installed compatibility208; additional installed modern APIs40 plus800-digest/33536-query/304-mass audit."
+  },
+  "current_pr_descriptions": "PR6/7 final evidence bodies retained; PR8/38 morning updates in /mnt/c/Users/ingol/Documents/Codex/2026-10-14/hi/work/morning-delivery/20261015T074543Z",
+  "benchmark_current": {
+    "source": "ff73cfab31d6368d203c1a361b8efaaea29d735b",
+    "independent_original": "8d9cf1fe82c5c9254e5dc9593f01717e317f4333",
+    "evidence_commit": "8fff555623ca7a472ac38bc9066dbb81534e424d",
+    "accuracy": "compat/accuracy/matched-budgets-ff73cfa/RESULTS.md",
+    "timing": "compat/performance/matched-budgets-ff73cfa/RESULTS.md",
+    "summary": "Frozen training choices, separate held-out seeds:8064states; 8088192quantile estimates and4134380CDF probes. All6048selected storage-policy states metcap; all2016selected2pp-policy states metthreshold. At1KiB modern worstqueriedrank43.583pp.2pp-policy modern storage~2xoriginal. n1M timing72processes retains8distinctpolicy misses; normalf64same2pppolicy buildmodern/original0.825/0.868, sequentialmerge1.542/1.681. Logicalstorage notcapacity/RSS; noglobalwinner orPython/JNI overheadclaim."
+  },
+  "compressed_audit": {
+    "status": "PASS atc5dec35; historicaltwofailuresat22867bdpreserved",
+    "coverage": "1440routes/3840states,7680masschecks,180594CDFvalues,503040quantilevalues;zerosfailures;controls/scriptunchanged.",
+    "cause_and_fix": "Finite-only compressedmeanbound toinputinterval preventsroundedmean collidingwithnextcluster. Doesnotmasknonfiniteaccumulation.",
+    "evidence": "compat/validation/c5dec35-modern-compressed-state-audit.json"
+  },
+  "subnormal_patch": {
+    "path": "/var/tmp/codex-tdigest-pr3-20261014/overnight/numerical-review/subnormal-queries",
+    "status": "Validatedandpushed:two-stage exactpower-of-twonormalization into[1,2) actualtotal;10Rusttests+6Python/Polarscasespassed.",
+    "scope": "Query-onlycopy;storedstateandordinaryarithmeticunchanged. Cannotrecovercompressionunderflow;normal-totaltinycomponentsandaggregate/productoverflowremaindeferred."
+  },
+  "packaging_findings": [
+    "Overlapping tdigest_rs/gr_tdigest namespace ownership remains a deployment decision; same-name upgrade prototype passes.",
+    "Committed360ad5b restores Python3.10-3.12 and NumPy1/2 support; installed matrix running. Python3.13+ and full wheel platforms not established.",
+    "Original tdigest_core restored at3b8fa69 with identical source; Git crate-name consumers work, original local root-path consumers need src/upstream.",
+    "Bytecode inclusion and source-archive README collision fixed and validated in prior52f6212; current artifact gate also checks active source paths."
+  ],
+  "ci_current": "The [current fork CI run](https://github.com/ingolfured/tdigest-rs/actions/runs/38693154198) passes at `57e7978`: Rust tests on all configured platforms, Python 3.10\u20133.12 source-interface tests on Linux/macOS/Windows, all seven wheel builds, and the installed GNU x86_64 wheel / NumPy matrix. The other platform wheels were built, not individually installation-tested.",
+  "boundary_validation": {
+    "source": "c5dec35059990b40fe6f036dc83590bf0cdf2a70",
+    "report": "/var/tmp/codex-tdigest-pr3-20261014/overnight/validation-c5dec35.json",
+    "counts": {
+      "python_and_coherence": 294,
+      "unchanged_upstream": 91,
+      "rust_and_java": "passed; three existing Rust ignored tests remain ignored"
+    },
+    "wheel": "/var/tmp/codex-tdigest-pr3-20261014/overnight/release-wheel-c5dec35",
+    "compressed_audit": "PASS:1440routes/3840states"
+  },
+  "summary": "Morning closeout: all original compatibility and final numerical/artifact evidence complete. Personal review stack6\u21927\u21928 intact, current8 green. Actual upstream draft57e7978 includes narrow launcher isolation fix; all protected numerical sources/manifests unchanged. The [current fork CI rerun](https://github.com/ingolfured/tdigest-rs/actions/runs/38693154198) at `57e7978` is still running, with 23 jobs successful so far. All three current-head Windows Python jobs now pass. The preceding `d506299` run passed Rust on all configured platforms, Python on Linux/macOS, all seven wheel builds and the installed GNU x86_64 2,036-instance matrix; its three Windows Python jobs stopped during pytest collection, after the checksum guards passed. The full current-head matrix remains pending. Upstream workflow remains disabled_inactivity; release/version and review decisions outstanding. No merge or release. Later final observation: fork CI38693154198 at57e7978 completed SUCCESS. Required upstream CI remains disabled_inactivity.",
+  "source_archive": {
+    "branch": "review/evidence-scaling-packaging-20261015",
+    "head": "52f6212008111b62fa07374278b850868b9ea77e",
+    "pushed": true
+  },
+  "ready_scratch_patches": {
+    "transactional_scaling": {
+      "path": "/var/tmp/codex-tdigest-pr3-20261014/overnight/numerical-review/transactional-weight-scaling/transactional-weight-scaling.patch",
+      "sha256": "630f08c1af782f8fb93a7ffdb3b9c5ee2e87822965d932e320b9146046edd5c8",
+      "base": "8ce82fc functional source; expectCHANGELOGcontextrebase",
+      "status": "Independentreviewpassed;rustfmt/Ruffonly,notcompiled/runtime-tested",
+      "tests": "3Rusttests inbothprecisions +20Python/Polarscases;productunderflow/overflow,accumulatedmassoverflow,storedcountoverflow,successpreservation",
+      "scope": "Validateallnewweightproductsandactual/storedmasstotalsbeforemutation;existingerrors. Weighted-value sumoverflowandconstruction/merge remainseparate."
+    },
+    "package_hygiene": {
+      "directory": "/var/tmp/codex-tdigest-pr3-20261014/overnight/package-hygiene",
+      "patch": "package-hygiene.patch",
+      "status": "Independentreviewpassed;negativecontrolrejects4pycfilesin228wheel;actualnewwheel/sdistpending",
+      "scope": "ThreeMaturinexcludes +pre-installZIPcontentassertion;noidentity/dependencychange",
+      "plan": "PLAN.mdincludesactualsame-distributionpipupgrade/uninstall/reinstallprototypeusingdisposablesourceexportchangingonlyprojectname. Do notrepackmetadataasproofofbuildconfig."
+    }
+  },
+  "focused_interleaved": {
+    "directory": "/var/tmp/codex-tdigest-pr3-20261014/overnight/focused-interleaved",
+    "files": [
+      "focused_interleaved.py",
+      "focused_interleaved_tail.rs",
+      "prepared-harness.rs",
+      "PLAN.md",
+      "PREPARATION.json"
+    ],
+    "status": "Complete:8 smoke and32 full processes; all source/lock/binary hashes and schedule validated. Integrated/pushed at7d9e132.",
+    "controls": "Immutable 22867bd and c5dec35 sources/binaries; ABBA then BAAB with reversed case and original/modern operation order; 32 planned runs.",
+    "next": "No repeat needed without a new hypothesis. Earlier slowdown was not consistently reproduced; retain both blocks and unchanged-engine controls.",
+    "report": "compat/performance/RESULTS-interleaved-20261015.md"
+  },
+  "current_batch_drivers": [
+    "work/validate_release_batch.py",
+    "work/validate_batch_modern_wheel.py",
+    "work/verify_sdist_hygiene.py",
+    "work/validate_runtime_batch.py"
+  ],
+  "scaling_packaging_validation": {
+    "source": "52f6212008111b62fa07374278b850868b9ea77e",
+    "report": "/var/tmp/codex-tdigest-pr3-20261014/overnight/validation-52f6212.json",
+    "counts": {
+      "python_and_coherence": 314,
+      "untouched_upstream": 91,
+      "rust_passed": 112,
+      "rust_preexisting_ignored": 3,
+      "installed_compatibility": 208,
+      "installed_modern": 70
+    },
+    "wheel_sha256": "b1a2f6329410a55cbe3b3cb2b49517fae6851309e130bf2e2220cc6b1f0c11bf",
+    "native_sha256": "78a7473df6e7b20c703a57559b8ea9975848a3f55f745a7fcd1e721a598ece09",
+    "audits": "800 weighted-point digests;1440 compressed routes/3840states;all pass",
+    "package_probe": "/var/tmp/codex-tdigest-pr3-20261014/overnight/package-hygiene/same-distribution-probe/RESULT.json",
+    "standard_sdist_rebuild": "/var/tmp/codex-tdigest-pr3-20261014/overnight/package-hygiene/standard-sdist-wheel-52f6212/execution.json",
+    "limits": "Package prototype changes only distribution name; staged dependencies and Python3.12 only, no independent gr-tdigest coinstallation, no unconstrained resolver or manylinux proof."
+  },
+  "python_runtime_plan": "work/overnight-compat/upgrade-probe/python-floor-feasibility.json",
+  "held_out_accuracy": {
+    "directory": "/var/tmp/codex-tdigest-pr3-20261014/overnight/held-out-accuracy/held-out-20261015",
+    "status": "PASS:240 datasets/3360 states(2160modern+1200original), no driver/modern invariant failures.3,370,080 primary quantile values+1,725,214modernCDFprobes;3,873,308tinyindependentreferencecells. Rawgzip154MB retainedlocal, hashchecked. Initialscratchharnesscompilefailurepreserved; correctedreference/smoke passedbeforefrozenfullsurvey.",
+    "budget": "Completed fixed-delta survey. Separate common logical storage/error-budget experiment has frozen policy, no executions yet.",
+    "findings": "Separated narrow modes expose worst modern CDF error0.0525635 and queried-rank error0.05296. Large median Type7 value errors can coexist with small rank errors; independently reproduced as compression/interpolation limitation, not mass loss. Some old/new examples are exact, others differ by about9.3e-15. No speculative numerical change.",
+    "review_bundle": "/var/tmp/codex-tdigest-pr3-20261014/overnight/held-out-accuracy/review-package-20261015",
+    "comparison": "1200paireddirect/sequentialroutes: modernp50ranklower106/equal1072/higher22,maxincrease0.048percentagepoints. Maxqueriedranklower609/equal526/higher65,maxincrease1.226points. Continuouslogicalstorageroughly2xatsamedelta;tiescompactandexact. Original4208belowminestimatesin488states, no nonfinite/abovemax."
+  },
+  "python_runtime_prototype": {
+    "directory": "/var/tmp/codex-tdigest-pr3-20261014/overnight/package-hygiene/lower-runtime-probe",
+    "runner": "work/overnight-compat/lower-runtime-probe/README.md",
+    "status": "PASS: genuine cp310 ABI3 optimized wheel loads exact native in all six CPython3.10.19/3.11.14/3.12.12 x NumPy1/2 cells; each208compat+70modern, no skips/xfails, pipcheck/importhash/source integrity pass. Production metadata unchanged.",
+    "planned_gate": "Genuine cp310wheel,208compatibility+70modern tests in each of six Python/NumPy cells plus pipcheck/importhash.",
+    "wheel_sha256": "e2bde32e417f45f137d4263049b9389ae3ccd7f0286330913eb4a57755185324",
+    "native_sha256": "df86ed91b2e0c428cf6953a74de78df2efe3022a3d00adc7cc4b20a4e952c0c4",
+    "completed": "work/overnight-compat/lower-runtime-probe/completed/"
+  },
+  "original_committed_lock_oracle": {
+    "directory": "/var/tmp/codex-tdigest-pr3-20261014/overnight/numerical-review/original-committed-lock-oracle/",
+    "results": "results.json",
+    "status": "PASS in debug and release:70 cases,1762 exact-bit and126 NaN-classification comparisons each; original35-file export, lock and golden unchanged."
+  },
+  "sdist_gate_draft": {
+    "status": "Final checker includes active root Rust library, allmodernRustfiles, active originalcrate, normalizedPythoncopies. Bothrealold/newarchives and9negativecontrolsPASS; incorporated intoadoption.",
+    "tests": "work/test_sdist_gate_scratch.py",
+    "helper": "work/check_python_sdist.py",
+    "results": "work/sdist-gate-scratch-validation.json",
+    "restored_results": "work/sdist-gate-restored-validation.json"
+  },
+  "runtime_adoption_decision": "Committed360ad5b: ABI310/Python3.10-3.12/NumPy1-2, optional Polars1.34.0 extra/dev pin, seventh real environment with Polars absent. Frozen during validation.",
+  "integration_decision": "Keep currentlygreenPR6 andPR7 heads stable. NewRust/runtime/delivery batch fast-forwardsPR8; broaden title/guide tocoverfinalcontract+releaseevidence. Avoid splittingPR8goldenfixturedependencies or reorderingearlierpackagefixes.",
+  "python_runtime_adoption": {
+    "commit": "360ad5b9dcd8b133a40cea9b6b70a83ba390e7fa",
+    "changes": "ABI310,CPython3.10-3.12,NumPy1/2,Polarsoptional1.34.0,7cleanruntimecellsprospective1902tests,actualartifact/sourcearchivegate,publishcommandcwdcoherence",
+    "lock": "Retained26packageversionsets; addedexceptiongroup1.3.1,tomli2.5.0,np2.2.6+scipy1.15.3for3.10. Existingnp2.3.4/scipy1.17.1 retained. Cargo.lock onlyalphabeticaltdigest_coreordering;graphunchanged.",
+    "status": "COMPLETE:canonicalunchangedlibrary360PASS; gate-only3d actualdirectwheel1902/sevenenvironments +bothpropertyauditsPASS; genuineunmodifiednormalizedsdistrebuilddistinctwheelown1902PASS, nativebytesidentical. Evidencecommitted66e56e4.",
+    "gate_fix": "3d0182a5713be0d1835296a8c7a340c987243072",
+    "artifact": {
+      "wheel": "/var/tmp/codex-tdigest-pr3-20261014/overnight/runtime-support-3d0182a/wheels/gr_tdigest-0.2.4-cp310-abi3-linux_x86_64.whl",
+      "wheel_sha256": "f34d0f016fb09896a1691f804129fb381e614973074f13d0dce469446d9f975e",
+      "native_sha256": "9a10ee77533a0ee0f8a59c0f661f4df4988a410d371471e7bbca32d49564fb9e",
+      "distribution": "gr-tdigest",
+      "version": "0.2.4",
+      "requires_python": ">=3.10, <3.13",
+      "requires_dist": [
+        "numpy>=1.26.4,<3",
+        "polars==1.34.0 ; extra == 'polars'"
+      ],
+      "tags": [
+        "cp310-abi3-linux_x86_64"
+      ],
+      "sdist": "/var/tmp/codex-tdigest-pr3-20261014/overnight/runtime-support-3d0182a/sdist/gr_tdigest-0.2.4.tar.gz",
+      "sdist_sha256": "8ef04af1f62a4b057044680375ff441eaf5037cf8fc546733dde5d694c1c8915"
+    },
+    "matrix": "/var/tmp/codex-tdigest-pr3-20261014/overnight/runtime-support-3d0182a/matrix.json",
+    "rebuilt_wheel_sha256": "2d98b55ce1dd87252a89a57149d71a0d42aa425e06ee0d3b1625123361e68f72",
+    "shared_native_sha256": "9a10ee77533a0ee0f8a59c0f661f4df4988a410d371471e7bbca32d49564fb9e",
+    "evidence_commit": "66e56e4dd751926c8e99de347fedcb7df3bdd8a5"
+  },
+  "separated_modes": {
+    "directory": "/var/tmp/codex-tdigest-pr3-20261014/overnight/numerical-review/separated-modes",
+    "note": "n1000f64old/newbitidenticalmedian;n100Ksamegapbehaviorbut~9.3e-15difference. Modernf32coalescingchangesnormalizationn/clusterboundaries.",
+    "status": "Reproducedheldoutcasesandreduceddeterministic1000/5pointcases. Compression/interpolationlossacrossgap, no mass/orderbug. No narrowarithmeticfixjustified; sourceunchanged."
+  },
+  "normalized_sdist_runner": "Completed and superseded by final ff73 personal2022 and daad315 actual upstream2036 test-instance gates on direct and source-rebuilt wheels. See upstream38.rebuilt_artifact and validated_artifacts; earlier runner paths are historical.",
+  "numerical_review_bundle": "/var/tmp/codex-tdigest-pr3-20261014/overnight/numerical-review/review-evidence-20261015; reviewedclarificationarchiveSHA0029ec92317e284f3de91d6249e73890b6dc1054f36762a2fbafa3c2c8b7e478",
+  "storage_budget_experiment": {
+    "source": "ff73cfab31d6368d203c1a361b8efaaea29d735b",
+    "directory": "/var/tmp/codex-tdigest-pr3-20261014/overnight/storage-budget-accuracy-ff73cfa",
+    "study": "/var/tmp/codex-tdigest-pr3-20261014/overnight/storage-budget-study-ff73cfa",
+    "status": "Complete and published in PR8 at8fff555: approved accuracyv2 manifestefe90195c82610e93c7499ba7417a8c85c744585c19a0baf11d5fcc948b2fe31. All8064states; severe tightstorage errors and~2xerrorpolicy storage disclosed.",
+    "protocol_sha256": "9c2a455e689802eb2dbbe7764764238b794fa5975e2517d5e3c1355fed66904a",
+    "selection_sha256": "300203022d0dfbaee3e0a5bcf947bee6f804687b927238cd2e1b0576f16bb562",
+    "metadata_report": "work/overnight-bench/storage_budget_summary/held-out-metadata-ff73cfa/policy-summary.json; SHA14a827d8718f65cdc50985903ec0daeb0ac35b5690daf75ea30499e5deee1c9f",
+    "reducer_ready": "Reducer complete in35.789s; /var/tmp/codex-tdigest-pr3-20261014/overnight/storage-budget-full-metrics-ff73cfa-20261015/status.json"
+  },
+  "k2norm_domain": {
+    "status": "Focused negative control and corrected tests, full canonical Linux suite, direct and rebuilt seven-cell release-artifact gates all PASS.",
+    "finding": "Modern delta1200 reverses K2Norm for2normalizeddistinctpoints; [0,0,100] collapses toMixed33.333, median33.333 vs original0. Bothprecisions. Delta300/600 preservepiles. Originalcompatibility unchanged.",
+    "evidence": "/var/tmp/codex-tdigest-pr3-20261014/overnight/numerical-review/k2norm-domain",
+    "patch_sha256": "ada0779c1c5f664eff73ab8f1882344cf25ae9ed801ea3341c5260fbdafbe8be",
+    "commit": "ff73cfab31d6368d203c1a361b8efaaea29d735b"
+  },
+  "timing_experiment": {
+    "manifest_sha256": "2287207affcdc511fc5802df95cf0635ce3f5920ab8274b49b547279db670f70",
+    "directory": "work/overnight-bench/matched_budget_timing",
+    "status": "Complete and published in PR8 at8fff555: approved timingv2 manifest3a5ff7dba78a7450046ae23bed0819eff36b40bfcb3d95b3818156bfeb8689fe. All72processes;8unique policy misses; correct blockratios and drift independently reviewed."
+  },
+  "scratch_runners": {
+    "invocation_sha256": "67f195c512bd2832c2812dd8098b1ff2123e58f5c2a2d56705ac19a629d6dcaa",
+    "integration_helper": "/var/tmp/codex-tdigest-pr3-20261014/overnight/upstream-evidence-daad315/prepare_evidence.py (independently reviewed, lifecycle v2 update pending)",
+    "rebuild_v2": "1486e136c7ec8270916c27f81f14e8106f38667a86786c85f5d300b951e42042",
+    "integration_helper_sha256": "0b500caa12fa1d073db72c806d75e8defba2f0e16b16ca8a97c557dc98762814",
+    "lifecycle": "v2 5da4311e91f8f824f7954c27d49e1f09603834863628427047170fea2237f045",
+    "upstream_invocation": "/var/tmp/codex-tdigest-pr3-20261014/overnight/package-hygiene/actual-upstream-lifecycle/invoke_daad315_v2.py"
+  },
+  "checkout_lf_fix": {
+    "status": "Applied, independentlyreviewed, LinuxcontrolsPASS andpushedbothrepos; nativeplatformrerunpending",
+    "personal_head": "25c8c1642029a640b153c160c22a89795d29ad91",
+    "upstream_head": "d50629973226571fae984013dda86f90f6cc1302",
+    "record": "work/checkout-lf-integration.json",
+    "manifest_sha256": "f8db7a1af9518c9bb1d6a6c62b1bd78419d726dc9cc5fd4c2297f3b6e60dfa2b",
+    "bundle": "/var/tmp/codex-tdigest-pr3-20261014/overnight/lf-checkout-fix/review-bundle",
+    "coverage": "Both exactbaseheads: LFguardpass; autocrlftrue guardfailslicense201CRLF; exact13pathattributesguardpass; deliberate mutationfails; restorationpass; immutableCSVbytes preserved."
+  },
+  "last_ci_poll": {
+    "utc": "2026-10-15T02:03:48Z",
+    "personal_run": 38668688575,
+    "personal_status": "in_progress",
+    "upstream_fork_run": 38668686687,
+    "upstream_fork_passed_jobs": 2,
+    "new_failures": 0,
+    "branches_clean_and_remotes_verified": true
+  },
+  "morning_remote_ci": {
+    "utc": "2026-10-15T06:28:21Z",
+    "prs": [
+      {
+        "number": 6,
+        "title": "[1/3] Preserve weighted mass, exact point means, and digest state",
+        "state": "open",
+        "draft": false,
+        "merged": false,
+        "html_url": "https://github.com/ingolfured/gr-tdigest/pull/6",
+        "head": "6eb4203fe1c4ad8d337636d5aca549e0fec155b3",
+        "base": "master"
+      },
+      {
+        "number": 7,
+        "title": "[2/3] Preserve the tdigest_rs Python API and original arithmetic",
+        "state": "open",
+        "draft": false,
+        "merged": false,
+        "html_url": "https://github.com/ingolfured/gr-tdigest/pull/7",
+        "head": "911dc35493f1774fed1320f9da30d553b41f59b2",
+        "base": "review/1-digest-correctness"
+      },
+      {
+        "number": 8,
+        "title": "[3/3] Complete original APIs, runtime support, and release evidence",
+        "state": "open",
+        "draft": false,
+        "merged": false,
+        "html_url": "https://github.com/ingolfured/gr-tdigest/pull/8",
+        "head": "25c8c1642029a640b153c160c22a89795d29ad91",
+        "base": "review/2-legacy-python-api"
+      },
+      {
+        "number": 38,
+        "title": "Preserve tdigest_rs compatibility and add an opt-in modern engine",
+        "state": "open",
+        "draft": true,
+        "merged": false,
+        "html_url": "https://github.com/G-Research/tdigest-rs/pull/38",
+        "head": "d50629973226571fae984013dda86f90f6cc1302",
+        "base": "main"
+      }
+    ],
+    "upstream_workflow_state": "disabled_inactivity",
+    "personal_run": {
+      "id": 38668688575,
+      "status": "completed",
+      "conclusion": "success",
+      "head_sha": "25c8c1642029a640b153c160c22a89795d29ad91",
+      "html_url": "https://github.com/ingolfured/gr-tdigest/actions/runs/38668688575"
+    },
+    "upstream_run": {
+      "id": 38668686687,
+      "status": "completed",
+      "conclusion": "failure",
+      "head_sha": "d50629973226571fae984013dda86f90f6cc1302",
+      "html_url": "https://github.com/ingolfured/tdigest-rs/actions/runs/38668686687"
+    },
+    "upstream_job_counts": {
+      "success": 23,
+      "failure": 3,
+      "skipped": 2
+    },
+    "failed_jobs": [
+      {
+        "name": "python / Test (3.10, windows-latest)",
+        "id": 116206409211,
+        "html_url": "https://github.com/ingolfured/tdigest-rs/actions/runs/38668686687/job/116206409211"
+      },
+      {
+        "name": "python / Test (3.12, windows-latest)",
+        "id": 116206409470,
+        "html_url": "https://github.com/ingolfured/tdigest-rs/actions/runs/38668686687/job/116206409470"
+      },
+      {
+        "name": "python / Test (3.11, windows-latest)",
+        "id": 116206409532,
+        "html_url": "https://github.com/ingolfured/tdigest-rs/actions/runs/38668686687/job/116206409532"
+      }
+    ]
+  },
+  "pytest_launcher_fix": {
+    "base": "d50629973226571fae984013dda86f90f6cc1302",
+    "patch_sha256": "2fd3930231b38af34f94dadd9f44993516de08288816e1ea7df0e59294b799f8",
+    "evidence": "/var/tmp/codex-tdigest-pr3-20261014/overnight/pytest-isolation-fix",
+    "validation": "208 compatibility +92 modern +2 isolation checks, Linux using installed extension; no skipped/xfail. Ruffcheck passed; existing baseline formatwarning unchanged.",
+    "scope": [
+      "scripts/test_python_interfaces.py",
+      "CHANGELOG.md"
+    ],
+    "status": "validated, independently reviewed and pushed",
+    "utc": "2026-10-15T06:33:45Z",
+    "head": "57e7978d0811baed4a546ff2f08dccaeff03c321",
+    "branch": "review/upstream38-compatible-refresh",
+    "remote_branch": "overwrite_snapshot_v1_0_0",
+    "files": {
+      "CHANGELOG.md": "845b5a808f3a3053f3b20c8ca18ee9ed0f0e7938eb97a03cdeba48f533f98c0f",
+      "scripts/test_python_interfaces.py": "2ff534a7e1df87f1cb15f6b5ec5a076df2d36cb6031d8560596ac606a3f85742"
+    },
+    "source_and_bindings_trees_unchanged": true,
+    "pushed": true,
+    "fork_run": {
+      "id": 38693154198,
+      "status": "in_progress",
+      "conclusion": null,
+      "head_sha": "57e7978d0811baed4a546ff2f08dccaeff03c321",
+      "html_url": "https://github.com/ingolfured/tdigest-rs/actions/runs/38693154198"
+    },
+    "windows_validation": {
+      "head": "57e7978d0811baed4a546ff2f08dccaeff03c321",
+      "status": "PASS",
+      "cases": "CPython3.10/3.11/3.12 each208compatibility+92modern,900total instances; both original raw-byte guards pass.",
+      "evidence": "work/overnight-compat/upstream-remote-ci/windows-success-57e7978/RESULTS.json",
+      "results_sha256": "5637cdb2e5145d317ac085a76c3ef5b6424dcf8d291150bba2e2c8f86529a212",
+      "scope": "Remote existing GitHub platform matrix, not local Windows execution or separate release-wheel installation."
+    }
+  },
+  "morning_remote_ci_current": {
+    "utc": "2026-10-15T07:45:48Z",
+    "head": "57e7978d0811baed4a546ff2f08dccaeff03c321",
+    "fork_run": {
+      "id": 38693154198,
+      "status": "completed",
+      "conclusion": "success",
+      "head_sha": "57e7978d0811baed4a546ff2f08dccaeff03c321",
+      "html_url": "https://github.com/ingolfured/tdigest-rs/actions/runs/38693154198"
+    },
+    "upstream_workflow_state": "disabled_inactivity",
+    "jobs": [
+      {
+        "name": "rust / Lint",
+        "id": 116283499043,
+        "status": "completed",
+        "conclusion": "success",
+        "html_url": "https://github.com/ingolfured/tdigest-rs/actions/runs/38693154198/job/116283499043"
+      },
+      {
+        "name": "rust / Test (macos-15-intel)",
+        "id": 116283499284,
+        "status": "completed",
+        "conclusion": "success",
+        "html_url": "https://github.com/ingolfured/tdigest-rs/actions/runs/38693154198/job/116283499284"
+      },
+      {
+        "name": "python / Test (3.12, ubuntu-latest)",
+        "id": 116283499324,
+        "status": "completed",
+        "conclusion": "success",
+        "html_url": "https://github.com/ingolfured/tdigest-rs/actions/runs/38693154198/job/116283499324"
+      },
+      {
+        "name": "rust / Test (windows-latest)",
+        "id": 116283499371,
+        "status": "completed",
+        "conclusion": "success",
+        "html_url": "https://github.com/ingolfured/tdigest-rs/actions/runs/38693154198/job/116283499371"
+      },
+      {
+        "name": "rust / Test (macos-14)",
+        "id": 116283499372,
+        "status": "completed",
+        "conclusion": "success",
+        "html_url": "https://github.com/ingolfured/tdigest-rs/actions/runs/38693154198/job/116283499372"
+      },
+      {
+        "name": "python / Build (macos-14, aarch64-apple-darwin)",
+        "id": 116283499401,
+        "status": "completed",
+        "conclusion": "success",
+        "html_url": "https://github.com/ingolfured/tdigest-rs/actions/runs/38693154198/job/116283499401"
+      },
+      {
+        "name": "python / Lint",
+        "id": 116283499404,
+        "status": "completed",
+        "conclusion": "success",
+        "html_url": "https://github.com/ingolfured/tdigest-rs/actions/runs/38693154198/job/116283499404"
+      },
+      {
+        "name": "python / Build (ubuntu-latest, x86_64-unknown-linux-musl)",
+        "id": 116283499458,
+        "status": "completed",
+        "conclusion": "success",
+        "html_url": "https://github.com/ingolfured/tdigest-rs/actions/runs/38693154198/job/116283499458"
+      },
+      {
+        "name": "rust / Test (ubuntu-latest)",
+        "id": 116283499629,
+        "status": "completed",
+        "conclusion": "success",
+        "html_url": "https://github.com/ingolfured/tdigest-rs/actions/runs/38693154198/job/116283499629"
+      },
+      {
+        "name": "python / Build (ubuntu-latest, aarch64-unknown-linux-gnu)",
+        "id": 116283499632,
+        "status": "completed",
+        "conclusion": "success",
+        "html_url": "https://github.com/ingolfured/tdigest-rs/actions/runs/38693154198/job/116283499632"
+      },
+      {
+        "name": "python / Test (3.10, ubuntu-latest)",
+        "id": 116283499634,
+        "status": "completed",
+        "conclusion": "success",
+        "html_url": "https://github.com/ingolfured/tdigest-rs/actions/runs/38693154198/job/116283499634"
+      },
+      {
+        "name": "python / Test (3.11, macos-15-intel)",
+        "id": 116283499637,
+        "status": "completed",
+        "conclusion": "success",
+        "html_url": "https://github.com/ingolfured/tdigest-rs/actions/runs/38693154198/job/116283499637"
+      },
+      {
+        "name": "python / Test (3.11, macos-14)",
+        "id": 116283499645,
+        "status": "completed",
+        "conclusion": "success",
+        "html_url": "https://github.com/ingolfured/tdigest-rs/actions/runs/38693154198/job/116283499645"
+      },
+      {
+        "name": "python / Test (3.11, ubuntu-latest)",
+        "id": 116283499665,
+        "status": "completed",
+        "conclusion": "success",
+        "html_url": "https://github.com/ingolfured/tdigest-rs/actions/runs/38693154198/job/116283499665"
+      },
+      {
+        "name": "python / Test (3.12, macos-15-intel)",
+        "id": 116283499726,
+        "status": "completed",
+        "conclusion": "success",
+        "html_url": "https://github.com/ingolfured/tdigest-rs/actions/runs/38693154198/job/116283499726"
+      },
+      {
+        "name": "python / Build (windows-latest, x86_64-pc-windows-msvc)",
+        "id": 116283499733,
+        "status": "completed",
+        "conclusion": "success",
+        "html_url": "https://github.com/ingolfured/tdigest-rs/actions/runs/38693154198/job/116283499733"
+      },
+      {
+        "name": "python / Test (3.12, windows-latest)",
+        "id": 116283499737,
+        "status": "completed",
+        "conclusion": "success",
+        "html_url": "https://github.com/ingolfured/tdigest-rs/actions/runs/38693154198/job/116283499737"
+      },
+      {
+        "name": "python / Build (ubuntu-latest, aarch64-unknown-linux-musl)",
+        "id": 116283499742,
+        "status": "completed",
+        "conclusion": "success",
+        "html_url": "https://github.com/ingolfured/tdigest-rs/actions/runs/38693154198/job/116283499742"
+      },
+      {
+        "name": "python / Build (ubuntu-latest, x86_64-unknown-linux-gnu)",
+        "id": 116283499754,
+        "status": "completed",
+        "conclusion": "success",
+        "html_url": "https://github.com/ingolfured/tdigest-rs/actions/runs/38693154198/job/116283499754"
+      },
+      {
+        "name": "python / Test (3.10, macos-14)",
+        "id": 116283499774,
+        "status": "completed",
+        "conclusion": "success",
+        "html_url": "https://github.com/ingolfured/tdigest-rs/actions/runs/38693154198/job/116283499774"
+      },
+      {
+        "name": "python / Test (3.11, windows-latest)",
+        "id": 116283499794,
+        "status": "completed",
+        "conclusion": "success",
+        "html_url": "https://github.com/ingolfured/tdigest-rs/actions/runs/38693154198/job/116283499794"
+      },
+      {
+        "name": "python / Build (macos-15-intel, x86_64-apple-darwin)",
+        "id": 116283499796,
+        "status": "completed",
+        "conclusion": "success",
+        "html_url": "https://github.com/ingolfured/tdigest-rs/actions/runs/38693154198/job/116283499796"
+      },
+      {
+        "name": "python / Test (3.10, windows-latest)",
+        "id": 116283499800,
+        "status": "completed",
+        "conclusion": "success",
+        "html_url": "https://github.com/ingolfured/tdigest-rs/actions/runs/38693154198/job/116283499800"
+      },
+      {
+        "name": "python / Test (3.12, macos-14)",
+        "id": 116283499813,
+        "status": "completed",
+        "conclusion": "success",
+        "html_url": "https://github.com/ingolfured/tdigest-rs/actions/runs/38693154198/job/116283499813"
+      },
+      {
+        "name": "python / Test (3.10, macos-15-intel)",
+        "id": 116283499846,
+        "status": "completed",
+        "conclusion": "success",
+        "html_url": "https://github.com/ingolfured/tdigest-rs/actions/runs/38693154198/job/116283499846"
+      },
+      {
+        "name": "python / Installed GNU x86_64 release wheel and NumPy matrix",
+        "id": 116289944572,
+        "status": "completed",
+        "conclusion": "success",
+        "html_url": "https://github.com/ingolfured/tdigest-rs/actions/runs/38693154198/job/116289944572"
+      },
+      {
+        "name": "All required checks done",
+        "id": 116291100798,
+        "status": "completed",
+        "conclusion": "success",
+        "html_url": "https://github.com/ingolfured/tdigest-rs/actions/runs/38693154198/job/116291100798"
+      },
+      {
+        "name": "release",
+        "id": 116291128275,
+        "status": "completed",
+        "conclusion": "skipped",
+        "html_url": "https://github.com/ingolfured/tdigest-rs/actions/runs/38693154198/job/116291128275"
+      }
+    ]
+  },
+  "morning_final_readonly": {
+    "utc": "2026-10-15T06:47:53Z",
+    "repositories": {
+      "personal": {
+        "head": "25c8c1642029a640b153c160c22a89795d29ad91",
+        "branch": "review/3-upstream-compatibility-gate",
+        "clean": true,
+        "remote_matches": true
+      },
+      "upstream": {
+        "head": "57e7978d0811baed4a546ff2f08dccaeff03c321",
+        "branch": "review/upstream38-compatible-refresh",
+        "clean": true,
+        "remote_matches": true
+      }
+    },
+    "personal_checks": {
+      "6": {
+        "head": "6eb4203fe1c4ad8d337636d5aca549e0fec155b3",
+        "checks": [
+          {
+            "name": "Build and test",
+            "status": "completed",
+            "conclusion": "success",
+            "html_url": "https://github.com/ingolfured/gr-tdigest/actions/runs/38652394934/job/116154062605"
+          },
+          {
+            "name": "Lint",
+            "status": "completed",
+            "conclusion": "success",
+            "html_url": "https://github.com/ingolfured/gr-tdigest/actions/runs/38652394934/job/116154062347"
+          }
+        ]
+      },
+      "7": {
+        "head": "911dc35493f1774fed1320f9da30d553b41f59b2",
+        "checks": [
+          {
+            "name": "Lint",
+            "status": "completed",
+            "conclusion": "success",
+            "html_url": "https://github.com/ingolfured/gr-tdigest/actions/runs/38652396833/job/116154071696"
+          },
+          {
+            "name": "Build and test",
+            "status": "completed",
+            "conclusion": "success",
+            "html_url": "https://github.com/ingolfured/gr-tdigest/actions/runs/38652396833/job/116154071456"
+          },
+          {
+            "name": "Build and test",
+            "status": "completed",
+            "conclusion": "cancelled",
+            "html_url": "https://github.com/ingolfured/gr-tdigest/actions/runs/38652395122/job/116154063619"
+          },
+          {
+            "name": "Lint",
+            "status": "completed",
+            "conclusion": "cancelled",
+            "html_url": "https://github.com/ingolfured/gr-tdigest/actions/runs/38652395122/job/116154063120"
+          }
+        ]
+      },
+      "8": {
+        "head": "25c8c1642029a640b153c160c22a89795d29ad91",
+        "checks": [
+          {
+            "name": "Build and test",
+            "status": "completed",
+            "conclusion": "success",
+            "html_url": "https://github.com/ingolfured/gr-tdigest/actions/runs/38668688575/job/116206415068"
+          },
+          {
+            "name": "Lint",
+            "status": "completed",
+            "conclusion": "success",
+            "html_url": "https://github.com/ingolfured/gr-tdigest/actions/runs/38668688575/job/116206414865"
+          }
+        ]
+      }
+    }
+  },
+  "historical_benchmark_c5dec35": {
+    "source": "c5dec35059990b40fe6f036dc83590bf0cdf2a70",
+    "report": "compat/performance/RESULTS-c5dec35.md",
+    "summary": "All non-timing fields identical to22867bd across30cases: numerical/count/memory/wire unchanged. Current10Muniform buildold/modernf64=2.878s/.789s (~3.6x);f32=2.252s/.487s (~4.6x).40wayf64/100Koldfold325us/modernfold555.7us/kway204.7us. Some tiny/sorted/mergecaseslose. One machine/seed, no matched-memory/world-best claim.",
+    "follow_up": "Controlled ABBA/BAAB follow-up complete. Earlier double-digit slowdown not consistently reproduced. f64 modern10M build overall0.925x, blocks1.013/0.880; f32 overall1.002x, blocks0.913/1.018. Timing shifts in unchanged controls prevent causal speedup/regression claims."
+  },
+  "runtime_current": {
+    "personal_source": "ff73cfa",
+    "personal_instances_each_artifact": 2022,
+    "upstream_source": "daad315",
+    "upstream_instances_each_artifact": 2036,
+    "artifacts": "direct optimized wheel and separate rebuild from unchanged normalized source archive",
+    "scope": "Linux CPython3.10/3.11/3.12 x NumPy1/2, plus Polars-free environment; repeated instances notdistinctdefinitions; no skips/xfails in these gates."
+  },
+  "historical_record_policy": "Earlier batch/source-specific records remain for provenance; summary, benchmark_current, runtime_current, local_validated_heads, upstream38 and morning_remote_ci_current are authoritative for final status. Historical counts and old pending notes do not describe current validation.",
+  "overnight_closeout": {
+    "utc": "2026-10-15T06:55:12Z",
+    "status": "Morning review and improvement batch closed; public PR38 remains draft pending required checks and human rollout decisions.",
+    "automation": "overnight-tdigest-review-and-improvements deleted at closeout",
+    "review_order": [
+      6,
+      7,
+      8
+    ],
+    "merged": false,
+    "released": false,
+    "original_checkout_modified": false
+  }
+}

@@ -1,0 +1,295 @@
+{
+  "schema": "day20-completion-report-v1",
+  "created_utc": "2026-10-15 15:54:19 UTC",
+  "status": "completed_all_twenty_dispositions",
+  "counts": {
+    "prototypes": 20,
+    "retained": 1,
+    "rejected": 19,
+    "pending": 0,
+    "native_winners": 0,
+    "retained_combinations_requiring_validation": 0
+  },
+  "interpretation": "Every prototype has an evidence-based disposition. Rejected candidates stopped at decisive gates; subsequent cells were explicitly skipped. This does not claim all twenty passed through full heldout or release qualification.",
+  "baseline": "25c8c1642029a640b153c160c22a89795d29ad91",
+  "retained": {
+    "id": "E12",
+    "url": "https://github.com/ingolfured/gr-tdigest/pull/9",
+    "head": "42d620428520a74fec8c57d5dc6d4db0f6b1920e",
+    "base": "25c8c1642029a640b153c160c22a89795d29ad91",
+    "change": "Three src/py.rs output conversions copy f64 slices directly into NumPy-owned memory, avoiding Python scalar/list boxing. Exact values, ownership, resizing, scalar/list/tuple semantics and the original API remain unchanged.",
+    "performance": {
+      "CDF_elapsed_reduction_percent": [
+        44.86,
+        54.76
+      ],
+      "quantile_elapsed_reduction_percent": [
+        36.53,
+        51.39
+      ],
+      "qualified_cells_each": 6,
+      "scope": "Installed NumPy2.3.4, single-thread WSL Linux, 64/1000/32768 queries on fresh8192-value ties/separated fixtures, both precisions; measured versus pinned modern baseline.",
+      "heldout_cells": 36,
+      "heldout_dispositions": {
+        "improved": 25,
+        "neutral_or_noisy": 7,
+        "unstable": 2,
+        "short": 2
+      },
+      "confirmed_regressions": 0,
+      "accuracy_change": "None; exact output equality, no core accuracy gain.",
+      "uncertainty": "One f64 encode repeat is unstable; empty-f32 CDF and two large weight-getter cases are also inconclusive. Earlier screen uncertainty remains preserved.",
+      "limits": [
+        "No NumPy1 speed claim.",
+        "No Rust arithmetic speedup or external-competitor superiority claim.",
+        "Equal output payload and ownership checked; allocator usable bytes/peak RSS not measured."
+      ]
+    },
+    "validation": {
+      "local_platform": "WSL ArchFresh Linux",
+      "canonical_make": [
+        "lint",
+        "build",
+        "test"
+      ],
+      "rust_passed": 121,
+      "rust_preexisting_ignored": 3,
+      "python_coherence_passed": 352,
+      "java_passed": 13,
+      "untouched_upstream_passed": 91,
+      "installed_runtime_test_instances": 2022,
+      "installed_runtime_matrix": "CPython3.10–3.12 x NumPy1/2 plus Polars-free cell; repeated test instances are not unique definitions.",
+      "installed_ownership_value_instances": 36,
+      "frozen_output_audits": 72,
+      "wheel_sha256": "dab5447ed271cf99478d4546b00ab21c7c5dfc5e2c1c1c92aa8c1d66d37742b0",
+      "artifact_scope": "Actual optimized manylinux_2_28 ABI3 wheel installed and tested. Genuine source archive/lock checked; no separate source-rebuilt wheel claimed for PR9.",
+      "tested_commit": "d54096087a9e975ab07faf71ab2db412a48edcfa",
+      "head_difference": "README clarification only; production, tests and CHANGELOG byte-identical.",
+      "CI": "https://github.com/ingolfured/gr-tdigest/actions/runs/38737554737",
+      "CI_conclusion": "success"
+    }
+  },
+  "compatibility": {
+    "api": "tdigest_rs.TDigest",
+    "engine": "Original arithmetic preserved; modern gr_tdigest engine remains explicit opt-in.",
+    "oracle": "8d9cf1fe82c5c9254e5dc9593f01717e317f4333",
+    "original_source_files": 35,
+    "cases": 70,
+    "exact_bit_checks_per_debug_release_profile": 1762,
+    "nan_class_checks_per_profile": 126,
+    "expected_data_regenerated": false,
+    "limit": "Measured compatibility coverage is not a proof over every input, and does not establish that modern-engine numerical defects are repaired."
+  },
+  "dispositions": [
+    {
+      "id": "E01",
+      "experiment": "Tiny-cap mass repair",
+      "decision": "rejected",
+      "reason": "Repairs mass but worsens rank/CDF errors at matched storage."
+    },
+    {
+      "id": "E02",
+      "experiment": "Borrowed merge",
+      "decision": "rejected",
+      "reason": "Fresh median-query control 9.71% slower."
+    },
+    {
+      "id": "E03",
+      "experiment": "Two-run heap bypass",
+      "decision": "rejected",
+      "reason": "Five fresh median-query controls 3.75–6.71% slower; prior merge gains preserved."
+    },
+    {
+      "id": "E04",
+      "experiment": "Scalar CDF without prefix allocation",
+      "decision": "rejected",
+      "reason": "Unchanged batch-CDF control 7.33% slower."
+    },
+    {
+      "id": "E05",
+      "experiment": "Move compressor vectors",
+      "decision": "rejected",
+      "reason": "Lifecycle control 13.23% slower despite fewer allocations."
+    },
+    {
+      "id": "E06",
+      "experiment": "Retain residual bucket tail",
+      "decision": "rejected",
+      "reason": "Moment retention improves but rank/value/CDF errors worsen."
+    },
+    {
+      "id": "E07",
+      "experiment": "Hoist scale constants",
+      "decision": "rejected",
+      "reason": "Build case 7.24% slower; no qualified gains."
+    },
+    {
+      "id": "E08",
+      "experiment": "Replace heap root during k-way merge",
+      "decision": "rejected",
+      "reason": "Three fresh batch-CDF controls 4.37–5.02% slower; prior k-way gains preserved."
+    },
+    {
+      "id": "E09",
+      "experiment": "Count-only cap search",
+      "decision": "rejected",
+      "reason": "Two median-query controls 5.79–6.64% slower despite allocation reduction."
+    },
+    {
+      "id": "E10",
+      "experiment": "Consume first owned merge input",
+      "decision": "rejected",
+      "reason": "Five lifecycle regressions outweigh four qualified gains under the fixed gate."
+    },
+    {
+      "id": "E11",
+      "experiment": "Contiguous NumPy input path",
+      "decision": "rejected",
+      "reason": "Three small strided-input cases 4.77–6.81% slower."
+    },
+    {
+      "id": "E12",
+      "experiment": "Direct bulk copy into NumPy-owned outputs",
+      "decision": "retained",
+      "reason": "PR9; exact results and ownership preserved, qualified output-conversion gains confirmed."
+    },
+    {
+      "id": "E13",
+      "experiment": "Write encoding directly into Python bytes",
+      "decision": "rejected",
+      "reason": "Ten native encoder cases 6.78–11.60% slower despite Python encode gains."
+    },
+    {
+      "id": "E14",
+      "experiment": "Combine Polars validation and decoding",
+      "decision": "rejected",
+      "reason": "No demonstrated meaningful gain after full screen and registered repeat."
+    },
+    {
+      "id": "E15",
+      "experiment": "Overflow-resistant weighted means",
+      "decision": "rejected",
+      "reason": "Deep cancellation loses a representable 2e-151 mean."
+    },
+    {
+      "id": "E16",
+      "experiment": "Normalize subnormal compression mass",
+      "decision": "rejected",
+      "reason": "Independent tiny-value oracle fails; baseline subnormal issues remain."
+    },
+    {
+      "id": "E17",
+      "experiment": "Cumulative quantile brackets",
+      "decision": "rejected",
+      "reason": "Equal-weight median changes incorrectly from 2.5 to 2."
+    },
+    {
+      "id": "E18",
+      "experiment": "Symmetric compression direction",
+      "decision": "rejected",
+      "reason": "Rank/value/CDF errors worsen in matched-storage cases."
+    },
+    {
+      "id": "E19",
+      "experiment": "Gap-aware cap coalescing",
+      "decision": "rejected",
+      "reason": "Better rank/CDF accompanies worse value errors."
+    },
+    {
+      "id": "E20",
+      "experiment": "Sorted batch-CDF sweep",
+      "decision": "rejected",
+      "reason": "A declared batch-CDF case is 4.80% slower."
+    }
+  ],
+  "remaining_modern_limits": [
+    "Use capacities1/2 can drop interior mass; the proposed repair worsened errors and was rejected.",
+    "Positive residual bucket tails can be lost; moment retention and representable total mass are separate.",
+    "Extreme finite weighted products/centroid means and raw-sum representability remain problematic.",
+    "Wholly subnormal weights can cause coarse or underflowed intermediate weighted products during compression.",
+    "Some fractional-weight quantiles violate reflection symmetry.",
+    "Tight-storage/repeated-merge approximation errors can be large; rank, value and CDF measures cannot be substituted for one another."
+  ],
+  "review_order": [
+    "https://github.com/ingolfured/gr-tdigest/pull/6",
+    "https://github.com/ingolfured/gr-tdigest/pull/7",
+    "https://github.com/ingolfured/gr-tdigest/pull/8",
+    "https://github.com/ingolfured/gr-tdigest/pull/9"
+  ],
+  "remaining_human_decisions": [
+    "Review the stacked PRs in order and retarget/restack dependents after any parent merge.",
+    "PR9 has not been incorporated into the preserved upstream PR38.",
+    "Upstream38 remains draft. Its recorded CI-enablement/required review and rollout decisions remain maintainer work; personal green CI does not satisfy upstream required checks.",
+    "Broader deployment including Python3.13+, every built platform wheel and minimum-glibc coverage remains unproven. Shared distributions/import paths make independent co-installation unsafe; Rust root-path users need the documented nested package."
+  ],
+  "latest_native_confirmation": {
+    "measured_cells": 1440,
+    "skipped_cells": 2016,
+    "confirmed_regressions": 8,
+    "completed_state_quality_storage_mismatches": 0
+  },
+  "preservation": {
+    "original_dirty_checkout_changed": false,
+    "existing_prs_6_7_8_38_changed": false,
+    "merges": false,
+    "releases": false,
+    "prototype_and_negative_evidence_retained": true,
+    "conditional_combination_plan": "Preserved unexecuted: no native survivors."
+  },
+  "evidence": [
+    {
+      "path": "work/day-final-portfolio-audit-accuracy.json",
+      "sha256": "80ba516cdeae02314d999c9d9fd006f30f91cbe102c848971a250a0a6ed4d1ec"
+    },
+    {
+      "path": "work/day-final-portfolio-audit-accuracy-remote.json",
+      "sha256": "35fc9a530d501ace6582bf467c7213614ad09d09fb4a9d26c0b82cc80b0f427b"
+    },
+    {
+      "path": "work/day-e03-e08-heldout-summary.json",
+      "sha256": "5146c3f70dc4ce39cf58190a658a251797756b41cdfd4f1ec90b6fd9bf5badf5"
+    },
+    {
+      "path": "work/day-e03-e08-heldout-final-review-speed-r3.json",
+      "sha256": "8cedd513d2f34795263f892cb321029ccf72f81ffd4f98dcb11944a7d9da9bae"
+    },
+    {
+      "path": "work/day-e02-heldout-rejection-summary.json",
+      "sha256": "a977934c9379dd0bfc3139259c0a84d8e24a7ed568d0a04dda2bdbe6e5d36da2"
+    },
+    {
+      "path": "work/day-e12-final-validation-result.json",
+      "sha256": "97bf2d2459b7155e80c50c045c92b66205adfef65ff90e1d1e85f26aa546ed85"
+    },
+    {
+      "path": "work/day-final-remote-verification.json",
+      "sha256": "af1da583725eabfb0124805cecf75d59e5bd0243c9461ef291e270a9a7729bec"
+    },
+    {
+      "path": "work/day-final-branch-verification.json",
+      "sha256": "1cadee661f53da28a9d2ad2790371b31ca072e32d5ab076f9d06d00a75684711"
+    }
+  ],
+  "final_quality_reference_verification": {
+    "method": "Read-only Linux sha256sum, session93710 exit0; no tests or source changes.",
+    "files": [
+      {
+        "path": "/var/tmp/codex-tdigest-pr3-20261014/day20261015/validation/E15/RESULT.json",
+        "sha256": "e45700f1c2c6d1c5147358599bd8215b2f910ea1111e94d1dc86473fc904140f"
+      },
+      {
+        "path": "/var/tmp/codex-tdigest-pr3-20261014/day20261015/validation/E16/RESULT.json",
+        "sha256": "a3492e7aa2f868bcf553df918b832b7c41e0bf10b5e4715cd35aa1735418dd52"
+      },
+      {
+        "path": "/var/tmp/codex-tdigest-pr3-20261014/day20261015/validation/E16/tiny-value-rejection/RESULT.json",
+        "sha256": "96614280faca5acc23e913c8748f7db2ce714ece7b27d52c37a95707d9aef334"
+      },
+      {
+        "path": "/var/tmp/codex-tdigest-pr3-20261014/day20261015/evidence/quality-hypotheses/INDEX.json",
+        "sha256": "fe0875d74d5afaeb3dc64317624baa75428956039e930b04efb8ad41947e245c"
+      }
+    ]
+  },
+  "next": "Stop speculative work as instructed; report completion and delete the finished daytime heartbeat."
+}

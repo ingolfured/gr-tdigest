@@ -1,4 +1,6 @@
 # tdigest-rs
+
+**Agent handoff:** this research branch contains the [cross-machine continuation guide](HANDOFF.md), branch map and checksummed October 2026 research archive. Product code remains at PR #9.
 T-Digest provides a mergeable summary of a distribution, enabling approximate quantiles and CDF with strong tail accuracy.
 `gr-tdigest` ships one Rust core with Rust, Python, Polars, and Java surfaces.
 
