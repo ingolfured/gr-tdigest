@@ -84,7 +84,7 @@ Useful Windows fixture copies include `work/upstream_numerical_golden.json` and 
 
 ## Resume safely
 
-The protected original checkout is **`/home/ingo/git/gr-tdigest`** and was dirty. Do not reset, clean, move or alter it. Prior work used `/var/tmp/codex-tdigest-pr3-20261014/work/gr-tdigest` and isolated siblings, in WSL `ArchFresh` as user `ingo`. On the destination use new isolated checkouts, verify branch/remotes/HEAD/status and read repository instructions before edits. Keep library builds, tests and benchmarks on Linux; never silently reuse a stale shared Cargo target for different candidate sources. Coordinate heavy work so benchmark timings are uncontaminated.
+The original checkout **`/home/ingo/git/gr-tdigest`** was protected and dirty during the experiments. After the initial migration the user authorized cleanup; its source and stashes are now remotely archived and it is clean. The [cleanup supplement](CLEANUP.md) supersedes the old no-cleanup instruction and records exact recovery refs. Prior work used `/var/tmp/codex-tdigest-pr3-20261014/work/gr-tdigest` and isolated siblings, in WSL `ArchFresh` as user `ingo`. On the destination use new isolated checkouts, verify branch/remotes/HEAD/status and read repository instructions before edits. Keep library builds, tests and benchmarks on Linux; never silently reuse a stale shared Cargo target for different candidate sources. Coordinate heavy work so benchmark timings are uncontaminated.
 
 Start from the current remote inventory and latest priorities, not an old automation prompt. The overnight and day experiment runs were closed. Do not merge PRs, publish releases, regenerate oracle fixtures or change original arithmetic as a migration side effect.
 

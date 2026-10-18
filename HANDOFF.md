@@ -4,6 +4,8 @@ This branch preserves the project for continuation on another computer. It is ba
 
 [Fresh GitHub clone and full extraction verified](research/2026-10-handoff/RESTORE-VERIFIED.json): all 92,680 files, all 67 archive parts, 35 personal branch mappings and two upstream-fork mappings passed. The final receipt commit changes only documentation/verification metadata; archive bytes and product source remain the same.
 
+[Later cleanup and recovered historical work](research/2026-10-handoff/CLEANUP.md): the formerly excluded original source, three stashes (including auto-scale research), and old branch heads are now archived. This supplement records the user-authorized cleanup after the initial migration.
+
 ## Resume from a fresh Linux clone
 
 ```bash
@@ -50,7 +52,7 @@ On 16 October the user relaxed that performance rule and emphasized production o
 
 Next priorities are E03 (two-way merge), E08 (multiway heap merge), E09 (cap search allocations), and conditionally E13 (Python serialization). **E09 is an experiment, not PR #9.** None proves many-core scaling. Complete missing validation and measure interactions with E12 before integration. Keep known modern-engine numerical defects visible; the old API's passing suite does not resolve them.
 
-Each dirty experiment worktree was preserved as an `archive/20261018/day20-*` branch, including untracked tests and the harness. These commits are archival snapshots, not validated production commits. Existing working files, indexes and branch heads were left alone. Clean local-only historical commits were also preserved or mapped to an already-pushed equivalent. The complete [branch map](research/2026-10-handoff/branch-map.json) gives old names, original heads, new remote refs and snapshot commits; the [experiment map](research/2026-10-handoff/EXPERIMENT-BRANCHES.md) gives one route for each E01–E20.
+Each dirty experiment worktree was preserved as an `archive/20261018/day20-*` branch, including untracked tests and the harness. These commits are archival snapshots, not validated production commits. The initial migration left working files, indexes and branch heads alone. The later authorized cleanup aligned the 21 local experiment/harness branches and indexes with those pushed snapshots, leaving clean checkouts; see the cleanup supplement. Clean local-only historical commits were also preserved or mapped to an already-pushed equivalent. The complete [branch map](research/2026-10-handoff/branch-map.json) gives old names, original heads, new remote refs and snapshot commits; the [experiment map](research/2026-10-handoff/EXPERIMENT-BRANCHES.md) gives one route for each E01–E20.
 
 For example, inspect E03 independently:
 
@@ -82,7 +84,7 @@ The archive excludes dependency environments, ordinary build caches, Git control
 - All library builds/tests/benchmarks must run on Linux/WSL. Read the Makefile and use `make setup`, `make build`, `make test` and `make lint` as appropriate for new code; actual installed release-wheel checks remain required before claiming a new release candidate. `make lint` can modify files.
 - Existing `tdigest_rs.TDigest` and `tdigest_core` use pinned original arithmetic. Modern `gr_tdigest` remains opt-in. Keep the untouched upstream suite and independent oracle. No blanket epsilon across data scales.
 - Measure both concurrent independent digests and sharded datasets including merge costs, at increasing available worker counts. Report topology/NUMA/SMT, throughput, latency, memory, and separate rank/value/CDF errors. No 100+ CPU result exists yet.
-- The original dirty checkout `/home/ingo/git/gr-tdigest` was not touched or included in this migration. Its unrelated personal changes are outside this research handoff.
+- The original checkout `/home/ingo/git/gr-tdigest` was initially excluded. The user subsequently authorized cleanup: its original changes and stashes are now remotely archived and the checkout is clean. See [cleanup and recovery](research/2026-10-handoff/CLEANUP.md); ignored local-only settings/context were retained locally.
 - The old overnight/day schedules are complete. No background benchmark or automation is transferred or restarted. Do not merge PRs or publish a release without the user's instruction.
 
 Suggested first prompt for the next agent:

@@ -1,0 +1,40 @@
+{
+  "repository": "ingolfured/gr-tdigest",
+  "entries": [
+    {
+      "ref": "refs/heads/archive/20261018/original-dirty-checkout",
+      "commit": "ea0b0dd46c5e39bca69c915c8be9cf1107852cf0",
+      "kind": "original_worktree"
+    },
+    {
+      "ref": "refs/heads/archive/20261018/original-stash-0-wip-before-v0.2.4-release",
+      "commit": "3adf4e8a4b629ad0d4b7cfa50b984ad78c3e68e3",
+      "kind": "stash"
+    },
+    {
+      "ref": "refs/heads/archive/20261018/original-stash-1-new-world-837a7c8",
+      "commit": "6a6fb4f31b84ede48815b15c302ab3a47c3e29a6",
+      "kind": "stash"
+    },
+    {
+      "ref": "refs/heads/archive/20261018/original-stash-2-new-world-c9f8a6d",
+      "commit": "59a782557e8482a7667f7a3eb25bad41261dba5d",
+      "kind": "stash"
+    },
+    {
+      "ref": "refs/heads/archive/20261018/original-local-pr38-docs-compat",
+      "commit": "e8562fd1c25a33cfd09359f671da126837c7bba4",
+      "kind": "historical_branch"
+    },
+    {
+      "ref": "refs/heads/archive/20261018/original-local-bigbang-review-1-core-delta",
+      "commit": "90962e90a09fc7fe72f43290ff17db808930560b",
+      "kind": "historical_branch"
+    },
+    {
+      "ref": "refs/heads/archive/20261018/original-local-bigbang-review-2-python-api",
+      "commit": "1c043b16b19f526a3213e1bf585ba14a4fe11f61",
+      "kind": "historical_branch"
+    }
+  ]
+}

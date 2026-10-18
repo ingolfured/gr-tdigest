@@ -54,3 +54,6 @@ compat/validation/checkout-lf-20261015/README.md linguist-generated=false
 compat/validation/checkout-lf-20261015/prepare_and_verify.py linguist-generated=false
 compat/validation/checkout-lf-20261015/**/*.log whitespace=cr-at-eol,-blank-at-eol,-blank-at-eof,-space-before-tab
 compat/validation/checkout-lf-20261015/**/*.patch whitespace=cr-at-eol,-blank-at-eol
+
+# Preserve byte-bound cleanup audit receipts, including Windows CRLF records.
+research/2026-10-handoff/cleanup/*.json -text whitespace=cr-at-eol

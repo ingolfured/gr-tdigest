@@ -1,0 +1,213 @@
+{
+  "created_utc": "2026-10-18T08:19:06.398970+00:00",
+  "remote_snapshot_source": "cleanup-stash-audit-inventory.json",
+  "remote_object_count": 3453,
+  "stashes": [
+    {
+      "commit": "3adf4e8a4b629ad0d4b7cfa50b984ad78c3e68e3",
+      "files": [
+        {
+          "path": "CHANGELOG.md",
+          "role": "tracked_worktree",
+          "blob": "ddc7c9c093b4115e9b8050553a1c8e739431aa59",
+          "reachable_anywhere_in_remote_history": false
+        },
+        {
+          "path": "src/lib.rs",
+          "role": "tracked_worktree",
+          "blob": "88f129966c334ca51a15eed3098fb5b9adc9164c",
+          "reachable_anywhere_in_remote_history": false
+        },
+        {
+          "path": "src/tdigest/mod.rs",
+          "role": "tracked_worktree",
+          "blob": "19e022da7f82128463a5c4fc20408f9ce838f6ff",
+          "reachable_anywhere_in_remote_history": false
+        },
+        {
+          "path": "tdigest_design.md",
+          "role": "tracked_worktree",
+          "blob": "047c8b7d1f83c51a617c22dc58f303c344bf6159",
+          "reachable_anywhere_in_remote_history": false
+        },
+        {
+          "path": "src/quality/auto_scale_quality.rs",
+          "role": "untracked_parent",
+          "blob": "7f6fa1a28ba0c988b1aa453d4488b12025ad1bf8",
+          "reachable_anywhere_in_remote_history": false
+        },
+        {
+          "path": "src/tdigest/auto_scale.rs",
+          "role": "untracked_parent",
+          "blob": "1e706de79da2df482c4c1077f4e76b220ef5193d",
+          "reachable_anywhere_in_remote_history": false
+        }
+      ],
+      "parents": [
+        {
+          "commit": "9becca2e6000fa2097e1ad0ab46a5019dbed7e8e",
+          "already_remote_reachable": true
+        },
+        {
+          "commit": "57d80c5a54a916bce1f37d83af906a92ba361eee",
+          "already_remote_reachable": false
+        },
+        {
+          "commit": "8afbf3ecab2879faf9a75b4c90b8212ec7ace3cc",
+          "already_remote_reachable": false
+        }
+      ]
+    },
+    {
+      "commit": "6a6fb4f31b84ede48815b15c302ab3a47c3e29a6",
+      "files": [
+        {
+          "path": "bindings/python/gr_tdigest/__init__.py",
+          "role": "tracked_worktree",
+          "blob": "35082561181e8d4124aba40338aca10e76c61e99",
+          "reachable_anywhere_in_remote_history": false
+        },
+        {
+          "path": "bindings/python/tests/test_py_api.py",
+          "role": "tracked_worktree",
+          "blob": "e3d21ebc0537756e6b49164687dac698b37755e4",
+          "reachable_anywhere_in_remote_history": false
+        },
+        {
+          "path": "src/py.rs",
+          "role": "tracked_worktree",
+          "blob": "0a7bf3f444168307ce4083bffc65cc08f7b64a72",
+          "reachable_anywhere_in_remote_history": false
+        }
+      ],
+      "parents": [
+        {
+          "commit": "837a7c8f536f2bc7a6e0dc1f7c4eebffe48da4d2",
+          "already_remote_reachable": true
+        },
+        {
+          "commit": "a3dba0b9a050f948c85b4fcba70768f1b23ed829",
+          "already_remote_reachable": false
+        }
+      ]
+    },
+    {
+      "commit": "59a782557e8482a7667f7a3eb25bad41261dba5d",
+      "files": [
+        {
+          "path": "src/tdigest/codecs.rs",
+          "role": "tracked_worktree",
+          "blob": "500673f49fee72c8fd5b8652ad01c7632c416309",
+          "reachable_anywhere_in_remote_history": false
+        },
+        {
+          "path": "src/tdigest/quantile.rs",
+          "role": "tracked_worktree",
+          "blob": "1c1ddc71187e6722d6b000747cfb78758e88b4d3",
+          "reachable_anywhere_in_remote_history": false
+        },
+        {
+          "path": "src/tdigest/tdigest.rs",
+          "role": "tracked_worktree",
+          "blob": "df1c57a8f6594344541d91841b3ce05e136a0d1d",
+          "reachable_anywhere_in_remote_history": false
+        },
+        {
+          "path": "tests/test_smoke_tests.py",
+          "role": "tracked_worktree",
+          "blob": "fb37a37028924aaff22c07f4bad0f5d8a7308b9b",
+          "reachable_anywhere_in_remote_history": false
+        }
+      ],
+      "parents": [
+        {
+          "commit": "c9f8a6d9a77767daba0ee46d9cd3f84f9fe8121f",
+          "already_remote_reachable": true
+        },
+        {
+          "commit": "0f65b31b7ae9c3261162304ba74a8e29a97a5149",
+          "already_remote_reachable": false
+        }
+      ]
+    }
+  ],
+  "local_branches": [
+    {
+      "ref": "refs/heads/archive/20261018/original-dirty-checkout",
+      "head": "ea0b0dd46c5e39bca69c915c8be9cf1107852cf0",
+      "unique_commit_count": 0,
+      "unique_commits": []
+    },
+    {
+      "ref": "refs/heads/master",
+      "head": "8dea4cf5e336db03eeefc18cad4b5f8537822dd2",
+      "unique_commit_count": 0,
+      "unique_commits": []
+    },
+    {
+      "ref": "refs/heads/pr38-docs-compat",
+      "head": "e8562fd1c25a33cfd09359f671da126837c7bba4",
+      "unique_commit_count": 25,
+      "unique_commits": [
+        "e8562fd1c25a33cfd09359f671da126837c7bba4",
+        "5c1befad665ffbef679c95edbeab8e36e07175ae",
+        "6cee1b489e827aba607a984c371fbf72912fa184",
+        "a1d592dba694224f3f869e4275b933e4c68e1360",
+        "0d4bbf018e7a9dc27cf1fecb8870b742e470f151",
+        "a1ed8d158d6e4d3f9104dfca3981aeee5cee95cd",
+        "a435fcdd3084f5eb7ad2ef2fe6616eca4208ca15",
+        "8d9cf1fe82c5c9254e5dc9593f01717e317f4333",
+        "7ce1658d96754581a44480e05a8a0ab7bbd1652c",
+        "b0f5a83f8f5a7e52d15dd786e75c938a7c37d3a5",
+        "c05cbeb8a693a4bb5055e7f78df2677ca1a52bd9",
+        "6da660657a63b212093fd62712a684f89ba37a7a",
+        "cf97604fbf3855e43a4ac0c85f91c9b905e60d4b",
+        "9685dbd9bfd13bf093b12cc966d1006d2ea5225e",
+        "fe64e5440b013cec6bea9365e6f8fe0310f85326",
+        "0869fe22f992ca6256881894b51f8f9273051804",
+        "574602c44071c51b4cb4fb1589d13b18566625ad",
+        "1f330569e7c65dd85b2be2cc4c78be1f31a20347",
+        "c5b88dfbdac8f116fe5631a076a339e58d44c8d5",
+        "11a08e7eac715cb30b33580e05597df783b1937b",
+        "3a2a0b16b022c06fa86bd24aef995194a019a415",
+        "c0b7718370bae92150564433f25b59cdcb991c53",
+        "e643baf6cd3765992f9137aa7aff3152ff36c6b9",
+        "9b1079c8864a75dce20793a38eb7e88ab3ad562a",
+        "467284bc8cd6c3492a40ac4787c3e8ec9cd038da"
+      ]
+    },
+    {
+      "ref": "refs/heads/tmp/bigbang-review-1-core-delta",
+      "head": "90962e90a09fc7fe72f43290ff17db808930560b",
+      "unique_commit_count": 5,
+      "unique_commits": [
+        "90962e90a09fc7fe72f43290ff17db808930560b",
+        "a4aecdbf58636742edea797d0d32c9f669c9e052",
+        "edb2d13e57820257367487829a2c7be2d2acecb8",
+        "715ea9449bbd12441eaafa3aad6f815779405abf",
+        "e17a38eb69952f362340659c08b538facc681e07"
+      ]
+    },
+    {
+      "ref": "refs/heads/tmp/bigbang-review-2-python-api",
+      "head": "1c043b16b19f526a3213e1bf585ba14a4fe11f61",
+      "unique_commit_count": 2,
+      "unique_commits": [
+        "1c043b16b19f526a3213e1bf585ba14a4fe11f61",
+        "a3064d50b8dd61cb2610f133b5704a79856f4bf2"
+      ]
+    },
+    {
+      "ref": "refs/heads/tmp/bigbang-review-3-legacy-harness",
+      "head": "2bc3b89cf6af5f2bde534c84e9bc4e9521db3878",
+      "unique_commit_count": 0,
+      "unique_commits": []
+    },
+    {
+      "ref": "refs/heads/tmp/bigbang-review-4-docs-plumbing",
+      "head": "850ebba40b514dbf869477856c62076b1dfb0df2",
+      "unique_commit_count": 0,
+      "unique_commits": []
+    }
+  ]
+}

@@ -1,0 +1,354 @@
+{
+  "schema": "cleanup-stash-audit-v1",
+  "created_utc": "2026-10-18T08:19:49.7515881Z",
+  "status": "read_only_audit_complete",
+  "repo": "/home/ingo/git/gr-tdigest",
+  "remote": "git@github.com:ingolfured/gr-tdigest.git",
+  "remote_snapshot_utc": "2026-10-18T09:18:15.469256+01:00",
+  "method": "Read-only git status/ref/stash/tree/diff/blob/reachability audit against live git ls-remote origin heads. All remote commit objects were available through the isolated clone as a read-only alternate object store; no fetch or source/ref/index/stash mutation performed by this audit.",
+  "scope": "Three existing stashes and six original local branch heads. Parent concurrently added archive/20261018/original-dirty-checkout; that seventh observed local head is reported separately and is already remote-reachable.",
+  "stashes": [
+    {
+      "stash_ref": "stash@{0}",
+      "subject": "On master: wip-before-v0.2.4-release",
+      "commit": "3adf4e8a4b629ad0d4b7cfa50b984ad78c3e68e3",
+      "tree": "1e457f1e5d02e583e9e6ac24adadbdda95d07f3b",
+      "parents": [
+        "9becca2e6000fa2097e1ad0ab46a5019dbed7e8e",
+        "57d80c5a54a916bce1f37d83af906a92ba361eee",
+        "8afbf3ecab2879faf9a75b4c90b8212ec7ace3cc"
+      ],
+      "parent_roles": [
+        "original_base",
+        "index_snapshot",
+        "untracked_or_ignored_snapshot"
+      ],
+      "recommended_archive_ref": "refs/heads/archive/20261018/original-stash-0-wip-before-v0.2.4-release",
+      "already_remote_reachable": false,
+      "base_already_remote_reachable": true,
+      "index_changes": "",
+      "tracked_changes": [
+        "CHANGELOG.md",
+        "src/lib.rs",
+        "src/tdigest/mod.rs",
+        "tdigest_design.md"
+      ],
+      "tracked_diff_stat": "CHANGELOG.md       |  1 +\n src/lib.rs         |  1 +\n src/tdigest/mod.rs |  1 +\n tdigest_design.md  | 20 ++++++++++++++++++++\n 4 files changed, 23 insertions(+)",
+      "untracked_parent_files": [
+        {
+          "path": "src/quality/auto_scale_quality.rs",
+          "mode": "100644",
+          "kind": "blob",
+          "oid": "7f6fa1a28ba0c988b1aa453d4488b12025ad1bf8",
+          "bytes": 22852
+        },
+        {
+          "path": "src/tdigest/auto_scale.rs",
+          "mode": "100644",
+          "kind": "blob",
+          "oid": "1e706de79da2df482c4c1077f4e76b220ef5193d",
+          "bytes": 9800
+        }
+      ],
+      "untracked_parent_bytes": 32652,
+      "changed_blob_remote_history": [
+        {
+          "path": "CHANGELOG.md",
+          "role": "tracked_worktree",
+          "blob": "ddc7c9c093b4115e9b8050553a1c8e739431aa59",
+          "reachable_anywhere_in_remote_history": false
+        },
+        {
+          "path": "src/lib.rs",
+          "role": "tracked_worktree",
+          "blob": "88f129966c334ca51a15eed3098fb5b9adc9164c",
+          "reachable_anywhere_in_remote_history": false
+        },
+        {
+          "path": "src/tdigest/mod.rs",
+          "role": "tracked_worktree",
+          "blob": "19e022da7f82128463a5c4fc20408f9ce838f6ff",
+          "reachable_anywhere_in_remote_history": false
+        },
+        {
+          "path": "tdigest_design.md",
+          "role": "tracked_worktree",
+          "blob": "047c8b7d1f83c51a617c22dc58f303c344bf6159",
+          "reachable_anywhere_in_remote_history": false
+        },
+        {
+          "path": "src/quality/auto_scale_quality.rs",
+          "role": "untracked_parent",
+          "blob": "7f6fa1a28ba0c988b1aa453d4488b12025ad1bf8",
+          "reachable_anywhere_in_remote_history": false
+        },
+        {
+          "path": "src/tdigest/auto_scale.rs",
+          "role": "untracked_parent",
+          "blob": "1e706de79da2df482c4c1077f4e76b220ef5193d",
+          "reachable_anywhere_in_remote_history": false
+        }
+      ],
+      "value": "Unique experimental automatic scale-family selection research: deterministic sampling/evaluation over Quad/K1/K2/K3, guarded switching from K2, quality matrices and design/CHANGELOG wiring. Worth preserving as research, not an approved default or validated release change.",
+      "cautions": [
+        "The two essential auto-scale source/test files live only in the third parent, not the top commit tree. A patch of tracked changes alone loses the implementation.",
+        "No tests or benchmarks were run for this audit; design claims in the stash are historical, not current validation."
+      ],
+      "secret_findings": [],
+      "preservation": "Point the archive ref at this exact stash merge commit, without cherry-picking or flattening. Git reachability then includes all original base/index/untracked parents and their trees."
+    },
+    {
+      "stash_ref": "stash@{1}",
+      "subject": "WIP on new-world: 837a7c8 support encoding / decoding",
+      "commit": "6a6fb4f31b84ede48815b15c302ab3a47c3e29a6",
+      "tree": "cf428a0e164c6f1b6d6a13d3bef8c8e17d93e548",
+      "parents": [
+        "837a7c8f536f2bc7a6e0dc1f7c4eebffe48da4d2",
+        "a3dba0b9a050f948c85b4fcba70768f1b23ed829"
+      ],
+      "parent_roles": [
+        "original_base",
+        "index_snapshot"
+      ],
+      "recommended_archive_ref": "refs/heads/archive/20261018/original-stash-1-new-world-837a7c8",
+      "already_remote_reachable": false,
+      "base_already_remote_reachable": true,
+      "index_changes": "",
+      "tracked_changes": [
+        "bindings/python/gr_tdigest/__init__.py",
+        "bindings/python/tests/test_py_api.py",
+        "src/py.rs"
+      ],
+      "tracked_diff_stat": "bindings/python/gr_tdigest/__init__.py | 409 ++++-----------------------------\n bindings/python/tests/test_py_api.py   | 121 +++++++++-\n src/py.rs                              | 278 ++++++++++++++++------\n 3 files changed, 372 insertions(+), 436 deletions(-)",
+      "untracked_parent_files": [],
+      "untracked_parent_bytes": 0,
+      "changed_blob_remote_history": [
+        {
+          "path": "bindings/python/gr_tdigest/__init__.py",
+          "role": "tracked_worktree",
+          "blob": "35082561181e8d4124aba40338aca10e76c61e99",
+          "reachable_anywhere_in_remote_history": false
+        },
+        {
+          "path": "bindings/python/tests/test_py_api.py",
+          "role": "tracked_worktree",
+          "blob": "e3d21ebc0537756e6b49164687dac698b37755e4",
+          "reachable_anywhere_in_remote_history": false
+        },
+        {
+          "path": "src/py.rs",
+          "role": "tracked_worktree",
+          "blob": "0a7bf3f444168307ce4083bffc65cc08f7b64a72",
+          "reachable_anywhere_in_remote_history": false
+        }
+      ],
+      "value": "Unique historical Python binding simplification and native merge/merge_all implementation, config/precision mismatch checks and focused merge tests. Related concepts exist later, but this exact source snapshot is not in current remote history; retain as provenance.",
+      "cautions": [
+        "Historical draft changes error messages/signatures and internal binding style; not a drop-in replacement for current APIs.",
+        "No claim that this old draft compiles or passes today; preserve without applying."
+      ],
+      "secret_findings": [],
+      "preservation": "Point the archive ref at this exact stash merge commit, without cherry-picking or flattening. Git reachability then includes all original base/index/untracked parents and their trees."
+    },
+    {
+      "stash_ref": "stash@{2}",
+      "subject": "WIP on new-world: c9f8a6d Support expression in cdf",
+      "commit": "59a782557e8482a7667f7a3eb25bad41261dba5d",
+      "tree": "e48c5e0ee156181f8bbdbb6c81099a86d774f4b9",
+      "parents": [
+        "c9f8a6d9a77767daba0ee46d9cd3f84f9fe8121f",
+        "0f65b31b7ae9c3261162304ba74a8e29a97a5149"
+      ],
+      "parent_roles": [
+        "original_base",
+        "index_snapshot"
+      ],
+      "recommended_archive_ref": "refs/heads/archive/20261018/original-stash-2-new-world-c9f8a6d",
+      "already_remote_reachable": false,
+      "base_already_remote_reachable": true,
+      "index_changes": "",
+      "tracked_changes": [
+        "src/tdigest/codecs.rs",
+        "src/tdigest/quantile.rs",
+        "src/tdigest/tdigest.rs",
+        "tests/test_smoke_tests.py"
+      ],
+      "tracked_diff_stat": "src/tdigest/codecs.rs     | 136 +++++++++++++++++++++++++++-----------------\n src/tdigest/quantile.rs   |   2 +-\n src/tdigest/tdigest.rs    | 142 ++++++++++++++--------------------------------\n tests/test_smoke_tests.py |   2 -\n 4 files changed, 127 insertions(+), 155 deletions(-)",
+      "untracked_parent_files": [],
+      "untracked_parent_bytes": 0,
+      "changed_blob_remote_history": [
+        {
+          "path": "src/tdigest/codecs.rs",
+          "role": "tracked_worktree",
+          "blob": "500673f49fee72c8fd5b8652ad01c7632c416309",
+          "reachable_anywhere_in_remote_history": false
+        },
+        {
+          "path": "src/tdigest/quantile.rs",
+          "role": "tracked_worktree",
+          "blob": "1c1ddc71187e6722d6b000747cfb78758e88b4d3",
+          "reachable_anywhere_in_remote_history": false
+        },
+        {
+          "path": "src/tdigest/tdigest.rs",
+          "role": "tracked_worktree",
+          "blob": "df1c57a8f6594344541d91841b3ce05e136a0d1d",
+          "reachable_anywhere_in_remote_history": false
+        },
+        {
+          "path": "tests/test_smoke_tests.py",
+          "role": "tracked_worktree",
+          "blob": "fb37a37028924aaff22c07f4bad0f5d8a7308b9b",
+          "reachable_anywhere_in_remote_history": false
+        }
+      ],
+      "value": "Unique historical Arc<Vec<Centroid>> sharing and Polars decode reuse keyed by physical list identity. Useful performance-research provenance, not validated current implementation.",
+      "cautions": [
+        "Static concern: decode reuse key only includes centroid-list identity while sum/count/extrema/max_size can differ by row; reusing the entire first digest can reuse the wrong metadata. Preserve the experiment rather than integrate it.",
+        "No build/test was run; current codec/schema/ownership requirements differ."
+      ],
+      "secret_findings": [],
+      "preservation": "Point the archive ref at this exact stash merge commit, without cherry-picking or flattening. Git reachability then includes all original base/index/untracked parents and their trees."
+    }
+  ],
+  "original_local_branches": [
+    {
+      "ref": "refs/heads/master",
+      "head": "8dea4cf5e336db03eeefc18cad4b5f8537822dd2",
+      "subject": "compressor: switch stage-4 cap to second k-limit pass",
+      "already_remote_reachable": true,
+      "containing_remote_heads": [
+        "refs/heads/archive/20261018/day20-accuracy",
+        "refs/heads/archive/20261018/day20-bucket-tail",
+        "refs/heads/archive/20261018/day20-cap-count",
+        "refs/heads/archive/20261018/day20-direction",
+        "refs/heads/archive/20261018/day20-finite-mean",
+        "refs/heads/archive/20261018/day20-frontend",
+        "refs/heads/archive/20261018/day20-gap-cap",
+        "refs/heads/archive/20261018/day20-harness",
+        "refs/heads/archive/20261018/day20-heap-root",
+        "refs/heads/archive/20261018/day20-numpy-input",
+        "refs/heads/archive/20261018/day20-numpy-output",
+        "refs/heads/archive/20261018/day20-polars-decode",
+        "refs/heads/archive/20261018/day20-python-bytes",
+        "refs/heads/archive/20261018/day20-quantile-prefix",
+        "refs/heads/archive/20261018/day20-scalar-cdf",
+        "refs/heads/archive/20261018/day20-scale-hoist",
+        "refs/heads/archive/20261018/day20-sorted-cdf",
+        "refs/heads/archive/20261018/day20-speed",
+        "refs/heads/archive/20261018/day20-subnormal-compress",
+        "refs/heads/archive/20261018/day20-two-run",
+        "refs/heads/archive/20261018/day20-vector-move",
+        "refs/heads/archive/20261018/original-dirty-checkout",
+        "refs/heads/archive/20261018/review-candidate-f64-weights",
+        "refs/heads/archive/20261018/review-candidate-original-rust-api",
+        "refs/heads/archive/20261018/review-overnight-first-batch",
+        "refs/heads/codex/legacy-compatibility",
+        "refs/heads/master",
+        "refs/heads/research/handoff-20261018",
+        "refs/heads/review/1-digest-correctness",
+        "refs/heads/review/2-legacy-python-api",
+        "refs/heads/review/3-upstream-compatibility-gate",
+        "refs/heads/review/4-numpy-output-copy",
+        "refs/heads/review/archive-before-overnight-20261014",
+        "refs/heads/review/evidence-numerical-boundaries-20261014",
+        "refs/heads/review/evidence-scaling-packaging-20261015",
+        "refs/heads/tmp/bigbang-review-3-legacy-harness",
+        "refs/heads/tmp/bigbang-review-4-docs-plumbing"
+      ],
+      "unique_commits_relative_to_origin_heads": 0,
+      "recommended_archive_ref": null
+    },
+    {
+      "ref": "refs/heads/pr38-docs-compat",
+      "head": "e8562fd1c25a33cfd09359f671da126837c7bba4",
+      "subject": "docs: add internals and upstream compatibility suite",
+      "already_remote_reachable": false,
+      "containing_remote_heads": [],
+      "unique_commits_relative_to_origin_heads": 25,
+      "recommended_archive_ref": "refs/heads/archive/20261018/original-local-pr38-docs-compat"
+    },
+    {
+      "ref": "refs/heads/tmp/bigbang-review-1-core-delta",
+      "head": "90962e90a09fc7fe72f43290ff17db808930560b",
+      "subject": "DRY trimmed_mean bounds validation across silent + strict variants",
+      "already_remote_reachable": false,
+      "containing_remote_heads": [],
+      "unique_commits_relative_to_origin_heads": 5,
+      "recommended_archive_ref": "refs/heads/archive/20261018/original-local-bigbang-review-1-core-delta"
+    },
+    {
+      "ref": "refs/heads/tmp/bigbang-review-2-python-api",
+      "head": "1c043b16b19f526a3213e1bf585ba14a4fe11f61",
+      "subject": "reconcile max_size + delta defaults across all surfaces",
+      "already_remote_reachable": false,
+      "containing_remote_heads": [],
+      "unique_commits_relative_to_origin_heads": 2,
+      "recommended_archive_ref": "refs/heads/archive/20261018/original-local-bigbang-review-2-python-api"
+    },
+    {
+      "ref": "refs/heads/tmp/bigbang-review-3-legacy-harness",
+      "head": "2bc3b89cf6af5f2bde534c84e9bc4e9521db3878",
+      "subject": "tmp review: strict legacy harness",
+      "already_remote_reachable": true,
+      "containing_remote_heads": [
+        "refs/heads/codex/legacy-compatibility",
+        "refs/heads/tmp/bigbang-review-3-legacy-harness"
+      ],
+      "unique_commits_relative_to_origin_heads": 0,
+      "recommended_archive_ref": null
+    },
+    {
+      "ref": "refs/heads/tmp/bigbang-review-4-docs-plumbing",
+      "head": "850ebba40b514dbf869477856c62076b1dfb0df2",
+      "subject": "tmp review: docs and review notes",
+      "already_remote_reachable": true,
+      "containing_remote_heads": [
+        "refs/heads/tmp/bigbang-review-4-docs-plumbing"
+      ],
+      "unique_commits_relative_to_origin_heads": 0,
+      "recommended_archive_ref": null
+    }
+  ],
+  "additional_parent_created_archive": [
+    {
+      "ref": "refs/heads/archive/20261018/original-dirty-checkout",
+      "head": "ea0b0dd46c5e39bca69c915c8be9cf1107852cf0",
+      "subject": "Archive original uncommitted compatibility work before cleanup",
+      "remote_heads_containing": [
+        "refs/heads/archive/20261018/original-dirty-checkout"
+      ],
+      "already_remote_reachable": true
+    }
+  ],
+  "original_branch_count": 6,
+  "original_heads_not_origin_reachable": 3,
+  "secrets": {
+    "scanned_changed_or_extra_blob_count": 13,
+    "findings": [],
+    "binary_files": 0,
+    "ignored_by_current_rules": 0,
+    "result": "No credential patterns or sensitive filenames found in changed tracked snapshots and third-parent files. Only source/docs/tests were present; no ignored build/cache dataset found in the stash snapshots.",
+    "limits": "Heuristic scan of changed tracked blob snapshots and third-parent files; findings contain no secret values. Not a cryptographic proof of absence or a scan of full public ancestor history. Third parent preserves untracked and possibly ignored files; original stash flags cannot be inferred from the object alone."
+  },
+  "preservation_checks": [
+    "Push the exact top stash commit under its proposed archive ref; retaining only a diff or the top tree loses stash topology and can lose third-parent files.",
+    "After push, compare remote ref OIDs with the recorded commits. In a separate fresh fetch/clone verify each parent commit and third-parent tree are available before dropping any stash.",
+    "A normal checkout of a stash archive branch does not materialize stash0 third-parent files. Restore deliberately using stash-aware recovery (git stash apply --index <archive-ref>) in an isolated checkout at the original base, or extract the third-parent files separately.",
+    "Preserve the three original local branch OIDs with archive refs before removing their local names. Counts of commits absent from gr-tdigest origin are not claims of global uniqueness across other repositories.",
+    "No archive refs/pushes, stash drops, cleanup, branch deletion or source changes were performed by this audit. Parent owns mutations."
+  ],
+  "source_inventory": {
+    "path": "work/cleanup-stash-audit-inventory.json",
+    "sha256": "da41ebfd429347b6d4fd53390e57c03534fd99494c2d25d15b3023302ae06037"
+  },
+  "history_inventory": {
+    "path": "work/cleanup-stash-audit-history.json",
+    "sha256": "8b7f27d639a88f4ebd5de8153c17ba538d79890ea83bd7f3da4548c5741789fe",
+    "remote_objects_examined": 3453
+  },
+  "audit_status_unchanged_within_inventory": true,
+  "fetch_executed": false,
+  "builds_tests_benchmarks_executed": false,
+  "source_ref_stash_mutations_by_audit": false
+}

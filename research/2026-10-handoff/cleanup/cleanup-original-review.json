@@ -1,0 +1,380 @@
+{
+  "schema": "tdigest-original-cleanup-readonly-review-v1",
+  "created_utc": "2026-10-18T08:18:39.200340+00:00",
+  "scope": "Read-only source/document audit. No original file edits, git mutations, fetches, builds, tests, pushes or cleanup performed.",
+  "original": {
+    "path": "/home/ingo/git/gr-tdigest",
+    "branch": "master",
+    "head": "8dea4cf5e336db03eeefc18cad4b5f8537822dd2",
+    "remotes": [
+      "legacy-origin\tgit@github.com:ingolfured/polars-tdigest.git (fetch)",
+      "legacy-origin\tgit@github.com:ingolfured/polars-tdigest.git (push)",
+      "origin\tgit@github.com:ingolfured/gr-tdigest.git (fetch)",
+      "origin\tgit@github.com:ingolfured/gr-tdigest.git (push)"
+    ],
+    "status": [
+      "M CHANGELOG.md",
+      " M Makefile",
+      " M README.md",
+      " M api_design.md",
+      " M bindings/python/gr_tdigest/__init__.py",
+      " M bindings/python/pyproject.toml",
+      " M bindings/python/tests/test_api_python.py",
+      " M bindings/python/uv.lock",
+      " M src/bin/tdigest_cli.rs",
+      " M src/jni.rs",
+      " M src/py.rs",
+      " M src/tdigest/compressor.rs",
+      " M src/tdigest/frontends.rs",
+      " M src/tdigest/quantile.rs",
+      " M src/tdigest/tdigest.rs",
+      " M tdigest_design.md",
+      "?? .codex",
+      "?? .gradle-tdigestrs/",
+      "?? .tdigestrs-target/",
+      "?? compat/",
+      "?? docs/",
+      "?? tdigest_rs/"
+    ],
+    "dirty_tracked_count": 16,
+    "diff_sha256": "1208a50393bf4323208b8bd0faa6ec83701554cc826ee0f0e4b1f10d01102a08"
+  },
+  "reference": {
+    "local_object_repository": "/var/tmp/codex-tdigest-pr3-20261014/work/gr-tdigest",
+    "pr9_commit": "42d620428520a74fec8c57d5dc6d4db0f6b1920e",
+    "handoff_path": "/var/tmp/codex-tdigest-pr3-20261014/handoff20261018",
+    "handoff_archive_summary_sha256": "14fad77b451f1572851fdb328a6b99a2adabd6d712905383466650b473c6db88",
+    "remote_status_note": "Compared pinned pushed review source identity already verified by parent; this audit performs no new network fetch."
+  },
+  "instructions_read": [
+    "AGENTS.md",
+    "api_design.md",
+    "tdigest_design.md",
+    "typical_usecase.md"
+  ],
+  "conclusion": "No substantive current production change or missing regression test to port was identified. Preserve the dirty source state and unique documents in a clearly historical archival commit/snapshot before cleaning; do not merge this earlier implementation into PR6-9 or upstream38.",
+  "evidence": [
+    "All six copied upstream Python test source files and the copied upstream benchmark are byte-identical to PR9 at the same paths. The standalone strict benchmark runner is also byte-identical.",
+    "The three dirty Python test additions are present in PR9. Full test_api_python.py differs only in expected error spelling scale=k2 versus scale=k2norm; preserve the reviewed newer contract.",
+    "Dirty Rust delta rule tests are carried forward/adapted in PR9 as delta_merge_matches_old_k2_rule_for_weighted_input and delta_mode_bypasses_off_fast_path_and_runs_merge.",
+    "Dirty modern delta plumbing, weighted construction, trimmed_mean, centroid getters, pickle/deepcopy and dictionary helpers are already carried forward or superseded. PR9 uses canonical K2Norm/delta, fixed weighted median/queries, preserved original-engine tdigest_rs wrappers, corrected wire support and wider regression gates.",
+    "The top-level untracked tdigest_rs shim explicitly deletes delta, retains every unique value, expands weights in trimmed_mean, and changes median after merge to trimmed_mean(0.05,0.95). It does not establish legacy numerical compatibility.",
+    "The untracked strict adapter only re-exports gr_tdigest and therefore exercises modern semantics. It has been superseded by the shipped bindings/python/tdigest_rs original-engine path.",
+    "The seven docs are absent at corresponding PR9 paths. They contain useful explanatory/historical material but stale assertions: even-count median branch, f32 centroid weights, equal-mean atomic conversion, and 70-pass/21-fail legacy status. The failure report suggests commenting old assertions, which contradicts the later frozen-suite compatibility requirement.",
+    "The inspected handoff archive roots exclude /home/ingo/git/gr-tdigest, so this original dirty tree must not be assumed backed up merely because the main research handoff completed."
+  ],
+  "preservation_recommendations": [
+    "Parent should preserve all 16 modified tracked files relative to original HEAD and the 10 nonduplicate untracked source/document files in a separate archive branch or hashed historical snapshot; retain enough provenance to reconstruct original HEAD plus changes. The eight byte-identical files may be referenced by PR9 commit/path/hash instead of copied again.",
+    "Keep the seven docs and obsolete adapter/shim under a historical namespace with a warning, rather than activating their original paths on the reviewed production branch. This prevents top-level tdigest_rs import shadowing and stale maintainer instructions.",
+    "Use PR6\u2192PR7\u2192PR8\u2192PR9 and current handoff COMPATIBILITY/EXPERIMENTS as active authority. Do not backport old max_size=200 defaults, K2 legacy_delta naming/rules, strict re-export adapter or replaced query behavior.",
+    "Only clean the original after the preservation commit/artifact is verified. Parent owns the actual mutations and remote preservation."
+  ],
+  "generated_or_empty": [
+    {
+      "path": ".codex",
+      "kind": "regular read-only file, mode 0444, zero bytes; not a directory or symlink",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "recommendation": "No source, settings, conversation or secret content; omit/remove safely when parent cleans."
+    },
+    {
+      "path": ".gradle-tdigestrs/",
+      "kind": "Gradle wrapper cache; top-level wrapper directory",
+      "recommendation": "Regenerable cache; no reason to commit. This audit inspected top-level shape only, not every binary."
+    },
+    {
+      "path": ".tdigestrs-target/",
+      "kind": "Cargo build output; debug/, release/, tmp/, .rustc_info.json",
+      "recommendation": "Regenerable cache; no reason to commit. Do not confuse it with the separately preserved exact oracle binaries and E12 wheel in handoff."
+    },
+    {
+      "path": "compat/**/__pycache__/, compat/**/.pytest_cache/, tdigest_rs/__pycache__/",
+      "kind": "Python bytecode and pytest cache metadata",
+      "recommendation": "Generated; omit/remove after source preservation."
+    }
+  ],
+  "ignored_local_context": {
+    "path": "typical_usecase.md",
+    "ignored_by": ".gitignore:83",
+    "sha256": "61d2a896f7120e82d721704ee1b576731bb3efab390bfa95d9873630cbb477dc",
+    "note": "Explicitly marked Local, Not For Commit and includes detailed production workload assumptions. It is outside the dirty tracked/untracked status. Prefer preserving it locally only; current public handoff already records the user-approved >100-CPU direction. Do not silently include ignored local context in a public historical commit."
+  },
+  "files": [
+    {
+      "path": "CHANGELOG.md",
+      "bytes": 12077,
+      "sha256": "751429cf026fc7f034ceb498d96a1684ffb28ed2040fa6658b67a5ff1913caee",
+      "classification": "superseded_tracked_work_preserve_snapshot",
+      "exists_at_pr9_path": true,
+      "equals_pr9_bytes": false
+    },
+    {
+      "path": "Makefile",
+      "bytes": 20731,
+      "sha256": "09d02a9d46bc3c433ce6536632eed0ef9cd73fb4e723d038c6cc685836a98c34",
+      "classification": "superseded_tracked_work_preserve_snapshot",
+      "exists_at_pr9_path": true,
+      "equals_pr9_bytes": false
+    },
+    {
+      "path": "README.md",
+      "bytes": 4601,
+      "sha256": "66ad8e27ec29e5b3257c12e66577d0721c9287e2dae886d7d2dec8bba7780eb8",
+      "classification": "superseded_tracked_work_preserve_snapshot",
+      "exists_at_pr9_path": true,
+      "equals_pr9_bytes": false
+    },
+    {
+      "path": "api_design.md",
+      "bytes": 5078,
+      "sha256": "1157baf541c77c68fc7af075616c3960efcfa9db212dc7b2e8f04c3cad76af61",
+      "classification": "superseded_tracked_work_preserve_snapshot",
+      "exists_at_pr9_path": true,
+      "equals_pr9_bytes": false
+    },
+    {
+      "path": "bindings/python/gr_tdigest/__init__.py",
+      "bytes": 25730,
+      "sha256": "0cf0263098881b339842af31605b88def4ebe5df372347da303b59a67cae8716",
+      "classification": "superseded_tracked_work_preserve_snapshot",
+      "exists_at_pr9_path": true,
+      "equals_pr9_bytes": false
+    },
+    {
+      "path": "bindings/python/pyproject.toml",
+      "bytes": 2248,
+      "sha256": "1ece103007a71c0195e6e2c25efc9daf0b2a4ae949fb41f940b432fda34553a7",
+      "classification": "superseded_tracked_work_preserve_snapshot",
+      "exists_at_pr9_path": true,
+      "equals_pr9_bytes": false
+    },
+    {
+      "path": "bindings/python/tests/test_api_python.py",
+      "bytes": 7332,
+      "sha256": "76d243c63d4b208c8a499635e688647df8ffbce645df7cade20719a365dece30",
+      "classification": "superseded_tracked_work_preserve_snapshot",
+      "exists_at_pr9_path": true,
+      "equals_pr9_bytes": false
+    },
+    {
+      "path": "bindings/python/uv.lock",
+      "bytes": 47768,
+      "sha256": "faa3c7cd782cf760a54d7b4018c9fcfbf3628c5baabc3376c02704d39bdc71c2",
+      "classification": "superseded_tracked_work_preserve_snapshot",
+      "exists_at_pr9_path": true,
+      "equals_pr9_bytes": false
+    },
+    {
+      "path": "src/bin/tdigest_cli.rs",
+      "bytes": 25425,
+      "sha256": "a4e560ef8c1bd6e95ac71a4634bea1e29d9f9295a1913f6cd1ad7e2db0845d62",
+      "classification": "superseded_tracked_work_preserve_snapshot",
+      "exists_at_pr9_path": true,
+      "equals_pr9_bytes": false
+    },
+    {
+      "path": "src/jni.rs",
+      "bytes": 17788,
+      "sha256": "7fbe86cdca55a8fa37a411a79e545f281b599739aeb1b4ac2c15e62ab8862ce2",
+      "classification": "superseded_tracked_work_preserve_snapshot",
+      "exists_at_pr9_path": true,
+      "equals_pr9_bytes": false
+    },
+    {
+      "path": "src/py.rs",
+      "bytes": 12642,
+      "sha256": "fadd88edfa12339073e0d225a952d3bccdadeefb15da7b97491a7793728293ae",
+      "classification": "superseded_tracked_work_preserve_snapshot",
+      "exists_at_pr9_path": true,
+      "equals_pr9_bytes": false
+    },
+    {
+      "path": "src/tdigest/compressor.rs",
+      "bytes": 32589,
+      "sha256": "0dcdc5ca34fafac1d81f0032b8fc23066c6b977136347200d3ae7d011e2d25d5",
+      "classification": "superseded_tracked_work_preserve_snapshot",
+      "exists_at_pr9_path": true,
+      "equals_pr9_bytes": false
+    },
+    {
+      "path": "src/tdigest/frontends.rs",
+      "bytes": 28358,
+      "sha256": "11585cb6a8a6a56247fc9018240413390744b810b3b9fd26d3df31e898e9f992",
+      "classification": "superseded_tracked_work_preserve_snapshot",
+      "exists_at_pr9_path": true,
+      "equals_pr9_bytes": false
+    },
+    {
+      "path": "src/tdigest/quantile.rs",
+      "bytes": 15910,
+      "sha256": "0f2cbdbe4c60c45ca07a0ca9701b7afa7638aab7ab305a4cb00a9d2dbd6a7bee",
+      "classification": "superseded_tracked_work_preserve_snapshot",
+      "exists_at_pr9_path": true,
+      "equals_pr9_bytes": false
+    },
+    {
+      "path": "src/tdigest/tdigest.rs",
+      "bytes": 47606,
+      "sha256": "facc93d78d1e640aece3adb286bb59799d625ffa1ecfb1ad0418513c77465de6",
+      "classification": "superseded_tracked_work_preserve_snapshot",
+      "exists_at_pr9_path": true,
+      "equals_pr9_bytes": false
+    },
+    {
+      "path": "tdigest_design.md",
+      "bytes": 14228,
+      "sha256": "ca6118a5937b89915240f47c8e203e4019567d3bceced4126a31122850ccf6b3",
+      "classification": "superseded_tracked_work_preserve_snapshot",
+      "exists_at_pr9_path": true,
+      "equals_pr9_bytes": false
+    },
+    {
+      "path": "compat/tdigest-rs-strict-python/benchmarks/run.py",
+      "bytes": 1889,
+      "sha256": "83f2321854f7b6106f1a3a1ada91b6b6b456937146a8723897e2d1c1a27f1f8d",
+      "classification": "exact_duplicate_of_pushed_pr9",
+      "exists_at_pr9_path": true,
+      "equals_pr9_bytes": true
+    },
+    {
+      "path": "compat/tdigest-rs-strict-python/tdigest_rs/__init__.py",
+      "bytes": 130,
+      "sha256": "a0c321edce719aa2c3f99bef81505ce37ebed9f1571b2152e245ab549cda26d1",
+      "classification": "obsolete_import_adapter_preserve_historically",
+      "exists_at_pr9_path": false,
+      "equals_pr9_bytes": false
+    },
+    {
+      "path": "compat/tdigest-rs-upstream/PROVENANCE.md",
+      "bytes": 1464,
+      "sha256": "c7988afb7982321539d8772fd21c927262938a2f48eb78de899e3b6a05c56b20",
+      "classification": "superseded_provenance_preserve_with_snapshot",
+      "exists_at_pr9_path": true,
+      "equals_pr9_bytes": false
+    },
+    {
+      "path": "compat/tdigest-rs-upstream/bindings/python/benchmarks/run.py",
+      "bytes": 569,
+      "sha256": "2161ce8d9c5be6b0cfd9ef7f08a389838681ce2989aa8c87c9018ec12f506662",
+      "classification": "exact_duplicate_of_pushed_pr9",
+      "exists_at_pr9_path": true,
+      "equals_pr9_bytes": true
+    },
+    {
+      "path": "compat/tdigest-rs-upstream/bindings/python/tests/__init__.py",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "classification": "exact_duplicate_of_pushed_pr9",
+      "exists_at_pr9_path": true,
+      "equals_pr9_bytes": true
+    },
+    {
+      "path": "compat/tdigest-rs-upstream/bindings/python/tests/conftest.py",
+      "bytes": 132,
+      "sha256": "61a4ea1a12b6ec3f835a2e5086fc7aa70c5dc02cb100befe5db7fb9abd47a074",
+      "classification": "exact_duplicate_of_pushed_pr9",
+      "exists_at_pr9_path": true,
+      "equals_pr9_bytes": true
+    },
+    {
+      "path": "compat/tdigest-rs-upstream/bindings/python/tests/constants.py",
+      "bytes": 132,
+      "sha256": "3ca8e570306c33a08076193f59e6255e2e9cc51dd5914b324ea1277dcee86365",
+      "classification": "exact_duplicate_of_pushed_pr9",
+      "exists_at_pr9_path": true,
+      "equals_pr9_bytes": true
+    },
+    {
+      "path": "compat/tdigest-rs-upstream/bindings/python/tests/test_distributions.py",
+      "bytes": 2097,
+      "sha256": "1ec4ef38fbf1a650aa36ed5ca459aa1cb2c63339e5f47bd9a685dbb9d0e3b3e3",
+      "classification": "exact_duplicate_of_pushed_pr9",
+      "exists_at_pr9_path": true,
+      "equals_pr9_bytes": true
+    },
+    {
+      "path": "compat/tdigest-rs-upstream/bindings/python/tests/test_tdigest.py",
+      "bytes": 4330,
+      "sha256": "aa2b939ce5c5f90f10acb4080475cf939d7d3b0dc0dea004dbf345fda930af9a",
+      "classification": "exact_duplicate_of_pushed_pr9",
+      "exists_at_pr9_path": true,
+      "equals_pr9_bytes": true
+    },
+    {
+      "path": "compat/tdigest-rs-upstream/bindings/python/tests/utils.py",
+      "bytes": 680,
+      "sha256": "94d05a31fe66c9712770f88ecb09adfb484ba179c3c01f69de90bc55f8538d64",
+      "classification": "exact_duplicate_of_pushed_pr9",
+      "exists_at_pr9_path": true,
+      "equals_pr9_bytes": true
+    },
+    {
+      "path": "docs/README.md",
+      "bytes": 1168,
+      "sha256": "d70324627e9e2ec39d01df5cf8cd95499828361715bbe8bb82631ee83ec14f8e",
+      "classification": "unique_historical_draft_preserve_not_current_guidance",
+      "exists_at_pr9_path": false,
+      "equals_pr9_bytes": false
+    },
+    {
+      "path": "docs/compressor-pipeline.md",
+      "bytes": 3861,
+      "sha256": "76243a3a5f719b1c8d07463de71e461ade816ad42899985e5322102c26f73b4c",
+      "classification": "unique_historical_draft_preserve_not_current_guidance",
+      "exists_at_pr9_path": false,
+      "equals_pr9_bytes": false
+    },
+    {
+      "path": "docs/legacy-failure-report.md",
+      "bytes": 5600,
+      "sha256": "d61d20eb4cd4dd853c98727e7fbf171f7c766d0c04a3f182260bf75387f62b5b",
+      "classification": "unique_historical_draft_preserve_not_current_guidance",
+      "exists_at_pr9_path": false,
+      "equals_pr9_bytes": false
+    },
+    {
+      "path": "docs/quality-and-benchmarks.md",
+      "bytes": 3084,
+      "sha256": "a892dfb458b53a8788f66b28a4a60860a6ba4c8d7cd9eb334e1d342957da7bac",
+      "classification": "unique_historical_draft_preserve_not_current_guidance",
+      "exists_at_pr9_path": false,
+      "equals_pr9_bytes": false
+    },
+    {
+      "path": "docs/query-kernels.md",
+      "bytes": 3157,
+      "sha256": "4cf6038593bca0f590a5e71dcc7efa68b64df3c4416513f82c7fb9b06b08d8b9",
+      "classification": "unique_historical_draft_preserve_not_current_guidance",
+      "exists_at_pr9_path": false,
+      "equals_pr9_bytes": false
+    },
+    {
+      "path": "docs/review-compat-suite.md",
+      "bytes": 3168,
+      "sha256": "1b2799d981c007ae9adc9fd1954b0b9b1de3b537c80f5f67e48a9e4ac905a918",
+      "classification": "unique_historical_draft_preserve_not_current_guidance",
+      "exists_at_pr9_path": false,
+      "equals_pr9_bytes": false
+    },
+    {
+      "path": "docs/wire-and-precision.md",
+      "bytes": 2712,
+      "sha256": "f7e4149b970b6b2c72854738009eb5063336504eced7ff4b41e40d5a5d56ddd9",
+      "classification": "unique_historical_draft_preserve_not_current_guidance",
+      "exists_at_pr9_path": false,
+      "equals_pr9_bytes": false
+    },
+    {
+      "path": "tdigest_rs/__init__.py",
+      "bytes": 7468,
+      "sha256": "6d9aa7594fd64e15bd8e20e3a481ad42c0132aa0434b079924aec4cb6e07f348",
+      "classification": "obsolete_python_shim_preserve_historically_never_install",
+      "exists_at_pr9_path": false,
+      "equals_pr9_bytes": false
+    }
+  ],
+  "limitations": [
+    "Static comparison only; no new validation claim for the original dirty state.",
+    "No recursive inspection of generated cache binaries.",
+    "No assertion that every historical byte is absent from all archives; exact current reference duplicates and active source supersession were checked."
+  ]
+}

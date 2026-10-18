@@ -5,6 +5,7 @@ All notable changes to this project are documented in this file.
 ## [Unreleased]
 
 ### Research handoff
+- Preserve pre-existing local source, three complete stashes (including auto-scale research), historical branch heads and a generated lockfile before authorized Git-worktree cleanup; document recovery and historical-code limitations.
 - Record successful independent GitHub-clone extraction and checksum verification of all archived research files and branch mappings.
 - Add the entry-point guide, experimental branch map, portable archive verifier and current production priorities after preserving all research data.
 - Archive transfer batch 8/8: preserve checksummed research data for machine migration; no new benchmark or release claim.

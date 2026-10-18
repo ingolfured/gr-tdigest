@@ -1,0 +1,250 @@
+{
+  "branch": "archive/20261018/original-dirty-checkout",
+  "commit": "ea0b0dd46c5e39bca69c915c8be9cf1107852cf0",
+  "parent": "8dea4cf5e336db03eeefc18cad4b5f8537822dd2",
+  "file_count": 34,
+  "files": [
+    {
+      "status": " M",
+      "path": "CHANGELOG.md",
+      "bytes": 12077,
+      "sha256": "751429cf026fc7f034ceb498d96a1684ffb28ed2040fa6658b67a5ff1913caee",
+      "symlink": null
+    },
+    {
+      "status": " M",
+      "path": "Makefile",
+      "bytes": 20731,
+      "sha256": "09d02a9d46bc3c433ce6536632eed0ef9cd73fb4e723d038c6cc685836a98c34",
+      "symlink": null
+    },
+    {
+      "status": " M",
+      "path": "README.md",
+      "bytes": 4601,
+      "sha256": "66ad8e27ec29e5b3257c12e66577d0721c9287e2dae886d7d2dec8bba7780eb8",
+      "symlink": null
+    },
+    {
+      "status": " M",
+      "path": "api_design.md",
+      "bytes": 5078,
+      "sha256": "1157baf541c77c68fc7af075616c3960efcfa9db212dc7b2e8f04c3cad76af61",
+      "symlink": null
+    },
+    {
+      "status": " M",
+      "path": "bindings/python/gr_tdigest/__init__.py",
+      "bytes": 25730,
+      "sha256": "0cf0263098881b339842af31605b88def4ebe5df372347da303b59a67cae8716",
+      "symlink": null
+    },
+    {
+      "status": " M",
+      "path": "bindings/python/pyproject.toml",
+      "bytes": 2248,
+      "sha256": "1ece103007a71c0195e6e2c25efc9daf0b2a4ae949fb41f940b432fda34553a7",
+      "symlink": null
+    },
+    {
+      "status": " M",
+      "path": "bindings/python/tests/test_api_python.py",
+      "bytes": 7332,
+      "sha256": "76d243c63d4b208c8a499635e688647df8ffbce645df7cade20719a365dece30",
+      "symlink": null
+    },
+    {
+      "status": " M",
+      "path": "bindings/python/uv.lock",
+      "bytes": 47768,
+      "sha256": "faa3c7cd782cf760a54d7b4018c9fcfbf3628c5baabc3376c02704d39bdc71c2",
+      "symlink": null
+    },
+    {
+      "status": " M",
+      "path": "src/bin/tdigest_cli.rs",
+      "bytes": 25425,
+      "sha256": "a4e560ef8c1bd6e95ac71a4634bea1e29d9f9295a1913f6cd1ad7e2db0845d62",
+      "symlink": null
+    },
+    {
+      "status": " M",
+      "path": "src/jni.rs",
+      "bytes": 17788,
+      "sha256": "7fbe86cdca55a8fa37a411a79e545f281b599739aeb1b4ac2c15e62ab8862ce2",
+      "symlink": null
+    },
+    {
+      "status": " M",
+      "path": "src/py.rs",
+      "bytes": 12642,
+      "sha256": "fadd88edfa12339073e0d225a952d3bccdadeefb15da7b97491a7793728293ae",
+      "symlink": null
+    },
+    {
+      "status": " M",
+      "path": "src/tdigest/compressor.rs",
+      "bytes": 32589,
+      "sha256": "0dcdc5ca34fafac1d81f0032b8fc23066c6b977136347200d3ae7d011e2d25d5",
+      "symlink": null
+    },
+    {
+      "status": " M",
+      "path": "src/tdigest/frontends.rs",
+      "bytes": 28358,
+      "sha256": "11585cb6a8a6a56247fc9018240413390744b810b3b9fd26d3df31e898e9f992",
+      "symlink": null
+    },
+    {
+      "status": " M",
+      "path": "src/tdigest/quantile.rs",
+      "bytes": 15910,
+      "sha256": "0f2cbdbe4c60c45ca07a0ca9701b7afa7638aab7ab305a4cb00a9d2dbd6a7bee",
+      "symlink": null
+    },
+    {
+      "status": " M",
+      "path": "src/tdigest/tdigest.rs",
+      "bytes": 47606,
+      "sha256": "facc93d78d1e640aece3adb286bb59799d625ffa1ecfb1ad0418513c77465de6",
+      "symlink": null
+    },
+    {
+      "status": " M",
+      "path": "tdigest_design.md",
+      "bytes": 14228,
+      "sha256": "ca6118a5937b89915240f47c8e203e4019567d3bceced4126a31122850ccf6b3",
+      "symlink": null
+    },
+    {
+      "status": "??",
+      "path": "compat/tdigest-rs-strict-python/benchmarks/run.py",
+      "bytes": 1889,
+      "sha256": "83f2321854f7b6106f1a3a1ada91b6b6b456937146a8723897e2d1c1a27f1f8d",
+      "symlink": null
+    },
+    {
+      "status": "??",
+      "path": "compat/tdigest-rs-strict-python/tdigest_rs/__init__.py",
+      "bytes": 130,
+      "sha256": "a0c321edce719aa2c3f99bef81505ce37ebed9f1571b2152e245ab549cda26d1",
+      "symlink": null
+    },
+    {
+      "status": "??",
+      "path": "compat/tdigest-rs-upstream/PROVENANCE.md",
+      "bytes": 1464,
+      "sha256": "c7988afb7982321539d8772fd21c927262938a2f48eb78de899e3b6a05c56b20",
+      "symlink": null
+    },
+    {
+      "status": "??",
+      "path": "compat/tdigest-rs-upstream/bindings/python/benchmarks/run.py",
+      "bytes": 569,
+      "sha256": "2161ce8d9c5be6b0cfd9ef7f08a389838681ce2989aa8c87c9018ec12f506662",
+      "symlink": null
+    },
+    {
+      "status": "??",
+      "path": "compat/tdigest-rs-upstream/bindings/python/tests/__init__.py",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "symlink": null
+    },
+    {
+      "status": "??",
+      "path": "compat/tdigest-rs-upstream/bindings/python/tests/conftest.py",
+      "bytes": 132,
+      "sha256": "61a4ea1a12b6ec3f835a2e5086fc7aa70c5dc02cb100befe5db7fb9abd47a074",
+      "symlink": null
+    },
+    {
+      "status": "??",
+      "path": "compat/tdigest-rs-upstream/bindings/python/tests/constants.py",
+      "bytes": 132,
+      "sha256": "3ca8e570306c33a08076193f59e6255e2e9cc51dd5914b324ea1277dcee86365",
+      "symlink": null
+    },
+    {
+      "status": "??",
+      "path": "compat/tdigest-rs-upstream/bindings/python/tests/test_distributions.py",
+      "bytes": 2097,
+      "sha256": "1ec4ef38fbf1a650aa36ed5ca459aa1cb2c63339e5f47bd9a685dbb9d0e3b3e3",
+      "symlink": null
+    },
+    {
+      "status": "??",
+      "path": "compat/tdigest-rs-upstream/bindings/python/tests/test_tdigest.py",
+      "bytes": 4330,
+      "sha256": "aa2b939ce5c5f90f10acb4080475cf939d7d3b0dc0dea004dbf345fda930af9a",
+      "symlink": null
+    },
+    {
+      "status": "??",
+      "path": "compat/tdigest-rs-upstream/bindings/python/tests/utils.py",
+      "bytes": 680,
+      "sha256": "94d05a31fe66c9712770f88ecb09adfb484ba179c3c01f69de90bc55f8538d64",
+      "symlink": null
+    },
+    {
+      "status": "??",
+      "path": "docs/README.md",
+      "bytes": 1168,
+      "sha256": "d70324627e9e2ec39d01df5cf8cd95499828361715bbe8bb82631ee83ec14f8e",
+      "symlink": null
+    },
+    {
+      "status": "??",
+      "path": "docs/compressor-pipeline.md",
+      "bytes": 3861,
+      "sha256": "76243a3a5f719b1c8d07463de71e461ade816ad42899985e5322102c26f73b4c",
+      "symlink": null
+    },
+    {
+      "status": "??",
+      "path": "docs/legacy-failure-report.md",
+      "bytes": 5600,
+      "sha256": "d61d20eb4cd4dd853c98727e7fbf171f7c766d0c04a3f182260bf75387f62b5b",
+      "symlink": null
+    },
+    {
+      "status": "??",
+      "path": "docs/quality-and-benchmarks.md",
+      "bytes": 3084,
+      "sha256": "a892dfb458b53a8788f66b28a4a60860a6ba4c8d7cd9eb334e1d342957da7bac",
+      "symlink": null
+    },
+    {
+      "status": "??",
+      "path": "docs/query-kernels.md",
+      "bytes": 3157,
+      "sha256": "4cf6038593bca0f590a5e71dcc7efa68b64df3c4416513f82c7fb9b06b08d8b9",
+      "symlink": null
+    },
+    {
+      "status": "??",
+      "path": "docs/review-compat-suite.md",
+      "bytes": 3168,
+      "sha256": "1b2799d981c007ae9adc9fd1954b0b9b1de3b537c80f5f67e48a9e4ac905a918",
+      "symlink": null
+    },
+    {
+      "status": "??",
+      "path": "docs/wire-and-precision.md",
+      "bytes": 2712,
+      "sha256": "f7e4149b970b6b2c72854738009eb5063336504eced7ff4b41e40d5a5d56ddd9",
+      "symlink": null
+    },
+    {
+      "status": "??",
+      "path": "tdigest_rs/__init__.py",
+      "bytes": 7468,
+      "sha256": "6d9aa7594fd64e15bd8e20e3a481ad42c0132aa0434b079924aec4cb6e07f348",
+      "symlink": null
+    }
+  ],
+  "remote_verified": true,
+  "fetched_source_bytes_verified": true,
+  "source_unmodified": true,
+  "secret_pattern_matches": 0
+}
