@@ -164,6 +164,15 @@ accumulator tracks the last input mean; centroid storage and wire layouts do not
 change. The bound applies only when the weight sum, weighted sum, and quotient
 are all finite. It must not hide overflow or repair invalid aggregate state.
 
+The E16 screening branch compresses wholly subnormal positive mass through a
+temporary normal-weight view with total in `[0.5, 1)` using two exact
+power-of-two factors. Keeping that total below one avoids introducing weighted
+product/sum overflow for finite large means. Output
+weights return to the original subnormal units; raw count/sum and data extrema
+remain those computed before normalization. Exact under-capacity Off inputs skip
+the copy. This does not recover tiny components inside a normal total, raw-sum
+underflow, or the independently tracked Use capacity-one/two mass-loss defect.
+
 ### 4.2 Stage 2: policy slice
 
 Policy is derived from `SingletonPolicy` and current `max_size`.

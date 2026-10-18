@@ -34,6 +34,44 @@ const CAP_SEARCH_LO: f64 = 1e-6;
  * Internal utilities
  * ============================================================================= */
 
+// Experimental rare-path normalization. Keep raw metadata in the caller.
+#[cold]
+fn compress_subnormal_mass<F: FloatLike + FloatCore>(
+    result: &TDigest<F>,
+    max_size: usize,
+    items: &[Centroid<F>],
+    total: f64,
+) -> Vec<Centroid<F>> {
+    let first_scale = 1.0 / f64::MIN_POSITIVE;
+    let first_total = total * first_scale;
+    let exponent = ((first_total.to_bits() >> 52) & 0x7ff) as i32 - 1023;
+    // A total below one prevents normalization from overflowing finite weighted values.
+    let second_scale = 2.0_f64.powi(-exponent - 1);
+    let scaled: Vec<_> = items
+        .iter()
+        .map(|c| {
+            let w = (c.weight_f64() * first_scale) * second_scale;
+            if c.is_atomic() {
+                Centroid::<F>::new_atomic_f64(c.mean_f64(), w)
+            } else {
+                Centroid::<F>::new_mixed_f64(c.mean_f64(), w)
+            }
+        })
+        .collect();
+    let mut view = result.clone();
+    compress_into(&mut view, max_size, scaled)
+        .into_iter()
+        .map(|c| {
+            let w = (c.weight_f64() / second_scale) / first_scale;
+            if c.is_atomic() {
+                Centroid::<F>::new_atomic_f64(c.mean_f64(), w)
+            } else {
+                Centroid::<F>::new_mixed_f64(c.mean_f64(), w)
+            }
+        })
+        .collect()
+}
+
 #[derive(Clone, Copy, Debug, Default)]
 struct WeightedStats {
     w_sum: f64,
@@ -132,6 +170,15 @@ where
     // -- 2) Slice -------------------------------------------------------------
     let policy = policy_from(result.singleton_policy(), max_size);
     let delta = result.delta();
+    if norm.total_w > 0.0
+        && norm.total_w < f64::MIN_POSITIVE
+        && norm.out.len() > 1
+        && !(delta.is_none()
+            && result.singleton_policy() == SingletonPolicy::Off
+            && norm.out.len() <= max_size)
+    {
+        return compress_subnormal_mass(result, max_size, &norm.out, norm.total_w);
+    }
     if delta.is_none() {
         if let Some(v) = policy.fast_path(&norm.out) {
             debug_assert!(crate::tdigest::centroids::is_sorted_strict_by_mean(&v));
