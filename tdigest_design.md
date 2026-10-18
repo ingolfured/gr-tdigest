@@ -471,3 +471,7 @@ preserves existing application outputs; `gr_tdigest`, Polars, Java, and the CLI
 continue using the modern shared core. Numerical fixes there must not silently
 change the original interface. See the vendored source provenance and exact
 output regression tests.
+
+## Experimental sorted CDF batches (E20)
+
+For sorted batches of 64–32767 probes with centroid count no greater than probe count, a forward cursor locates interpolation brackets. Prefix accumulation and interpolation arithmetic are unchanged. Exact centroid hits retain binary-search selection, including duplicate means. NaN, unsorted, sparse, short and parallel-size batches retain the existing path. This candidate is independently measured before retention.

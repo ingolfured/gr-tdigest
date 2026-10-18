@@ -88,6 +88,32 @@ impl<F: FloatLike + FloatCore> TDigest<F> {
         let min_v = self.min();
         let max_v = self.max();
 
+        // Sorted, sufficiently dense batches can share one forward cursor.
+        // Keep short/sparse/parallel batches and NaNs on the existing path.
+        if vals.len() >= 64
+            && vals.len() < PAR_MIN
+            && n <= vals.len()
+            && vals.windows(2).all(|w| w[0] <= w[1])
+        {
+            let mut idx = 0;
+            return vals
+                .iter()
+                .map(|&v| {
+                    while idx < n && cents[idx].mean_f64() < v {
+                        idx += 1;
+                    }
+                    let position = if idx < n && cents[idx].mean_f64() == v {
+                        // Preserve the existing binary-search choice even for
+                        // externally supplied duplicate centroid means.
+                        cents.binary_search_by(|c| c.mean_f64().partial_cmp(&v).unwrap())
+                    } else {
+                        Err(idx)
+                    };
+                    cdf_at_position(v, cents, &prefix, count_f64, min_v, max_v, position)
+                })
+                .collect();
+        }
+
         // Main path: parallel for big batches, scalar otherwise.
         if vals.len() >= PAR_MIN {
             vals.par_iter()
@@ -141,9 +167,23 @@ fn cdf_at_val_fast<F: FloatLike + FloatCore>(
     min_v: f64,
     max_v: f64,
 ) -> f64 {
+    let position = cents.binary_search_by(|c| c.mean_f64().partial_cmp(&val).unwrap());
+    cdf_at_position(val, cents, prefix, count_f64, min_v, max_v, position)
+}
+
+#[inline(always)]
+fn cdf_at_position<F: FloatLike + FloatCore>(
+    val: f64,
+    cents: &[Centroid<F>],
+    prefix: &[f64],
+    count_f64: f64,
+    min_v: f64,
+    max_v: f64,
+    position: Result<usize, usize>,
+) -> f64 {
     let n = cents.len();
 
-    match cents.binary_search_by(|c| c.mean_f64().partial_cmp(&val).unwrap()) {
+    match position {
         // Exact centroid hit: midpoint semantics (half-weight).
         Ok(idx) => (prefix[idx] + 0.5 * cents[idx].weight_f64()) / count_f64,
 
@@ -396,5 +436,123 @@ mod tests {
             (exact - (2.5 / 12.0)).abs() <= 1e-12,
             "exact hit at left mean should be midpoint mass"
         );
+    }
+    fn sorted_batch_reference<
+        F: crate::tdigest::precision::FloatLike + ordered_float::FloatCore,
+    >(
+        digest: &crate::tdigest::TDigest<F>,
+        probes: &[f64],
+    ) {
+        let mut prefix = Vec::new();
+        let mut count = 0.0;
+        for c in digest.centroids() {
+            prefix.push(count);
+            count += c.weight_f64();
+        }
+        let actual = digest.cdf(probes);
+        if count > 0.0 && count < f64::MIN_POSITIVE {
+            let scaled = digest.normalized_subnormal_mass_for_queries(count);
+            sorted_batch_reference(&scaled, probes);
+            let expected = scaled.cdf(probes);
+            for (&a, &b) in actual.iter().zip(&expected) {
+                assert_eq!(a.to_bits(), b.to_bits());
+            }
+            return;
+        }
+        for (&v, &got) in probes.iter().zip(&actual) {
+            let expected = if v.is_nan() {
+                f64::NAN
+            } else {
+                super::cdf_at_val_fast(
+                    v,
+                    digest.centroids(),
+                    &prefix,
+                    count,
+                    digest.min(),
+                    digest.max(),
+                )
+            };
+            if expected.is_nan() {
+                assert!(got.is_nan());
+            } else {
+                assert_eq!(got.to_bits(), expected.to_bits(), "probe={v}");
+            }
+        }
+    }
+
+    #[test]
+    fn sorted_batch_matches_binary_search_across_probe_shapes() {
+        use crate::tdigest::singleton_policy::SingletonPolicy;
+        for cap in [1, 2, 16, 128] {
+            for policy in [SingletonPolicy::Off, SingletonPolicy::Use] {
+                let vals: Vec<f64> = (0..2048)
+                    .map(|i| ((i * 67 % 257) as f64 - 128.0) / 8.0)
+                    .collect();
+                let d64 = TDigestBuilder::<f64>::new()
+                    .max_size(cap)
+                    .singleton_policy(policy)
+                    .build()
+                    .merge_unsorted(vals.clone())
+                    .unwrap();
+                let d32 = TDigestBuilder::<f32>::new()
+                    .max_size(cap)
+                    .singleton_policy(policy)
+                    .build()
+                    .merge_unsorted(vals.into_iter().map(|v| v as f32).collect())
+                    .unwrap();
+                for n in [1, 63, 64, 128, 1024, 32768] {
+                    let mut probes: Vec<f64> =
+                        (0..n).map(|i| (i as f64 - n as f64 / 2.0) / 8.0).collect();
+                    if n > 1 {
+                        probes[0] = f64::NEG_INFINITY;
+                        probes[n - 1] = f64::INFINITY;
+                    }
+                    sorted_batch_reference(&d64, &probes);
+                    sorted_batch_reference(&d32, &probes);
+                    probes.reverse();
+                    sorted_batch_reference(&d64, &probes);
+                    sorted_batch_reference(&d32, &probes);
+                    probes[n / 2] = f64::NAN;
+                    sorted_batch_reference(&d64, &probes);
+                    sorted_batch_reference(&d32, &probes);
+                }
+                for v in [-16.0, -0.0, 0.0, 16.0] {
+                    sorted_batch_reference(&d64, &vec![v; 128]);
+                    sorted_batch_reference(&d32, &vec![v; 128]);
+                }
+            }
+        }
+    }
+    #[test]
+    fn sorted_batch_keeps_sparse_and_subnormal_controls() {
+        use crate::tdigest::singleton_policy::SingletonPolicy;
+        let dense = TDigestBuilder::<f64>::new()
+            .max_size(2048)
+            .singleton_policy(SingletonPolicy::Off)
+            .build()
+            .merge_sorted((0..1024).map(|v| v as f64).collect())
+            .unwrap();
+        let sparse: Vec<f64> = (0..64).map(|v| v as f64 * 16.0 + 0.25).collect();
+        assert!(dense.centroids().len() > sparse.len());
+        sorted_batch_reference(&dense, &sparse);
+        let mut almost: Vec<f64> = (0..2048).map(|v| v as f64 / 2.0).collect();
+        almost.swap(2046, 2047);
+        sorted_batch_reference(&dense, &almost);
+        let tiny = f64::from_bits(1);
+        let d64 = TDigestBuilder::<f64>::new()
+            .max_size(128)
+            .singleton_policy(SingletonPolicy::Off)
+            .build()
+            .merge_weighted_unsorted(&[-1.0, 0.0, 2.0], &[tiny; 3])
+            .unwrap();
+        let d32 = TDigestBuilder::<f32>::new()
+            .max_size(128)
+            .singleton_policy(SingletonPolicy::Off)
+            .build()
+            .merge_weighted_unsorted(&[-1.0, 0.0, 2.0], &[tiny; 3])
+            .unwrap();
+        let probes: Vec<f64> = (0..128).map(|v| v as f64 / 16.0 - 4.0).collect();
+        sorted_batch_reference(&d64, &probes);
+        sorted_batch_reference(&d32, &probes);
     }
 }
