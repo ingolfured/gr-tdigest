@@ -5,6 +5,7 @@ All notable changes to this project are documented in this file.
 ## [Unreleased]
 
 ### Research handoff
+- Record successful independent GitHub-clone extraction and checksum verification of all archived research files and branch mappings.
 - Add the entry-point guide, experimental branch map, portable archive verifier and current production priorities after preserving all research data.
 - Archive transfer batch 8/8: preserve checksummed research data for machine migration; no new benchmark or release claim.
 - Archive transfer batch 7/8: preserve checksummed research data for machine migration; no new benchmark or release claim.

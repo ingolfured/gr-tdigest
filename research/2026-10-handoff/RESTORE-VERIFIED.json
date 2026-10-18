@@ -1,0 +1,18 @@
+{
+  "status": "passed",
+  "date": "2026-10-18",
+  "source": "Fresh HTTPS clone from GitHub; no local object sharing",
+  "research_head": "e960d9c3b286cffb2fe18062115f1ea9c2ce170e",
+  "archive_manifest_sha256": "0057f9591407010fc3cd92a0a1cae11883194606d9cab1672b88225a46c6d73e",
+  "archive_files_verified_and_extracted": 92680,
+  "archive_parts_verified": 67,
+  "uncompressed_bytes": 5910778736,
+  "personal_branch_mappings_verified": 35,
+  "fork_branch_mappings_verified": 2,
+  "product_source_tests_manifests_locks_unchanged_from_pr9": true,
+  "clone_clean": true,
+  "clone": "/var/tmp/codex-tdigest-pr3-20261014/handoff-clean-clone-20261018",
+  "extraction": "/var/tmp/codex-tdigest-pr3-20261014/handoff-restored-research-20261018",
+  "log_sha256": "033495be181191e6c49c82548a2fa2eb0b1dfb2d79c0848d8b6e398dd7a44be2",
+  "scope": "Archival integrity/restoration verification only; historical test results remain source/artifact-specific. No product builds or benchmarks rerun."
+}

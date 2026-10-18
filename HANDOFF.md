@@ -2,6 +2,8 @@
 
 This branch preserves the project for continuation on another computer. It is based on the validated personal PR #9 and adds documentation and historical research only. **Do not merge this research archive wholesale into the product or upstream PR.**
 
+[Fresh GitHub clone and full extraction verified](research/2026-10-handoff/RESTORE-VERIFIED.json): all 92,680 files, all 67 archive parts, 35 personal branch mappings and two upstream-fork mappings passed. The final receipt commit changes only documentation/verification metadata; archive bytes and product source remain the same.
+
 ## Resume from a fresh Linux clone
 
 ```bash
