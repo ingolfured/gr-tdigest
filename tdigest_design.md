@@ -177,7 +177,11 @@ Policy is derived from `SingletonPolicy` and current `max_size`.
   - if `max_size == 2`, bucketize directly into 2.
 
 `Use`:
-- Preserve up to one centroid on each side (first and last when present).
+- With a total cap of one or two, compress the entire normalized stream into
+  that many equal-weight buckets before slicing; retain already-fitting inputs
+  unchanged. Reserving both endpoints would otherwise leave zero interior slots
+  and discard their mass. Stored data extrema remain available to tail queries.
+- At larger capacities, preserve up to one centroid on each side (first and last when present).
 - `core_cap = max_size - left_len - right_len` (saturating).
 - Interior excludes the preserved endpoints.
 

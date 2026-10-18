@@ -216,6 +216,15 @@ impl Policy {
                 }
                 None
             }
+            Policy::Use { max } if max == 1 || max == 2 => {
+                // There is no interior slot after reserving both endpoints.
+                // Compress the whole stream so a tiny total cap retains mass.
+                Some(if out.len() <= max {
+                    out.to_vec()
+                } else {
+                    bucketize_equal_weight(out, max)
+                })
+            }
             Policy::Use { .. } | Policy::UseProt { .. } => None,
         }
     }
