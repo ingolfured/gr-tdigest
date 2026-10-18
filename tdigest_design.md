@@ -133,6 +133,15 @@ Weighted constructor/merge helpers:
 
 Note: core merge is permissive by design. Strict precision/config checks are enforced in `FrontendDigest::merge_in_place`.
 
+The owned `merge_digests` entry point and in-place `merge` / `merge_many` share a
+private borrowed-run implementation. In-place calls retain references to their
+source centroids while building the replacement result, then assign it after
+compression completes. They do not clone the input centroid vectors. Source
+order, heap tie breaking, first-nonempty configuration selection, extrema and
+compression arithmetic are unchanged. The shared frontend performs its existing
+precision/configuration checks and delegates nonempty pairs to `merge`; its
+empty-input adoption and no-op rules remain unchanged.
+
 ## 4. Compression pipeline internals
 
 `compress_into` runs stages 1->6.

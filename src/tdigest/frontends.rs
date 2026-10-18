@@ -467,10 +467,10 @@ Rebuild or cast to a shared configuration before merge.",
 
         match (self, other) {
             (FrontendDigest::F32(a), FrontendDigest::F32(b)) => {
-                *a = TDigest::<f32>::merge_digests(vec![a.clone(), b.clone()]);
+                a.merge(b);
             }
             (FrontendDigest::F64(a), FrontendDigest::F64(b)) => {
-                *a = TDigest::<f64>::merge_digests(vec![a.clone(), b.clone()]);
+                a.merge(b);
             }
             _ => unreachable!("precision mismatch checked above"),
         }

@@ -577,14 +577,21 @@ impl<F: FloatLike + FloatCore> TDigest<F> {
     /// Merge multiple digests by k-way merging their centroid runs and sending the result through
     /// the same pipeline used for raw values.
     pub fn merge_digests(digests: Vec<TDigest<F>>) -> TDigest<F> {
+        Self::merge_digest_refs(digests.iter())
+    }
+
+    // Borrow source runs until compression completes. Mutation entry points can
+    // replace their destination afterwards without cloning either operand.
+    fn merge_digest_refs<'a>(digests: impl IntoIterator<Item = &'a TDigest<F>>) -> TDigest<F> {
+        let digests = digests.into_iter();
         // Decide defaults by first non-empty digest to keep semantics stable.
         let mut chosen: Option<(usize, ScaleFamily, SingletonPolicy, Option<f64>)> = None;
-        let mut runs: Vec<&[Centroid<F>]> = Vec::with_capacity(digests.len());
+        let mut runs: Vec<&[Centroid<F>]> = Vec::with_capacity(digests.size_hint().0);
         let mut total_count = 0.0_f64;
         let mut min = OrderedFloat::from(F::from_f64(f64::INFINITY));
         let mut max = OrderedFloat::from(F::from_f64(f64::NEG_INFINITY));
 
-        for d in &digests {
+        for d in digests {
             let n = d.count();
             if n > 0.0 && !d.centroids.is_empty() {
                 if chosen.is_none() {
@@ -632,7 +639,7 @@ impl<F: FloatLike + FloatCore> TDigest<F> {
     ///
     /// This is a convenience wrapper over [`TDigest::merge_digests`].
     pub fn merge(&mut self, other: &TDigest<F>) -> &mut Self {
-        *self = TDigest::merge_digests(vec![self.clone(), other.clone()]);
+        *self = Self::merge_digest_refs([&*self, other]);
         self
     }
 
@@ -643,10 +650,7 @@ impl<F: FloatLike + FloatCore> TDigest<F> {
         if others.is_empty() {
             return self;
         }
-        let mut all = Vec::with_capacity(others.len() + 1);
-        all.push(self.clone());
-        all.extend_from_slice(others);
-        *self = TDigest::merge_digests(all);
+        *self = Self::merge_digest_refs(std::iter::once(&*self).chain(others));
         self
     }
 
