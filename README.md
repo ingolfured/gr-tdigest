@@ -158,3 +158,5 @@ by its original name, while local path dependencies must point to that directory
 The repository root remains the separate modern `gr-tdigest` package. Registry
 publication requires publishing the matching `tdigest_core` version first; this
 workspace layout does not itself publish either package.
+
+Experimental branch E19 changes only the modern engine's Stage-4 cap to adjacent weighted-gap coalescing. It is pending accuracy, timing and storage screening and does not claim an improvement; see `tdigest_design.md` for scope and numerical tradeoffs.

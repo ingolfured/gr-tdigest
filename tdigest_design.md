@@ -223,19 +223,33 @@ This changes the modern engine only; the original `tdigest_rs`/`tdigest_core`
 calculation path remains pinned.
 
 
-### 4.4 Stage 4: cap
+### 4.4 Stage 4: cap (E19 experiment)
 
-If interior count exceeds `core_cap`, run a second k-limit merge on the Stage-3 output:
-1. Keep scale family fixed (`K1`/`K2`/`K3`/`Quad`).
-2. Binary-search a smaller `d'` in `(0, d]` where `d` is the configured `max_size`.
-3. Pick the largest `d'` such that `klimit_merge(..., d')` yields `<= core_cap`.
-4. Use that result as the capped interior.
+When the Stage-3 interior exceeds `core_cap`, this isolated experiment repeatedly
+coalesces the adjacent pair with minimum `gap * wl*wr/(wl+wr)`. This is half the
+pair's weighted absolute displacement to its weighted mean in exact arithmetic.
+The score is evaluated as `log(gap) + log(min(wl,wr)) - log1p(min/max)` to avoid
+overflow/underflow in the cost product. An overflowing finite-endpoint difference
+uses scaled subtraction inside the log; zero gaps have priority `-infinity`.
+Equal computed scores prefer the leftmost original input index. A min-heap with
+generation checks and linked neighbor indices updates only affected pairs.
+It emits exactly `core_cap` centroids and allocates its final vector to that size.
 
-This keeps Stage 4 aligned with Stage 3 geometry (same `q_to_k` family + `Δk<=1` rule), while still enforcing the cap.
+Stage 3 and protected edges are unchanged. Every coalesced pair uses the existing
+weighted accumulator and becomes Mixed; untouched inputs retain bits and kind.
+The score arithmetic does not change weighted-mean overflow/underflow limitations
+or finite positive centroid-weight validation. Binary merge grouping changes
+floating-point summation order. Extra transient node/heap memory is O(n), with no
+persistent digest or wire fields added. Worst-case time is O(n log n), replacing
+28 cap-search compression passes plus the old tightening/bucket fallback.
 
-Safety fallback:
-- If rare plateau behavior prevents converging under cap, Stage 4 tightens `d'` further for a bounded number of retries.
-- If still over cap, it falls back to order-preserving equal-weight bucketization as a last-resort guard.
+This cap deliberately gives up the old scale-family geometry guarantee. It is
+an unaccepted prototype pending held-out rank, value and CDF error, runtime and
+storage comparisons. Preserving moments or a single tail fixture is insufficient.
+The E06 `0,1,1e17` / `.5,.5,5e-17` fixture retains its tail in the direct helper;
+the public Off/max_size=2 fast path still bypasses Stage 4 and is outside E19.
+Existing tiny-cap policy behavior and the independent pinned upstream API remain
+unchanged. No speed or quality improvement is claimed before measurement.
 
 ### 4.5 Stage 5: assemble
 

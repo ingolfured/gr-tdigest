@@ -5,6 +5,7 @@ All notable changes to this project are documented in this file.
 ## [Unreleased]
 
 ### Fixed
+- Prototype E19: replace modern Stage-4 cap search with deterministic adjacent weighted-gap coalescing; preserve protected edges and centroid kind rules. Numerical grouping and scale geometry change, so adoption requires held-out rank/value/CDF and resource measurements. Off/max_size=2 and the original upstream API remain unchanged.
 - Preserve LF checkout bytes for the 13 checksum-bound original implementation, Python wrapper, tests and benchmark files, including when Git uses `core.autocrlf=true`; keep the raw-byte checks and numerical code unchanged.
 - Record independently reviewed frozen-budget accuracy and native timing evidence on the corrected source, including tight-storage losses, value/rank distinctions and policy violations; connect the personal review stack to the validated actual upstream draft.
 - Record the K2Norm negative controls, full corrected-source Linux validation, and seven-runtime direct/source-rebuilt wheel gates, with exact artifact identities and bounded claims.

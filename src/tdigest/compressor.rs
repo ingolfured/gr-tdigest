@@ -6,8 +6,8 @@
 //! 2. **Slice**: partition `(left edges, interior, right edges)` and compute interior capacity
 //!    from the active [`SingletonPolicy`].
 //! 3. **Merge (k-limit)**: greedily merge interior under Δk ≤ 1 for the selected [`ScaleFamily`].
-//! 4. **Cap**: if interior exceeds its budget, run a second k-limit merge with tuned `d'`
-//!    (via binary search) to honor the cap while preserving scale-family geometry.
+//! 4. **Cap**: if interior exceeds its budget, coalesce adjacent pairs in increasing
+//!    weighted-gap cost until the interior meets its cap (experimental E19).
 //! 5. **Assemble**: concatenate `left + core + right`.
 //! 6. **Post**: optional policy finalization (e.g., total-cap for `Use`).
 //!
@@ -16,7 +16,10 @@
 //! - Total weight is preserved (up to floating rounding).
 //! - Stage ownership is explicit: same-mean runs are coalesced only in **1**; edge rules only in **2/6**.
 
-use ordered_float::FloatCore;
+use std::cmp::Reverse;
+use std::collections::BinaryHeap;
+
+use ordered_float::{FloatCore, OrderedFloat};
 
 use crate::tdigest::centroids::Centroid;
 use crate::tdigest::merges::normalize_stream;
@@ -26,9 +29,6 @@ use crate::tdigest::singleton_policy::SingletonPolicy;
 use crate::tdigest::TDigest;
 
 const KLIMIT_TOL: f64 = 1e-12;
-const CAP_SEARCH_ITERS: usize = 28;
-const CAP_FALLBACK_ITERS: usize = 12;
-const CAP_SEARCH_LO: f64 = 1e-6;
 
 /* =============================================================================
  * Internal utilities
@@ -103,7 +103,7 @@ impl WeightedStats {
 /// 1) Normalize → `normalize_stream`
 /// 2) Slice     → policy-dependent edge/interior partition
 /// 3) Merge     → `klimit_merge`
-/// 4) Cap       → `cap_core` / `cap_with_second_klimit`
+/// 4) Cap       → `cap_core` / `cap_by_weighted_gap`
 /// 5) Assemble  → `assemble_with_edges`
 /// 6) Post      → policy-specific finalization
 pub(crate) fn compress_into<F, I>(
@@ -153,8 +153,7 @@ where
     };
 
     // -- 4) Cap ---------------------------------------------------------------
-    // Second k-limit cap pass if the interior exceeds its budget.
-    // Fallback to equal-weight bucketization remains as a safety net in cap_core.
+    // Experimental weighted-gap coalescing if the interior exceeds its budget.
     let core_capped = if delta.is_some() {
         core
     } else {
@@ -360,18 +359,14 @@ fn klimit_merge<F: FloatLike + FloatCore>(
     clusters
 }
 
-/// **(4) Cap** — reduce to at most `core_cap` by running a second k-limit pass.
-///
-/// We binary-search `d'` in `(0, d]` and choose the largest value that yields `<= core_cap`
-/// centroids under the same k-limit merge rule used by Stage 3.
-///
-/// If plateau behavior prevents strict cap convergence, we tighten `d'` a few times and
-/// finally fall back to equal-weight bucketization as a last-resort safety net.
+/// **(4) Cap** — coalesce adjacent centroids at minimum weighted-gap cost.
+/// Stage 3 still uses the selected scale; this experimental cap does not promise
+/// to retain that scale's geometry. The held-out accuracy gate decides adoption.
 fn cap_core<F: FloatLike + FloatCore>(
     core: Vec<Centroid<F>>,
     core_cap: usize,
-    d: f64,
-    family: ScaleFamily,
+    _d: f64,
+    _family: ScaleFamily,
 ) -> Vec<Centroid<F>> {
     if core.len() <= core_cap {
         return core;
@@ -379,59 +374,122 @@ fn cap_core<F: FloatLike + FloatCore>(
     if core_cap == 0 {
         return Vec::new();
     }
-    cap_with_second_klimit(&core, core_cap, d, family)
+    cap_by_weighted_gap(core, core_cap)
 }
 
-/// Stage-4 cap strategy: second k-limit merge with tuned `d'`.
-fn cap_with_second_klimit<F: FloatLike + FloatCore>(
-    core: &[Centroid<F>],
+struct GapNode<F: FloatLike + FloatCore> {
+    centroid: Centroid<F>,
+    previous: Option<usize>,
+    next: Option<usize>,
+    generation: usize,
+    live: bool,
+}
+
+// Reverse makes the minimum score first. Exact score ties use the original
+// left index, followed only by validity fields for otherwise stale candidates.
+type GapCandidate = Reverse<(OrderedFloat<f64>, usize, usize, usize, usize)>;
+
+/// Log of gap * wl*wr/(wl+wr), half the pair's weighted absolute displacement
+/// to its weighted mean in exact arithmetic. Log space avoids overflow in the
+/// score, including finite endpoints whose subtraction would overflow. It does
+/// not change or conceal the existing weighted-mean/weight validation rules.
+fn weighted_gap_log_score<F: FloatLike + FloatCore>(
+    left: &Centroid<F>,
+    right: &Centroid<F>,
+) -> f64 {
+    let l = left.mean_f64();
+    let r = right.mean_f64();
+    let gap = r - l;
+    let log_gap = if gap.is_finite() {
+        gap.ln() // Equal means, including signed zero, intentionally score -inf.
+    } else {
+        let magnitude = l.abs().max(r.abs());
+        magnitude.ln() + (r / magnitude - l / magnitude).ln()
+    };
+    let small = left.weight_f64().min(right.weight_f64());
+    let large = left.weight_f64().max(right.weight_f64());
+    log_gap + small.ln() - (small / large).ln_1p()
+}
+
+fn push_gap_candidate<F: FloatLike + FloatCore>(
+    nodes: &[GapNode<F>],
+    left: usize,
+    heap: &mut BinaryHeap<GapCandidate>,
+) {
+    if let Some(right) = nodes[left].next {
+        heap.push(Reverse((
+            OrderedFloat(weighted_gap_log_score(
+                &nodes[left].centroid,
+                &nodes[right].centroid,
+            )),
+            left,
+            right,
+            nodes[left].generation,
+            nodes[right].generation,
+        )));
+    }
+}
+
+fn cap_by_weighted_gap<F: FloatLike + FloatCore>(
+    core: Vec<Centroid<F>>,
     core_cap: usize,
-    d: f64,
-    family: ScaleFamily,
 ) -> Vec<Centroid<F>> {
     debug_assert!(core_cap > 0);
     if core.len() <= core_cap {
-        return core.to_vec();
+        return core;
     }
-
-    // Find the largest d' that satisfies the cap to preserve as much detail as possible.
-    let mut lo = CAP_SEARCH_LO;
-    let mut hi = d.max(CAP_SEARCH_LO);
-    let mut best = lo;
-    let mut found = false;
-
-    for _ in 0..CAP_SEARCH_ITERS {
-        let mid = 0.5 * (lo + hi);
-        let len_mid = klimit_merge(core, mid, family, KLIMIT_TOL).len();
-        if len_mid <= core_cap {
-            found = true;
-            best = mid;
-            lo = mid;
-        } else {
-            hi = mid;
+    let mut remaining = core.len();
+    let mut nodes: Vec<_> = core
+        .into_iter()
+        .enumerate()
+        .map(|(index, centroid)| GapNode {
+            centroid,
+            previous: index.checked_sub(1),
+            next: (index + 1 < remaining).then_some(index + 1),
+            generation: 0,
+            live: true,
+        })
+        .collect();
+    let mut heap = BinaryHeap::with_capacity(remaining - 1);
+    for index in 0..remaining - 1 {
+        push_gap_candidate(&nodes, index, &mut heap);
+    }
+    while remaining > core_cap {
+        let Reverse((_, left, right, left_generation, right_generation)) = heap
+            .pop()
+            .expect("a live adjacent pair exists while over cap");
+        if !nodes[left].live
+            || !nodes[right].live
+            || nodes[left].generation != left_generation
+            || nodes[right].generation != right_generation
+            || nodes[left].next != Some(right)
+        {
+            continue;
         }
+        // Preserve the existing arithmetic and invalid aggregate behavior;
+        // only the choice and grouping order of these two inputs changes.
+        let mut stats = WeightedStats::default();
+        stats.add(&nodes[left].centroid);
+        stats.add(&nodes[right].centroid);
+        nodes[left].centroid = stats.centroid();
+        nodes[left].generation += 1;
+        nodes[left].next = nodes[right].next;
+        nodes[right].live = false;
+        if let Some(next) = nodes[left].next {
+            nodes[next].previous = Some(left);
+        }
+        remaining -= 1;
+        if let Some(previous) = nodes[left].previous {
+            push_gap_candidate(&nodes, previous, &mut heap);
+        }
+        push_gap_candidate(&nodes, left, &mut heap);
     }
-
-    let mut out = klimit_merge(
-        core,
-        if found { best } else { CAP_SEARCH_LO },
-        family,
-        KLIMIT_TOL,
-    );
-
-    // Guard against rare non-monotone/plateau effects.
-    let mut guard = 0usize;
-    let mut tuned = if found { best } else { CAP_SEARCH_LO };
-    while out.len() > core_cap && guard < CAP_FALLBACK_ITERS {
-        tuned *= 0.95;
-        out = klimit_merge(core, tuned, family, KLIMIT_TOL);
-        guard += 1;
+    let mut out = Vec::with_capacity(remaining);
+    let mut next = Some(0);
+    while let Some(index) = next {
+        out.push(nodes[index].centroid);
+        next = nodes[index].next;
     }
-
-    if out.len() > core_cap {
-        return bucketize_equal_weight(core, core_cap);
-    }
-
     out
 }
 
@@ -664,6 +722,277 @@ mod tests {
         }
     }
 
+    // E19 uses a slow full adjacency rescan as an independent data-structure
+    // reference. It intentionally shares the frozen score definition, but no
+    // heap, generations or linked-neighbor maintenance with production code.
+    fn gap_cap_scan_reference<F: FloatLike + FloatCore>(
+        mut items: Vec<Centroid<F>>,
+        cap: usize,
+    ) -> Vec<Centroid<F>> {
+        while items.len() > cap {
+            let index = (0..items.len() - 1)
+                .min_by_key(|&i| {
+                    (
+                        OrderedFloat(weighted_gap_log_score(&items[i], &items[i + 1])),
+                        i,
+                    )
+                })
+                .unwrap();
+            items[index] = weighted_collapse(&items[index..=index + 1]);
+            items.remove(index + 1);
+        }
+        items
+    }
+
+    fn assert_gap_bits<F: FloatLike + FloatCore>(actual: &[Centroid<F>], expected: &[Centroid<F>]) {
+        assert_eq!(actual.len(), expected.len());
+        for (a, e) in actual.iter().zip(expected) {
+            assert_eq!(a.mean_f64().to_bits(), e.mean_f64().to_bits());
+            assert_eq!(a.weight_f64().to_bits(), e.weight_f64().to_bits());
+            assert_eq!(a.kind(), e.kind());
+        }
+    }
+
+    fn gap_cap_heap_cases<F: FloatLike + FloatCore>() {
+        for sample in 0..48 {
+            let items: Vec<_> = (0..3 + sample % 31)
+                .map(|i| {
+                    let mean = if sample % 4 == 0 {
+                        // Repeated/signed-zero means exercise zero-cost ties.
+                        if i < 2 {
+                            -0.0
+                        } else {
+                            (i / 3) as f64
+                        }
+                    } else {
+                        ((i * i + 3 * i) as f64 - 100.0) * [1e-20, 1.0, 1e20][sample % 3]
+                    };
+                    let weight = (1 + (i * 13 + sample) % 19) as f64 / 8.0;
+                    if i % 3 == 0 {
+                        Centroid::<F>::new_mixed_f64(mean, weight)
+                    } else {
+                        Centroid::<F>::new_atomic_f64(mean, weight)
+                    }
+                })
+                .collect();
+            for cap in 1..=items.len() {
+                let output = cap_by_weighted_gap(items.clone(), cap);
+                assert_gap_bits(&output, &gap_cap_scan_reference(items.clone(), cap));
+                assert_eq!(output.len(), cap);
+                assert_eq!(
+                    output.iter().map(Centroid::weight_f64).sum::<f64>(),
+                    items.iter().map(Centroid::weight_f64).sum::<f64>(),
+                    "dyadic weights must preserve exact mass"
+                );
+                assert!(output
+                    .windows(2)
+                    .all(|w| w[0].mean_f64() <= w[1].mean_f64()));
+                assert!(output.iter().all(|c| c.mean_f64() >= items[0].mean_f64()
+                    && c.mean_f64() <= items.last().unwrap().mean_f64()));
+            }
+        }
+    }
+
+    #[test]
+    fn gap_cap_heap_matches_independent_rescan_f32_and_f64() {
+        gap_cap_heap_cases::<f32>();
+        gap_cap_heap_cases::<f64>();
+    }
+
+    #[test]
+    fn gap_cap_zero_gap_and_equal_cost_ties_choose_left_original_index() {
+        let input = vec![
+            Centroid::<f64>::new_atomic_f64(-0.0, 0.5),
+            Centroid::<f64>::new_atomic_f64(0.0, 0.5),
+            Centroid::<f64>::new_atomic_f64(1.0, 0.5),
+            Centroid::<f64>::new_atomic_f64(2.0, 0.5),
+        ];
+        assert_eq!(
+            weighted_gap_log_score(&input[0], &input[1]),
+            f64::NEG_INFINITY
+        );
+        let output = cap_by_weighted_gap(input, 3);
+        assert_eq!(output[0].weight_f64(), 1.0);
+        assert!(output[0].is_mixed());
+        let input: Vec<_> = (0..4)
+            .map(|i| Centroid::<f64>::new_atomic_f64(i as f64, 1.0))
+            .collect();
+        let output = cap_by_weighted_gap(input, 3);
+        assert_eq!(output[0].mean_f64(), 0.5);
+        assert_eq!(output[0].weight_f64(), 2.0);
+        assert!(output[1].is_atomic() && output[2].is_atomic());
+    }
+
+    #[test]
+    fn gap_cap_e06_tiny_tail_is_kept_by_direct_stage4_helper() {
+        // This is NOT the public Off/max_size=2 path, which bypasses Stage4.
+        // The tiny tail has a larger displacement cost than merging 0 and 1.
+        macro_rules! check {
+            ($float:ty) => {{
+                let input = vec![
+                    Centroid::<$float>::new_atomic_f64(0.0, 0.5),
+                    Centroid::<$float>::new_atomic_f64(1.0, 0.5),
+                    Centroid::<$float>::new_atomic_f64(1e17, 5e-17),
+                ];
+                let tail = input[2];
+                let output = cap_by_weighted_gap(input, 2);
+                assert_eq!(output[0].mean_f64(), 0.5);
+                assert_eq!(output[0].weight_f64(), 1.0);
+                assert!(output[0].is_mixed());
+                assert_gap_bits(&output[1..], &[tail]);
+            }};
+        }
+        check!(f32);
+        check!(f64);
+    }
+
+    #[test]
+    fn gap_cap_log_cost_handles_overflowing_gap_and_subnormal_weights() {
+        let left = Centroid::<f64>::new_atomic_f64(-1e308, 1e-308);
+        let right = Centroid::<f64>::new_atomic_f64(1e308, 1e-308);
+        assert!((right.mean_f64() - left.mean_f64()).is_infinite());
+        assert!(weighted_gap_log_score(&left, &right).is_finite());
+        let out = cap_by_weighted_gap(vec![left, right], 1);
+        assert_eq!(out[0].mean_f64(), 0.0);
+        assert_eq!(out[0].weight_f64(), 2e-308);
+        let tiny = f64::from_bits(1);
+        let left = Centroid::<f64>::new_atomic_f64(1.0, tiny);
+        let right = Centroid::<f64>::new_atomic_f64(2.0, tiny);
+        assert!(weighted_gap_log_score(&left, &right).is_finite());
+        let out = cap_by_weighted_gap(vec![left, right], 1);
+        assert_eq!(out[0].weight_f64().to_bits(), 2);
+        assert!(out[0].mean_f64() >= 1.0 && out[0].mean_f64() <= 2.0);
+    }
+
+    #[test]
+    #[should_panic(expected = "centroid weight must be finite and > 0")]
+    fn gap_cap_does_not_hide_nonfinite_combined_mass() {
+        let input = vec![
+            Centroid::<f64>::new_atomic_f64(0.0, 1e308),
+            Centroid::<f64>::new_atomic_f64(1.0, 1e308),
+        ];
+        let _ = cap_by_weighted_gap(input, 1);
+    }
+
+    fn gap_cap_policy_matrix<F: FloatLike + FloatCore>() {
+        for scale in [
+            ScaleFamily::Quad,
+            ScaleFamily::K1,
+            ScaleFamily::K2,
+            ScaleFamily::K2Norm,
+            ScaleFamily::K3,
+        ] {
+            for policy in [
+                SingletonPolicy::Off,
+                SingletonPolicy::Use,
+                SingletonPolicy::UseWithProtectedEdges(2),
+            ] {
+                for magnitude in [1e-20, 1.0, 1e20] {
+                    let input: Vec<_> = (0..67)
+                        .map(|i| {
+                            let mean = (i as f64 - 33.0) * magnitude;
+                            let weight = (i % 7 + 1) as f64 / 8.0;
+                            if i > 2 && i < 64 && i % 5 == 0 {
+                                Centroid::<F>::new_mixed_f64(mean, weight)
+                            } else {
+                                Centroid::<F>::new_atomic_f64(mean, weight)
+                            }
+                        })
+                        .collect();
+                    let mut td = TDigest::<F>::builder()
+                        .max_size(7)
+                        .scale(scale)
+                        .singleton_policy(policy)
+                        .build();
+                    let output = compress_into(&mut td, 7, input.clone());
+                    assert_eq!(
+                        td.count(),
+                        input.iter().map(Centroid::weight_f64).sum::<f64>()
+                    );
+                    assert_eq!(
+                        td.sum(),
+                        input
+                            .iter()
+                            .map(|c| c.mean_f64() * c.weight_f64())
+                            .sum::<f64>()
+                    );
+                    assert_eq!(
+                        output.iter().map(Centroid::weight_f64).sum::<f64>(),
+                        td.count()
+                    );
+                    assert_eq!(td.min().to_bits(), input[0].mean_f64().to_bits());
+                    assert_eq!(
+                        td.max().to_bits(),
+                        input.last().unwrap().mean_f64().to_bits()
+                    );
+                    assert!(crate::tdigest::centroids::is_sorted_strict_by_mean(&output));
+                    match policy {
+                        SingletonPolicy::Off => assert!(output.len() <= 7),
+                        SingletonPolicy::Use => {
+                            assert!(output.len() <= 7);
+                            assert_gap_bits(&output[..1], &input[..1]);
+                            assert_gap_bits(&output[output.len() - 1..], &input[input.len() - 1..]);
+                        }
+                        SingletonPolicy::UseWithProtectedEdges(_) => {
+                            assert!(output.len() <= 11);
+                            assert_gap_bits(&output[..2], &input[..2]);
+                            assert_gap_bits(&output[output.len() - 2..], &input[input.len() - 2..]);
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    #[test]
+    fn gap_cap_all_scales_and_policies_preserve_mass_metadata_and_edges() {
+        gap_cap_policy_matrix::<f32>();
+        gap_cap_policy_matrix::<f64>();
+    }
+
+    fn gap_cap_nondyadic_controls<F: FloatLike + FloatCore>(magnitude: f64) {
+        for weights in [
+            [0.7, 0.1, 0.2, 0.3, 1.1, 0.9, 0.4, 0.6, 0.8, 1.3, 0.1],
+            [
+                1e200, 0.1, 1e-200, 1e100, 0.3, 1e-100, 0.9, 1e180, 0.7, 1e-180, 1e-200,
+            ],
+        ] {
+            let means = [
+                -9.0, -4.0, -2.0, -1.0, -1e-10, 0.0, 1e-10, 1.0, 2.0, 4.0, 9.0,
+            ];
+            let input: Vec<_> = means
+                .iter()
+                .zip(weights)
+                .enumerate()
+                .map(|(i, (&mean, weight))| {
+                    if i % 3 == 0 {
+                        Centroid::<F>::new_mixed_f64(mean * magnitude, weight)
+                    } else {
+                        Centroid::<F>::new_atomic_f64(mean * magnitude, weight)
+                    }
+                })
+                .collect();
+            for cap in 1..=input.len() {
+                let output = cap_by_weighted_gap(input.clone(), cap);
+                assert_gap_bits(&output, &gap_cap_scan_reference(input.clone(), cap));
+                assert!(crate::tdigest::centroids::is_sorted_strict_by_mean(&output));
+                assert!(output.iter().all(|c| c.mean_f64().is_finite()));
+                let forward_mass: f64 = input.iter().map(Centroid::weight_f64).sum();
+                let output_mass: f64 = output.iter().map(Centroid::weight_f64).sum();
+                // Positive-sum rounding bound, scaled to this input's mass and
+                // term count. Independent rescan also checks every output bit.
+                let bound = forward_mass * f64::EPSILON * (4 * input.len()) as f64;
+                assert!((output_mass - forward_mass).abs() <= bound);
+            }
+        }
+    }
+
+    #[test]
+    fn gap_cap_nondyadic_extreme_weights_and_mixed_signs_match_rescan() {
+        gap_cap_nondyadic_controls::<f32>(1e20);
+        gap_cap_nondyadic_controls::<f64>(1e100);
+    }
+
     // ---- tiny helpers ----
     fn c<F: FloatLike + FloatCore>(m: f64, w: f64, singleton: bool) -> Centroid<F> {
         if singleton {
@@ -756,7 +1085,7 @@ mod tests {
     }
 
     #[test]
-    fn cap_core_second_klimit_respects_cap_and_preserves_weight_order() {
+    fn cap_core_gap_coalescing_respects_cap_and_preserves_weight_order() {
         let core: Vec<_> = (0..200).map(|i| c::<Fp>(i as f64, 1.0, true)).collect();
         let out = super::cap_core(core.clone(), 32, 1000.0, ScaleFamily::K2);
 
