@@ -1,0 +1,16 @@
+{
+  "purpose": "Separate mass/moment invariants from empirical accuracy for E01/E06; no timing and no production changes.",
+  "fixtures": "Four E01 and four E06 fixed adversarial controls, both precisions, three value scales, direct and4-batch merge/add, affected caps and unaffected capacity controls.",
+  "oracle": "Python Fraction of exact f64 input bits after declared f32 input conversion; repeated input population weights multiplied by4, no digest-derived truth.",
+  "quantile": "Weighted step quantile; exact boundary midpoint. Report value error and distance to exact raw ECDF rank interval independently.",
+  "cdf": "Exact raw midpoint weighted ECDF at input atoms and adjacent midpoints.",
+  "moments": "Exact rational raw and centroid weighted sums; raw header and centroid mass errors separately, including residual weight below f64 total ULP.",
+  "storage": "Record actual TDIG wire size and centroid count at same cap; never call invalid omitted-work timing a valid comparison.",
+  "no_tolerance": true,
+  "source_sha256": "03c7a325741d6ee504a47f16761589bda82d2d6bf121c80e97e2708db5ae908c",
+  "variants": [
+    "baseline-v3",
+    "e01-v3",
+    "e06-v3"
+  ]
+}

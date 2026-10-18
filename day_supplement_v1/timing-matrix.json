@@ -1,0 +1,59 @@
+{
+  "schema": "day20-supplement-timing-matrix-v1",
+  "status": "proposed_before_any_supplemental_build_or_measurement",
+  "original_proposal_sha256": "8191d8b810da8bf3b4de2ab2ee23226333576f4ee9da87110818f0dcb8c510c1",
+  "rationale": "Replace the exhaustive 628-cell lifecycle Cartesian grid with 70 declared representative timing cells. Keep the entire 252-cell untimed allocation/correctness grid and 324-cell direct borrowed/CDF audit grid. Selection is by affected paths and input boundaries before any supplemental results; no candidate data were used to select or calibrate these cells.",
+  "expansion": {
+    "precisions": ["f32", "f64"],
+    "E05_lifecycles": ["drop"],
+    "E10_lifecycles": ["return", "drop", "clone_drop"],
+    "screen_seed": 32452843,
+    "confirmation_seed": 49979687,
+    "E05_cells": 16,
+    "E10_cells": 54,
+    "total_cells_per_phase": 70
+  },
+  "E05_templates": [
+    {"kind":"distinct","n":0,"setting":"cap64off","operation":"build","fan_in":40,"purpose":"Empty Off control"},
+    {"kind":"distinct","n":1,"setting":"cap64off","operation":"build","fan_in":40,"purpose":"Tiny under-cap move"},
+    {"kind":"distinct","n":32,"setting":"cap64off","operation":"sequential","fan_in":40,"purpose":"Under-cap borrowed sequential operation with empty shards"},
+    {"kind":"ties_exact_17","n":65536,"setting":"cap64off","operation":"build","fan_in":40,"purpose":"Required compaction after normalization creates spare capacity"},
+    {"kind":"normal","n":100000,"setting":"delta300","operation":"sequential","fan_in":40,"purpose":"No-edge assembly after ordinary large compression"},
+    {"kind":"separated_modes","n":1000,"setting":"cap64off","operation":"build","fan_in":40,"purpose":"Distinct distribution and capped no-edge assembly"},
+    {"kind":"normal","n":1000,"setting":"cap64use","operation":"build","fan_in":40,"purpose":"Singleton Use control"},
+    {"kind":"normal","n":1000,"setting":"cap64edges","operation":"sequential","fan_in":40,"purpose":"Protected-edge sequential control"}
+  ],
+  "E10_templates": [
+    {"fan_in":0,"length":0,"capacity":"len","layout":"all_empty","purpose":"Canonical no-input boundary"},
+    {"fan_in":1,"length":0,"capacity":"65536","layout":"all_empty","purpose":"Empty owned vector with large spare capacity"},
+    {"fan_in":1,"length":1,"capacity":"len","layout":"all_live","purpose":"Compact singleton ownership path"},
+    {"fan_in":1,"length":64,"capacity":"65536","layout":"all_live","purpose":"Single ordinary owned digest requiring final compaction"},
+    {"fan_in":2,"length":8,"capacity":"16x","layout":"trailing_empty","purpose":"Tiny live first input with trailing empty and moderate slack"},
+    {"fan_in":2,"length":256,"capacity":"65536","layout":"leading_empty","purpose":"Large empty first allocation before a full compact live digest"},
+    {"fan_in":2,"length":64,"capacity":"len","layout":"all_live","purpose":"Ordinary compact pair merge"},
+    {"fan_in":40,"length":64,"capacity":"len","layout":"all_live","purpose":"Ordinary compact forty-input merge"},
+    {"fan_in":40,"length":256,"capacity":"65536","layout":"all_live","purpose":"Full-size forty-input merge with large first-input slack"}
+  ],
+  "axis_coverage": {
+    "precision": "Every timing template runs f32 and f64.",
+    "lifecycle": "Every E10 template runs owned return, owned result drop, and caller-held seed clone plus merge plus result drop. Original seed destruction remains outside the clone-reset clock.",
+    "E05_operations": "Build and sequential borrowed forty-input merges both run; the exact same data/operation is used in baseline and candidate.",
+    "E05_input_size": "Empty, singleton, under-cap32, ordinary1000, normalization65536 and large100000 boundaries are represented.",
+    "E05_policy": "Off, delta300, Use and protected edges each appear with their relevant affected/control operation.",
+    "E10_fan_in": "0,1,2,40 all represented; pair and forty-input ordinary compact merges are explicit.",
+    "E10_length": "0,1,8,64,256 all represented.",
+    "E10_capacity": "len,16x,65536 all represented through the reachable public builder without fixture cloning before owned timing.",
+    "E10_layout": "all_empty,all_live,trailing_empty,leading_empty all represented.",
+    "E10_selected_interactions": "Empty plus maximum slack; singleton plus compact capacity; one-input ordinary plus maximum slack; two-input tiny plus trailing empties and moderate slack; two-input leading empty plus maximum slack; compact ordinary pairs and forty-way merges; full-size forty-way plus maximum slack. This is targeted interaction coverage, not a claim of complete pairwise coverage across all axes.",
+    "quality_and_storage": "All 252 allocation cells retain five fresh-process repetitions per arm, exact output bytes/query bits, centroid capacity, retained requested and usable bytes, observed allocation counts and allocation-boundary peaks. Timing subset does not shrink storage coverage.",
+    "unchanged_query_controls": "Existing frozen v3 p50/CDF/encode/decode controls remain required. They are not duplicated in this lifecycle supplement."
+  },
+  "omitted_timing_claims": [
+    "No general timing claim for every input-size, distribution, policy, capacity, layout or fan-in Cartesian combination.",
+    "E05 exact-two-tie normalization and additional tiny sizes remain in allocation/correctness controls only.",
+    "Additional matched compact/slack combinations and empty layouts beyond listed E10 templates remain in allocation/correctness controls only.",
+    "E10 structural inputs are deterministic ownership/storage controls; changing the seed does not turn them into independent random data. Fresh random v3 confirmation remains necessary.",
+    "No allocator-internal transient peak, arena footprint or RSS claim; reported peaks are observed live-object bytes at allocation boundaries in instrumented builds."
+  ],
+  "execution_estimate": "70 cells x 8 retained-process calls x 7 x approximately60ms timed batches is approximately235seconds of timed work per phase, before pilots, startup and untimed fixture construction. Expect roughly10-30minutes per phase, with small empty/slack fixtures potentially more expensive to reset than to execute. Full allocations add2520 fresh-process calls; direct audits add648. Compile and smoke validation are a separately scheduled first batch. No 10x repeat unless the frozen short-batch rule triggers; root must schedule it separately."
+}

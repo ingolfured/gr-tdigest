@@ -1,0 +1,13 @@
+{
+  "schema": "day20-native-reset-label-erratum-v1",
+  "immutable_results_changed": false,
+  "affected_results": "Existing E02 native timing outputs in evidence/E02-* using v2 and any v3 native build/merge/merge2/kway result containing caller_reset_clone_timed:false",
+  "correction": {
+    "merge_and_merge2": "The timed fold clones leaves[0] to reset its mutable accumulator, then calls public borrowed pair merges. Caller reset is included even though the emitted flag is false.",
+    "kway": "The timed owned merge_digests call receives leaves.clone(), so all input reset clones are included even though the emitted flag is false.",
+    "build": "The timed make(values.clone()) includes resetting the owned raw-value vector. This should be named reset-inclusive build cost.",
+    "frontend": "Existing explicit frontend_owned and frontend_clone labels retain their documented meanings; this erratum does not change those paths."
+  },
+  "interpretation": "The timings remain measurements of those reset-inclusive operations. The metadata did not describe the reset cost accurately. Do not relabel them as pure owned/borrowed kernel costs or use static owned kway timing as direct coverage of public borrowed merge_many.",
+  "separate_new_coverage": "The supplement invokes TDigest::merge_many directly, verifies source operands are unchanged, and records a distinct operation label and reset policy. Existing files and timings remain untouched."
+}

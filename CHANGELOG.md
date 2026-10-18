@@ -4,6 +4,9 @@ All notable changes to this project are documented in this file.
 
 ## [Unreleased]
 
+### Research archive
+- Preserve the October 2026 experiment harness and protocols for machine migration; this snapshot is not a validated production change.
+
 ### Fixed
 - Preserve LF checkout bytes for the 13 checksum-bound original implementation, Python wrapper, tests and benchmark files, including when Git uses `core.autocrlf=true`; keep the raw-byte checks and numerical code unchanged.
 - Record independently reviewed frozen-budget accuracy and native timing evidence on the corrected source, including tight-storage losses, value/rank distinctions and policy violations; connect the personal review stack to the validated actual upstream draft.

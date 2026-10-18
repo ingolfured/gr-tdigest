@@ -1,0 +1,8 @@
+[package]
+name="repair-quality-probe"
+version="0.0.0"
+edition="2021"
+[workspace]
+[dependencies]
+gr-tdigest={path="/var/tmp/codex-tdigest-pr3-20261014/day20261015/evidence/v3/builds/e01-v3/source"}
+serde_json="1.0.145"

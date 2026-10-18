@@ -1,0 +1,154 @@
+{
+  "schema": "day20-modern-baseline-screen-v2",
+  "baseline": "25c8c1642029a640b153c160c22a89795d29ad91",
+  "baseline_modern_source": "ff73cfab31d6368d203c1a361b8efaaea29d735b",
+  "original_oracle": "8d9cf1fe82c5c9254e5dc9593f01717e317f4333",
+  "reference_sha256": "b239ede5d90bed920360201f3c640cc8ee29cbb81357a6ec4142149dfd2ce056",
+  "reference_reuse": "Exact prefix before macro_rules! precision_suite, except unused Original import removed; original recorded source copied unchanged beside harness.",
+  "seeds": {
+    "screen": 18705203,
+    "confirm": 67867967
+  },
+  "screen": {
+    "distributions": [
+      "normal",
+      "ties",
+      "separated_modes"
+    ],
+    "sizes": [
+      1000,
+      100000
+    ],
+    "precision": [
+      "f32",
+      "f64"
+    ],
+    "settings": [
+      "delta300",
+      "cap64use"
+    ],
+    "routes": [
+      "direct",
+      "sequential40",
+      "kway40"
+    ]
+  },
+  "confirm": {
+    "distributions": [
+      "uniform",
+      "normal",
+      "exponential",
+      "lognormal",
+      "pareto",
+      "ties",
+      "spike_tail",
+      "separated_modes"
+    ],
+    "sizes": [
+      32,
+      1000,
+      100000
+    ],
+    "precision": [
+      "f32",
+      "f64"
+    ],
+    "settings": [
+      "delta100",
+      "delta300",
+      "delta1200",
+      "cap64use",
+      "cap256off",
+      "cap256edges"
+    ],
+    "routes": [
+      "direct",
+      "sequential40",
+      "kway40"
+    ]
+  },
+  "scalar_cdf_control": {
+    "centroid_counts": [
+      1,
+      8,
+      64,
+      256,
+      1000
+    ],
+    "probes": "first exact centroid, median type7, last exact centroid, below support, above support"
+  },
+  "timing": {
+    "platform": "Linux WSL ArchFresh",
+    "cpu": 0,
+    "threads": 1,
+    "lock": "/var/tmp/codex-tdigest-pr3-20261014/day20261015/cpu.lock",
+    "schedule": [
+      "A",
+      "B",
+      "B",
+      "A",
+      "B",
+      "A",
+      "A",
+      "B"
+    ],
+    "warmup_batches": 2,
+    "retained_batches": 5,
+    "repetitions": "Baseline-only preliminarymeasurement percell, ceil60ms/ns-per-op withfixedinitialminimum and10million cap; persist and freeze identical counts forcandidate. Actualbatches below50ms areinconclusive.",
+    "query_exactness_assertions_timed": true,
+    "improvement": "Every one of four adjacent AB or BA process-median ratios <=0.97; screening alone cannot accept.",
+    "regression": "Every one of four ratios >1.03 rejects within claimed scope.",
+    "unstable_controls": "Either binary max/min process-median >1.10 means inconclusive; no winner claim.",
+    "acceptance": "Fresh held-out repeated timing must confirm meaningful gain and no confirmed >3% regression in claimed scope. Neutral or noisy candidates discarded.",
+    "drops_except_last_timed": true,
+    "query_assertions_timed": false,
+    "post_batch_exact_checks": true,
+    "repetition_escalation": "--rounds-scale10 allowedonce iff existingcomplete matching scale1run has short_batch_inconclusive; reuse itsbaselinecalibration rounds\u00d710, no newpilot, samebinaries/workloads/settings. Defaultscale1. Bothrawresults retained."
+  },
+  "exactness": "Pure speed requires identical centroid mean/weight/kind, stats bits, wire fingerprint, all selected quantile and CDF bits at identical settings, plus no invariant failures. Wire hash is screening FNV1a64; retained changes require exact byte differential/full compatibility gates. ScalarCDF bits are independently included and must match batchCDF on each source. Repeated timing resultstate must match auditedstate; finaloperation output checked outsideeachbatch.",
+  "quality": "Report empirical quantile rank interval, type7 value error, p50/IQR, midpointCDF max, exact integer mass/count/extrema, finite/positive centroids, monotonic outputs and wire query/byte roundtrip. No hidden logical storage increase. Adversarial weighted E01/E06 reported separately. No blanket epsilon.",
+  "limits": [
+    "This screening is not the complete release gate.",
+    "No original arithmetic is benchmarked as a proxy for modern baseline.",
+    "Same-config comparison is not matched-memory equivalence; all logical storage increases are explicit.",
+    "Confirm uses fresh seeds, not untouched-for-all-future-experiments holdout; changes selected after seeing confirm must use another registered seed.",
+    "No claim about PyO3/Polars/JNI overhead from native timing.",
+    "Global pass/fail is not aggregated to hide individual regressing cells."
+  ],
+  "files_sha256": {
+    "run.py": "7c0446432d4d262fe7c735abc5518179649684f04adb2e77b0ec1018c93caf45",
+    "tail.rs": "a204680dffb01d819cf1596e9bb0435f869e3019fab0be4a8c82222fe5114918",
+    "reference.rs": "b239ede5d90bed920360201f3c640cc8ee29cbb81357a6ec4142149dfd2ce056"
+  },
+  "premeasurement_repairs": [
+    "Snapshot explicitly declared bench sources for Cargo manifest parsing; failed no-compilation attempt retained.",
+    "Record scalarCDF alongside batchCDF and require bit equivalence.",
+    "Verify driver/tail/reference protocol hashes before any action and match baseline/candidate generated harness,toolchain,resolvedlock,profile,environment,protocol.",
+    "Snapshot untracked production source modules as well as tracked files.",
+    "Calibrate baseline once percell to50ms minimumtarget with60ms safety target; freeze rounds forbothbinary arms and retain calibration. Mark actualsub50ms batches inconclusive.",
+    "Unique resultpaths forlimited and audit-only runs.",
+    "Record rawquantile/CDF quality rows and tailrank/value summaries.",
+    "Postbatch last-result exactwire/outputcheck outsideclock; scalarquery XORcontrol outsideclock. Allintermediate drops timed, finalresult drop outsideclock.",
+    "E01 and E06 add affectedtinycaps plus ordinarycontrols; brokenbaseline speed is descriptive and cannot alone justify rejectingcorrectnessrepair.",
+    "Rootreview approvedsingle10xrounds escalation onlyafterinitialshortbatches withsamebinaries/patch/workloads/protocol; bothinitialandrerun retained. No candidateparameter tuning."
+  ],
+  "supersedes_premeasurement_protocol_sha256": "f2918d44d5027a4506190b568c6141dc4151cc49354bef1bbaec3e893063f0d7",
+  "baseline_label": "baseline-v2",
+  "experiment_settings": {
+    "E01": [
+      "cap1use",
+      "cap2use",
+      "cap3use",
+      "cap64use",
+      "delta300"
+    ],
+    "E06": [
+      "cap1off",
+      "cap2off",
+      "cap3off",
+      "cap64off",
+      "delta300"
+    ]
+  },
+  "quality_defect_decision": "ForE01/E06 baseline invariantviolationsareexplicitnegativecontrols. Repairedaffectedwork speed measuredhonestly; unchangedvalidordinarypathbit/qualitycontrols required. Materialrepaircostrequires explicittradeoffdecision, never comparingmissingwork asvalidcompetitor."
+}

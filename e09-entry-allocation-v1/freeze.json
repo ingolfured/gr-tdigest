@@ -1,0 +1,32 @@
+{
+  "schema": "day20-e09-windows-freeze-v1",
+  "utc": "2026-10-15T10:26:14.5705036Z",
+  "status": "frozen_not_compiled_or_executed",
+  "baseline": "25c8c1642029a640b153c160c22a89795d29ad91",
+  "approval": "Root approved hooks and156 diagnostic rows; source seed corrected to native v3 screen104729 before any builds.",
+  "screen_seed": 104729,
+  "original_rows": 72,
+  "expanded_rows": 84,
+  "repeats_per_arm": 5,
+  "instrumented_processes": 1560,
+  "independent_control_processes": 312,
+  "candidate_edits": false,
+  "timing_eligible": false,
+  "files_sha256": {
+    "day_e09_validate.py": "e3fba175b662f176a21fbb3a727addb5b8066592aa95c32d0eec772041283fe3",
+    "day_e09_probe.rs": "9577d9af3565c405b9a7bb2c691b47235dca6f1adf3e2106d1afceb5ebccddbb",
+    "day_e09_tail.rs": "55ef48e34b02b6eb65b81e545cdb755c8085c803e166557c07017a230cdb0cda",
+    "day_e09_selfcheck.rs": "77066eab84f3a6a4c64064fba6d20dfe3e935291518c9e77f7392745a4efe7eb",
+    "day-e09-entry-allocation-proposal.json": "087be14ef0d120742c10747727bb46da4b22f526a4b96bedfbb452b7c6826dd4",
+    "day-e09-entry-allocation-proposal-v2.json": "ef0a5ead9bdca5750a4c7e7cb7dcc6f1f40e7859f3f6cd022fd44c6a8c62a5b9",
+    "day_supplement_allocator.rs": "4e9ba2a503c04be233e1b94369a79c21e06a1c6d6066b8cd1c23d9773ca3e607"
+  },
+  "peer_review": "day_speed: no blocking compile or logic issue in Windows static review; actual Linux anchors, linking, compilation and selfchecks remain pending. Clean-log hashing and preserved new-phase failure status added after review.",
+  "limitations": [
+    "No build, selfcheck, smoke or full grid has run.",
+    "No timed operation exists in this harness.",
+    "Counter hooks and allocator instrumentation alter optimization; only observed instrumented allocations and allocation-boundary peaks are claimed.",
+    "Private cap helper is an instrumentation selfcheck only.",
+    "Original proposal and all existing candidate/protocol/evidence files are preserved."
+  ]
+}

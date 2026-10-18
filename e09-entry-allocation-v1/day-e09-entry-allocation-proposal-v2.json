@@ -1,0 +1,145 @@
+{
+  "schema": "day20-e09-cap-entry-allocation-design-v2",
+  "status": "approved_design_seed_corrected_before_builds",
+  "purpose": "Certify whether the already declared public E09 workloads enter the binary-search trial loop, and measure observed temporary allocation effects separately from performance.",
+  "baseline": "25c8c1642029a640b153c160c22a89795d29ad91",
+  "immutable_inputs": {
+    "root": "/var/tmp/codex-tdigest-pr3-20261014/day20261015/evidence/v3/builds",
+    "labels": [
+      "baseline-v3",
+      "e09-v3"
+    ],
+    "baseline_compressor_sha256": "302108296e1ee8b13e49a0cb83c64e9105eef3a1709208532417cb94ddc56adc",
+    "e09_compressor_sha256": "a02a72a71367e035155baca2ddfee5f21099b02be000d805af516b25c1546f1e",
+    "e09_candidate_patch_sha256": "96b44f2db977412bb81407fea2ba5b37d9b8c4860a513fb7b5a16a77a5c0221b",
+    "v3_protocol_sha256": "f19170e2951b59b5a30113c3724565a7ebc65dba8ca0d7caad543e69bff3d1d6",
+    "allocator_source": "work/day-supplement-frozen-v1/day_supplement_allocator.rs",
+    "allocator_sha256": "4e9ba2a503c04be233e1b94369a79c21e06a1c6d6066b8cd1c23d9773ca3e607"
+  },
+  "scope": {
+    "production": "No candidate, source snapshot, original upstream file, frozen v3 driver/protocol or existing evidence changes.",
+    "new_bundle": "After approval, create a separate write-once E09 validation bundle and copied source trees. Do not extend or overwrite supplement-v1, its frozen manifest, or its runner.",
+    "profile": "Release libtest builds for untimed validation only, one test thread and one CPU owner. Counting instrumentation must never emit performance timings.",
+    "provenance": "Reuse the reviewed supplement's copy/allowlist/reverse-transform pattern, not its evidence directory. Require full original manifests before/after, copied-source manifests, exact compile path after release package clean, binary hashes, toolchain/flags/lock hashes, and the approved probe source hash. The candidate snapshot remains independent of E05/E10 and every other experiment."
+  },
+  "instrumentation": {
+    "allowed_existing_files": [
+      "src/lib.rs",
+      "src/tdigest/tdigest.rs",
+      "src/tdigest/compressor.rs"
+    ],
+    "allowed_new_files": [
+      "src/day_counting_allocator.rs",
+      "src/day_cap_probe.rs",
+      "src/day_e09_validation.rs"
+    ],
+    "allocator": "Copy the reviewed allocator source unchanged; redirect only the copied Linux global allocator declaration. Its capture() returns allocation-free counters. Reuse the test-only centroid-capacity observer. Do not alter allocator accounting to collect stage-specific peaks.",
+    "probe_module": "Allocation-free fixed AtomicU64 counters, enabled only after fixture construction and warmup. Reset all counters outside the measured region. No tracing Vec, logging, formatting, callback allocation, or additional compression. Use successful GlobalAlloc counter snapshots for trial attribution. Report observed instrumented-build requests, never presumed uninstrumented counts.",
+    "anchors": [
+      {
+        "name": "delta_bypass",
+        "location": "compress_stream Stage4: inside `if delta.is_some()` immediately before returning `core`",
+        "counter": "delta_bypass_calls",
+        "interpretation": "Compression reached Stage4 but intentionally skipped cap_core; this is not a count-only trial target."
+      },
+      {
+        "name": "cap_dispatch",
+        "location": "cap_core entry, plus its existing `core.len() <= core_cap` and `core_cap == 0` early-return branches",
+        "counter": "cap_core_calls, already_within_budget, zero_budget_returns",
+        "interpretation": "A call to cap_core alone does not certify the affected optimization."
+      },
+      {
+        "name": "actual_search_entry",
+        "location": "cap_with_second_klimit after its early-return guard and immediately before `let mut lo = CAP_SEARCH_LO`",
+        "counter": "search_entries; search_input_centroids; search_budget_total; expected_trials += CAP_SEARCH_ITERS",
+        "interpretation": "Certifies core.len() > core_cap and a positive budget, using the real interior budget after edge protection."
+      },
+      {
+        "name": "actual_trial",
+        "location": "Inside the existing search for-loop: capture allocator metrics immediately before the original `let len_mid = ...;` statement and immediately after its semicolon",
+        "counter": "trial_calls; trial_alloc_calls; trial_zeroed_calls; trial_realloc_calls; trial_free_calls; trial_requested_bytes; trial_released_bytes",
+        "interpretation": "Keep the original baseline materializing expression or candidate count expression byte-for-byte. Capturing after the semicolon includes destruction of the baseline temporary Vec. The snapshot functions and counter updates allocate nothing."
+      },
+      {
+        "name": "selected_and_fallback_passes",
+        "location": "Before the existing final `let mut out = klimit_merge(...)`, inside the existing guard loop before each klimit_merge call, and before the final bucketize_equal_weight call",
+        "counter": "selected_passes, fallback_klimit_passes, bucket_fallbacks",
+        "interpretation": "Prove selected/fallback materialization remains present. E09 only removes temporary trial vectors."
+      }
+    ],
+    "branch_check": "For successful public calls, baseline and E09 counters for dispatch, bypass, search entries, trial count, selected passes and fallbacks must agree. trial_calls must equal expected_trials. A target claim requires search_entries > 0 and trial_calls > 0 in both arms. Do not infer entry from raw n > max_size, output centroid count, the label cap64Use, or a cap_core call.",
+    "attribution_limits": "Trial allocation snapshots can attribute calls/requested/released bytes to the trial expression. They cannot isolate an allocator-internal or trial-local peak. Report only the existing whole-operation GlobalAlloc-boundary peak, separately from trial allocation totals. Do not subtract a guessed memory peak or claim RSS."
+  },
+  "fixtures_and_boundaries": {
+    "frozen_data": "Reuse the frozen v3 generator, screen seed 104729, data conversion, 40 round-robin shards, precision and public operation order. Confirm raw-input and leaf-state hashes before enabling counters. Input generation, leaf construction and warmup must not contribute to the measured operation's Stage4 counts.",
+    "operations": {
+      "build": "Existing v3 configured merge_unsorted(raw.clone()) operation, including its explicitly labeled raw reset clone.",
+      "merge": "Existing v3 sequential public pair merges, including its explicitly labeled initial-accumulator reset clone. Do not substitute private compressor calls or a new merge shape.",
+      "kway": "Existing v3 owned TDigest::merge_digests(leaves.clone()), with source reset clones labeled. Do not present this as borrowed merge_many performance."
+    },
+    "initial_inventory": "Use the existing full v3 screen cases for build, merge and kway: normal/ties/separated_modes x n1000/100000 x f32/f64 x delta300/cap64Use, 72 public-operation rows. This does not invent new timing workloads or change the timing matrix.",
+    "proposed_scale_cap_coverage_not_yet_authorized": {
+      "purpose": "Complete the already declared five-scale and cap3/64/256 diagnostic coverage; this is an untimed path/allocation proposal, not a new timing matrix.",
+      "families": [
+        "Quad",
+        "K1",
+        "K2",
+        "K2Norm",
+        "K3"
+      ],
+      "caps": [
+        3,
+        64,
+        256
+      ],
+      "policy": "Use",
+      "input": "The same frozen normal generator, seed and n1000; no hand-selected cap-hitting input.",
+      "precisions": [
+        "f32",
+        "f64"
+      ],
+      "operations": [
+        "build",
+        "merge",
+        "kway"
+      ],
+      "raw_rows": 90,
+      "overlap_with_initial_inventory": 6,
+      "combined_unique_rows_if_root_approves": 156,
+      "coverage_limits": "Each scale/cap/operation/precision combination is covered on normal data. Ties and separated modes retain the original K2 cap64 and K2Norm delta controls; this is not all distributions crossed with all scale/cap combinations. Do not grow this grid after observing which rows hit or improve.",
+      "delta": "delta300 is valid only with K2Norm and Off. Keep the existing delta controls rather than constructing invalid delta/scale combinations."
+    },
+    "no_hit_policy": "Publish zero-entry rows as bypass/under-budget controls. If a declared path is never exercised, report the coverage gap and obtain a separately reviewed decision; do not manufacture a faster workload, silently drop rows, or count private helper coverage as public-path evidence."
+  },
+  "validation_order": [
+    "Root approves exact hook anchors, immutable source hashes and diagnostic row scope before implementation.",
+    "Compile baseline and E09 copied release libtests; run allocator self-checks and a small declared smoke batch before any full inventory.",
+    "Use a validation-only direct helper sanity test with the existing frozen E09 differential fixture to ensure the search counter changes and trial_calls == CAP_SEARCH_ITERS. Label it instrumentation self-check only, never public-target or speed evidence. Also verify reset/disabled hooks and delta bypass zero trials.",
+    "For each declared public-operation row, independently obtain exact output bytes and query bits from an uninstrumented immutable-snapshot control. If an existing v3 audit matches the exact fixture/config/route, reference its preserved artifact; otherwise use an untimed uninstrumented companion linked to the immutable source. Do not compare only two instrumented builds.",
+    "Run five fresh-process untimed repeats per arm. Verify identical input hashes, state bytes, quantile/CDF bits, observed input/output capacities, branch counters, trial allocation totals, live-byte deltas and retained output bytes. Investigate instability rather than averaging it away.",
+    "Check candidate output against its uninstrumented control and against baseline, then compare allocation evidence only for rows whose affected-path entry is certified. Preserve non-entry rows as controls.",
+    "Gate retained requested/usable output bytes, returned capacity, and whole-operation requested/usable allocation-boundary peaks against baseline. Report call-count differences and trial allocation savings separately; fewer calls alone is not acceptance.",
+    "Export a compact table linking each existing performance cell to entry proof and allocation evidence. Preserve all earlier timing results. E09 still requires the declared target/unchanged-control timing and heldout gates; no instrumented timing or automatic retention."
+  ],
+  "minimum_report_fields": [
+    "fixture id, raw/leaf state hashes, operation/reset lifecycle, precision, family, requested cap and actual interior budget summary",
+    "baseline/candidate source/binary/protocol hashes and uninstrumented exactness-control reference",
+    "delta bypass, cap calls, under-budget/zero-budget returns, search entries, trial count, selected/fallback calls",
+    "trial alloc/zeroed/realloc/free counts and requested/released bytes",
+    "whole-operation observed calls and allocation-boundary peaks, input/output actual capacity, retained requested/usable output bytes",
+    "five-repeat determinism, exact output result, target-hit or explicit no-hit label, storage-gate violations"
+  ],
+  "limitations": [
+    "No E09 production change is proposed.",
+    "Counter hooks and the counting allocator change optimization opportunities; these are observed instrumented-build allocation counts only.",
+    "The allocation-free counters certify control-flow execution but do not measure execution speed.",
+    "No blanket scale-independent epsilon, approximation change, new numeric algorithm, or modification of existing evidence is permitted.",
+    "The original source and compatibility oracle remain untouched."
+  ],
+  "revision": {
+    "correction": "The original proposal accidentally quoted the separate supplement seed. Use frozen native v3 screen seed 104729 for all 156 rows, preserving exact provenance for the original 72. No prior evidence changed.",
+    "approval": "Root approved exact hooks and 156 rows, then directed this seed correction before implementation/builds.",
+    "prior_file": "day-e09-entry-allocation-proposal.json",
+    "prior_sha256": "087be14ef0d120742c10747727bb46da4b22f526a4b96bedfbb452b7c6826dd4"
+  }
+}

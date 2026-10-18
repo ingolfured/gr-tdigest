@@ -1,0 +1,14 @@
+{
+  "utc": "2026-10-15T09:20:46.6360563Z",
+  "status": "approved operation/control map and validation-only allocator instrumentation",
+  "constraints": [
+    "No production edits; use copied immutable snapshots and prove only declared instrumentation differences.",
+    "Never use instrumented builds for speed timings.",
+    "Record requested allocation bytes separately from retained capacity, usable bytes and RSS.",
+    "E02 borrowed merge_many must be covered separately; existing sequential/static-kway timing contains reset clones and requires an explicit metadata erratum.",
+    "E20 near-sorted and boundary controls must verify actual query order; equal-value swaps are not evidence of late-disorder fallback.",
+    "Root has now seen initial E03 and E05 breadth outcomes; proposal itself was frozen before those results. No workload/gate retuning."
+  ],
+  "no_retention_yet": true,
+  "proposal_sha256": "8191d8b810da8bf3b4de2ab2ee23226333576f4ee9da87110818f0dcb8c510c1"
+}

@@ -1,0 +1,22 @@
+{
+  "schema": "day20-merge-shape-freeze-v1",
+  "utc": "2026-10-15T11:15:22.1413279Z",
+  "status": "frozen_Windows_only_before_builds_or_execution",
+  "root_approval": "Proposal a00dc7b00fc64ec0d526c73b5f69c624ceaf45c4d8d711ea19a1863e6a569397 approved as written",
+  "cells": 52,
+  "full_audit_processes": 156,
+  "smoke_cells": 12,
+  "timing": false,
+  "files_sha256": {
+    "day_merge_shapes.py": "ebecf825160f8d03cb2b78bc102489b5a15e7584ba8840ea0a2846dcf4efd331",
+    "day_merge_shapes.rs": "1eb8f9c452c48bcaee857fc22721d7e75f26500d733299cd160fa941b7401cce",
+    "day-merge-shape-audit-proposal.json": "a00dc7b00fc64ec0d526c73b5f69c624ceaf45c4d8d711ea19a1863e6a569397"
+  },
+  "checks": [
+    "Public owned static, borrowed many, and exactly-two borrowed pair routes",
+    "Independent immutable baseline query bits passed to candidates",
+    "f32 fixture means and quantile inputs cast explicitly; CDF takes identical shared f64 query bits",
+    "Nonfinite classes and exact bits compared",
+    "Prior focused proof log hashes, nonzero counts and exact source compile paths checked before builds"
+  ]
+}

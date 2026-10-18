@@ -1,0 +1,114 @@
+{
+  "schema": "day20-speed-supplementary-proposal-v1",
+  "status": "proposal_only_no_builds_or_measurements_root_review_required",
+  "baseline": "25c8c1642029a640b153c160c22a89795d29ad91",
+  "frozen_v3_protocol_sha256": "f19170e2951b59b5a30113c3724565a7ebc65dba8ca0d7caad543e69bff3d1d6",
+  "existing_evidence": {
+    "E02_v2": "24 sequential-merge cells: four tied-data improvements, four unstable, sixteen neutral/noisy. No general speed claim or retention justified; fresh v3 controls/confirmation still required.",
+    "v3_source_identity": "Windows work/day_harness_v3_tail.rs and work/day_harness_v3_run.py were SHA256-compared equal to the frozen WSL copies before quiet timing.",
+    "results_not_viewed": ["E03 performance", "E05 performance", "E07 performance", "E08 performance", "E09 performance", "E10 performance", "E20 performance"]
+  },
+  "immutability": {
+    "production_changes": "None. Never edit candidate worktrees or existing immutable binaries/source snapshots for this proposal.",
+    "snapshot_root": "/var/tmp/codex-tdigest-pr3-20261014/day20261015/evidence/v3/builds",
+    "labels": ["baseline-v3", "e05-v3", "e10-v3"],
+    "new_artifacts": "Create write-once supplemental directories with manifests pointing to exact existing snapshot and patch SHA256 values. Use a separately frozen supplemental driver. Preserve v3 results and protocol unchanged.",
+    "timing_builds": "New companion drivers may link the same immutable production snapshots; record compiler, resolved lock, profile, flags, allocator and driver SHA256. Force per-profile crate invalidation and verify exact compile path. Do not time instrumented allocator builds.",
+    "instrumented_builds": "Exact Rust allocation-request counts require instrumentation: the library already declares Jemalloc globally, so adding a second global allocator in a consumer is invalid. Proposal is a separately archived validation copy of the same snapshot with ONLY the global-allocator declaration redirected to a counting wrapper around the same Jemalloc backend and a cfg(test)-only capacity observer. Prove all numerical/API/source bytes outside these declared instrumentation edits match the immutable snapshot. No production changes or inferred exactness if this cannot be verified. Root must approve this validation-only mechanism before implementation."
+  },
+  "allocation_metrics": {
+    "scope": "One Linux thread, explicit operation boundaries, no JSON/report allocation inside the measured region. Use a fixed preallocated metrics buffer and allocation-free counters.",
+    "exact_requested_metrics": [
+      "Successful Rust GlobalAlloc alloc, alloc_zeroed and realloc calls, counted separately; failed requests recorded separately",
+      "dealloc calls and requested bytes released",
+      "total requested allocation/reallocation bytes during operation",
+      "live requested bytes before operation, after return and after output destruction",
+      "maximum live requested bytes during operation and incremental peak above the pre-operation live set",
+      "input and returned centroid Vec len and actual Vec capacity in validation-only observer"
+    ],
+    "realloc_accounting": "On success replace old layout bytes with new layout bytes and update peak; on failure retain old live bytes. Count realloc separately from fresh alloc. Keep pointer movement as a separate observable if safely available.",
+    "usable_memory": "If the pinned Jemalloc backend exposes a verified usable-size API, record actual usable allocation bytes/peak through that API as a distinct metric. Otherwise label requested-byte peak exactly and do not call it actual allocator capacity or RSS.",
+    "additional_descriptive_metrics": "In a separate untimed fresh process, report Jemalloc allocated/active/resident and process VmHWM after controlled warmup. These are allocator/process measurements with caches/startup included, not exact per-operation peaks.",
+    "limitations": "Rust GlobalAlloc counters exclude native code that bypasses that allocator. Arena bin nmalloc and thread allocated-byte counters are not exact Rust call counts; never relabel them as such. Existing v3 logical len-based bytes prove neither capacity nor transient peak.",
+    "capacity_gate": "Returned centroid capacity must not exceed the baseline for the same operation and input. Compare retained usable bytes when available. Empty results and public-builder slack are included.",
+    "peak_gate": "Any increased requested-byte or usable-byte peak is a reported storage tradeoff, preventing an unconditional no-storage-regression claim. Do not hide it behind equal wire length. No automatic retention based solely on fewer allocations.",
+    "repeat_rule": "Five deterministic fresh-process untimed repeats per cell; preserve all counts. Counter instability requires investigation, not averaging away a discrepancy. Verify output exact bytes before comparing counters."
+  },
+  "supplemental_seeds": {"screen": 32452843, "confirmation": 49979687},
+  "E05_storage_cases": {
+    "precisions": ["f32", "f64"],
+    "public_operations": ["merge_unsorted on an empty configured digest", "sequential borrowed merges of 40 prebuilt shards"],
+    "cases": [
+      {"input": "distinct values", "n": [0, 1, 8, 32], "setting": "cap64 Off", "purpose": "Under-cap move and tiny-digest overhead"},
+      {"input": "65536 values with exactly2 or17 distinct integer values", "setting": "cap64 Off", "purpose": "Normalization leaves a small vector with substantial source capacity; exercise required shrink"},
+      {"input": "normal and separated_modes", "n": [1000, 100000], "setting": ["cap64 Off", "delta300"], "purpose": "No-edge assembly after compression"},
+      {"input": "normal", "n": [1000], "setting": ["cap64 Use", "cap64 UseWithProtectedEdges(2)"], "purpose": "Edge-preserving controls"}
+    ],
+    "checks": "Record raw input allocation separately; count complete public compression/merge operation, final compact capacity and transient peak. Exact bytes and query bits must match baseline."
+  },
+  "E10_storage_cases": {
+    "precisions": ["f32", "f64"],
+    "operation": "FrontendDigest::merge_all consumes owned Vec<FrontendDigest>",
+    "fan_in": [0, 1, 2, 40],
+    "first_live_centroid_lengths": [0, 1, 8, 64, 256],
+    "first_input_capacity": ["len", "max(16*len,16)", 65536],
+    "slack_construction": "Seed through the reachable public builder with a preallocated centroid Vec and correct explicit stats; do not clone this fixture after seeding, because Vec::clone compacts it.",
+    "empty_layouts": ["all empty", "one live first and trailing empties", "leading empty before one live", "all live"],
+    "other_inputs": "Other digests use compact vectors. Include equal/compatible config and preserved input kinds; error/config behavior remains in existing correctness tests, not mixed into success timings.",
+    "checks": "Verify final capacity equals baseline compact behavior for the repaired one-item/trailing-empty cases; measure actual realloc/free work caused by shrink_to_fit rather than assuming it is free. Preserve exact output bytes."
+  },
+  "full_lifecycle_timing": {
+    "labels": ["E05 complete public operation plus output drop", "E10 owned merge-return kernel", "E10 owned merge plus output drop", "E10 caller-reset clone plus merge plus output drop"],
+    "ownership": "Owned input reset occurs outside timed region for owned operations. A separate explicitly labeled caller-reset-inclusive arm times reset too. No kernel-only result is relabeled end-to-end.",
+    "timed_owned_lifecycle": "Take each already-owned input, call the public operation, black_box the result, then drop it before stopping the timer. Include outer pool container destruction consistently. Validate bytes on independently produced outputs before and after each batch, outside the clock.",
+    "pool": "Use identical baseline-derived pool size in both arms: min(64, max(1, floor(64MiB / measured input requested-byte footprint))). Record actual pool memory. This bounds the public-builder slack case; pool cloning must not remove slack.",
+    "calibration": "Same v3 baseline-only60ms target, minimum50ms retained batches, fixed CPU0, single thread, CPU lock, ABBA/BAAB schedule,2warmups/5retained batches and frozen identical repetitions. Preserve v3 threshold and instability gates. Do not tune workload or candidate after viewing confirmation.",
+    "gate": "A kernel gain alone is insufficient if the complete lifecycle has a reproducible regression. Instrumented allocation measurements are never used as performance timings."
+  },
+  "operation_control_map": {
+    "E03": {
+      "primary_targets": ["merge2", "merge:40 sequential pair merges"],
+      "controls": ["kway40:heap path", "build", "p50", "cdf_batch"],
+      "supplemental_before_retention": ["Exactly2nonempty runs among empty operands", "Unequal run lengths1:100 and100:1", "All equal means and mixed Atomic/Mixed ties", "Zero/one nonempty input"],
+      "caution": "Exactly2nonempty runs dispatch to the candidate. Round-robin balanced leaves alone miss exhaustion/tie extremes. Iterator-only wins cannot substitute for public merge timing."
+    },
+    "E05": {
+      "primary_targets": ["build delta300:no-edge assembly", "merge delta300:no-edge assembly", "build cap256Off at n32:under-cap move"],
+      "controls": ["build/merge cap64Use", "build/merge cap256edges", "p50", "cdf_batch"],
+      "supplemental_before_retention": ["All E05_storage_cases and full lifecycle above"],
+      "caution": "shrink_to_fit is necessary for fleet storage and can add allocator/copy work. Default cap64Use screening alone does not exercise Off under-cap fast paths."
+    },
+    "E07": {
+      "primary_targets": ["build", "merge", "kway"],
+      "controls": ["p50", "cdf_batch", "encode", "decode"],
+      "supplemental_before_retention": ["Each of Quad,K1,K2,K2Norm,K3 with cap64Off and cap64Use", "K2Norm delta100,300,1200", "Tiny n0,1,8 and ordinary n1000,100000"],
+      "caution": "Current v3 settings exercise K2 and K2Norm only. Constant preparation may cost more on small passes or scales where the compiler already hoists arithmetic; preserve exact output bits for every family."
+    },
+    "E08": {
+      "primary_targets": ["kway40"],
+      "controls": ["merge2", "merge", "build", "p50", "cdf_batch"],
+      "supplemental_before_retention": ["Fan-in1,2,3,4,40", "Unequal run lengths including one long run and39singletons", "Disjoint ordered runs versus interleaved runs", "Tied means and early-exhausting runs"],
+      "caution": "Replacing a heap root and popping an exhausted root have different costs. Balanced interleaved40-way data cannot establish every fan-in. E03/E08 integration dispatch must be remeasured."
+    },
+    "E09": {
+      "primary_targets": ["build cap64Use", "merge cap64Use", "kway cap64Use"],
+      "controls": ["build/merge/kway delta300:cap bypass", "p50", "cdf_batch", "encode", "decode"],
+      "supplemental_before_retention": ["Record untimed proof Stage4 was entered for each claimed target", "Each scale family at cap3,64,256 where feasible", "Normal,ties,separated_modes", "Allocation calls and temporary peak for over-cap versus cap-bypass workloads"],
+      "caution": "Count-only probes keep centroid construction/arithmetic but remove materialization. Do not call no-cap runs a test of the intended optimization, or confuse fewer allocations with an end-to-end runtime win."
+    }
+  },
+  "screening_priority": [
+    "E03 public merge2 and sequential40 plus kway control; E02 same targets retain fresh tied-data hypothesis but require unchanged-operation controls",
+    "E08 kway40 with heap-exhaustion supplemental controls if promising",
+    "E09 true over-cap complete builds/merges with delta bypass controls",
+    "E07 full builds/merges and all-family small-pass controls",
+    "E05 no-edge/under-cap complete operations with allocation and retained-capacity checks",
+    "E10 owned1,2,40 then slack/full-lifecycle checks before accepting kernel-only gains"
+  ],
+  "other_cautions": {
+    "E02": "v3 fold clones the initial digest inside timing; kway clones all leaves inside timing. This is a valid reset-inclusive benchmark but the emitted caller_reset_clone_timed flag is currently false for these native operations. Label them accurately. Borrowed merge_many is not directly timed by the static owned merge_digests kway arm.",
+    "E20": "Required sorted/random/reverse/ties/late-disorder and parallel-threshold controls are appropriate. Add a small eligibility boundary check around63/64 probes and n_centroids around n_probes before a general claim. For tied datasets, swapping final finite probes can swap equal values, so nearlysorted may remain sorted; assert actual order shape. Exact centroid hits retain binary search, so exact-hit-heavy batches need separate interpretation. RAYON_NUM_THREADS=1 does not establish default multithread throughput.",
+    "combination": "Revalidate and time retained combinations against the same baseline: E02/E03/E08 overlap merge dispatch, E05/E07/E09 overlap compression, E02/E10 overlap frontend ownership. Separate candidate wins are not additive evidence.",
+    "no_world_claim": "All these comparisons are against the frozen modern baseline. They do not establish world-best speed or accuracy."
+  }
+}

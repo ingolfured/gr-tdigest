@@ -1,0 +1,6477 @@
+{
+  "schema": "day20-supplement-v2",
+  "created": "2026-10-15T10:05:30.983299+00:00",
+  "baseline": "25c8c1642029a640b153c160c22a89795d29ad91",
+  "proposal_sha256": "8191d8b810da8bf3b4de2ab2ee23226333576f4ee9da87110818f0dcb8c510c1",
+  "previous_attempt": "v1 preserved: baseline-only compilation failed on unparenthesized iterator expression in json! macro; no measurements or workload changes",
+  "status": "prepared_no_execution",
+  "seeds": {
+    "screen": 32452843,
+    "confirmation": 49979687
+  },
+  "allocation_cases": [
+    {
+      "experiment": "E05",
+      "kind": "distinct",
+      "n": 0,
+      "setting": "cap64off",
+      "precision": "f32",
+      "operation": "build",
+      "fan_in": 40
+    },
+    {
+      "experiment": "E05",
+      "kind": "distinct",
+      "n": 1,
+      "setting": "cap64off",
+      "precision": "f32",
+      "operation": "build",
+      "fan_in": 40
+    },
+    {
+      "experiment": "E05",
+      "kind": "distinct",
+      "n": 8,
+      "setting": "cap64off",
+      "precision": "f32",
+      "operation": "build",
+      "fan_in": 40
+    },
+    {
+      "experiment": "E05",
+      "kind": "distinct",
+      "n": 32,
+      "setting": "cap64off",
+      "precision": "f32",
+      "operation": "build",
+      "fan_in": 40
+    },
+    {
+      "experiment": "E05",
+      "kind": "ties_exact_2",
+      "n": 65536,
+      "setting": "cap64off",
+      "precision": "f32",
+      "operation": "build",
+      "fan_in": 40
+    },
+    {
+      "experiment": "E05",
+      "kind": "ties_exact_17",
+      "n": 65536,
+      "setting": "cap64off",
+      "precision": "f32",
+      "operation": "build",
+      "fan_in": 40
+    },
+    {
+      "experiment": "E05",
+      "kind": "normal",
+      "n": 1000,
+      "setting": "cap64off",
+      "precision": "f32",
+      "operation": "build",
+      "fan_in": 40
+    },
+    {
+      "experiment": "E05",
+      "kind": "normal",
+      "n": 1000,
+      "setting": "delta300",
+      "precision": "f32",
+      "operation": "build",
+      "fan_in": 40
+    },
+    {
+      "experiment": "E05",
+      "kind": "normal",
+      "n": 100000,
+      "setting": "cap64off",
+      "precision": "f32",
+      "operation": "build",
+      "fan_in": 40
+    },
+    {
+      "experiment": "E05",
+      "kind": "normal",
+      "n": 100000,
+      "setting": "delta300",
+      "precision": "f32",
+      "operation": "build",
+      "fan_in": 40
+    },
+    {
+      "experiment": "E05",
+      "kind": "separated_modes",
+      "n": 1000,
+      "setting": "cap64off",
+      "precision": "f32",
+      "operation": "build",
+      "fan_in": 40
+    },
+    {
+      "experiment": "E05",
+      "kind": "separated_modes",
+      "n": 1000,
+      "setting": "delta300",
+      "precision": "f32",
+      "operation": "build",
+      "fan_in": 40
+    },
+    {
+      "experiment": "E05",
+      "kind": "separated_modes",
+      "n": 100000,
+      "setting": "cap64off",
+      "precision": "f32",
+      "operation": "build",
+      "fan_in": 40
+    },
+    {
+      "experiment": "E05",
+      "kind": "separated_modes",
+      "n": 100000,
+      "setting": "delta300",
+      "precision": "f32",
+      "operation": "build",
+      "fan_in": 40
+    },
+    {
+      "experiment": "E05",
+      "kind": "normal",
+      "n": 1000,
+      "setting": "cap64use",
+      "precision": "f32",
+      "operation": "build",
+      "fan_in": 40
+    },
+    {
+      "experiment": "E05",
+      "kind": "normal",
+      "n": 1000,
+      "setting": "cap64edges",
+      "precision": "f32",
+      "operation": "build",
+      "fan_in": 40
+    },
+    {
+      "experiment": "E05",
+      "kind": "distinct",
+      "n": 0,
+      "setting": "cap64off",
+      "precision": "f32",
+      "operation": "sequential",
+      "fan_in": 40
+    },
+    {
+      "experiment": "E05",
+      "kind": "distinct",
+      "n": 1,
+      "setting": "cap64off",
+      "precision": "f32",
+      "operation": "sequential",
+      "fan_in": 40
+    },
+    {
+      "experiment": "E05",
+      "kind": "distinct",
+      "n": 8,
+      "setting": "cap64off",
+      "precision": "f32",
+      "operation": "sequential",
+      "fan_in": 40
+    },
+    {
+      "experiment": "E05",
+      "kind": "distinct",
+      "n": 32,
+      "setting": "cap64off",
+      "precision": "f32",
+      "operation": "sequential",
+      "fan_in": 40
+    },
+    {
+      "experiment": "E05",
+      "kind": "ties_exact_2",
+      "n": 65536,
+      "setting": "cap64off",
+      "precision": "f32",
+      "operation": "sequential",
+      "fan_in": 40
+    },
+    {
+      "experiment": "E05",
+      "kind": "ties_exact_17",
+      "n": 65536,
+      "setting": "cap64off",
+      "precision": "f32",
+      "operation": "sequential",
+      "fan_in": 40
+    },
+    {
+      "experiment": "E05",
+      "kind": "normal",
+      "n": 1000,
+      "setting": "cap64off",
+      "precision": "f32",
+      "operation": "sequential",
+      "fan_in": 40
+    },
+    {
+      "experiment": "E05",
+      "kind": "normal",
+      "n": 1000,
+      "setting": "delta300",
+      "precision": "f32",
+      "operation": "sequential",
+      "fan_in": 40
+    },
+    {
+      "experiment": "E05",
+      "kind": "normal",
+      "n": 100000,
+      "setting": "cap64off",
+      "precision": "f32",
+      "operation": "sequential",
+      "fan_in": 40
+    },
+    {
+      "experiment": "E05",
+      "kind": "normal",
+      "n": 100000,
+      "setting": "delta300",
+      "precision": "f32",
+      "operation": "sequential",
+      "fan_in": 40
+    },
+    {
+      "experiment": "E05",
+      "kind": "separated_modes",
+      "n": 1000,
+      "setting": "cap64off",
+      "precision": "f32",
+      "operation": "sequential",
+      "fan_in": 40
+    },
+    {
+      "experiment": "E05",
+      "kind": "separated_modes",
+      "n": 1000,
+      "setting": "delta300",
+      "precision": "f32",
+      "operation": "sequential",
+      "fan_in": 40
+    },
+    {
+      "experiment": "E05",
+      "kind": "separated_modes",
+      "n": 100000,
+      "setting": "cap64off",
+      "precision": "f32",
+      "operation": "sequential",
+      "fan_in": 40
+    },
+    {
+      "experiment": "E05",
+      "kind": "separated_modes",
+      "n": 100000,
+      "setting": "delta300",
+      "precision": "f32",
+      "operation": "sequential",
+      "fan_in": 40
+    },
+    {
+      "experiment": "E05",
+      "kind": "normal",
+      "n": 1000,
+      "setting": "cap64use",
+      "precision": "f32",
+      "operation": "sequential",
+      "fan_in": 40
+    },
+    {
+      "experiment": "E05",
+      "kind": "normal",
+      "n": 1000,
+      "setting": "cap64edges",
+      "precision": "f32",
+      "operation": "sequential",
+      "fan_in": 40
+    },
+    {
+      "experiment": "E05",
+      "kind": "distinct",
+      "n": 0,
+      "setting": "cap64off",
+      "precision": "f64",
+      "operation": "build",
+      "fan_in": 40
+    },
+    {
+      "experiment": "E05",
+      "kind": "distinct",
+      "n": 1,
+      "setting": "cap64off",
+      "precision": "f64",
+      "operation": "build",
+      "fan_in": 40
+    },
+    {
+      "experiment": "E05",
+      "kind": "distinct",
+      "n": 8,
+      "setting": "cap64off",
+      "precision": "f64",
+      "operation": "build",
+      "fan_in": 40
+    },
+    {
+      "experiment": "E05",
+      "kind": "distinct",
+      "n": 32,
+      "setting": "cap64off",
+      "precision": "f64",
+      "operation": "build",
+      "fan_in": 40
+    },
+    {
+      "experiment": "E05",
+      "kind": "ties_exact_2",
+      "n": 65536,
+      "setting": "cap64off",
+      "precision": "f64",
+      "operation": "build",
+      "fan_in": 40
+    },
+    {
+      "experiment": "E05",
+      "kind": "ties_exact_17",
+      "n": 65536,
+      "setting": "cap64off",
+      "precision": "f64",
+      "operation": "build",
+      "fan_in": 40
+    },
+    {
+      "experiment": "E05",
+      "kind": "normal",
+      "n": 1000,
+      "setting": "cap64off",
+      "precision": "f64",
+      "operation": "build",
+      "fan_in": 40
+    },
+    {
+      "experiment": "E05",
+      "kind": "normal",
+      "n": 1000,
+      "setting": "delta300",
+      "precision": "f64",
+      "operation": "build",
+      "fan_in": 40
+    },
+    {
+      "experiment": "E05",
+      "kind": "normal",
+      "n": 100000,
+      "setting": "cap64off",
+      "precision": "f64",
+      "operation": "build",
+      "fan_in": 40
+    },
+    {
+      "experiment": "E05",
+      "kind": "normal",
+      "n": 100000,
+      "setting": "delta300",
+      "precision": "f64",
+      "operation": "build",
+      "fan_in": 40
+    },
+    {
+      "experiment": "E05",
+      "kind": "separated_modes",
+      "n": 1000,
+      "setting": "cap64off",
+      "precision": "f64",
+      "operation": "build",
+      "fan_in": 40
+    },
+    {
+      "experiment": "E05",
+      "kind": "separated_modes",
+      "n": 1000,
+      "setting": "delta300",
+      "precision": "f64",
+      "operation": "build",
+      "fan_in": 40
+    },
+    {
+      "experiment": "E05",
+      "kind": "separated_modes",
+      "n": 100000,
+      "setting": "cap64off",
+      "precision": "f64",
+      "operation": "build",
+      "fan_in": 40
+    },
+    {
+      "experiment": "E05",
+      "kind": "separated_modes",
+      "n": 100000,
+      "setting": "delta300",
+      "precision": "f64",
+      "operation": "build",
+      "fan_in": 40
+    },
+    {
+      "experiment": "E05",
+      "kind": "normal",
+      "n": 1000,
+      "setting": "cap64use",
+      "precision": "f64",
+      "operation": "build",
+      "fan_in": 40
+    },
+    {
+      "experiment": "E05",
+      "kind": "normal",
+      "n": 1000,
+      "setting": "cap64edges",
+      "precision": "f64",
+      "operation": "build",
+      "fan_in": 40
+    },
+    {
+      "experiment": "E05",
+      "kind": "distinct",
+      "n": 0,
+      "setting": "cap64off",
+      "precision": "f64",
+      "operation": "sequential",
+      "fan_in": 40
+    },
+    {
+      "experiment": "E05",
+      "kind": "distinct",
+      "n": 1,
+      "setting": "cap64off",
+      "precision": "f64",
+      "operation": "sequential",
+      "fan_in": 40
+    },
+    {
+      "experiment": "E05",
+      "kind": "distinct",
+      "n": 8,
+      "setting": "cap64off",
+      "precision": "f64",
+      "operation": "sequential",
+      "fan_in": 40
+    },
+    {
+      "experiment": "E05",
+      "kind": "distinct",
+      "n": 32,
+      "setting": "cap64off",
+      "precision": "f64",
+      "operation": "sequential",
+      "fan_in": 40
+    },
+    {
+      "experiment": "E05",
+      "kind": "ties_exact_2",
+      "n": 65536,
+      "setting": "cap64off",
+      "precision": "f64",
+      "operation": "sequential",
+      "fan_in": 40
+    },
+    {
+      "experiment": "E05",
+      "kind": "ties_exact_17",
+      "n": 65536,
+      "setting": "cap64off",
+      "precision": "f64",
+      "operation": "sequential",
+      "fan_in": 40
+    },
+    {
+      "experiment": "E05",
+      "kind": "normal",
+      "n": 1000,
+      "setting": "cap64off",
+      "precision": "f64",
+      "operation": "sequential",
+      "fan_in": 40
+    },
+    {
+      "experiment": "E05",
+      "kind": "normal",
+      "n": 1000,
+      "setting": "delta300",
+      "precision": "f64",
+      "operation": "sequential",
+      "fan_in": 40
+    },
+    {
+      "experiment": "E05",
+      "kind": "normal",
+      "n": 100000,
+      "setting": "cap64off",
+      "precision": "f64",
+      "operation": "sequential",
+      "fan_in": 40
+    },
+    {
+      "experiment": "E05",
+      "kind": "normal",
+      "n": 100000,
+      "setting": "delta300",
+      "precision": "f64",
+      "operation": "sequential",
+      "fan_in": 40
+    },
+    {
+      "experiment": "E05",
+      "kind": "separated_modes",
+      "n": 1000,
+      "setting": "cap64off",
+      "precision": "f64",
+      "operation": "sequential",
+      "fan_in": 40
+    },
+    {
+      "experiment": "E05",
+      "kind": "separated_modes",
+      "n": 1000,
+      "setting": "delta300",
+      "precision": "f64",
+      "operation": "sequential",
+      "fan_in": 40
+    },
+    {
+      "experiment": "E05",
+      "kind": "separated_modes",
+      "n": 100000,
+      "setting": "cap64off",
+      "precision": "f64",
+      "operation": "sequential",
+      "fan_in": 40
+    },
+    {
+      "experiment": "E05",
+      "kind": "separated_modes",
+      "n": 100000,
+      "setting": "delta300",
+      "precision": "f64",
+      "operation": "sequential",
+      "fan_in": 40
+    },
+    {
+      "experiment": "E05",
+      "kind": "normal",
+      "n": 1000,
+      "setting": "cap64use",
+      "precision": "f64",
+      "operation": "sequential",
+      "fan_in": 40
+    },
+    {
+      "experiment": "E05",
+      "kind": "normal",
+      "n": 1000,
+      "setting": "cap64edges",
+      "precision": "f64",
+      "operation": "sequential",
+      "fan_in": 40
+    },
+    {
+      "experiment": "E10",
+      "kind": "distinct",
+      "n": 0,
+      "setting": "cap256off",
+      "precision": "f32",
+      "operation": "frontend",
+      "fan_in": 0,
+      "length": 0,
+      "capacity": "len",
+      "layout": "all_empty"
+    },
+    {
+      "experiment": "E10",
+      "kind": "distinct",
+      "n": 0,
+      "setting": "cap256off",
+      "precision": "f32",
+      "operation": "frontend",
+      "fan_in": 1,
+      "length": 0,
+      "capacity": "len",
+      "layout": "all_empty"
+    },
+    {
+      "experiment": "E10",
+      "kind": "distinct",
+      "n": 0,
+      "setting": "cap256off",
+      "precision": "f32",
+      "operation": "frontend",
+      "fan_in": 1,
+      "length": 1,
+      "capacity": "len",
+      "layout": "all_live"
+    },
+    {
+      "experiment": "E10",
+      "kind": "distinct",
+      "n": 0,
+      "setting": "cap256off",
+      "precision": "f32",
+      "operation": "frontend",
+      "fan_in": 1,
+      "length": 8,
+      "capacity": "len",
+      "layout": "all_live"
+    },
+    {
+      "experiment": "E10",
+      "kind": "distinct",
+      "n": 0,
+      "setting": "cap256off",
+      "precision": "f32",
+      "operation": "frontend",
+      "fan_in": 1,
+      "length": 64,
+      "capacity": "len",
+      "layout": "all_live"
+    },
+    {
+      "experiment": "E10",
+      "kind": "distinct",
+      "n": 0,
+      "setting": "cap256off",
+      "precision": "f32",
+      "operation": "frontend",
+      "fan_in": 1,
+      "length": 256,
+      "capacity": "len",
+      "layout": "all_live"
+    },
+    {
+      "experiment": "E10",
+      "kind": "distinct",
+      "n": 0,
+      "setting": "cap256off",
+      "precision": "f32",
+      "operation": "frontend",
+      "fan_in": 1,
+      "length": 0,
+      "capacity": "16x",
+      "layout": "all_empty"
+    },
+    {
+      "experiment": "E10",
+      "kind": "distinct",
+      "n": 0,
+      "setting": "cap256off",
+      "precision": "f32",
+      "operation": "frontend",
+      "fan_in": 1,
+      "length": 1,
+      "capacity": "16x",
+      "layout": "all_live"
+    },
+    {
+      "experiment": "E10",
+      "kind": "distinct",
+      "n": 0,
+      "setting": "cap256off",
+      "precision": "f32",
+      "operation": "frontend",
+      "fan_in": 1,
+      "length": 8,
+      "capacity": "16x",
+      "layout": "all_live"
+    },
+    {
+      "experiment": "E10",
+      "kind": "distinct",
+      "n": 0,
+      "setting": "cap256off",
+      "precision": "f32",
+      "operation": "frontend",
+      "fan_in": 1,
+      "length": 64,
+      "capacity": "16x",
+      "layout": "all_live"
+    },
+    {
+      "experiment": "E10",
+      "kind": "distinct",
+      "n": 0,
+      "setting": "cap256off",
+      "precision": "f32",
+      "operation": "frontend",
+      "fan_in": 1,
+      "length": 256,
+      "capacity": "16x",
+      "layout": "all_live"
+    },
+    {
+      "experiment": "E10",
+      "kind": "distinct",
+      "n": 0,
+      "setting": "cap256off",
+      "precision": "f32",
+      "operation": "frontend",
+      "fan_in": 1,
+      "length": 0,
+      "capacity": "65536",
+      "layout": "all_empty"
+    },
+    {
+      "experiment": "E10",
+      "kind": "distinct",
+      "n": 0,
+      "setting": "cap256off",
+      "precision": "f32",
+      "operation": "frontend",
+      "fan_in": 1,
+      "length": 1,
+      "capacity": "65536",
+      "layout": "all_live"
+    },
+    {
+      "experiment": "E10",
+      "kind": "distinct",
+      "n": 0,
+      "setting": "cap256off",
+      "precision": "f32",
+      "operation": "frontend",
+      "fan_in": 1,
+      "length": 8,
+      "capacity": "65536",
+      "layout": "all_live"
+    },
+    {
+      "experiment": "E10",
+      "kind": "distinct",
+      "n": 0,
+      "setting": "cap256off",
+      "precision": "f32",
+      "operation": "frontend",
+      "fan_in": 1,
+      "length": 64,
+      "capacity": "65536",
+      "layout": "all_live"
+    },
+    {
+      "experiment": "E10",
+      "kind": "distinct",
+      "n": 0,
+      "setting": "cap256off",
+      "precision": "f32",
+      "operation": "frontend",
+      "fan_in": 1,
+      "length": 256,
+      "capacity": "65536",
+      "layout": "all_live"
+    },
+    {
+      "experiment": "E10",
+      "kind": "distinct",
+      "n": 0,
+      "setting": "cap256off",
+      "precision": "f32",
+      "operation": "frontend",
+      "fan_in": 2,
+      "length": 0,
+      "capacity": "len",
+      "layout": "all_empty"
+    },
+    {
+      "experiment": "E10",
+      "kind": "distinct",
+      "n": 0,
+      "setting": "cap256off",
+      "precision": "f32",
+      "operation": "frontend",
+      "fan_in": 2,
+      "length": 1,
+      "capacity": "len",
+      "layout": "all_live"
+    },
+    {
+      "experiment": "E10",
+      "kind": "distinct",
+      "n": 0,
+      "setting": "cap256off",
+      "precision": "f32",
+      "operation": "frontend",
+      "fan_in": 2,
+      "length": 1,
+      "capacity": "len",
+      "layout": "trailing_empty"
+    },
+    {
+      "experiment": "E10",
+      "kind": "distinct",
+      "n": 0,
+      "setting": "cap256off",
+      "precision": "f32",
+      "operation": "frontend",
+      "fan_in": 2,
+      "length": 1,
+      "capacity": "len",
+      "layout": "leading_empty"
+    },
+    {
+      "experiment": "E10",
+      "kind": "distinct",
+      "n": 0,
+      "setting": "cap256off",
+      "precision": "f32",
+      "operation": "frontend",
+      "fan_in": 2,
+      "length": 8,
+      "capacity": "len",
+      "layout": "all_live"
+    },
+    {
+      "experiment": "E10",
+      "kind": "distinct",
+      "n": 0,
+      "setting": "cap256off",
+      "precision": "f32",
+      "operation": "frontend",
+      "fan_in": 2,
+      "length": 8,
+      "capacity": "len",
+      "layout": "trailing_empty"
+    },
+    {
+      "experiment": "E10",
+      "kind": "distinct",
+      "n": 0,
+      "setting": "cap256off",
+      "precision": "f32",
+      "operation": "frontend",
+      "fan_in": 2,
+      "length": 8,
+      "capacity": "len",
+      "layout": "leading_empty"
+    },
+    {
+      "experiment": "E10",
+      "kind": "distinct",
+      "n": 0,
+      "setting": "cap256off",
+      "precision": "f32",
+      "operation": "frontend",
+      "fan_in": 2,
+      "length": 64,
+      "capacity": "len",
+      "layout": "all_live"
+    },
+    {
+      "experiment": "E10",
+      "kind": "distinct",
+      "n": 0,
+      "setting": "cap256off",
+      "precision": "f32",
+      "operation": "frontend",
+      "fan_in": 2,
+      "length": 64,
+      "capacity": "len",
+      "layout": "trailing_empty"
+    },
+    {
+      "experiment": "E10",
+      "kind": "distinct",
+      "n": 0,
+      "setting": "cap256off",
+      "precision": "f32",
+      "operation": "frontend",
+      "fan_in": 2,
+      "length": 64,
+      "capacity": "len",
+      "layout": "leading_empty"
+    },
+    {
+      "experiment": "E10",
+      "kind": "distinct",
+      "n": 0,
+      "setting": "cap256off",
+      "precision": "f32",
+      "operation": "frontend",
+      "fan_in": 2,
+      "length": 256,
+      "capacity": "len",
+      "layout": "all_live"
+    },
+    {
+      "experiment": "E10",
+      "kind": "distinct",
+      "n": 0,
+      "setting": "cap256off",
+      "precision": "f32",
+      "operation": "frontend",
+      "fan_in": 2,
+      "length": 256,
+      "capacity": "len",
+      "layout": "trailing_empty"
+    },
+    {
+      "experiment": "E10",
+      "kind": "distinct",
+      "n": 0,
+      "setting": "cap256off",
+      "precision": "f32",
+      "operation": "frontend",
+      "fan_in": 2,
+      "length": 256,
+      "capacity": "len",
+      "layout": "leading_empty"
+    },
+    {
+      "experiment": "E10",
+      "kind": "distinct",
+      "n": 0,
+      "setting": "cap256off",
+      "precision": "f32",
+      "operation": "frontend",
+      "fan_in": 2,
+      "length": 0,
+      "capacity": "16x",
+      "layout": "all_empty"
+    },
+    {
+      "experiment": "E10",
+      "kind": "distinct",
+      "n": 0,
+      "setting": "cap256off",
+      "precision": "f32",
+      "operation": "frontend",
+      "fan_in": 2,
+      "length": 1,
+      "capacity": "16x",
+      "layout": "all_live"
+    },
+    {
+      "experiment": "E10",
+      "kind": "distinct",
+      "n": 0,
+      "setting": "cap256off",
+      "precision": "f32",
+      "operation": "frontend",
+      "fan_in": 2,
+      "length": 1,
+      "capacity": "16x",
+      "layout": "trailing_empty"
+    },
+    {
+      "experiment": "E10",
+      "kind": "distinct",
+      "n": 0,
+      "setting": "cap256off",
+      "precision": "f32",
+      "operation": "frontend",
+      "fan_in": 2,
+      "length": 1,
+      "capacity": "16x",
+      "layout": "leading_empty"
+    },
+    {
+      "experiment": "E10",
+      "kind": "distinct",
+      "n": 0,
+      "setting": "cap256off",
+      "precision": "f32",
+      "operation": "frontend",
+      "fan_in": 2,
+      "length": 8,
+      "capacity": "16x",
+      "layout": "all_live"
+    },
+    {
+      "experiment": "E10",
+      "kind": "distinct",
+      "n": 0,
+      "setting": "cap256off",
+      "precision": "f32",
+      "operation": "frontend",
+      "fan_in": 2,
+      "length": 8,
+      "capacity": "16x",
+      "layout": "trailing_empty"
+    },
+    {
+      "experiment": "E10",
+      "kind": "distinct",
+      "n": 0,
+      "setting": "cap256off",
+      "precision": "f32",
+      "operation": "frontend",
+      "fan_in": 2,
+      "length": 8,
+      "capacity": "16x",
+      "layout": "leading_empty"
+    },
+    {
+      "experiment": "E10",
+      "kind": "distinct",
+      "n": 0,
+      "setting": "cap256off",
+      "precision": "f32",
+      "operation": "frontend",
+      "fan_in": 2,
+      "length": 64,
+      "capacity": "16x",
+      "layout": "all_live"
+    },
+    {
+      "experiment": "E10",
+      "kind": "distinct",
+      "n": 0,
+      "setting": "cap256off",
+      "precision": "f32",
+      "operation": "frontend",
+      "fan_in": 2,
+      "length": 64,
+      "capacity": "16x",
+      "layout": "trailing_empty"
+    },
+    {
+      "experiment": "E10",
+      "kind": "distinct",
+      "n": 0,
+      "setting": "cap256off",
+      "precision": "f32",
+      "operation": "frontend",
+      "fan_in": 2,
+      "length": 64,
+      "capacity": "16x",
+      "layout": "leading_empty"
+    },
+    {
+      "experiment": "E10",
+      "kind": "distinct",
+      "n": 0,
+      "setting": "cap256off",
+      "precision": "f32",
+      "operation": "frontend",
+      "fan_in": 2,
+      "length": 256,
+      "capacity": "16x",
+      "layout": "all_live"
+    },
+    {
+      "experiment": "E10",
+      "kind": "distinct",
+      "n": 0,
+      "setting": "cap256off",
+      "precision": "f32",
+      "operation": "frontend",
+      "fan_in": 2,
+      "length": 256,
+      "capacity": "16x",
+      "layout": "trailing_empty"
+    },
+    {
+      "experiment": "E10",
+      "kind": "distinct",
+      "n": 0,
+      "setting": "cap256off",
+      "precision": "f32",
+      "operation": "frontend",
+      "fan_in": 2,
+      "length": 256,
+      "capacity": "16x",
+      "layout": "leading_empty"
+    },
+    {
+      "experiment": "E10",
+      "kind": "distinct",
+      "n": 0,
+      "setting": "cap256off",
+      "precision": "f32",
+      "operation": "frontend",
+      "fan_in": 2,
+      "length": 0,
+      "capacity": "65536",
+      "layout": "all_empty"
+    },
+    {
+      "experiment": "E10",
+      "kind": "distinct",
+      "n": 0,
+      "setting": "cap256off",
+      "precision": "f32",
+      "operation": "frontend",
+      "fan_in": 2,
+      "length": 1,
+      "capacity": "65536",
+      "layout": "all_live"
+    },
+    {
+      "experiment": "E10",
+      "kind": "distinct",
+      "n": 0,
+      "setting": "cap256off",
+      "precision": "f32",
+      "operation": "frontend",
+      "fan_in": 2,
+      "length": 1,
+      "capacity": "65536",
+      "layout": "trailing_empty"
+    },
+    {
+      "experiment": "E10",
+      "kind": "distinct",
+      "n": 0,
+      "setting": "cap256off",
+      "precision": "f32",
+      "operation": "frontend",
+      "fan_in": 2,
+      "length": 1,
+      "capacity": "65536",
+      "layout": "leading_empty"
+    },
+    {
+      "experiment": "E10",
+      "kind": "distinct",
+      "n": 0,
+      "setting": "cap256off",
+      "precision": "f32",
+      "operation": "frontend",
+      "fan_in": 2,
+      "length": 8,
+      "capacity": "65536",
+      "layout": "all_live"
+    },
+    {
+      "experiment": "E10",
+      "kind": "distinct",
+      "n": 0,
+      "setting": "cap256off",
+      "precision": "f32",
+      "operation": "frontend",
+      "fan_in": 2,
+      "length": 8,
+      "capacity": "65536",
+      "layout": "trailing_empty"
+    },
+    {
+      "experiment": "E10",
+      "kind": "distinct",
+      "n": 0,
+      "setting": "cap256off",
+      "precision": "f32",
+      "operation": "frontend",
+      "fan_in": 2,
+      "length": 8,
+      "capacity": "65536",
+      "layout": "leading_empty"
+    },
+    {
+      "experiment": "E10",
+      "kind": "distinct",
+      "n": 0,
+      "setting": "cap256off",
+      "precision": "f32",
+      "operation": "frontend",
+      "fan_in": 2,
+      "length": 64,
+      "capacity": "65536",
+      "layout": "all_live"
+    },
+    {
+      "experiment": "E10",
+      "kind": "distinct",
+      "n": 0,
+      "setting": "cap256off",
+      "precision": "f32",
+      "operation": "frontend",
+      "fan_in": 2,
+      "length": 64,
+      "capacity": "65536",
+      "layout": "trailing_empty"
+    },
+    {
+      "experiment": "E10",
+      "kind": "distinct",
+      "n": 0,
+      "setting": "cap256off",
+      "precision": "f32",
+      "operation": "frontend",
+      "fan_in": 2,
+      "length": 64,
+      "capacity": "65536",
+      "layout": "leading_empty"
+    },
+    {
+      "experiment": "E10",
+      "kind": "distinct",
+      "n": 0,
+      "setting": "cap256off",
+      "precision": "f32",
+      "operation": "frontend",
+      "fan_in": 2,
+      "length": 256,
+      "capacity": "65536",
+      "layout": "all_live"
+    },
+    {
+      "experiment": "E10",
+      "kind": "distinct",
+      "n": 0,
+      "setting": "cap256off",
+      "precision": "f32",
+      "operation": "frontend",
+      "fan_in": 2,
+      "length": 256,
+      "capacity": "65536",
+      "layout": "trailing_empty"
+    },
+    {
+      "experiment": "E10",
+      "kind": "distinct",
+      "n": 0,
+      "setting": "cap256off",
+      "precision": "f32",
+      "operation": "frontend",
+      "fan_in": 2,
+      "length": 256,
+      "capacity": "65536",
+      "layout": "leading_empty"
+    },
+    {
+      "experiment": "E10",
+      "kind": "distinct",
+      "n": 0,
+      "setting": "cap256off",
+      "precision": "f32",
+      "operation": "frontend",
+      "fan_in": 40,
+      "length": 0,
+      "capacity": "len",
+      "layout": "all_empty"
+    },
+    {
+      "experiment": "E10",
+      "kind": "distinct",
+      "n": 0,
+      "setting": "cap256off",
+      "precision": "f32",
+      "operation": "frontend",
+      "fan_in": 40,
+      "length": 1,
+      "capacity": "len",
+      "layout": "all_live"
+    },
+    {
+      "experiment": "E10",
+      "kind": "distinct",
+      "n": 0,
+      "setting": "cap256off",
+      "precision": "f32",
+      "operation": "frontend",
+      "fan_in": 40,
+      "length": 1,
+      "capacity": "len",
+      "layout": "trailing_empty"
+    },
+    {
+      "experiment": "E10",
+      "kind": "distinct",
+      "n": 0,
+      "setting": "cap256off",
+      "precision": "f32",
+      "operation": "frontend",
+      "fan_in": 40,
+      "length": 1,
+      "capacity": "len",
+      "layout": "leading_empty"
+    },
+    {
+      "experiment": "E10",
+      "kind": "distinct",
+      "n": 0,
+      "setting": "cap256off",
+      "precision": "f32",
+      "operation": "frontend",
+      "fan_in": 40,
+      "length": 8,
+      "capacity": "len",
+      "layout": "all_live"
+    },
+    {
+      "experiment": "E10",
+      "kind": "distinct",
+      "n": 0,
+      "setting": "cap256off",
+      "precision": "f32",
+      "operation": "frontend",
+      "fan_in": 40,
+      "length": 8,
+      "capacity": "len",
+      "layout": "trailing_empty"
+    },
+    {
+      "experiment": "E10",
+      "kind": "distinct",
+      "n": 0,
+      "setting": "cap256off",
+      "precision": "f32",
+      "operation": "frontend",
+      "fan_in": 40,
+      "length": 8,
+      "capacity": "len",
+      "layout": "leading_empty"
+    },
+    {
+      "experiment": "E10",
+      "kind": "distinct",
+      "n": 0,
+      "setting": "cap256off",
+      "precision": "f32",
+      "operation": "frontend",
+      "fan_in": 40,
+      "length": 64,
+      "capacity": "len",
+      "layout": "all_live"
+    },
+    {
+      "experiment": "E10",
+      "kind": "distinct",
+      "n": 0,
+      "setting": "cap256off",
+      "precision": "f32",
+      "operation": "frontend",
+      "fan_in": 40,
+      "length": 64,
+      "capacity": "len",
+      "layout": "trailing_empty"
+    },
+    {
+      "experiment": "E10",
+      "kind": "distinct",
+      "n": 0,
+      "setting": "cap256off",
+      "precision": "f32",
+      "operation": "frontend",
+      "fan_in": 40,
+      "length": 64,
+      "capacity": "len",
+      "layout": "leading_empty"
+    },
+    {
+      "experiment": "E10",
+      "kind": "distinct",
+      "n": 0,
+      "setting": "cap256off",
+      "precision": "f32",
+      "operation": "frontend",
+      "fan_in": 40,
+      "length": 256,
+      "capacity": "len",
+      "layout": "all_live"
+    },
+    {
+      "experiment": "E10",
+      "kind": "distinct",
+      "n": 0,
+      "setting": "cap256off",
+      "precision": "f32",
+      "operation": "frontend",
+      "fan_in": 40,
+      "length": 256,
+      "capacity": "len",
+      "layout": "trailing_empty"
+    },
+    {
+      "experiment": "E10",
+      "kind": "distinct",
+      "n": 0,
+      "setting": "cap256off",
+      "precision": "f32",
+      "operation": "frontend",
+      "fan_in": 40,
+      "length": 256,
+      "capacity": "len",
+      "layout": "leading_empty"
+    },
+    {
+      "experiment": "E10",
+      "kind": "distinct",
+      "n": 0,
+      "setting": "cap256off",
+      "precision": "f32",
+      "operation": "frontend",
+      "fan_in": 40,
+      "length": 0,
+      "capacity": "16x",
+      "layout": "all_empty"
+    },
+    {
+      "experiment": "E10",
+      "kind": "distinct",
+      "n": 0,
+      "setting": "cap256off",
+      "precision": "f32",
+      "operation": "frontend",
+      "fan_in": 40,
+      "length": 1,
+      "capacity": "16x",
+      "layout": "all_live"
+    },
+    {
+      "experiment": "E10",
+      "kind": "distinct",
+      "n": 0,
+      "setting": "cap256off",
+      "precision": "f32",
+      "operation": "frontend",
+      "fan_in": 40,
+      "length": 1,
+      "capacity": "16x",
+      "layout": "trailing_empty"
+    },
+    {
+      "experiment": "E10",
+      "kind": "distinct",
+      "n": 0,
+      "setting": "cap256off",
+      "precision": "f32",
+      "operation": "frontend",
+      "fan_in": 40,
+      "length": 1,
+      "capacity": "16x",
+      "layout": "leading_empty"
+    },
+    {
+      "experiment": "E10",
+      "kind": "distinct",
+      "n": 0,
+      "setting": "cap256off",
+      "precision": "f32",
+      "operation": "frontend",
+      "fan_in": 40,
+      "length": 8,
+      "capacity": "16x",
+      "layout": "all_live"
+    },
+    {
+      "experiment": "E10",
+      "kind": "distinct",
+      "n": 0,
+      "setting": "cap256off",
+      "precision": "f32",
+      "operation": "frontend",
+      "fan_in": 40,
+      "length": 8,
+      "capacity": "16x",
+      "layout": "trailing_empty"
+    },
+    {
+      "experiment": "E10",
+      "kind": "distinct",
+      "n": 0,
+      "setting": "cap256off",
+      "precision": "f32",
+      "operation": "frontend",
+      "fan_in": 40,
+      "length": 8,
+      "capacity": "16x",
+      "layout": "leading_empty"
+    },
+    {
+      "experiment": "E10",
+      "kind": "distinct",
+      "n": 0,
+      "setting": "cap256off",
+      "precision": "f32",
+      "operation": "frontend",
+      "fan_in": 40,
+      "length": 64,
+      "capacity": "16x",
+      "layout": "all_live"
+    },
+    {
+      "experiment": "E10",
+      "kind": "distinct",
+      "n": 0,
+      "setting": "cap256off",
+      "precision": "f32",
+      "operation": "frontend",
+      "fan_in": 40,
+      "length": 64,
+      "capacity": "16x",
+      "layout": "trailing_empty"
+    },
+    {
+      "experiment": "E10",
+      "kind": "distinct",
+      "n": 0,
+      "setting": "cap256off",
+      "precision": "f32",
+      "operation": "frontend",
+      "fan_in": 40,
+      "length": 64,
+      "capacity": "16x",
+      "layout": "leading_empty"
+    },
+    {
+      "experiment": "E10",
+      "kind": "distinct",
+      "n": 0,
+      "setting": "cap256off",
+      "precision": "f32",
+      "operation": "frontend",
+      "fan_in": 40,
+      "length": 256,
+      "capacity": "16x",
+      "layout": "all_live"
+    },
+    {
+      "experiment": "E10",
+      "kind": "distinct",
+      "n": 0,
+      "setting": "cap256off",
+      "precision": "f32",
+      "operation": "frontend",
+      "fan_in": 40,
+      "length": 256,
+      "capacity": "16x",
+      "layout": "trailing_empty"
+    },
+    {
+      "experiment": "E10",
+      "kind": "distinct",
+      "n": 0,
+      "setting": "cap256off",
+      "precision": "f32",
+      "operation": "frontend",
+      "fan_in": 40,
+      "length": 256,
+      "capacity": "16x",
+      "layout": "leading_empty"
+    },
+    {
+      "experiment": "E10",
+      "kind": "distinct",
+      "n": 0,
+      "setting": "cap256off",
+      "precision": "f32",
+      "operation": "frontend",
+      "fan_in": 40,
+      "length": 0,
+      "capacity": "65536",
+      "layout": "all_empty"
+    },
+    {
+      "experiment": "E10",
+      "kind": "distinct",
+      "n": 0,
+      "setting": "cap256off",
+      "precision": "f32",
+      "operation": "frontend",
+      "fan_in": 40,
+      "length": 1,
+      "capacity": "65536",
+      "layout": "all_live"
+    },
+    {
+      "experiment": "E10",
+      "kind": "distinct",
+      "n": 0,
+      "setting": "cap256off",
+      "precision": "f32",
+      "operation": "frontend",
+      "fan_in": 40,
+      "length": 1,
+      "capacity": "65536",
+      "layout": "trailing_empty"
+    },
+    {
+      "experiment": "E10",
+      "kind": "distinct",
+      "n": 0,
+      "setting": "cap256off",
+      "precision": "f32",
+      "operation": "frontend",
+      "fan_in": 40,
+      "length": 1,
+      "capacity": "65536",
+      "layout": "leading_empty"
+    },
+    {
+      "experiment": "E10",
+      "kind": "distinct",
+      "n": 0,
+      "setting": "cap256off",
+      "precision": "f32",
+      "operation": "frontend",
+      "fan_in": 40,
+      "length": 8,
+      "capacity": "65536",
+      "layout": "all_live"
+    },
+    {
+      "experiment": "E10",
+      "kind": "distinct",
+      "n": 0,
+      "setting": "cap256off",
+      "precision": "f32",
+      "operation": "frontend",
+      "fan_in": 40,
+      "length": 8,
+      "capacity": "65536",
+      "layout": "trailing_empty"
+    },
+    {
+      "experiment": "E10",
+      "kind": "distinct",
+      "n": 0,
+      "setting": "cap256off",
+      "precision": "f32",
+      "operation": "frontend",
+      "fan_in": 40,
+      "length": 8,
+      "capacity": "65536",
+      "layout": "leading_empty"
+    },
+    {
+      "experiment": "E10",
+      "kind": "distinct",
+      "n": 0,
+      "setting": "cap256off",
+      "precision": "f32",
+      "operation": "frontend",
+      "fan_in": 40,
+      "length": 64,
+      "capacity": "65536",
+      "layout": "all_live"
+    },
+    {
+      "experiment": "E10",
+      "kind": "distinct",
+      "n": 0,
+      "setting": "cap256off",
+      "precision": "f32",
+      "operation": "frontend",
+      "fan_in": 40,
+      "length": 64,
+      "capacity": "65536",
+      "layout": "trailing_empty"
+    },
+    {
+      "experiment": "E10",
+      "kind": "distinct",
+      "n": 0,
+      "setting": "cap256off",
+      "precision": "f32",
+      "operation": "frontend",
+      "fan_in": 40,
+      "length": 64,
+      "capacity": "65536",
+      "layout": "leading_empty"
+    },
+    {
+      "experiment": "E10",
+      "kind": "distinct",
+      "n": 0,
+      "setting": "cap256off",
+      "precision": "f32",
+      "operation": "frontend",
+      "fan_in": 40,
+      "length": 256,
+      "capacity": "65536",
+      "layout": "all_live"
+    },
+    {
+      "experiment": "E10",
+      "kind": "distinct",
+      "n": 0,
+      "setting": "cap256off",
+      "precision": "f32",
+      "operation": "frontend",
+      "fan_in": 40,
+      "length": 256,
+      "capacity": "65536",
+      "layout": "trailing_empty"
+    },
+    {
+      "experiment": "E10",
+      "kind": "distinct",
+      "n": 0,
+      "setting": "cap256off",
+      "precision": "f32",
+      "operation": "frontend",
+      "fan_in": 40,
+      "length": 256,
+      "capacity": "65536",
+      "layout": "leading_empty"
+    },
+    {
+      "experiment": "E10",
+      "kind": "distinct",
+      "n": 0,
+      "setting": "cap256off",
+      "precision": "f64",
+      "operation": "frontend",
+      "fan_in": 0,
+      "length": 0,
+      "capacity": "len",
+      "layout": "all_empty"
+    },
+    {
+      "experiment": "E10",
+      "kind": "distinct",
+      "n": 0,
+      "setting": "cap256off",
+      "precision": "f64",
+      "operation": "frontend",
+      "fan_in": 1,
+      "length": 0,
+      "capacity": "len",
+      "layout": "all_empty"
+    },
+    {
+      "experiment": "E10",
+      "kind": "distinct",
+      "n": 0,
+      "setting": "cap256off",
+      "precision": "f64",
+      "operation": "frontend",
+      "fan_in": 1,
+      "length": 1,
+      "capacity": "len",
+      "layout": "all_live"
+    },
+    {
+      "experiment": "E10",
+      "kind": "distinct",
+      "n": 0,
+      "setting": "cap256off",
+      "precision": "f64",
+      "operation": "frontend",
+      "fan_in": 1,
+      "length": 8,
+      "capacity": "len",
+      "layout": "all_live"
+    },
+    {
+      "experiment": "E10",
+      "kind": "distinct",
+      "n": 0,
+      "setting": "cap256off",
+      "precision": "f64",
+      "operation": "frontend",
+      "fan_in": 1,
+      "length": 64,
+      "capacity": "len",
+      "layout": "all_live"
+    },
+    {
+      "experiment": "E10",
+      "kind": "distinct",
+      "n": 0,
+      "setting": "cap256off",
+      "precision": "f64",
+      "operation": "frontend",
+      "fan_in": 1,
+      "length": 256,
+      "capacity": "len",
+      "layout": "all_live"
+    },
+    {
+      "experiment": "E10",
+      "kind": "distinct",
+      "n": 0,
+      "setting": "cap256off",
+      "precision": "f64",
+      "operation": "frontend",
+      "fan_in": 1,
+      "length": 0,
+      "capacity": "16x",
+      "layout": "all_empty"
+    },
+    {
+      "experiment": "E10",
+      "kind": "distinct",
+      "n": 0,
+      "setting": "cap256off",
+      "precision": "f64",
+      "operation": "frontend",
+      "fan_in": 1,
+      "length": 1,
+      "capacity": "16x",
+      "layout": "all_live"
+    },
+    {
+      "experiment": "E10",
+      "kind": "distinct",
+      "n": 0,
+      "setting": "cap256off",
+      "precision": "f64",
+      "operation": "frontend",
+      "fan_in": 1,
+      "length": 8,
+      "capacity": "16x",
+      "layout": "all_live"
+    },
+    {
+      "experiment": "E10",
+      "kind": "distinct",
+      "n": 0,
+      "setting": "cap256off",
+      "precision": "f64",
+      "operation": "frontend",
+      "fan_in": 1,
+      "length": 64,
+      "capacity": "16x",
+      "layout": "all_live"
+    },
+    {
+      "experiment": "E10",
+      "kind": "distinct",
+      "n": 0,
+      "setting": "cap256off",
+      "precision": "f64",
+      "operation": "frontend",
+      "fan_in": 1,
+      "length": 256,
+      "capacity": "16x",
+      "layout": "all_live"
+    },
+    {
+      "experiment": "E10",
+      "kind": "distinct",
+      "n": 0,
+      "setting": "cap256off",
+      "precision": "f64",
+      "operation": "frontend",
+      "fan_in": 1,
+      "length": 0,
+      "capacity": "65536",
+      "layout": "all_empty"
+    },
+    {
+      "experiment": "E10",
+      "kind": "distinct",
+      "n": 0,
+      "setting": "cap256off",
+      "precision": "f64",
+      "operation": "frontend",
+      "fan_in": 1,
+      "length": 1,
+      "capacity": "65536",
+      "layout": "all_live"
+    },
+    {
+      "experiment": "E10",
+      "kind": "distinct",
+      "n": 0,
+      "setting": "cap256off",
+      "precision": "f64",
+      "operation": "frontend",
+      "fan_in": 1,
+      "length": 8,
+      "capacity": "65536",
+      "layout": "all_live"
+    },
+    {
+      "experiment": "E10",
+      "kind": "distinct",
+      "n": 0,
+      "setting": "cap256off",
+      "precision": "f64",
+      "operation": "frontend",
+      "fan_in": 1,
+      "length": 64,
+      "capacity": "65536",
+      "layout": "all_live"
+    },
+    {
+      "experiment": "E10",
+      "kind": "distinct",
+      "n": 0,
+      "setting": "cap256off",
+      "precision": "f64",
+      "operation": "frontend",
+      "fan_in": 1,
+      "length": 256,
+      "capacity": "65536",
+      "layout": "all_live"
+    },
+    {
+      "experiment": "E10",
+      "kind": "distinct",
+      "n": 0,
+      "setting": "cap256off",
+      "precision": "f64",
+      "operation": "frontend",
+      "fan_in": 2,
+      "length": 0,
+      "capacity": "len",
+      "layout": "all_empty"
+    },
+    {
+      "experiment": "E10",
+      "kind": "distinct",
+      "n": 0,
+      "setting": "cap256off",
+      "precision": "f64",
+      "operation": "frontend",
+      "fan_in": 2,
+      "length": 1,
+      "capacity": "len",
+      "layout": "all_live"
+    },
+    {
+      "experiment": "E10",
+      "kind": "distinct",
+      "n": 0,
+      "setting": "cap256off",
+      "precision": "f64",
+      "operation": "frontend",
+      "fan_in": 2,
+      "length": 1,
+      "capacity": "len",
+      "layout": "trailing_empty"
+    },
+    {
+      "experiment": "E10",
+      "kind": "distinct",
+      "n": 0,
+      "setting": "cap256off",
+      "precision": "f64",
+      "operation": "frontend",
+      "fan_in": 2,
+      "length": 1,
+      "capacity": "len",
+      "layout": "leading_empty"
+    },
+    {
+      "experiment": "E10",
+      "kind": "distinct",
+      "n": 0,
+      "setting": "cap256off",
+      "precision": "f64",
+      "operation": "frontend",
+      "fan_in": 2,
+      "length": 8,
+      "capacity": "len",
+      "layout": "all_live"
+    },
+    {
+      "experiment": "E10",
+      "kind": "distinct",
+      "n": 0,
+      "setting": "cap256off",
+      "precision": "f64",
+      "operation": "frontend",
+      "fan_in": 2,
+      "length": 8,
+      "capacity": "len",
+      "layout": "trailing_empty"
+    },
+    {
+      "experiment": "E10",
+      "kind": "distinct",
+      "n": 0,
+      "setting": "cap256off",
+      "precision": "f64",
+      "operation": "frontend",
+      "fan_in": 2,
+      "length": 8,
+      "capacity": "len",
+      "layout": "leading_empty"
+    },
+    {
+      "experiment": "E10",
+      "kind": "distinct",
+      "n": 0,
+      "setting": "cap256off",
+      "precision": "f64",
+      "operation": "frontend",
+      "fan_in": 2,
+      "length": 64,
+      "capacity": "len",
+      "layout": "all_live"
+    },
+    {
+      "experiment": "E10",
+      "kind": "distinct",
+      "n": 0,
+      "setting": "cap256off",
+      "precision": "f64",
+      "operation": "frontend",
+      "fan_in": 2,
+      "length": 64,
+      "capacity": "len",
+      "layout": "trailing_empty"
+    },
+    {
+      "experiment": "E10",
+      "kind": "distinct",
+      "n": 0,
+      "setting": "cap256off",
+      "precision": "f64",
+      "operation": "frontend",
+      "fan_in": 2,
+      "length": 64,
+      "capacity": "len",
+      "layout": "leading_empty"
+    },
+    {
+      "experiment": "E10",
+      "kind": "distinct",
+      "n": 0,
+      "setting": "cap256off",
+      "precision": "f64",
+      "operation": "frontend",
+      "fan_in": 2,
+      "length": 256,
+      "capacity": "len",
+      "layout": "all_live"
+    },
+    {
+      "experiment": "E10",
+      "kind": "distinct",
+      "n": 0,
+      "setting": "cap256off",
+      "precision": "f64",
+      "operation": "frontend",
+      "fan_in": 2,
+      "length": 256,
+      "capacity": "len",
+      "layout": "trailing_empty"
+    },
+    {
+      "experiment": "E10",
+      "kind": "distinct",
+      "n": 0,
+      "setting": "cap256off",
+      "precision": "f64",
+      "operation": "frontend",
+      "fan_in": 2,
+      "length": 256,
+      "capacity": "len",
+      "layout": "leading_empty"
+    },
+    {
+      "experiment": "E10",
+      "kind": "distinct",
+      "n": 0,
+      "setting": "cap256off",
+      "precision": "f64",
+      "operation": "frontend",
+      "fan_in": 2,
+      "length": 0,
+      "capacity": "16x",
+      "layout": "all_empty"
+    },
+    {
+      "experiment": "E10",
+      "kind": "distinct",
+      "n": 0,
+      "setting": "cap256off",
+      "precision": "f64",
+      "operation": "frontend",
+      "fan_in": 2,
+      "length": 1,
+      "capacity": "16x",
+      "layout": "all_live"
+    },
+    {
+      "experiment": "E10",
+      "kind": "distinct",
+      "n": 0,
+      "setting": "cap256off",
+      "precision": "f64",
+      "operation": "frontend",
+      "fan_in": 2,
+      "length": 1,
+      "capacity": "16x",
+      "layout": "trailing_empty"
+    },
+    {
+      "experiment": "E10",
+      "kind": "distinct",
+      "n": 0,
+      "setting": "cap256off",
+      "precision": "f64",
+      "operation": "frontend",
+      "fan_in": 2,
+      "length": 1,
+      "capacity": "16x",
+      "layout": "leading_empty"
+    },
+    {
+      "experiment": "E10",
+      "kind": "distinct",
+      "n": 0,
+      "setting": "cap256off",
+      "precision": "f64",
+      "operation": "frontend",
+      "fan_in": 2,
+      "length": 8,
+      "capacity": "16x",
+      "layout": "all_live"
+    },
+    {
+      "experiment": "E10",
+      "kind": "distinct",
+      "n": 0,
+      "setting": "cap256off",
+      "precision": "f64",
+      "operation": "frontend",
+      "fan_in": 2,
+      "length": 8,
+      "capacity": "16x",
+      "layout": "trailing_empty"
+    },
+    {
+      "experiment": "E10",
+      "kind": "distinct",
+      "n": 0,
+      "setting": "cap256off",
+      "precision": "f64",
+      "operation": "frontend",
+      "fan_in": 2,
+      "length": 8,
+      "capacity": "16x",
+      "layout": "leading_empty"
+    },
+    {
+      "experiment": "E10",
+      "kind": "distinct",
+      "n": 0,
+      "setting": "cap256off",
+      "precision": "f64",
+      "operation": "frontend",
+      "fan_in": 2,
+      "length": 64,
+      "capacity": "16x",
+      "layout": "all_live"
+    },
+    {
+      "experiment": "E10",
+      "kind": "distinct",
+      "n": 0,
+      "setting": "cap256off",
+      "precision": "f64",
+      "operation": "frontend",
+      "fan_in": 2,
+      "length": 64,
+      "capacity": "16x",
+      "layout": "trailing_empty"
+    },
+    {
+      "experiment": "E10",
+      "kind": "distinct",
+      "n": 0,
+      "setting": "cap256off",
+      "precision": "f64",
+      "operation": "frontend",
+      "fan_in": 2,
+      "length": 64,
+      "capacity": "16x",
+      "layout": "leading_empty"
+    },
+    {
+      "experiment": "E10",
+      "kind": "distinct",
+      "n": 0,
+      "setting": "cap256off",
+      "precision": "f64",
+      "operation": "frontend",
+      "fan_in": 2,
+      "length": 256,
+      "capacity": "16x",
+      "layout": "all_live"
+    },
+    {
+      "experiment": "E10",
+      "kind": "distinct",
+      "n": 0,
+      "setting": "cap256off",
+      "precision": "f64",
+      "operation": "frontend",
+      "fan_in": 2,
+      "length": 256,
+      "capacity": "16x",
+      "layout": "trailing_empty"
+    },
+    {
+      "experiment": "E10",
+      "kind": "distinct",
+      "n": 0,
+      "setting": "cap256off",
+      "precision": "f64",
+      "operation": "frontend",
+      "fan_in": 2,
+      "length": 256,
+      "capacity": "16x",
+      "layout": "leading_empty"
+    },
+    {
+      "experiment": "E10",
+      "kind": "distinct",
+      "n": 0,
+      "setting": "cap256off",
+      "precision": "f64",
+      "operation": "frontend",
+      "fan_in": 2,
+      "length": 0,
+      "capacity": "65536",
+      "layout": "all_empty"
+    },
+    {
+      "experiment": "E10",
+      "kind": "distinct",
+      "n": 0,
+      "setting": "cap256off",
+      "precision": "f64",
+      "operation": "frontend",
+      "fan_in": 2,
+      "length": 1,
+      "capacity": "65536",
+      "layout": "all_live"
+    },
+    {
+      "experiment": "E10",
+      "kind": "distinct",
+      "n": 0,
+      "setting": "cap256off",
+      "precision": "f64",
+      "operation": "frontend",
+      "fan_in": 2,
+      "length": 1,
+      "capacity": "65536",
+      "layout": "trailing_empty"
+    },
+    {
+      "experiment": "E10",
+      "kind": "distinct",
+      "n": 0,
+      "setting": "cap256off",
+      "precision": "f64",
+      "operation": "frontend",
+      "fan_in": 2,
+      "length": 1,
+      "capacity": "65536",
+      "layout": "leading_empty"
+    },
+    {
+      "experiment": "E10",
+      "kind": "distinct",
+      "n": 0,
+      "setting": "cap256off",
+      "precision": "f64",
+      "operation": "frontend",
+      "fan_in": 2,
+      "length": 8,
+      "capacity": "65536",
+      "layout": "all_live"
+    },
+    {
+      "experiment": "E10",
+      "kind": "distinct",
+      "n": 0,
+      "setting": "cap256off",
+      "precision": "f64",
+      "operation": "frontend",
+      "fan_in": 2,
+      "length": 8,
+      "capacity": "65536",
+      "layout": "trailing_empty"
+    },
+    {
+      "experiment": "E10",
+      "kind": "distinct",
+      "n": 0,
+      "setting": "cap256off",
+      "precision": "f64",
+      "operation": "frontend",
+      "fan_in": 2,
+      "length": 8,
+      "capacity": "65536",
+      "layout": "leading_empty"
+    },
+    {
+      "experiment": "E10",
+      "kind": "distinct",
+      "n": 0,
+      "setting": "cap256off",
+      "precision": "f64",
+      "operation": "frontend",
+      "fan_in": 2,
+      "length": 64,
+      "capacity": "65536",
+      "layout": "all_live"
+    },
+    {
+      "experiment": "E10",
+      "kind": "distinct",
+      "n": 0,
+      "setting": "cap256off",
+      "precision": "f64",
+      "operation": "frontend",
+      "fan_in": 2,
+      "length": 64,
+      "capacity": "65536",
+      "layout": "trailing_empty"
+    },
+    {
+      "experiment": "E10",
+      "kind": "distinct",
+      "n": 0,
+      "setting": "cap256off",
+      "precision": "f64",
+      "operation": "frontend",
+      "fan_in": 2,
+      "length": 64,
+      "capacity": "65536",
+      "layout": "leading_empty"
+    },
+    {
+      "experiment": "E10",
+      "kind": "distinct",
+      "n": 0,
+      "setting": "cap256off",
+      "precision": "f64",
+      "operation": "frontend",
+      "fan_in": 2,
+      "length": 256,
+      "capacity": "65536",
+      "layout": "all_live"
+    },
+    {
+      "experiment": "E10",
+      "kind": "distinct",
+      "n": 0,
+      "setting": "cap256off",
+      "precision": "f64",
+      "operation": "frontend",
+      "fan_in": 2,
+      "length": 256,
+      "capacity": "65536",
+      "layout": "trailing_empty"
+    },
+    {
+      "experiment": "E10",
+      "kind": "distinct",
+      "n": 0,
+      "setting": "cap256off",
+      "precision": "f64",
+      "operation": "frontend",
+      "fan_in": 2,
+      "length": 256,
+      "capacity": "65536",
+      "layout": "leading_empty"
+    },
+    {
+      "experiment": "E10",
+      "kind": "distinct",
+      "n": 0,
+      "setting": "cap256off",
+      "precision": "f64",
+      "operation": "frontend",
+      "fan_in": 40,
+      "length": 0,
+      "capacity": "len",
+      "layout": "all_empty"
+    },
+    {
+      "experiment": "E10",
+      "kind": "distinct",
+      "n": 0,
+      "setting": "cap256off",
+      "precision": "f64",
+      "operation": "frontend",
+      "fan_in": 40,
+      "length": 1,
+      "capacity": "len",
+      "layout": "all_live"
+    },
+    {
+      "experiment": "E10",
+      "kind": "distinct",
+      "n": 0,
+      "setting": "cap256off",
+      "precision": "f64",
+      "operation": "frontend",
+      "fan_in": 40,
+      "length": 1,
+      "capacity": "len",
+      "layout": "trailing_empty"
+    },
+    {
+      "experiment": "E10",
+      "kind": "distinct",
+      "n": 0,
+      "setting": "cap256off",
+      "precision": "f64",
+      "operation": "frontend",
+      "fan_in": 40,
+      "length": 1,
+      "capacity": "len",
+      "layout": "leading_empty"
+    },
+    {
+      "experiment": "E10",
+      "kind": "distinct",
+      "n": 0,
+      "setting": "cap256off",
+      "precision": "f64",
+      "operation": "frontend",
+      "fan_in": 40,
+      "length": 8,
+      "capacity": "len",
+      "layout": "all_live"
+    },
+    {
+      "experiment": "E10",
+      "kind": "distinct",
+      "n": 0,
+      "setting": "cap256off",
+      "precision": "f64",
+      "operation": "frontend",
+      "fan_in": 40,
+      "length": 8,
+      "capacity": "len",
+      "layout": "trailing_empty"
+    },
+    {
+      "experiment": "E10",
+      "kind": "distinct",
+      "n": 0,
+      "setting": "cap256off",
+      "precision": "f64",
+      "operation": "frontend",
+      "fan_in": 40,
+      "length": 8,
+      "capacity": "len",
+      "layout": "leading_empty"
+    },
+    {
+      "experiment": "E10",
+      "kind": "distinct",
+      "n": 0,
+      "setting": "cap256off",
+      "precision": "f64",
+      "operation": "frontend",
+      "fan_in": 40,
+      "length": 64,
+      "capacity": "len",
+      "layout": "all_live"
+    },
+    {
+      "experiment": "E10",
+      "kind": "distinct",
+      "n": 0,
+      "setting": "cap256off",
+      "precision": "f64",
+      "operation": "frontend",
+      "fan_in": 40,
+      "length": 64,
+      "capacity": "len",
+      "layout": "trailing_empty"
+    },
+    {
+      "experiment": "E10",
+      "kind": "distinct",
+      "n": 0,
+      "setting": "cap256off",
+      "precision": "f64",
+      "operation": "frontend",
+      "fan_in": 40,
+      "length": 64,
+      "capacity": "len",
+      "layout": "leading_empty"
+    },
+    {
+      "experiment": "E10",
+      "kind": "distinct",
+      "n": 0,
+      "setting": "cap256off",
+      "precision": "f64",
+      "operation": "frontend",
+      "fan_in": 40,
+      "length": 256,
+      "capacity": "len",
+      "layout": "all_live"
+    },
+    {
+      "experiment": "E10",
+      "kind": "distinct",
+      "n": 0,
+      "setting": "cap256off",
+      "precision": "f64",
+      "operation": "frontend",
+      "fan_in": 40,
+      "length": 256,
+      "capacity": "len",
+      "layout": "trailing_empty"
+    },
+    {
+      "experiment": "E10",
+      "kind": "distinct",
+      "n": 0,
+      "setting": "cap256off",
+      "precision": "f64",
+      "operation": "frontend",
+      "fan_in": 40,
+      "length": 256,
+      "capacity": "len",
+      "layout": "leading_empty"
+    },
+    {
+      "experiment": "E10",
+      "kind": "distinct",
+      "n": 0,
+      "setting": "cap256off",
+      "precision": "f64",
+      "operation": "frontend",
+      "fan_in": 40,
+      "length": 0,
+      "capacity": "16x",
+      "layout": "all_empty"
+    },
+    {
+      "experiment": "E10",
+      "kind": "distinct",
+      "n": 0,
+      "setting": "cap256off",
+      "precision": "f64",
+      "operation": "frontend",
+      "fan_in": 40,
+      "length": 1,
+      "capacity": "16x",
+      "layout": "all_live"
+    },
+    {
+      "experiment": "E10",
+      "kind": "distinct",
+      "n": 0,
+      "setting": "cap256off",
+      "precision": "f64",
+      "operation": "frontend",
+      "fan_in": 40,
+      "length": 1,
+      "capacity": "16x",
+      "layout": "trailing_empty"
+    },
+    {
+      "experiment": "E10",
+      "kind": "distinct",
+      "n": 0,
+      "setting": "cap256off",
+      "precision": "f64",
+      "operation": "frontend",
+      "fan_in": 40,
+      "length": 1,
+      "capacity": "16x",
+      "layout": "leading_empty"
+    },
+    {
+      "experiment": "E10",
+      "kind": "distinct",
+      "n": 0,
+      "setting": "cap256off",
+      "precision": "f64",
+      "operation": "frontend",
+      "fan_in": 40,
+      "length": 8,
+      "capacity": "16x",
+      "layout": "all_live"
+    },
+    {
+      "experiment": "E10",
+      "kind": "distinct",
+      "n": 0,
+      "setting": "cap256off",
+      "precision": "f64",
+      "operation": "frontend",
+      "fan_in": 40,
+      "length": 8,
+      "capacity": "16x",
+      "layout": "trailing_empty"
+    },
+    {
+      "experiment": "E10",
+      "kind": "distinct",
+      "n": 0,
+      "setting": "cap256off",
+      "precision": "f64",
+      "operation": "frontend",
+      "fan_in": 40,
+      "length": 8,
+      "capacity": "16x",
+      "layout": "leading_empty"
+    },
+    {
+      "experiment": "E10",
+      "kind": "distinct",
+      "n": 0,
+      "setting": "cap256off",
+      "precision": "f64",
+      "operation": "frontend",
+      "fan_in": 40,
+      "length": 64,
+      "capacity": "16x",
+      "layout": "all_live"
+    },
+    {
+      "experiment": "E10",
+      "kind": "distinct",
+      "n": 0,
+      "setting": "cap256off",
+      "precision": "f64",
+      "operation": "frontend",
+      "fan_in": 40,
+      "length": 64,
+      "capacity": "16x",
+      "layout": "trailing_empty"
+    },
+    {
+      "experiment": "E10",
+      "kind": "distinct",
+      "n": 0,
+      "setting": "cap256off",
+      "precision": "f64",
+      "operation": "frontend",
+      "fan_in": 40,
+      "length": 64,
+      "capacity": "16x",
+      "layout": "leading_empty"
+    },
+    {
+      "experiment": "E10",
+      "kind": "distinct",
+      "n": 0,
+      "setting": "cap256off",
+      "precision": "f64",
+      "operation": "frontend",
+      "fan_in": 40,
+      "length": 256,
+      "capacity": "16x",
+      "layout": "all_live"
+    },
+    {
+      "experiment": "E10",
+      "kind": "distinct",
+      "n": 0,
+      "setting": "cap256off",
+      "precision": "f64",
+      "operation": "frontend",
+      "fan_in": 40,
+      "length": 256,
+      "capacity": "16x",
+      "layout": "trailing_empty"
+    },
+    {
+      "experiment": "E10",
+      "kind": "distinct",
+      "n": 0,
+      "setting": "cap256off",
+      "precision": "f64",
+      "operation": "frontend",
+      "fan_in": 40,
+      "length": 256,
+      "capacity": "16x",
+      "layout": "leading_empty"
+    },
+    {
+      "experiment": "E10",
+      "kind": "distinct",
+      "n": 0,
+      "setting": "cap256off",
+      "precision": "f64",
+      "operation": "frontend",
+      "fan_in": 40,
+      "length": 0,
+      "capacity": "65536",
+      "layout": "all_empty"
+    },
+    {
+      "experiment": "E10",
+      "kind": "distinct",
+      "n": 0,
+      "setting": "cap256off",
+      "precision": "f64",
+      "operation": "frontend",
+      "fan_in": 40,
+      "length": 1,
+      "capacity": "65536",
+      "layout": "all_live"
+    },
+    {
+      "experiment": "E10",
+      "kind": "distinct",
+      "n": 0,
+      "setting": "cap256off",
+      "precision": "f64",
+      "operation": "frontend",
+      "fan_in": 40,
+      "length": 1,
+      "capacity": "65536",
+      "layout": "trailing_empty"
+    },
+    {
+      "experiment": "E10",
+      "kind": "distinct",
+      "n": 0,
+      "setting": "cap256off",
+      "precision": "f64",
+      "operation": "frontend",
+      "fan_in": 40,
+      "length": 1,
+      "capacity": "65536",
+      "layout": "leading_empty"
+    },
+    {
+      "experiment": "E10",
+      "kind": "distinct",
+      "n": 0,
+      "setting": "cap256off",
+      "precision": "f64",
+      "operation": "frontend",
+      "fan_in": 40,
+      "length": 8,
+      "capacity": "65536",
+      "layout": "all_live"
+    },
+    {
+      "experiment": "E10",
+      "kind": "distinct",
+      "n": 0,
+      "setting": "cap256off",
+      "precision": "f64",
+      "operation": "frontend",
+      "fan_in": 40,
+      "length": 8,
+      "capacity": "65536",
+      "layout": "trailing_empty"
+    },
+    {
+      "experiment": "E10",
+      "kind": "distinct",
+      "n": 0,
+      "setting": "cap256off",
+      "precision": "f64",
+      "operation": "frontend",
+      "fan_in": 40,
+      "length": 8,
+      "capacity": "65536",
+      "layout": "leading_empty"
+    },
+    {
+      "experiment": "E10",
+      "kind": "distinct",
+      "n": 0,
+      "setting": "cap256off",
+      "precision": "f64",
+      "operation": "frontend",
+      "fan_in": 40,
+      "length": 64,
+      "capacity": "65536",
+      "layout": "all_live"
+    },
+    {
+      "experiment": "E10",
+      "kind": "distinct",
+      "n": 0,
+      "setting": "cap256off",
+      "precision": "f64",
+      "operation": "frontend",
+      "fan_in": 40,
+      "length": 64,
+      "capacity": "65536",
+      "layout": "trailing_empty"
+    },
+    {
+      "experiment": "E10",
+      "kind": "distinct",
+      "n": 0,
+      "setting": "cap256off",
+      "precision": "f64",
+      "operation": "frontend",
+      "fan_in": 40,
+      "length": 64,
+      "capacity": "65536",
+      "layout": "leading_empty"
+    },
+    {
+      "experiment": "E10",
+      "kind": "distinct",
+      "n": 0,
+      "setting": "cap256off",
+      "precision": "f64",
+      "operation": "frontend",
+      "fan_in": 40,
+      "length": 256,
+      "capacity": "65536",
+      "layout": "all_live"
+    },
+    {
+      "experiment": "E10",
+      "kind": "distinct",
+      "n": 0,
+      "setting": "cap256off",
+      "precision": "f64",
+      "operation": "frontend",
+      "fan_in": 40,
+      "length": 256,
+      "capacity": "65536",
+      "layout": "trailing_empty"
+    },
+    {
+      "experiment": "E10",
+      "kind": "distinct",
+      "n": 0,
+      "setting": "cap256off",
+      "precision": "f64",
+      "operation": "frontend",
+      "fan_in": 40,
+      "length": 256,
+      "capacity": "65536",
+      "layout": "leading_empty"
+    }
+  ],
+  "lifecycle_cases": [
+    {
+      "kind": "distinct",
+      "n": 0,
+      "setting": "cap64off",
+      "operation": "build",
+      "fan_in": 40,
+      "experiment": "E05",
+      "precision": "f32",
+      "lifecycle": "drop"
+    },
+    {
+      "kind": "distinct",
+      "n": 0,
+      "setting": "cap64off",
+      "operation": "build",
+      "fan_in": 40,
+      "experiment": "E05",
+      "precision": "f64",
+      "lifecycle": "drop"
+    },
+    {
+      "kind": "distinct",
+      "n": 1,
+      "setting": "cap64off",
+      "operation": "build",
+      "fan_in": 40,
+      "experiment": "E05",
+      "precision": "f32",
+      "lifecycle": "drop"
+    },
+    {
+      "kind": "distinct",
+      "n": 1,
+      "setting": "cap64off",
+      "operation": "build",
+      "fan_in": 40,
+      "experiment": "E05",
+      "precision": "f64",
+      "lifecycle": "drop"
+    },
+    {
+      "kind": "distinct",
+      "n": 32,
+      "setting": "cap64off",
+      "operation": "sequential",
+      "fan_in": 40,
+      "experiment": "E05",
+      "precision": "f32",
+      "lifecycle": "drop"
+    },
+    {
+      "kind": "distinct",
+      "n": 32,
+      "setting": "cap64off",
+      "operation": "sequential",
+      "fan_in": 40,
+      "experiment": "E05",
+      "precision": "f64",
+      "lifecycle": "drop"
+    },
+    {
+      "kind": "ties_exact_17",
+      "n": 65536,
+      "setting": "cap64off",
+      "operation": "build",
+      "fan_in": 40,
+      "experiment": "E05",
+      "precision": "f32",
+      "lifecycle": "drop"
+    },
+    {
+      "kind": "ties_exact_17",
+      "n": 65536,
+      "setting": "cap64off",
+      "operation": "build",
+      "fan_in": 40,
+      "experiment": "E05",
+      "precision": "f64",
+      "lifecycle": "drop"
+    },
+    {
+      "kind": "normal",
+      "n": 100000,
+      "setting": "delta300",
+      "operation": "sequential",
+      "fan_in": 40,
+      "experiment": "E05",
+      "precision": "f32",
+      "lifecycle": "drop"
+    },
+    {
+      "kind": "normal",
+      "n": 100000,
+      "setting": "delta300",
+      "operation": "sequential",
+      "fan_in": 40,
+      "experiment": "E05",
+      "precision": "f64",
+      "lifecycle": "drop"
+    },
+    {
+      "kind": "separated_modes",
+      "n": 1000,
+      "setting": "cap64off",
+      "operation": "build",
+      "fan_in": 40,
+      "experiment": "E05",
+      "precision": "f32",
+      "lifecycle": "drop"
+    },
+    {
+      "kind": "separated_modes",
+      "n": 1000,
+      "setting": "cap64off",
+      "operation": "build",
+      "fan_in": 40,
+      "experiment": "E05",
+      "precision": "f64",
+      "lifecycle": "drop"
+    },
+    {
+      "kind": "normal",
+      "n": 1000,
+      "setting": "cap64use",
+      "operation": "build",
+      "fan_in": 40,
+      "experiment": "E05",
+      "precision": "f32",
+      "lifecycle": "drop"
+    },
+    {
+      "kind": "normal",
+      "n": 1000,
+      "setting": "cap64use",
+      "operation": "build",
+      "fan_in": 40,
+      "experiment": "E05",
+      "precision": "f64",
+      "lifecycle": "drop"
+    },
+    {
+      "kind": "normal",
+      "n": 1000,
+      "setting": "cap64edges",
+      "operation": "sequential",
+      "fan_in": 40,
+      "experiment": "E05",
+      "precision": "f32",
+      "lifecycle": "drop"
+    },
+    {
+      "kind": "normal",
+      "n": 1000,
+      "setting": "cap64edges",
+      "operation": "sequential",
+      "fan_in": 40,
+      "experiment": "E05",
+      "precision": "f64",
+      "lifecycle": "drop"
+    },
+    {
+      "fan_in": 0,
+      "length": 0,
+      "capacity": "len",
+      "layout": "all_empty",
+      "kind": "distinct",
+      "n": 0,
+      "setting": "cap256off",
+      "operation": "frontend",
+      "experiment": "E10",
+      "precision": "f32",
+      "lifecycle": "return"
+    },
+    {
+      "fan_in": 0,
+      "length": 0,
+      "capacity": "len",
+      "layout": "all_empty",
+      "kind": "distinct",
+      "n": 0,
+      "setting": "cap256off",
+      "operation": "frontend",
+      "experiment": "E10",
+      "precision": "f32",
+      "lifecycle": "drop"
+    },
+    {
+      "fan_in": 0,
+      "length": 0,
+      "capacity": "len",
+      "layout": "all_empty",
+      "kind": "distinct",
+      "n": 0,
+      "setting": "cap256off",
+      "operation": "frontend",
+      "experiment": "E10",
+      "precision": "f32",
+      "lifecycle": "clone_drop"
+    },
+    {
+      "fan_in": 0,
+      "length": 0,
+      "capacity": "len",
+      "layout": "all_empty",
+      "kind": "distinct",
+      "n": 0,
+      "setting": "cap256off",
+      "operation": "frontend",
+      "experiment": "E10",
+      "precision": "f64",
+      "lifecycle": "return"
+    },
+    {
+      "fan_in": 0,
+      "length": 0,
+      "capacity": "len",
+      "layout": "all_empty",
+      "kind": "distinct",
+      "n": 0,
+      "setting": "cap256off",
+      "operation": "frontend",
+      "experiment": "E10",
+      "precision": "f64",
+      "lifecycle": "drop"
+    },
+    {
+      "fan_in": 0,
+      "length": 0,
+      "capacity": "len",
+      "layout": "all_empty",
+      "kind": "distinct",
+      "n": 0,
+      "setting": "cap256off",
+      "operation": "frontend",
+      "experiment": "E10",
+      "precision": "f64",
+      "lifecycle": "clone_drop"
+    },
+    {
+      "fan_in": 1,
+      "length": 0,
+      "capacity": "65536",
+      "layout": "all_empty",
+      "kind": "distinct",
+      "n": 0,
+      "setting": "cap256off",
+      "operation": "frontend",
+      "experiment": "E10",
+      "precision": "f32",
+      "lifecycle": "return"
+    },
+    {
+      "fan_in": 1,
+      "length": 0,
+      "capacity": "65536",
+      "layout": "all_empty",
+      "kind": "distinct",
+      "n": 0,
+      "setting": "cap256off",
+      "operation": "frontend",
+      "experiment": "E10",
+      "precision": "f32",
+      "lifecycle": "drop"
+    },
+    {
+      "fan_in": 1,
+      "length": 0,
+      "capacity": "65536",
+      "layout": "all_empty",
+      "kind": "distinct",
+      "n": 0,
+      "setting": "cap256off",
+      "operation": "frontend",
+      "experiment": "E10",
+      "precision": "f32",
+      "lifecycle": "clone_drop"
+    },
+    {
+      "fan_in": 1,
+      "length": 0,
+      "capacity": "65536",
+      "layout": "all_empty",
+      "kind": "distinct",
+      "n": 0,
+      "setting": "cap256off",
+      "operation": "frontend",
+      "experiment": "E10",
+      "precision": "f64",
+      "lifecycle": "return"
+    },
+    {
+      "fan_in": 1,
+      "length": 0,
+      "capacity": "65536",
+      "layout": "all_empty",
+      "kind": "distinct",
+      "n": 0,
+      "setting": "cap256off",
+      "operation": "frontend",
+      "experiment": "E10",
+      "precision": "f64",
+      "lifecycle": "drop"
+    },
+    {
+      "fan_in": 1,
+      "length": 0,
+      "capacity": "65536",
+      "layout": "all_empty",
+      "kind": "distinct",
+      "n": 0,
+      "setting": "cap256off",
+      "operation": "frontend",
+      "experiment": "E10",
+      "precision": "f64",
+      "lifecycle": "clone_drop"
+    },
+    {
+      "fan_in": 1,
+      "length": 1,
+      "capacity": "len",
+      "layout": "all_live",
+      "kind": "distinct",
+      "n": 0,
+      "setting": "cap256off",
+      "operation": "frontend",
+      "experiment": "E10",
+      "precision": "f32",
+      "lifecycle": "return"
+    },
+    {
+      "fan_in": 1,
+      "length": 1,
+      "capacity": "len",
+      "layout": "all_live",
+      "kind": "distinct",
+      "n": 0,
+      "setting": "cap256off",
+      "operation": "frontend",
+      "experiment": "E10",
+      "precision": "f32",
+      "lifecycle": "drop"
+    },
+    {
+      "fan_in": 1,
+      "length": 1,
+      "capacity": "len",
+      "layout": "all_live",
+      "kind": "distinct",
+      "n": 0,
+      "setting": "cap256off",
+      "operation": "frontend",
+      "experiment": "E10",
+      "precision": "f32",
+      "lifecycle": "clone_drop"
+    },
+    {
+      "fan_in": 1,
+      "length": 1,
+      "capacity": "len",
+      "layout": "all_live",
+      "kind": "distinct",
+      "n": 0,
+      "setting": "cap256off",
+      "operation": "frontend",
+      "experiment": "E10",
+      "precision": "f64",
+      "lifecycle": "return"
+    },
+    {
+      "fan_in": 1,
+      "length": 1,
+      "capacity": "len",
+      "layout": "all_live",
+      "kind": "distinct",
+      "n": 0,
+      "setting": "cap256off",
+      "operation": "frontend",
+      "experiment": "E10",
+      "precision": "f64",
+      "lifecycle": "drop"
+    },
+    {
+      "fan_in": 1,
+      "length": 1,
+      "capacity": "len",
+      "layout": "all_live",
+      "kind": "distinct",
+      "n": 0,
+      "setting": "cap256off",
+      "operation": "frontend",
+      "experiment": "E10",
+      "precision": "f64",
+      "lifecycle": "clone_drop"
+    },
+    {
+      "fan_in": 1,
+      "length": 64,
+      "capacity": "65536",
+      "layout": "all_live",
+      "kind": "distinct",
+      "n": 0,
+      "setting": "cap256off",
+      "operation": "frontend",
+      "experiment": "E10",
+      "precision": "f32",
+      "lifecycle": "return"
+    },
+    {
+      "fan_in": 1,
+      "length": 64,
+      "capacity": "65536",
+      "layout": "all_live",
+      "kind": "distinct",
+      "n": 0,
+      "setting": "cap256off",
+      "operation": "frontend",
+      "experiment": "E10",
+      "precision": "f32",
+      "lifecycle": "drop"
+    },
+    {
+      "fan_in": 1,
+      "length": 64,
+      "capacity": "65536",
+      "layout": "all_live",
+      "kind": "distinct",
+      "n": 0,
+      "setting": "cap256off",
+      "operation": "frontend",
+      "experiment": "E10",
+      "precision": "f32",
+      "lifecycle": "clone_drop"
+    },
+    {
+      "fan_in": 1,
+      "length": 64,
+      "capacity": "65536",
+      "layout": "all_live",
+      "kind": "distinct",
+      "n": 0,
+      "setting": "cap256off",
+      "operation": "frontend",
+      "experiment": "E10",
+      "precision": "f64",
+      "lifecycle": "return"
+    },
+    {
+      "fan_in": 1,
+      "length": 64,
+      "capacity": "65536",
+      "layout": "all_live",
+      "kind": "distinct",
+      "n": 0,
+      "setting": "cap256off",
+      "operation": "frontend",
+      "experiment": "E10",
+      "precision": "f64",
+      "lifecycle": "drop"
+    },
+    {
+      "fan_in": 1,
+      "length": 64,
+      "capacity": "65536",
+      "layout": "all_live",
+      "kind": "distinct",
+      "n": 0,
+      "setting": "cap256off",
+      "operation": "frontend",
+      "experiment": "E10",
+      "precision": "f64",
+      "lifecycle": "clone_drop"
+    },
+    {
+      "fan_in": 2,
+      "length": 8,
+      "capacity": "16x",
+      "layout": "trailing_empty",
+      "kind": "distinct",
+      "n": 0,
+      "setting": "cap256off",
+      "operation": "frontend",
+      "experiment": "E10",
+      "precision": "f32",
+      "lifecycle": "return"
+    },
+    {
+      "fan_in": 2,
+      "length": 8,
+      "capacity": "16x",
+      "layout": "trailing_empty",
+      "kind": "distinct",
+      "n": 0,
+      "setting": "cap256off",
+      "operation": "frontend",
+      "experiment": "E10",
+      "precision": "f32",
+      "lifecycle": "drop"
+    },
+    {
+      "fan_in": 2,
+      "length": 8,
+      "capacity": "16x",
+      "layout": "trailing_empty",
+      "kind": "distinct",
+      "n": 0,
+      "setting": "cap256off",
+      "operation": "frontend",
+      "experiment": "E10",
+      "precision": "f32",
+      "lifecycle": "clone_drop"
+    },
+    {
+      "fan_in": 2,
+      "length": 8,
+      "capacity": "16x",
+      "layout": "trailing_empty",
+      "kind": "distinct",
+      "n": 0,
+      "setting": "cap256off",
+      "operation": "frontend",
+      "experiment": "E10",
+      "precision": "f64",
+      "lifecycle": "return"
+    },
+    {
+      "fan_in": 2,
+      "length": 8,
+      "capacity": "16x",
+      "layout": "trailing_empty",
+      "kind": "distinct",
+      "n": 0,
+      "setting": "cap256off",
+      "operation": "frontend",
+      "experiment": "E10",
+      "precision": "f64",
+      "lifecycle": "drop"
+    },
+    {
+      "fan_in": 2,
+      "length": 8,
+      "capacity": "16x",
+      "layout": "trailing_empty",
+      "kind": "distinct",
+      "n": 0,
+      "setting": "cap256off",
+      "operation": "frontend",
+      "experiment": "E10",
+      "precision": "f64",
+      "lifecycle": "clone_drop"
+    },
+    {
+      "fan_in": 2,
+      "length": 256,
+      "capacity": "65536",
+      "layout": "leading_empty",
+      "kind": "distinct",
+      "n": 0,
+      "setting": "cap256off",
+      "operation": "frontend",
+      "experiment": "E10",
+      "precision": "f32",
+      "lifecycle": "return"
+    },
+    {
+      "fan_in": 2,
+      "length": 256,
+      "capacity": "65536",
+      "layout": "leading_empty",
+      "kind": "distinct",
+      "n": 0,
+      "setting": "cap256off",
+      "operation": "frontend",
+      "experiment": "E10",
+      "precision": "f32",
+      "lifecycle": "drop"
+    },
+    {
+      "fan_in": 2,
+      "length": 256,
+      "capacity": "65536",
+      "layout": "leading_empty",
+      "kind": "distinct",
+      "n": 0,
+      "setting": "cap256off",
+      "operation": "frontend",
+      "experiment": "E10",
+      "precision": "f32",
+      "lifecycle": "clone_drop"
+    },
+    {
+      "fan_in": 2,
+      "length": 256,
+      "capacity": "65536",
+      "layout": "leading_empty",
+      "kind": "distinct",
+      "n": 0,
+      "setting": "cap256off",
+      "operation": "frontend",
+      "experiment": "E10",
+      "precision": "f64",
+      "lifecycle": "return"
+    },
+    {
+      "fan_in": 2,
+      "length": 256,
+      "capacity": "65536",
+      "layout": "leading_empty",
+      "kind": "distinct",
+      "n": 0,
+      "setting": "cap256off",
+      "operation": "frontend",
+      "experiment": "E10",
+      "precision": "f64",
+      "lifecycle": "drop"
+    },
+    {
+      "fan_in": 2,
+      "length": 256,
+      "capacity": "65536",
+      "layout": "leading_empty",
+      "kind": "distinct",
+      "n": 0,
+      "setting": "cap256off",
+      "operation": "frontend",
+      "experiment": "E10",
+      "precision": "f64",
+      "lifecycle": "clone_drop"
+    },
+    {
+      "fan_in": 2,
+      "length": 64,
+      "capacity": "len",
+      "layout": "all_live",
+      "kind": "distinct",
+      "n": 0,
+      "setting": "cap256off",
+      "operation": "frontend",
+      "experiment": "E10",
+      "precision": "f32",
+      "lifecycle": "return"
+    },
+    {
+      "fan_in": 2,
+      "length": 64,
+      "capacity": "len",
+      "layout": "all_live",
+      "kind": "distinct",
+      "n": 0,
+      "setting": "cap256off",
+      "operation": "frontend",
+      "experiment": "E10",
+      "precision": "f32",
+      "lifecycle": "drop"
+    },
+    {
+      "fan_in": 2,
+      "length": 64,
+      "capacity": "len",
+      "layout": "all_live",
+      "kind": "distinct",
+      "n": 0,
+      "setting": "cap256off",
+      "operation": "frontend",
+      "experiment": "E10",
+      "precision": "f32",
+      "lifecycle": "clone_drop"
+    },
+    {
+      "fan_in": 2,
+      "length": 64,
+      "capacity": "len",
+      "layout": "all_live",
+      "kind": "distinct",
+      "n": 0,
+      "setting": "cap256off",
+      "operation": "frontend",
+      "experiment": "E10",
+      "precision": "f64",
+      "lifecycle": "return"
+    },
+    {
+      "fan_in": 2,
+      "length": 64,
+      "capacity": "len",
+      "layout": "all_live",
+      "kind": "distinct",
+      "n": 0,
+      "setting": "cap256off",
+      "operation": "frontend",
+      "experiment": "E10",
+      "precision": "f64",
+      "lifecycle": "drop"
+    },
+    {
+      "fan_in": 2,
+      "length": 64,
+      "capacity": "len",
+      "layout": "all_live",
+      "kind": "distinct",
+      "n": 0,
+      "setting": "cap256off",
+      "operation": "frontend",
+      "experiment": "E10",
+      "precision": "f64",
+      "lifecycle": "clone_drop"
+    },
+    {
+      "fan_in": 40,
+      "length": 64,
+      "capacity": "len",
+      "layout": "all_live",
+      "kind": "distinct",
+      "n": 0,
+      "setting": "cap256off",
+      "operation": "frontend",
+      "experiment": "E10",
+      "precision": "f32",
+      "lifecycle": "return"
+    },
+    {
+      "fan_in": 40,
+      "length": 64,
+      "capacity": "len",
+      "layout": "all_live",
+      "kind": "distinct",
+      "n": 0,
+      "setting": "cap256off",
+      "operation": "frontend",
+      "experiment": "E10",
+      "precision": "f32",
+      "lifecycle": "drop"
+    },
+    {
+      "fan_in": 40,
+      "length": 64,
+      "capacity": "len",
+      "layout": "all_live",
+      "kind": "distinct",
+      "n": 0,
+      "setting": "cap256off",
+      "operation": "frontend",
+      "experiment": "E10",
+      "precision": "f32",
+      "lifecycle": "clone_drop"
+    },
+    {
+      "fan_in": 40,
+      "length": 64,
+      "capacity": "len",
+      "layout": "all_live",
+      "kind": "distinct",
+      "n": 0,
+      "setting": "cap256off",
+      "operation": "frontend",
+      "experiment": "E10",
+      "precision": "f64",
+      "lifecycle": "return"
+    },
+    {
+      "fan_in": 40,
+      "length": 64,
+      "capacity": "len",
+      "layout": "all_live",
+      "kind": "distinct",
+      "n": 0,
+      "setting": "cap256off",
+      "operation": "frontend",
+      "experiment": "E10",
+      "precision": "f64",
+      "lifecycle": "drop"
+    },
+    {
+      "fan_in": 40,
+      "length": 64,
+      "capacity": "len",
+      "layout": "all_live",
+      "kind": "distinct",
+      "n": 0,
+      "setting": "cap256off",
+      "operation": "frontend",
+      "experiment": "E10",
+      "precision": "f64",
+      "lifecycle": "clone_drop"
+    },
+    {
+      "fan_in": 40,
+      "length": 256,
+      "capacity": "65536",
+      "layout": "all_live",
+      "kind": "distinct",
+      "n": 0,
+      "setting": "cap256off",
+      "operation": "frontend",
+      "experiment": "E10",
+      "precision": "f32",
+      "lifecycle": "return"
+    },
+    {
+      "fan_in": 40,
+      "length": 256,
+      "capacity": "65536",
+      "layout": "all_live",
+      "kind": "distinct",
+      "n": 0,
+      "setting": "cap256off",
+      "operation": "frontend",
+      "experiment": "E10",
+      "precision": "f32",
+      "lifecycle": "drop"
+    },
+    {
+      "fan_in": 40,
+      "length": 256,
+      "capacity": "65536",
+      "layout": "all_live",
+      "kind": "distinct",
+      "n": 0,
+      "setting": "cap256off",
+      "operation": "frontend",
+      "experiment": "E10",
+      "precision": "f32",
+      "lifecycle": "clone_drop"
+    },
+    {
+      "fan_in": 40,
+      "length": 256,
+      "capacity": "65536",
+      "layout": "all_live",
+      "kind": "distinct",
+      "n": 0,
+      "setting": "cap256off",
+      "operation": "frontend",
+      "experiment": "E10",
+      "precision": "f64",
+      "lifecycle": "return"
+    },
+    {
+      "fan_in": 40,
+      "length": 256,
+      "capacity": "65536",
+      "layout": "all_live",
+      "kind": "distinct",
+      "n": 0,
+      "setting": "cap256off",
+      "operation": "frontend",
+      "experiment": "E10",
+      "precision": "f64",
+      "lifecycle": "drop"
+    },
+    {
+      "fan_in": 40,
+      "length": 256,
+      "capacity": "65536",
+      "layout": "all_live",
+      "kind": "distinct",
+      "n": 0,
+      "setting": "cap256off",
+      "operation": "frontend",
+      "experiment": "E10",
+      "precision": "f64",
+      "lifecycle": "clone_drop"
+    }
+  ],
+  "timing_matrix_sha256": "5c763f57b572e310f2d8d50d1801a6aa809ccdab383b5c90c8ee0d960594c213",
+  "timing_matrix_approval": "Root reviewed exact70-cell matrix and fixes; approved before any supplemental build or measurement. Full untimed grids retained, omissions explicit, no selecting favorable results.",
+  "borrowed_many_cases": [
+    {
+      "experiment": "E02",
+      "kind": "normal",
+      "n": 32,
+      "setting": "delta300",
+      "precision": "f32",
+      "operation": "borrowed_many",
+      "fan_in": 1
+    },
+    {
+      "experiment": "E02",
+      "kind": "normal",
+      "n": 32,
+      "setting": "delta300",
+      "precision": "f32",
+      "operation": "borrowed_many",
+      "fan_in": 2
+    },
+    {
+      "experiment": "E02",
+      "kind": "normal",
+      "n": 32,
+      "setting": "delta300",
+      "precision": "f32",
+      "operation": "borrowed_many",
+      "fan_in": 40
+    },
+    {
+      "experiment": "E02",
+      "kind": "normal",
+      "n": 32,
+      "setting": "cap64use",
+      "precision": "f32",
+      "operation": "borrowed_many",
+      "fan_in": 1
+    },
+    {
+      "experiment": "E02",
+      "kind": "normal",
+      "n": 32,
+      "setting": "cap64use",
+      "precision": "f32",
+      "operation": "borrowed_many",
+      "fan_in": 2
+    },
+    {
+      "experiment": "E02",
+      "kind": "normal",
+      "n": 32,
+      "setting": "cap64use",
+      "precision": "f32",
+      "operation": "borrowed_many",
+      "fan_in": 40
+    },
+    {
+      "experiment": "E02",
+      "kind": "normal",
+      "n": 32,
+      "setting": "delta300",
+      "precision": "f64",
+      "operation": "borrowed_many",
+      "fan_in": 1
+    },
+    {
+      "experiment": "E02",
+      "kind": "normal",
+      "n": 32,
+      "setting": "delta300",
+      "precision": "f64",
+      "operation": "borrowed_many",
+      "fan_in": 2
+    },
+    {
+      "experiment": "E02",
+      "kind": "normal",
+      "n": 32,
+      "setting": "delta300",
+      "precision": "f64",
+      "operation": "borrowed_many",
+      "fan_in": 40
+    },
+    {
+      "experiment": "E02",
+      "kind": "normal",
+      "n": 32,
+      "setting": "cap64use",
+      "precision": "f64",
+      "operation": "borrowed_many",
+      "fan_in": 1
+    },
+    {
+      "experiment": "E02",
+      "kind": "normal",
+      "n": 32,
+      "setting": "cap64use",
+      "precision": "f64",
+      "operation": "borrowed_many",
+      "fan_in": 2
+    },
+    {
+      "experiment": "E02",
+      "kind": "normal",
+      "n": 32,
+      "setting": "cap64use",
+      "precision": "f64",
+      "operation": "borrowed_many",
+      "fan_in": 40
+    },
+    {
+      "experiment": "E02",
+      "kind": "normal",
+      "n": 1000,
+      "setting": "delta300",
+      "precision": "f32",
+      "operation": "borrowed_many",
+      "fan_in": 1
+    },
+    {
+      "experiment": "E02",
+      "kind": "normal",
+      "n": 1000,
+      "setting": "delta300",
+      "precision": "f32",
+      "operation": "borrowed_many",
+      "fan_in": 2
+    },
+    {
+      "experiment": "E02",
+      "kind": "normal",
+      "n": 1000,
+      "setting": "delta300",
+      "precision": "f32",
+      "operation": "borrowed_many",
+      "fan_in": 40
+    },
+    {
+      "experiment": "E02",
+      "kind": "normal",
+      "n": 1000,
+      "setting": "cap64use",
+      "precision": "f32",
+      "operation": "borrowed_many",
+      "fan_in": 1
+    },
+    {
+      "experiment": "E02",
+      "kind": "normal",
+      "n": 1000,
+      "setting": "cap64use",
+      "precision": "f32",
+      "operation": "borrowed_many",
+      "fan_in": 2
+    },
+    {
+      "experiment": "E02",
+      "kind": "normal",
+      "n": 1000,
+      "setting": "cap64use",
+      "precision": "f32",
+      "operation": "borrowed_many",
+      "fan_in": 40
+    },
+    {
+      "experiment": "E02",
+      "kind": "normal",
+      "n": 1000,
+      "setting": "delta300",
+      "precision": "f64",
+      "operation": "borrowed_many",
+      "fan_in": 1
+    },
+    {
+      "experiment": "E02",
+      "kind": "normal",
+      "n": 1000,
+      "setting": "delta300",
+      "precision": "f64",
+      "operation": "borrowed_many",
+      "fan_in": 2
+    },
+    {
+      "experiment": "E02",
+      "kind": "normal",
+      "n": 1000,
+      "setting": "delta300",
+      "precision": "f64",
+      "operation": "borrowed_many",
+      "fan_in": 40
+    },
+    {
+      "experiment": "E02",
+      "kind": "normal",
+      "n": 1000,
+      "setting": "cap64use",
+      "precision": "f64",
+      "operation": "borrowed_many",
+      "fan_in": 1
+    },
+    {
+      "experiment": "E02",
+      "kind": "normal",
+      "n": 1000,
+      "setting": "cap64use",
+      "precision": "f64",
+      "operation": "borrowed_many",
+      "fan_in": 2
+    },
+    {
+      "experiment": "E02",
+      "kind": "normal",
+      "n": 1000,
+      "setting": "cap64use",
+      "precision": "f64",
+      "operation": "borrowed_many",
+      "fan_in": 40
+    },
+    {
+      "experiment": "E02",
+      "kind": "normal",
+      "n": 100000,
+      "setting": "delta300",
+      "precision": "f32",
+      "operation": "borrowed_many",
+      "fan_in": 1
+    },
+    {
+      "experiment": "E02",
+      "kind": "normal",
+      "n": 100000,
+      "setting": "delta300",
+      "precision": "f32",
+      "operation": "borrowed_many",
+      "fan_in": 2
+    },
+    {
+      "experiment": "E02",
+      "kind": "normal",
+      "n": 100000,
+      "setting": "delta300",
+      "precision": "f32",
+      "operation": "borrowed_many",
+      "fan_in": 40
+    },
+    {
+      "experiment": "E02",
+      "kind": "normal",
+      "n": 100000,
+      "setting": "cap64use",
+      "precision": "f32",
+      "operation": "borrowed_many",
+      "fan_in": 1
+    },
+    {
+      "experiment": "E02",
+      "kind": "normal",
+      "n": 100000,
+      "setting": "cap64use",
+      "precision": "f32",
+      "operation": "borrowed_many",
+      "fan_in": 2
+    },
+    {
+      "experiment": "E02",
+      "kind": "normal",
+      "n": 100000,
+      "setting": "cap64use",
+      "precision": "f32",
+      "operation": "borrowed_many",
+      "fan_in": 40
+    },
+    {
+      "experiment": "E02",
+      "kind": "normal",
+      "n": 100000,
+      "setting": "delta300",
+      "precision": "f64",
+      "operation": "borrowed_many",
+      "fan_in": 1
+    },
+    {
+      "experiment": "E02",
+      "kind": "normal",
+      "n": 100000,
+      "setting": "delta300",
+      "precision": "f64",
+      "operation": "borrowed_many",
+      "fan_in": 2
+    },
+    {
+      "experiment": "E02",
+      "kind": "normal",
+      "n": 100000,
+      "setting": "delta300",
+      "precision": "f64",
+      "operation": "borrowed_many",
+      "fan_in": 40
+    },
+    {
+      "experiment": "E02",
+      "kind": "normal",
+      "n": 100000,
+      "setting": "cap64use",
+      "precision": "f64",
+      "operation": "borrowed_many",
+      "fan_in": 1
+    },
+    {
+      "experiment": "E02",
+      "kind": "normal",
+      "n": 100000,
+      "setting": "cap64use",
+      "precision": "f64",
+      "operation": "borrowed_many",
+      "fan_in": 2
+    },
+    {
+      "experiment": "E02",
+      "kind": "normal",
+      "n": 100000,
+      "setting": "cap64use",
+      "precision": "f64",
+      "operation": "borrowed_many",
+      "fan_in": 40
+    },
+    {
+      "experiment": "E02",
+      "kind": "ties",
+      "n": 32,
+      "setting": "delta300",
+      "precision": "f32",
+      "operation": "borrowed_many",
+      "fan_in": 1
+    },
+    {
+      "experiment": "E02",
+      "kind": "ties",
+      "n": 32,
+      "setting": "delta300",
+      "precision": "f32",
+      "operation": "borrowed_many",
+      "fan_in": 2
+    },
+    {
+      "experiment": "E02",
+      "kind": "ties",
+      "n": 32,
+      "setting": "delta300",
+      "precision": "f32",
+      "operation": "borrowed_many",
+      "fan_in": 40
+    },
+    {
+      "experiment": "E02",
+      "kind": "ties",
+      "n": 32,
+      "setting": "cap64use",
+      "precision": "f32",
+      "operation": "borrowed_many",
+      "fan_in": 1
+    },
+    {
+      "experiment": "E02",
+      "kind": "ties",
+      "n": 32,
+      "setting": "cap64use",
+      "precision": "f32",
+      "operation": "borrowed_many",
+      "fan_in": 2
+    },
+    {
+      "experiment": "E02",
+      "kind": "ties",
+      "n": 32,
+      "setting": "cap64use",
+      "precision": "f32",
+      "operation": "borrowed_many",
+      "fan_in": 40
+    },
+    {
+      "experiment": "E02",
+      "kind": "ties",
+      "n": 32,
+      "setting": "delta300",
+      "precision": "f64",
+      "operation": "borrowed_many",
+      "fan_in": 1
+    },
+    {
+      "experiment": "E02",
+      "kind": "ties",
+      "n": 32,
+      "setting": "delta300",
+      "precision": "f64",
+      "operation": "borrowed_many",
+      "fan_in": 2
+    },
+    {
+      "experiment": "E02",
+      "kind": "ties",
+      "n": 32,
+      "setting": "delta300",
+      "precision": "f64",
+      "operation": "borrowed_many",
+      "fan_in": 40
+    },
+    {
+      "experiment": "E02",
+      "kind": "ties",
+      "n": 32,
+      "setting": "cap64use",
+      "precision": "f64",
+      "operation": "borrowed_many",
+      "fan_in": 1
+    },
+    {
+      "experiment": "E02",
+      "kind": "ties",
+      "n": 32,
+      "setting": "cap64use",
+      "precision": "f64",
+      "operation": "borrowed_many",
+      "fan_in": 2
+    },
+    {
+      "experiment": "E02",
+      "kind": "ties",
+      "n": 32,
+      "setting": "cap64use",
+      "precision": "f64",
+      "operation": "borrowed_many",
+      "fan_in": 40
+    },
+    {
+      "experiment": "E02",
+      "kind": "ties",
+      "n": 1000,
+      "setting": "delta300",
+      "precision": "f32",
+      "operation": "borrowed_many",
+      "fan_in": 1
+    },
+    {
+      "experiment": "E02",
+      "kind": "ties",
+      "n": 1000,
+      "setting": "delta300",
+      "precision": "f32",
+      "operation": "borrowed_many",
+      "fan_in": 2
+    },
+    {
+      "experiment": "E02",
+      "kind": "ties",
+      "n": 1000,
+      "setting": "delta300",
+      "precision": "f32",
+      "operation": "borrowed_many",
+      "fan_in": 40
+    },
+    {
+      "experiment": "E02",
+      "kind": "ties",
+      "n": 1000,
+      "setting": "cap64use",
+      "precision": "f32",
+      "operation": "borrowed_many",
+      "fan_in": 1
+    },
+    {
+      "experiment": "E02",
+      "kind": "ties",
+      "n": 1000,
+      "setting": "cap64use",
+      "precision": "f32",
+      "operation": "borrowed_many",
+      "fan_in": 2
+    },
+    {
+      "experiment": "E02",
+      "kind": "ties",
+      "n": 1000,
+      "setting": "cap64use",
+      "precision": "f32",
+      "operation": "borrowed_many",
+      "fan_in": 40
+    },
+    {
+      "experiment": "E02",
+      "kind": "ties",
+      "n": 1000,
+      "setting": "delta300",
+      "precision": "f64",
+      "operation": "borrowed_many",
+      "fan_in": 1
+    },
+    {
+      "experiment": "E02",
+      "kind": "ties",
+      "n": 1000,
+      "setting": "delta300",
+      "precision": "f64",
+      "operation": "borrowed_many",
+      "fan_in": 2
+    },
+    {
+      "experiment": "E02",
+      "kind": "ties",
+      "n": 1000,
+      "setting": "delta300",
+      "precision": "f64",
+      "operation": "borrowed_many",
+      "fan_in": 40
+    },
+    {
+      "experiment": "E02",
+      "kind": "ties",
+      "n": 1000,
+      "setting": "cap64use",
+      "precision": "f64",
+      "operation": "borrowed_many",
+      "fan_in": 1
+    },
+    {
+      "experiment": "E02",
+      "kind": "ties",
+      "n": 1000,
+      "setting": "cap64use",
+      "precision": "f64",
+      "operation": "borrowed_many",
+      "fan_in": 2
+    },
+    {
+      "experiment": "E02",
+      "kind": "ties",
+      "n": 1000,
+      "setting": "cap64use",
+      "precision": "f64",
+      "operation": "borrowed_many",
+      "fan_in": 40
+    },
+    {
+      "experiment": "E02",
+      "kind": "ties",
+      "n": 100000,
+      "setting": "delta300",
+      "precision": "f32",
+      "operation": "borrowed_many",
+      "fan_in": 1
+    },
+    {
+      "experiment": "E02",
+      "kind": "ties",
+      "n": 100000,
+      "setting": "delta300",
+      "precision": "f32",
+      "operation": "borrowed_many",
+      "fan_in": 2
+    },
+    {
+      "experiment": "E02",
+      "kind": "ties",
+      "n": 100000,
+      "setting": "delta300",
+      "precision": "f32",
+      "operation": "borrowed_many",
+      "fan_in": 40
+    },
+    {
+      "experiment": "E02",
+      "kind": "ties",
+      "n": 100000,
+      "setting": "cap64use",
+      "precision": "f32",
+      "operation": "borrowed_many",
+      "fan_in": 1
+    },
+    {
+      "experiment": "E02",
+      "kind": "ties",
+      "n": 100000,
+      "setting": "cap64use",
+      "precision": "f32",
+      "operation": "borrowed_many",
+      "fan_in": 2
+    },
+    {
+      "experiment": "E02",
+      "kind": "ties",
+      "n": 100000,
+      "setting": "cap64use",
+      "precision": "f32",
+      "operation": "borrowed_many",
+      "fan_in": 40
+    },
+    {
+      "experiment": "E02",
+      "kind": "ties",
+      "n": 100000,
+      "setting": "delta300",
+      "precision": "f64",
+      "operation": "borrowed_many",
+      "fan_in": 1
+    },
+    {
+      "experiment": "E02",
+      "kind": "ties",
+      "n": 100000,
+      "setting": "delta300",
+      "precision": "f64",
+      "operation": "borrowed_many",
+      "fan_in": 2
+    },
+    {
+      "experiment": "E02",
+      "kind": "ties",
+      "n": 100000,
+      "setting": "delta300",
+      "precision": "f64",
+      "operation": "borrowed_many",
+      "fan_in": 40
+    },
+    {
+      "experiment": "E02",
+      "kind": "ties",
+      "n": 100000,
+      "setting": "cap64use",
+      "precision": "f64",
+      "operation": "borrowed_many",
+      "fan_in": 1
+    },
+    {
+      "experiment": "E02",
+      "kind": "ties",
+      "n": 100000,
+      "setting": "cap64use",
+      "precision": "f64",
+      "operation": "borrowed_many",
+      "fan_in": 2
+    },
+    {
+      "experiment": "E02",
+      "kind": "ties",
+      "n": 100000,
+      "setting": "cap64use",
+      "precision": "f64",
+      "operation": "borrowed_many",
+      "fan_in": 40
+    },
+    {
+      "experiment": "E02",
+      "kind": "separated_modes",
+      "n": 32,
+      "setting": "delta300",
+      "precision": "f32",
+      "operation": "borrowed_many",
+      "fan_in": 1
+    },
+    {
+      "experiment": "E02",
+      "kind": "separated_modes",
+      "n": 32,
+      "setting": "delta300",
+      "precision": "f32",
+      "operation": "borrowed_many",
+      "fan_in": 2
+    },
+    {
+      "experiment": "E02",
+      "kind": "separated_modes",
+      "n": 32,
+      "setting": "delta300",
+      "precision": "f32",
+      "operation": "borrowed_many",
+      "fan_in": 40
+    },
+    {
+      "experiment": "E02",
+      "kind": "separated_modes",
+      "n": 32,
+      "setting": "cap64use",
+      "precision": "f32",
+      "operation": "borrowed_many",
+      "fan_in": 1
+    },
+    {
+      "experiment": "E02",
+      "kind": "separated_modes",
+      "n": 32,
+      "setting": "cap64use",
+      "precision": "f32",
+      "operation": "borrowed_many",
+      "fan_in": 2
+    },
+    {
+      "experiment": "E02",
+      "kind": "separated_modes",
+      "n": 32,
+      "setting": "cap64use",
+      "precision": "f32",
+      "operation": "borrowed_many",
+      "fan_in": 40
+    },
+    {
+      "experiment": "E02",
+      "kind": "separated_modes",
+      "n": 32,
+      "setting": "delta300",
+      "precision": "f64",
+      "operation": "borrowed_many",
+      "fan_in": 1
+    },
+    {
+      "experiment": "E02",
+      "kind": "separated_modes",
+      "n": 32,
+      "setting": "delta300",
+      "precision": "f64",
+      "operation": "borrowed_many",
+      "fan_in": 2
+    },
+    {
+      "experiment": "E02",
+      "kind": "separated_modes",
+      "n": 32,
+      "setting": "delta300",
+      "precision": "f64",
+      "operation": "borrowed_many",
+      "fan_in": 40
+    },
+    {
+      "experiment": "E02",
+      "kind": "separated_modes",
+      "n": 32,
+      "setting": "cap64use",
+      "precision": "f64",
+      "operation": "borrowed_many",
+      "fan_in": 1
+    },
+    {
+      "experiment": "E02",
+      "kind": "separated_modes",
+      "n": 32,
+      "setting": "cap64use",
+      "precision": "f64",
+      "operation": "borrowed_many",
+      "fan_in": 2
+    },
+    {
+      "experiment": "E02",
+      "kind": "separated_modes",
+      "n": 32,
+      "setting": "cap64use",
+      "precision": "f64",
+      "operation": "borrowed_many",
+      "fan_in": 40
+    },
+    {
+      "experiment": "E02",
+      "kind": "separated_modes",
+      "n": 1000,
+      "setting": "delta300",
+      "precision": "f32",
+      "operation": "borrowed_many",
+      "fan_in": 1
+    },
+    {
+      "experiment": "E02",
+      "kind": "separated_modes",
+      "n": 1000,
+      "setting": "delta300",
+      "precision": "f32",
+      "operation": "borrowed_many",
+      "fan_in": 2
+    },
+    {
+      "experiment": "E02",
+      "kind": "separated_modes",
+      "n": 1000,
+      "setting": "delta300",
+      "precision": "f32",
+      "operation": "borrowed_many",
+      "fan_in": 40
+    },
+    {
+      "experiment": "E02",
+      "kind": "separated_modes",
+      "n": 1000,
+      "setting": "cap64use",
+      "precision": "f32",
+      "operation": "borrowed_many",
+      "fan_in": 1
+    },
+    {
+      "experiment": "E02",
+      "kind": "separated_modes",
+      "n": 1000,
+      "setting": "cap64use",
+      "precision": "f32",
+      "operation": "borrowed_many",
+      "fan_in": 2
+    },
+    {
+      "experiment": "E02",
+      "kind": "separated_modes",
+      "n": 1000,
+      "setting": "cap64use",
+      "precision": "f32",
+      "operation": "borrowed_many",
+      "fan_in": 40
+    },
+    {
+      "experiment": "E02",
+      "kind": "separated_modes",
+      "n": 1000,
+      "setting": "delta300",
+      "precision": "f64",
+      "operation": "borrowed_many",
+      "fan_in": 1
+    },
+    {
+      "experiment": "E02",
+      "kind": "separated_modes",
+      "n": 1000,
+      "setting": "delta300",
+      "precision": "f64",
+      "operation": "borrowed_many",
+      "fan_in": 2
+    },
+    {
+      "experiment": "E02",
+      "kind": "separated_modes",
+      "n": 1000,
+      "setting": "delta300",
+      "precision": "f64",
+      "operation": "borrowed_many",
+      "fan_in": 40
+    },
+    {
+      "experiment": "E02",
+      "kind": "separated_modes",
+      "n": 1000,
+      "setting": "cap64use",
+      "precision": "f64",
+      "operation": "borrowed_many",
+      "fan_in": 1
+    },
+    {
+      "experiment": "E02",
+      "kind": "separated_modes",
+      "n": 1000,
+      "setting": "cap64use",
+      "precision": "f64",
+      "operation": "borrowed_many",
+      "fan_in": 2
+    },
+    {
+      "experiment": "E02",
+      "kind": "separated_modes",
+      "n": 1000,
+      "setting": "cap64use",
+      "precision": "f64",
+      "operation": "borrowed_many",
+      "fan_in": 40
+    },
+    {
+      "experiment": "E02",
+      "kind": "separated_modes",
+      "n": 100000,
+      "setting": "delta300",
+      "precision": "f32",
+      "operation": "borrowed_many",
+      "fan_in": 1
+    },
+    {
+      "experiment": "E02",
+      "kind": "separated_modes",
+      "n": 100000,
+      "setting": "delta300",
+      "precision": "f32",
+      "operation": "borrowed_many",
+      "fan_in": 2
+    },
+    {
+      "experiment": "E02",
+      "kind": "separated_modes",
+      "n": 100000,
+      "setting": "delta300",
+      "precision": "f32",
+      "operation": "borrowed_many",
+      "fan_in": 40
+    },
+    {
+      "experiment": "E02",
+      "kind": "separated_modes",
+      "n": 100000,
+      "setting": "cap64use",
+      "precision": "f32",
+      "operation": "borrowed_many",
+      "fan_in": 1
+    },
+    {
+      "experiment": "E02",
+      "kind": "separated_modes",
+      "n": 100000,
+      "setting": "cap64use",
+      "precision": "f32",
+      "operation": "borrowed_many",
+      "fan_in": 2
+    },
+    {
+      "experiment": "E02",
+      "kind": "separated_modes",
+      "n": 100000,
+      "setting": "cap64use",
+      "precision": "f32",
+      "operation": "borrowed_many",
+      "fan_in": 40
+    },
+    {
+      "experiment": "E02",
+      "kind": "separated_modes",
+      "n": 100000,
+      "setting": "delta300",
+      "precision": "f64",
+      "operation": "borrowed_many",
+      "fan_in": 1
+    },
+    {
+      "experiment": "E02",
+      "kind": "separated_modes",
+      "n": 100000,
+      "setting": "delta300",
+      "precision": "f64",
+      "operation": "borrowed_many",
+      "fan_in": 2
+    },
+    {
+      "experiment": "E02",
+      "kind": "separated_modes",
+      "n": 100000,
+      "setting": "delta300",
+      "precision": "f64",
+      "operation": "borrowed_many",
+      "fan_in": 40
+    },
+    {
+      "experiment": "E02",
+      "kind": "separated_modes",
+      "n": 100000,
+      "setting": "cap64use",
+      "precision": "f64",
+      "operation": "borrowed_many",
+      "fan_in": 1
+    },
+    {
+      "experiment": "E02",
+      "kind": "separated_modes",
+      "n": 100000,
+      "setting": "cap64use",
+      "precision": "f64",
+      "operation": "borrowed_many",
+      "fan_in": 2
+    },
+    {
+      "experiment": "E02",
+      "kind": "separated_modes",
+      "n": 100000,
+      "setting": "cap64use",
+      "precision": "f64",
+      "operation": "borrowed_many",
+      "fan_in": 40
+    }
+  ],
+  "cdf_boundary_cases": [
+    {
+      "experiment": "E20",
+      "operation": "cdf_boundary",
+      "precision": "f32",
+      "centroids": 1,
+      "probes": 63,
+      "shape": "sorted"
+    },
+    {
+      "experiment": "E20",
+      "operation": "cdf_boundary",
+      "precision": "f32",
+      "centroids": 1,
+      "probes": 63,
+      "shape": "reverse"
+    },
+    {
+      "experiment": "E20",
+      "operation": "cdf_boundary",
+      "precision": "f32",
+      "centroids": 1,
+      "probes": 63,
+      "shape": "random"
+    },
+    {
+      "experiment": "E20",
+      "operation": "cdf_boundary",
+      "precision": "f32",
+      "centroids": 1,
+      "probes": 63,
+      "shape": "nan"
+    },
+    {
+      "experiment": "E20",
+      "operation": "cdf_boundary",
+      "precision": "f32",
+      "centroids": 1,
+      "probes": 63,
+      "shape": "ties"
+    },
+    {
+      "experiment": "E20",
+      "operation": "cdf_boundary",
+      "precision": "f32",
+      "centroids": 1,
+      "probes": 63,
+      "shape": "nearlysorted"
+    },
+    {
+      "experiment": "E20",
+      "operation": "cdf_boundary",
+      "precision": "f32",
+      "centroids": 1,
+      "probes": 64,
+      "shape": "sorted"
+    },
+    {
+      "experiment": "E20",
+      "operation": "cdf_boundary",
+      "precision": "f32",
+      "centroids": 1,
+      "probes": 64,
+      "shape": "reverse"
+    },
+    {
+      "experiment": "E20",
+      "operation": "cdf_boundary",
+      "precision": "f32",
+      "centroids": 1,
+      "probes": 64,
+      "shape": "random"
+    },
+    {
+      "experiment": "E20",
+      "operation": "cdf_boundary",
+      "precision": "f32",
+      "centroids": 1,
+      "probes": 64,
+      "shape": "nan"
+    },
+    {
+      "experiment": "E20",
+      "operation": "cdf_boundary",
+      "precision": "f32",
+      "centroids": 1,
+      "probes": 64,
+      "shape": "ties"
+    },
+    {
+      "experiment": "E20",
+      "operation": "cdf_boundary",
+      "precision": "f32",
+      "centroids": 1,
+      "probes": 64,
+      "shape": "nearlysorted"
+    },
+    {
+      "experiment": "E20",
+      "operation": "cdf_boundary",
+      "precision": "f32",
+      "centroids": 1,
+      "probes": 65,
+      "shape": "sorted"
+    },
+    {
+      "experiment": "E20",
+      "operation": "cdf_boundary",
+      "precision": "f32",
+      "centroids": 1,
+      "probes": 65,
+      "shape": "reverse"
+    },
+    {
+      "experiment": "E20",
+      "operation": "cdf_boundary",
+      "precision": "f32",
+      "centroids": 1,
+      "probes": 65,
+      "shape": "random"
+    },
+    {
+      "experiment": "E20",
+      "operation": "cdf_boundary",
+      "precision": "f32",
+      "centroids": 1,
+      "probes": 65,
+      "shape": "nan"
+    },
+    {
+      "experiment": "E20",
+      "operation": "cdf_boundary",
+      "precision": "f32",
+      "centroids": 1,
+      "probes": 65,
+      "shape": "ties"
+    },
+    {
+      "experiment": "E20",
+      "operation": "cdf_boundary",
+      "precision": "f32",
+      "centroids": 1,
+      "probes": 65,
+      "shape": "nearlysorted"
+    },
+    {
+      "experiment": "E20",
+      "operation": "cdf_boundary",
+      "precision": "f32",
+      "centroids": 8,
+      "probes": 63,
+      "shape": "sorted"
+    },
+    {
+      "experiment": "E20",
+      "operation": "cdf_boundary",
+      "precision": "f32",
+      "centroids": 8,
+      "probes": 63,
+      "shape": "reverse"
+    },
+    {
+      "experiment": "E20",
+      "operation": "cdf_boundary",
+      "precision": "f32",
+      "centroids": 8,
+      "probes": 63,
+      "shape": "random"
+    },
+    {
+      "experiment": "E20",
+      "operation": "cdf_boundary",
+      "precision": "f32",
+      "centroids": 8,
+      "probes": 63,
+      "shape": "nan"
+    },
+    {
+      "experiment": "E20",
+      "operation": "cdf_boundary",
+      "precision": "f32",
+      "centroids": 8,
+      "probes": 63,
+      "shape": "ties"
+    },
+    {
+      "experiment": "E20",
+      "operation": "cdf_boundary",
+      "precision": "f32",
+      "centroids": 8,
+      "probes": 63,
+      "shape": "nearlysorted"
+    },
+    {
+      "experiment": "E20",
+      "operation": "cdf_boundary",
+      "precision": "f32",
+      "centroids": 8,
+      "probes": 64,
+      "shape": "sorted"
+    },
+    {
+      "experiment": "E20",
+      "operation": "cdf_boundary",
+      "precision": "f32",
+      "centroids": 8,
+      "probes": 64,
+      "shape": "reverse"
+    },
+    {
+      "experiment": "E20",
+      "operation": "cdf_boundary",
+      "precision": "f32",
+      "centroids": 8,
+      "probes": 64,
+      "shape": "random"
+    },
+    {
+      "experiment": "E20",
+      "operation": "cdf_boundary",
+      "precision": "f32",
+      "centroids": 8,
+      "probes": 64,
+      "shape": "nan"
+    },
+    {
+      "experiment": "E20",
+      "operation": "cdf_boundary",
+      "precision": "f32",
+      "centroids": 8,
+      "probes": 64,
+      "shape": "ties"
+    },
+    {
+      "experiment": "E20",
+      "operation": "cdf_boundary",
+      "precision": "f32",
+      "centroids": 8,
+      "probes": 64,
+      "shape": "nearlysorted"
+    },
+    {
+      "experiment": "E20",
+      "operation": "cdf_boundary",
+      "precision": "f32",
+      "centroids": 8,
+      "probes": 65,
+      "shape": "sorted"
+    },
+    {
+      "experiment": "E20",
+      "operation": "cdf_boundary",
+      "precision": "f32",
+      "centroids": 8,
+      "probes": 65,
+      "shape": "reverse"
+    },
+    {
+      "experiment": "E20",
+      "operation": "cdf_boundary",
+      "precision": "f32",
+      "centroids": 8,
+      "probes": 65,
+      "shape": "random"
+    },
+    {
+      "experiment": "E20",
+      "operation": "cdf_boundary",
+      "precision": "f32",
+      "centroids": 8,
+      "probes": 65,
+      "shape": "nan"
+    },
+    {
+      "experiment": "E20",
+      "operation": "cdf_boundary",
+      "precision": "f32",
+      "centroids": 8,
+      "probes": 65,
+      "shape": "ties"
+    },
+    {
+      "experiment": "E20",
+      "operation": "cdf_boundary",
+      "precision": "f32",
+      "centroids": 8,
+      "probes": 65,
+      "shape": "nearlysorted"
+    },
+    {
+      "experiment": "E20",
+      "operation": "cdf_boundary",
+      "precision": "f32",
+      "centroids": 63,
+      "probes": 63,
+      "shape": "sorted"
+    },
+    {
+      "experiment": "E20",
+      "operation": "cdf_boundary",
+      "precision": "f32",
+      "centroids": 63,
+      "probes": 63,
+      "shape": "reverse"
+    },
+    {
+      "experiment": "E20",
+      "operation": "cdf_boundary",
+      "precision": "f32",
+      "centroids": 63,
+      "probes": 63,
+      "shape": "random"
+    },
+    {
+      "experiment": "E20",
+      "operation": "cdf_boundary",
+      "precision": "f32",
+      "centroids": 63,
+      "probes": 63,
+      "shape": "nan"
+    },
+    {
+      "experiment": "E20",
+      "operation": "cdf_boundary",
+      "precision": "f32",
+      "centroids": 63,
+      "probes": 63,
+      "shape": "ties"
+    },
+    {
+      "experiment": "E20",
+      "operation": "cdf_boundary",
+      "precision": "f32",
+      "centroids": 63,
+      "probes": 63,
+      "shape": "nearlysorted"
+    },
+    {
+      "experiment": "E20",
+      "operation": "cdf_boundary",
+      "precision": "f32",
+      "centroids": 63,
+      "probes": 64,
+      "shape": "sorted"
+    },
+    {
+      "experiment": "E20",
+      "operation": "cdf_boundary",
+      "precision": "f32",
+      "centroids": 63,
+      "probes": 64,
+      "shape": "reverse"
+    },
+    {
+      "experiment": "E20",
+      "operation": "cdf_boundary",
+      "precision": "f32",
+      "centroids": 63,
+      "probes": 64,
+      "shape": "random"
+    },
+    {
+      "experiment": "E20",
+      "operation": "cdf_boundary",
+      "precision": "f32",
+      "centroids": 63,
+      "probes": 64,
+      "shape": "nan"
+    },
+    {
+      "experiment": "E20",
+      "operation": "cdf_boundary",
+      "precision": "f32",
+      "centroids": 63,
+      "probes": 64,
+      "shape": "ties"
+    },
+    {
+      "experiment": "E20",
+      "operation": "cdf_boundary",
+      "precision": "f32",
+      "centroids": 63,
+      "probes": 64,
+      "shape": "nearlysorted"
+    },
+    {
+      "experiment": "E20",
+      "operation": "cdf_boundary",
+      "precision": "f32",
+      "centroids": 63,
+      "probes": 65,
+      "shape": "sorted"
+    },
+    {
+      "experiment": "E20",
+      "operation": "cdf_boundary",
+      "precision": "f32",
+      "centroids": 63,
+      "probes": 65,
+      "shape": "reverse"
+    },
+    {
+      "experiment": "E20",
+      "operation": "cdf_boundary",
+      "precision": "f32",
+      "centroids": 63,
+      "probes": 65,
+      "shape": "random"
+    },
+    {
+      "experiment": "E20",
+      "operation": "cdf_boundary",
+      "precision": "f32",
+      "centroids": 63,
+      "probes": 65,
+      "shape": "nan"
+    },
+    {
+      "experiment": "E20",
+      "operation": "cdf_boundary",
+      "precision": "f32",
+      "centroids": 63,
+      "probes": 65,
+      "shape": "ties"
+    },
+    {
+      "experiment": "E20",
+      "operation": "cdf_boundary",
+      "precision": "f32",
+      "centroids": 63,
+      "probes": 65,
+      "shape": "nearlysorted"
+    },
+    {
+      "experiment": "E20",
+      "operation": "cdf_boundary",
+      "precision": "f32",
+      "centroids": 64,
+      "probes": 63,
+      "shape": "sorted"
+    },
+    {
+      "experiment": "E20",
+      "operation": "cdf_boundary",
+      "precision": "f32",
+      "centroids": 64,
+      "probes": 63,
+      "shape": "reverse"
+    },
+    {
+      "experiment": "E20",
+      "operation": "cdf_boundary",
+      "precision": "f32",
+      "centroids": 64,
+      "probes": 63,
+      "shape": "random"
+    },
+    {
+      "experiment": "E20",
+      "operation": "cdf_boundary",
+      "precision": "f32",
+      "centroids": 64,
+      "probes": 63,
+      "shape": "nan"
+    },
+    {
+      "experiment": "E20",
+      "operation": "cdf_boundary",
+      "precision": "f32",
+      "centroids": 64,
+      "probes": 63,
+      "shape": "ties"
+    },
+    {
+      "experiment": "E20",
+      "operation": "cdf_boundary",
+      "precision": "f32",
+      "centroids": 64,
+      "probes": 63,
+      "shape": "nearlysorted"
+    },
+    {
+      "experiment": "E20",
+      "operation": "cdf_boundary",
+      "precision": "f32",
+      "centroids": 64,
+      "probes": 64,
+      "shape": "sorted"
+    },
+    {
+      "experiment": "E20",
+      "operation": "cdf_boundary",
+      "precision": "f32",
+      "centroids": 64,
+      "probes": 64,
+      "shape": "reverse"
+    },
+    {
+      "experiment": "E20",
+      "operation": "cdf_boundary",
+      "precision": "f32",
+      "centroids": 64,
+      "probes": 64,
+      "shape": "random"
+    },
+    {
+      "experiment": "E20",
+      "operation": "cdf_boundary",
+      "precision": "f32",
+      "centroids": 64,
+      "probes": 64,
+      "shape": "nan"
+    },
+    {
+      "experiment": "E20",
+      "operation": "cdf_boundary",
+      "precision": "f32",
+      "centroids": 64,
+      "probes": 64,
+      "shape": "ties"
+    },
+    {
+      "experiment": "E20",
+      "operation": "cdf_boundary",
+      "precision": "f32",
+      "centroids": 64,
+      "probes": 64,
+      "shape": "nearlysorted"
+    },
+    {
+      "experiment": "E20",
+      "operation": "cdf_boundary",
+      "precision": "f32",
+      "centroids": 64,
+      "probes": 65,
+      "shape": "sorted"
+    },
+    {
+      "experiment": "E20",
+      "operation": "cdf_boundary",
+      "precision": "f32",
+      "centroids": 64,
+      "probes": 65,
+      "shape": "reverse"
+    },
+    {
+      "experiment": "E20",
+      "operation": "cdf_boundary",
+      "precision": "f32",
+      "centroids": 64,
+      "probes": 65,
+      "shape": "random"
+    },
+    {
+      "experiment": "E20",
+      "operation": "cdf_boundary",
+      "precision": "f32",
+      "centroids": 64,
+      "probes": 65,
+      "shape": "nan"
+    },
+    {
+      "experiment": "E20",
+      "operation": "cdf_boundary",
+      "precision": "f32",
+      "centroids": 64,
+      "probes": 65,
+      "shape": "ties"
+    },
+    {
+      "experiment": "E20",
+      "operation": "cdf_boundary",
+      "precision": "f32",
+      "centroids": 64,
+      "probes": 65,
+      "shape": "nearlysorted"
+    },
+    {
+      "experiment": "E20",
+      "operation": "cdf_boundary",
+      "precision": "f32",
+      "centroids": 65,
+      "probes": 63,
+      "shape": "sorted"
+    },
+    {
+      "experiment": "E20",
+      "operation": "cdf_boundary",
+      "precision": "f32",
+      "centroids": 65,
+      "probes": 63,
+      "shape": "reverse"
+    },
+    {
+      "experiment": "E20",
+      "operation": "cdf_boundary",
+      "precision": "f32",
+      "centroids": 65,
+      "probes": 63,
+      "shape": "random"
+    },
+    {
+      "experiment": "E20",
+      "operation": "cdf_boundary",
+      "precision": "f32",
+      "centroids": 65,
+      "probes": 63,
+      "shape": "nan"
+    },
+    {
+      "experiment": "E20",
+      "operation": "cdf_boundary",
+      "precision": "f32",
+      "centroids": 65,
+      "probes": 63,
+      "shape": "ties"
+    },
+    {
+      "experiment": "E20",
+      "operation": "cdf_boundary",
+      "precision": "f32",
+      "centroids": 65,
+      "probes": 63,
+      "shape": "nearlysorted"
+    },
+    {
+      "experiment": "E20",
+      "operation": "cdf_boundary",
+      "precision": "f32",
+      "centroids": 65,
+      "probes": 64,
+      "shape": "sorted"
+    },
+    {
+      "experiment": "E20",
+      "operation": "cdf_boundary",
+      "precision": "f32",
+      "centroids": 65,
+      "probes": 64,
+      "shape": "reverse"
+    },
+    {
+      "experiment": "E20",
+      "operation": "cdf_boundary",
+      "precision": "f32",
+      "centroids": 65,
+      "probes": 64,
+      "shape": "random"
+    },
+    {
+      "experiment": "E20",
+      "operation": "cdf_boundary",
+      "precision": "f32",
+      "centroids": 65,
+      "probes": 64,
+      "shape": "nan"
+    },
+    {
+      "experiment": "E20",
+      "operation": "cdf_boundary",
+      "precision": "f32",
+      "centroids": 65,
+      "probes": 64,
+      "shape": "ties"
+    },
+    {
+      "experiment": "E20",
+      "operation": "cdf_boundary",
+      "precision": "f32",
+      "centroids": 65,
+      "probes": 64,
+      "shape": "nearlysorted"
+    },
+    {
+      "experiment": "E20",
+      "operation": "cdf_boundary",
+      "precision": "f32",
+      "centroids": 65,
+      "probes": 65,
+      "shape": "sorted"
+    },
+    {
+      "experiment": "E20",
+      "operation": "cdf_boundary",
+      "precision": "f32",
+      "centroids": 65,
+      "probes": 65,
+      "shape": "reverse"
+    },
+    {
+      "experiment": "E20",
+      "operation": "cdf_boundary",
+      "precision": "f32",
+      "centroids": 65,
+      "probes": 65,
+      "shape": "random"
+    },
+    {
+      "experiment": "E20",
+      "operation": "cdf_boundary",
+      "precision": "f32",
+      "centroids": 65,
+      "probes": 65,
+      "shape": "nan"
+    },
+    {
+      "experiment": "E20",
+      "operation": "cdf_boundary",
+      "precision": "f32",
+      "centroids": 65,
+      "probes": 65,
+      "shape": "ties"
+    },
+    {
+      "experiment": "E20",
+      "operation": "cdf_boundary",
+      "precision": "f32",
+      "centroids": 65,
+      "probes": 65,
+      "shape": "nearlysorted"
+    },
+    {
+      "experiment": "E20",
+      "operation": "cdf_boundary",
+      "precision": "f32",
+      "centroids": 256,
+      "probes": 63,
+      "shape": "sorted"
+    },
+    {
+      "experiment": "E20",
+      "operation": "cdf_boundary",
+      "precision": "f32",
+      "centroids": 256,
+      "probes": 63,
+      "shape": "reverse"
+    },
+    {
+      "experiment": "E20",
+      "operation": "cdf_boundary",
+      "precision": "f32",
+      "centroids": 256,
+      "probes": 63,
+      "shape": "random"
+    },
+    {
+      "experiment": "E20",
+      "operation": "cdf_boundary",
+      "precision": "f32",
+      "centroids": 256,
+      "probes": 63,
+      "shape": "nan"
+    },
+    {
+      "experiment": "E20",
+      "operation": "cdf_boundary",
+      "precision": "f32",
+      "centroids": 256,
+      "probes": 63,
+      "shape": "ties"
+    },
+    {
+      "experiment": "E20",
+      "operation": "cdf_boundary",
+      "precision": "f32",
+      "centroids": 256,
+      "probes": 63,
+      "shape": "nearlysorted"
+    },
+    {
+      "experiment": "E20",
+      "operation": "cdf_boundary",
+      "precision": "f32",
+      "centroids": 256,
+      "probes": 64,
+      "shape": "sorted"
+    },
+    {
+      "experiment": "E20",
+      "operation": "cdf_boundary",
+      "precision": "f32",
+      "centroids": 256,
+      "probes": 64,
+      "shape": "reverse"
+    },
+    {
+      "experiment": "E20",
+      "operation": "cdf_boundary",
+      "precision": "f32",
+      "centroids": 256,
+      "probes": 64,
+      "shape": "random"
+    },
+    {
+      "experiment": "E20",
+      "operation": "cdf_boundary",
+      "precision": "f32",
+      "centroids": 256,
+      "probes": 64,
+      "shape": "nan"
+    },
+    {
+      "experiment": "E20",
+      "operation": "cdf_boundary",
+      "precision": "f32",
+      "centroids": 256,
+      "probes": 64,
+      "shape": "ties"
+    },
+    {
+      "experiment": "E20",
+      "operation": "cdf_boundary",
+      "precision": "f32",
+      "centroids": 256,
+      "probes": 64,
+      "shape": "nearlysorted"
+    },
+    {
+      "experiment": "E20",
+      "operation": "cdf_boundary",
+      "precision": "f32",
+      "centroids": 256,
+      "probes": 65,
+      "shape": "sorted"
+    },
+    {
+      "experiment": "E20",
+      "operation": "cdf_boundary",
+      "precision": "f32",
+      "centroids": 256,
+      "probes": 65,
+      "shape": "reverse"
+    },
+    {
+      "experiment": "E20",
+      "operation": "cdf_boundary",
+      "precision": "f32",
+      "centroids": 256,
+      "probes": 65,
+      "shape": "random"
+    },
+    {
+      "experiment": "E20",
+      "operation": "cdf_boundary",
+      "precision": "f32",
+      "centroids": 256,
+      "probes": 65,
+      "shape": "nan"
+    },
+    {
+      "experiment": "E20",
+      "operation": "cdf_boundary",
+      "precision": "f32",
+      "centroids": 256,
+      "probes": 65,
+      "shape": "ties"
+    },
+    {
+      "experiment": "E20",
+      "operation": "cdf_boundary",
+      "precision": "f32",
+      "centroids": 256,
+      "probes": 65,
+      "shape": "nearlysorted"
+    },
+    {
+      "experiment": "E20",
+      "operation": "cdf_boundary",
+      "precision": "f64",
+      "centroids": 1,
+      "probes": 63,
+      "shape": "sorted"
+    },
+    {
+      "experiment": "E20",
+      "operation": "cdf_boundary",
+      "precision": "f64",
+      "centroids": 1,
+      "probes": 63,
+      "shape": "reverse"
+    },
+    {
+      "experiment": "E20",
+      "operation": "cdf_boundary",
+      "precision": "f64",
+      "centroids": 1,
+      "probes": 63,
+      "shape": "random"
+    },
+    {
+      "experiment": "E20",
+      "operation": "cdf_boundary",
+      "precision": "f64",
+      "centroids": 1,
+      "probes": 63,
+      "shape": "nan"
+    },
+    {
+      "experiment": "E20",
+      "operation": "cdf_boundary",
+      "precision": "f64",
+      "centroids": 1,
+      "probes": 63,
+      "shape": "ties"
+    },
+    {
+      "experiment": "E20",
+      "operation": "cdf_boundary",
+      "precision": "f64",
+      "centroids": 1,
+      "probes": 63,
+      "shape": "nearlysorted"
+    },
+    {
+      "experiment": "E20",
+      "operation": "cdf_boundary",
+      "precision": "f64",
+      "centroids": 1,
+      "probes": 64,
+      "shape": "sorted"
+    },
+    {
+      "experiment": "E20",
+      "operation": "cdf_boundary",
+      "precision": "f64",
+      "centroids": 1,
+      "probes": 64,
+      "shape": "reverse"
+    },
+    {
+      "experiment": "E20",
+      "operation": "cdf_boundary",
+      "precision": "f64",
+      "centroids": 1,
+      "probes": 64,
+      "shape": "random"
+    },
+    {
+      "experiment": "E20",
+      "operation": "cdf_boundary",
+      "precision": "f64",
+      "centroids": 1,
+      "probes": 64,
+      "shape": "nan"
+    },
+    {
+      "experiment": "E20",
+      "operation": "cdf_boundary",
+      "precision": "f64",
+      "centroids": 1,
+      "probes": 64,
+      "shape": "ties"
+    },
+    {
+      "experiment": "E20",
+      "operation": "cdf_boundary",
+      "precision": "f64",
+      "centroids": 1,
+      "probes": 64,
+      "shape": "nearlysorted"
+    },
+    {
+      "experiment": "E20",
+      "operation": "cdf_boundary",
+      "precision": "f64",
+      "centroids": 1,
+      "probes": 65,
+      "shape": "sorted"
+    },
+    {
+      "experiment": "E20",
+      "operation": "cdf_boundary",
+      "precision": "f64",
+      "centroids": 1,
+      "probes": 65,
+      "shape": "reverse"
+    },
+    {
+      "experiment": "E20",
+      "operation": "cdf_boundary",
+      "precision": "f64",
+      "centroids": 1,
+      "probes": 65,
+      "shape": "random"
+    },
+    {
+      "experiment": "E20",
+      "operation": "cdf_boundary",
+      "precision": "f64",
+      "centroids": 1,
+      "probes": 65,
+      "shape": "nan"
+    },
+    {
+      "experiment": "E20",
+      "operation": "cdf_boundary",
+      "precision": "f64",
+      "centroids": 1,
+      "probes": 65,
+      "shape": "ties"
+    },
+    {
+      "experiment": "E20",
+      "operation": "cdf_boundary",
+      "precision": "f64",
+      "centroids": 1,
+      "probes": 65,
+      "shape": "nearlysorted"
+    },
+    {
+      "experiment": "E20",
+      "operation": "cdf_boundary",
+      "precision": "f64",
+      "centroids": 8,
+      "probes": 63,
+      "shape": "sorted"
+    },
+    {
+      "experiment": "E20",
+      "operation": "cdf_boundary",
+      "precision": "f64",
+      "centroids": 8,
+      "probes": 63,
+      "shape": "reverse"
+    },
+    {
+      "experiment": "E20",
+      "operation": "cdf_boundary",
+      "precision": "f64",
+      "centroids": 8,
+      "probes": 63,
+      "shape": "random"
+    },
+    {
+      "experiment": "E20",
+      "operation": "cdf_boundary",
+      "precision": "f64",
+      "centroids": 8,
+      "probes": 63,
+      "shape": "nan"
+    },
+    {
+      "experiment": "E20",
+      "operation": "cdf_boundary",
+      "precision": "f64",
+      "centroids": 8,
+      "probes": 63,
+      "shape": "ties"
+    },
+    {
+      "experiment": "E20",
+      "operation": "cdf_boundary",
+      "precision": "f64",
+      "centroids": 8,
+      "probes": 63,
+      "shape": "nearlysorted"
+    },
+    {
+      "experiment": "E20",
+      "operation": "cdf_boundary",
+      "precision": "f64",
+      "centroids": 8,
+      "probes": 64,
+      "shape": "sorted"
+    },
+    {
+      "experiment": "E20",
+      "operation": "cdf_boundary",
+      "precision": "f64",
+      "centroids": 8,
+      "probes": 64,
+      "shape": "reverse"
+    },
+    {
+      "experiment": "E20",
+      "operation": "cdf_boundary",
+      "precision": "f64",
+      "centroids": 8,
+      "probes": 64,
+      "shape": "random"
+    },
+    {
+      "experiment": "E20",
+      "operation": "cdf_boundary",
+      "precision": "f64",
+      "centroids": 8,
+      "probes": 64,
+      "shape": "nan"
+    },
+    {
+      "experiment": "E20",
+      "operation": "cdf_boundary",
+      "precision": "f64",
+      "centroids": 8,
+      "probes": 64,
+      "shape": "ties"
+    },
+    {
+      "experiment": "E20",
+      "operation": "cdf_boundary",
+      "precision": "f64",
+      "centroids": 8,
+      "probes": 64,
+      "shape": "nearlysorted"
+    },
+    {
+      "experiment": "E20",
+      "operation": "cdf_boundary",
+      "precision": "f64",
+      "centroids": 8,
+      "probes": 65,
+      "shape": "sorted"
+    },
+    {
+      "experiment": "E20",
+      "operation": "cdf_boundary",
+      "precision": "f64",
+      "centroids": 8,
+      "probes": 65,
+      "shape": "reverse"
+    },
+    {
+      "experiment": "E20",
+      "operation": "cdf_boundary",
+      "precision": "f64",
+      "centroids": 8,
+      "probes": 65,
+      "shape": "random"
+    },
+    {
+      "experiment": "E20",
+      "operation": "cdf_boundary",
+      "precision": "f64",
+      "centroids": 8,
+      "probes": 65,
+      "shape": "nan"
+    },
+    {
+      "experiment": "E20",
+      "operation": "cdf_boundary",
+      "precision": "f64",
+      "centroids": 8,
+      "probes": 65,
+      "shape": "ties"
+    },
+    {
+      "experiment": "E20",
+      "operation": "cdf_boundary",
+      "precision": "f64",
+      "centroids": 8,
+      "probes": 65,
+      "shape": "nearlysorted"
+    },
+    {
+      "experiment": "E20",
+      "operation": "cdf_boundary",
+      "precision": "f64",
+      "centroids": 63,
+      "probes": 63,
+      "shape": "sorted"
+    },
+    {
+      "experiment": "E20",
+      "operation": "cdf_boundary",
+      "precision": "f64",
+      "centroids": 63,
+      "probes": 63,
+      "shape": "reverse"
+    },
+    {
+      "experiment": "E20",
+      "operation": "cdf_boundary",
+      "precision": "f64",
+      "centroids": 63,
+      "probes": 63,
+      "shape": "random"
+    },
+    {
+      "experiment": "E20",
+      "operation": "cdf_boundary",
+      "precision": "f64",
+      "centroids": 63,
+      "probes": 63,
+      "shape": "nan"
+    },
+    {
+      "experiment": "E20",
+      "operation": "cdf_boundary",
+      "precision": "f64",
+      "centroids": 63,
+      "probes": 63,
+      "shape": "ties"
+    },
+    {
+      "experiment": "E20",
+      "operation": "cdf_boundary",
+      "precision": "f64",
+      "centroids": 63,
+      "probes": 63,
+      "shape": "nearlysorted"
+    },
+    {
+      "experiment": "E20",
+      "operation": "cdf_boundary",
+      "precision": "f64",
+      "centroids": 63,
+      "probes": 64,
+      "shape": "sorted"
+    },
+    {
+      "experiment": "E20",
+      "operation": "cdf_boundary",
+      "precision": "f64",
+      "centroids": 63,
+      "probes": 64,
+      "shape": "reverse"
+    },
+    {
+      "experiment": "E20",
+      "operation": "cdf_boundary",
+      "precision": "f64",
+      "centroids": 63,
+      "probes": 64,
+      "shape": "random"
+    },
+    {
+      "experiment": "E20",
+      "operation": "cdf_boundary",
+      "precision": "f64",
+      "centroids": 63,
+      "probes": 64,
+      "shape": "nan"
+    },
+    {
+      "experiment": "E20",
+      "operation": "cdf_boundary",
+      "precision": "f64",
+      "centroids": 63,
+      "probes": 64,
+      "shape": "ties"
+    },
+    {
+      "experiment": "E20",
+      "operation": "cdf_boundary",
+      "precision": "f64",
+      "centroids": 63,
+      "probes": 64,
+      "shape": "nearlysorted"
+    },
+    {
+      "experiment": "E20",
+      "operation": "cdf_boundary",
+      "precision": "f64",
+      "centroids": 63,
+      "probes": 65,
+      "shape": "sorted"
+    },
+    {
+      "experiment": "E20",
+      "operation": "cdf_boundary",
+      "precision": "f64",
+      "centroids": 63,
+      "probes": 65,
+      "shape": "reverse"
+    },
+    {
+      "experiment": "E20",
+      "operation": "cdf_boundary",
+      "precision": "f64",
+      "centroids": 63,
+      "probes": 65,
+      "shape": "random"
+    },
+    {
+      "experiment": "E20",
+      "operation": "cdf_boundary",
+      "precision": "f64",
+      "centroids": 63,
+      "probes": 65,
+      "shape": "nan"
+    },
+    {
+      "experiment": "E20",
+      "operation": "cdf_boundary",
+      "precision": "f64",
+      "centroids": 63,
+      "probes": 65,
+      "shape": "ties"
+    },
+    {
+      "experiment": "E20",
+      "operation": "cdf_boundary",
+      "precision": "f64",
+      "centroids": 63,
+      "probes": 65,
+      "shape": "nearlysorted"
+    },
+    {
+      "experiment": "E20",
+      "operation": "cdf_boundary",
+      "precision": "f64",
+      "centroids": 64,
+      "probes": 63,
+      "shape": "sorted"
+    },
+    {
+      "experiment": "E20",
+      "operation": "cdf_boundary",
+      "precision": "f64",
+      "centroids": 64,
+      "probes": 63,
+      "shape": "reverse"
+    },
+    {
+      "experiment": "E20",
+      "operation": "cdf_boundary",
+      "precision": "f64",
+      "centroids": 64,
+      "probes": 63,
+      "shape": "random"
+    },
+    {
+      "experiment": "E20",
+      "operation": "cdf_boundary",
+      "precision": "f64",
+      "centroids": 64,
+      "probes": 63,
+      "shape": "nan"
+    },
+    {
+      "experiment": "E20",
+      "operation": "cdf_boundary",
+      "precision": "f64",
+      "centroids": 64,
+      "probes": 63,
+      "shape": "ties"
+    },
+    {
+      "experiment": "E20",
+      "operation": "cdf_boundary",
+      "precision": "f64",
+      "centroids": 64,
+      "probes": 63,
+      "shape": "nearlysorted"
+    },
+    {
+      "experiment": "E20",
+      "operation": "cdf_boundary",
+      "precision": "f64",
+      "centroids": 64,
+      "probes": 64,
+      "shape": "sorted"
+    },
+    {
+      "experiment": "E20",
+      "operation": "cdf_boundary",
+      "precision": "f64",
+      "centroids": 64,
+      "probes": 64,
+      "shape": "reverse"
+    },
+    {
+      "experiment": "E20",
+      "operation": "cdf_boundary",
+      "precision": "f64",
+      "centroids": 64,
+      "probes": 64,
+      "shape": "random"
+    },
+    {
+      "experiment": "E20",
+      "operation": "cdf_boundary",
+      "precision": "f64",
+      "centroids": 64,
+      "probes": 64,
+      "shape": "nan"
+    },
+    {
+      "experiment": "E20",
+      "operation": "cdf_boundary",
+      "precision": "f64",
+      "centroids": 64,
+      "probes": 64,
+      "shape": "ties"
+    },
+    {
+      "experiment": "E20",
+      "operation": "cdf_boundary",
+      "precision": "f64",
+      "centroids": 64,
+      "probes": 64,
+      "shape": "nearlysorted"
+    },
+    {
+      "experiment": "E20",
+      "operation": "cdf_boundary",
+      "precision": "f64",
+      "centroids": 64,
+      "probes": 65,
+      "shape": "sorted"
+    },
+    {
+      "experiment": "E20",
+      "operation": "cdf_boundary",
+      "precision": "f64",
+      "centroids": 64,
+      "probes": 65,
+      "shape": "reverse"
+    },
+    {
+      "experiment": "E20",
+      "operation": "cdf_boundary",
+      "precision": "f64",
+      "centroids": 64,
+      "probes": 65,
+      "shape": "random"
+    },
+    {
+      "experiment": "E20",
+      "operation": "cdf_boundary",
+      "precision": "f64",
+      "centroids": 64,
+      "probes": 65,
+      "shape": "nan"
+    },
+    {
+      "experiment": "E20",
+      "operation": "cdf_boundary",
+      "precision": "f64",
+      "centroids": 64,
+      "probes": 65,
+      "shape": "ties"
+    },
+    {
+      "experiment": "E20",
+      "operation": "cdf_boundary",
+      "precision": "f64",
+      "centroids": 64,
+      "probes": 65,
+      "shape": "nearlysorted"
+    },
+    {
+      "experiment": "E20",
+      "operation": "cdf_boundary",
+      "precision": "f64",
+      "centroids": 65,
+      "probes": 63,
+      "shape": "sorted"
+    },
+    {
+      "experiment": "E20",
+      "operation": "cdf_boundary",
+      "precision": "f64",
+      "centroids": 65,
+      "probes": 63,
+      "shape": "reverse"
+    },
+    {
+      "experiment": "E20",
+      "operation": "cdf_boundary",
+      "precision": "f64",
+      "centroids": 65,
+      "probes": 63,
+      "shape": "random"
+    },
+    {
+      "experiment": "E20",
+      "operation": "cdf_boundary",
+      "precision": "f64",
+      "centroids": 65,
+      "probes": 63,
+      "shape": "nan"
+    },
+    {
+      "experiment": "E20",
+      "operation": "cdf_boundary",
+      "precision": "f64",
+      "centroids": 65,
+      "probes": 63,
+      "shape": "ties"
+    },
+    {
+      "experiment": "E20",
+      "operation": "cdf_boundary",
+      "precision": "f64",
+      "centroids": 65,
+      "probes": 63,
+      "shape": "nearlysorted"
+    },
+    {
+      "experiment": "E20",
+      "operation": "cdf_boundary",
+      "precision": "f64",
+      "centroids": 65,
+      "probes": 64,
+      "shape": "sorted"
+    },
+    {
+      "experiment": "E20",
+      "operation": "cdf_boundary",
+      "precision": "f64",
+      "centroids": 65,
+      "probes": 64,
+      "shape": "reverse"
+    },
+    {
+      "experiment": "E20",
+      "operation": "cdf_boundary",
+      "precision": "f64",
+      "centroids": 65,
+      "probes": 64,
+      "shape": "random"
+    },
+    {
+      "experiment": "E20",
+      "operation": "cdf_boundary",
+      "precision": "f64",
+      "centroids": 65,
+      "probes": 64,
+      "shape": "nan"
+    },
+    {
+      "experiment": "E20",
+      "operation": "cdf_boundary",
+      "precision": "f64",
+      "centroids": 65,
+      "probes": 64,
+      "shape": "ties"
+    },
+    {
+      "experiment": "E20",
+      "operation": "cdf_boundary",
+      "precision": "f64",
+      "centroids": 65,
+      "probes": 64,
+      "shape": "nearlysorted"
+    },
+    {
+      "experiment": "E20",
+      "operation": "cdf_boundary",
+      "precision": "f64",
+      "centroids": 65,
+      "probes": 65,
+      "shape": "sorted"
+    },
+    {
+      "experiment": "E20",
+      "operation": "cdf_boundary",
+      "precision": "f64",
+      "centroids": 65,
+      "probes": 65,
+      "shape": "reverse"
+    },
+    {
+      "experiment": "E20",
+      "operation": "cdf_boundary",
+      "precision": "f64",
+      "centroids": 65,
+      "probes": 65,
+      "shape": "random"
+    },
+    {
+      "experiment": "E20",
+      "operation": "cdf_boundary",
+      "precision": "f64",
+      "centroids": 65,
+      "probes": 65,
+      "shape": "nan"
+    },
+    {
+      "experiment": "E20",
+      "operation": "cdf_boundary",
+      "precision": "f64",
+      "centroids": 65,
+      "probes": 65,
+      "shape": "ties"
+    },
+    {
+      "experiment": "E20",
+      "operation": "cdf_boundary",
+      "precision": "f64",
+      "centroids": 65,
+      "probes": 65,
+      "shape": "nearlysorted"
+    },
+    {
+      "experiment": "E20",
+      "operation": "cdf_boundary",
+      "precision": "f64",
+      "centroids": 256,
+      "probes": 63,
+      "shape": "sorted"
+    },
+    {
+      "experiment": "E20",
+      "operation": "cdf_boundary",
+      "precision": "f64",
+      "centroids": 256,
+      "probes": 63,
+      "shape": "reverse"
+    },
+    {
+      "experiment": "E20",
+      "operation": "cdf_boundary",
+      "precision": "f64",
+      "centroids": 256,
+      "probes": 63,
+      "shape": "random"
+    },
+    {
+      "experiment": "E20",
+      "operation": "cdf_boundary",
+      "precision": "f64",
+      "centroids": 256,
+      "probes": 63,
+      "shape": "nan"
+    },
+    {
+      "experiment": "E20",
+      "operation": "cdf_boundary",
+      "precision": "f64",
+      "centroids": 256,
+      "probes": 63,
+      "shape": "ties"
+    },
+    {
+      "experiment": "E20",
+      "operation": "cdf_boundary",
+      "precision": "f64",
+      "centroids": 256,
+      "probes": 63,
+      "shape": "nearlysorted"
+    },
+    {
+      "experiment": "E20",
+      "operation": "cdf_boundary",
+      "precision": "f64",
+      "centroids": 256,
+      "probes": 64,
+      "shape": "sorted"
+    },
+    {
+      "experiment": "E20",
+      "operation": "cdf_boundary",
+      "precision": "f64",
+      "centroids": 256,
+      "probes": 64,
+      "shape": "reverse"
+    },
+    {
+      "experiment": "E20",
+      "operation": "cdf_boundary",
+      "precision": "f64",
+      "centroids": 256,
+      "probes": 64,
+      "shape": "random"
+    },
+    {
+      "experiment": "E20",
+      "operation": "cdf_boundary",
+      "precision": "f64",
+      "centroids": 256,
+      "probes": 64,
+      "shape": "nan"
+    },
+    {
+      "experiment": "E20",
+      "operation": "cdf_boundary",
+      "precision": "f64",
+      "centroids": 256,
+      "probes": 64,
+      "shape": "ties"
+    },
+    {
+      "experiment": "E20",
+      "operation": "cdf_boundary",
+      "precision": "f64",
+      "centroids": 256,
+      "probes": 64,
+      "shape": "nearlysorted"
+    },
+    {
+      "experiment": "E20",
+      "operation": "cdf_boundary",
+      "precision": "f64",
+      "centroids": 256,
+      "probes": 65,
+      "shape": "sorted"
+    },
+    {
+      "experiment": "E20",
+      "operation": "cdf_boundary",
+      "precision": "f64",
+      "centroids": 256,
+      "probes": 65,
+      "shape": "reverse"
+    },
+    {
+      "experiment": "E20",
+      "operation": "cdf_boundary",
+      "precision": "f64",
+      "centroids": 256,
+      "probes": 65,
+      "shape": "random"
+    },
+    {
+      "experiment": "E20",
+      "operation": "cdf_boundary",
+      "precision": "f64",
+      "centroids": 256,
+      "probes": 65,
+      "shape": "nan"
+    },
+    {
+      "experiment": "E20",
+      "operation": "cdf_boundary",
+      "precision": "f64",
+      "centroids": 256,
+      "probes": 65,
+      "shape": "ties"
+    },
+    {
+      "experiment": "E20",
+      "operation": "cdf_boundary",
+      "precision": "f64",
+      "centroids": 256,
+      "probes": 65,
+      "shape": "nearlysorted"
+    }
+  ],
+  "allocation_repeats": 5,
+  "allocation_builds": [
+    "baseline-v3",
+    "e05-v3",
+    "e10-v3"
+  ],
+  "timing_and_audit_builds": [
+    "baseline-v3",
+    "e02-v3",
+    "e05-v3",
+    "e10-v3",
+    "e20-v3"
+  ],
+  "instrumentation_allowed_modified": [
+    "src/lib.rs",
+    "src/tdigest/tdigest.rs"
+  ],
+  "instrumentation_allowed_added": [
+    "src/day_counting_allocator.rs",
+    "src/day_supplement_probe.rs"
+  ],
+  "instrumentation_note": "Observed requests in the instrumented build plus backend usable live-object sizes at GlobalAlloc boundaries. Instrumentation can change optimization and allocation elision; counts are not claimed exact for the uninstrumented build. Not allocator-internal realloc transient peak, RSS or arena footprint. No timing of instrumented binaries.",
+  "timing_note": "Same immutable snapshots; reset-owned-input setup outside clock, output drop and optional clone inside clock as named. Caller-held original seeds and their pool are dropped after the clone-reset timer; consumed owned pools are dropped inside the owned timer. Fixed baseline-derived <=64MiB input pool, at most64 inputs. Structural E10 cases are repeatability controls, not fresh random holdouts; independent v3 fresh-data confirmation still required.",
+  "gates": {
+    "minimum_batch_ns": 50000000,
+    "pilot_target_ns": 60000000,
+    "round_cap": 1000000000,
+    "schedule": [
+      "baseline",
+      "candidate",
+      "candidate",
+      "baseline",
+      "candidate",
+      "baseline",
+      "baseline",
+      "candidate"
+    ],
+    "improvement": "all4 ratios<=0.97",
+    "regression": "all4 ratios>1.03",
+    "instability": "either arm max/min process medians>1.10",
+    "short_batch": "any retained batch<50ms is inconclusive",
+    "neutral": "neutral/noisy does not retain",
+    "source_and_output": "exact bytes, query bits and source manifests required"
+  },
+  "limits": [
+    "No automatic retention",
+    "No production edits",
+    "No timings from instrumented test binaries",
+    "Requested/usable boundary peaks do not prove allocator internal transient peak or RSS",
+    "E07 discarded after stable regression; no acceptance work on that patch"
+  ],
+  "files_sha256": {
+    "run.py": "45985771363bbc89cc0c45ea55289ef93dfff3f9ca8258e907327ccb25b209e0",
+    "tail.rs": "e2a72fcae471e84c6f8241511fb514381313d8f5150523d6653ca36fa77c37c5",
+    "allocator.rs": "4e9ba2a503c04be233e1b94369a79c21e06a1c6d6066b8cd1c23d9773ca3e607",
+    "proposal.json": "8191d8b810da8bf3b4de2ab2ee23226333576f4ee9da87110818f0dcb8c510c1",
+    "approval.json": "3c385d3cdabf925ec31cd997fa38de78fcec939f3f5128854bfa2cb45721de87",
+    "timing-erratum.json": "997e09d02ae982c37c1161e4bb70316a13d8f13a25902f2a30f13540acf1b8bc",
+    "timing-matrix.json": "5c763f57b572e310f2d8d50d1801a6aa809ccdab383b5c90c8ee0d960594c213",
+    "reference.rs": "b239ede5d90bed920360201f3c640cc8ee29cbb81357a6ec4142149dfd2ce056"
+  }
+}
