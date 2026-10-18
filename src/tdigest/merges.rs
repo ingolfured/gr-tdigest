@@ -1,8 +1,9 @@
 //! Merge helpers for TDigest centroids.
 //!
-//! This module provides two utilities used by the TDigest builder/merge path:
+//! This module provides streaming utilities used by the TDigest builder/merge path:
 //! - `MergeByMean<F>`: merges a slice of centroids with a sorted slice of values
 //!   into a single centroid stream ordered by mean.
+//! - `TwoWayCentroidMerge<F>`: direct pairwise merge with stable run-index tie order.
 //! - `KWayCentroidMerge<F>`: k-way merge of multiple centroid runs, ordered by mean.
 //! - `normalize_stream`: tiny normalization pass used by the compressor (kept here
 //!   for minimal churn), coalescing equal-mean runs while preserving atomic/mixed kind and
@@ -88,6 +89,60 @@ impl<'a, F: FloatLike + FloatCore> Iterator for MergeByMean<'a, F> {
 }
 
 impl<'a, F: FloatLike + FloatCore> ExactSizeIterator for MergeByMean<'a, F> {}
+
+/* =============================================================================
+ * Two-way merge of centroid runs
+ * ============================================================================= */
+
+/// Pairwise counterpart of the heap merger, with the same run-index tie order.
+pub(crate) struct TwoWayCentroidMerge<'a, F: FloatLike + FloatCore> {
+    left: &'a [Centroid<F>],
+    right: &'a [Centroid<F>],
+}
+
+impl<'a, F: FloatLike + FloatCore> TwoWayCentroidMerge<'a, F> {
+    pub(crate) fn from_runs(left: &'a [Centroid<F>], right: &'a [Centroid<F>]) -> Self {
+        debug_assert!(
+            is_non_decreasing_by_mean(left) && is_non_decreasing_by_mean(right),
+            "two-way merge requires each run sorted by mean"
+        );
+        Self { left, right }
+    }
+}
+
+impl<F: FloatLike + FloatCore> Iterator for TwoWayCentroidMerge<'_, F> {
+    type Item = Centroid<F>;
+
+    #[inline]
+    fn next(&mut self) -> Option<Self::Item> {
+        let take_left = match (self.left.first(), self.right.first()) {
+            (Some(left), Some(right)) => {
+                // OrderedFloat treats signed zeros as equal. On an equal mean,
+                // the heap emits every run-0 item before the run-1 item.
+                OrderedFloat(left.mean_f64()) <= OrderedFloat(right.mean_f64())
+            }
+            (Some(_), None) => true,
+            (None, Some(_)) => false,
+            (None, None) => return None,
+        };
+        let run = if take_left {
+            &mut self.left
+        } else {
+            &mut self.right
+        };
+        let out = run[0];
+        *run = &run[1..];
+        Some(out)
+    }
+
+    #[inline]
+    fn size_hint(&self) -> (usize, Option<usize>) {
+        let remaining = self.left.len() + self.right.len();
+        (remaining, Some(remaining))
+    }
+}
+
+impl<F: FloatLike + FloatCore> ExactSizeIterator for TwoWayCentroidMerge<'_, F> {}
 
 /* =============================================================================
  * K-way merge of centroid runs
@@ -314,6 +369,89 @@ where
 mod tests {
     use super::*;
     use rand::{rngs::StdRng, Rng, SeedableRng};
+
+    fn check_two_way_against_heap<F: FloatLike + FloatCore>(
+        left: &[Centroid<F>],
+        right: &[Centroid<F>],
+    ) {
+        let runs = [left, right];
+        let mut reference = KWayCentroidMerge::from_runs(&runs);
+        let mut candidate = TwoWayCentroidMerge::from_runs(left, right);
+        let total = left.len() + right.len();
+        for remaining in (1..=total).rev() {
+            assert_eq!(candidate.size_hint(), (remaining, Some(remaining)));
+            assert_eq!(candidate.len(), reference.len());
+            let actual = candidate.next().unwrap();
+            let expected = reference.next().unwrap();
+            assert_eq!(actual.mean_f64().to_bits(), expected.mean_f64().to_bits());
+            assert_eq!(
+                actual.weight_f64().to_bits(),
+                expected.weight_f64().to_bits()
+            );
+            assert_eq!(actual.is_atomic(), expected.is_atomic());
+        }
+        assert_eq!(candidate.size_hint(), (0, Some(0)));
+        assert!(candidate.next().is_none());
+        assert!(candidate.next().is_none());
+        assert!(reference.next().is_none());
+    }
+
+    fn two_way_fixtures<F: FloatLike + FloatCore>() {
+        let left = [
+            Centroid::<F>::new_mixed_f64(-4.0, 0.1),
+            Centroid::<F>::new_atomic_f64(0.0, 1e-310),
+            Centroid::<F>::new_mixed_f64(0.0, 0.3),
+            Centroid::<F>::new_atomic_f64(5.0, 1.5),
+        ];
+        let right = [
+            Centroid::<F>::new_atomic_f64(-4.0, 0.2),
+            Centroid::<F>::new_mixed_f64(-0.0, 0.4),
+            Centroid::<F>::new_atomic_f64(0.0, 1e-309),
+            Centroid::<F>::new_mixed_f64(8.0, 2.5),
+        ];
+        for (a, b) in [
+            (&left[..], &right[..]),
+            (&right[..], &left[..]),
+            (&left[..], &[][..]),
+            (&[][..], &right[..]),
+            (&[][..], &[][..]),
+        ] {
+            check_two_way_against_heap(a, b);
+        }
+
+        let mut rng = StdRng::seed_from_u64(0xD202_2A7);
+        for _ in 0..128 {
+            let mut make_run = || {
+                let len = rng.random_range(0..80);
+                let mut run: Vec<_> = (0..len)
+                    .map(|_| {
+                        let mean = rng.random_range(-10..=10) as f64;
+                        let weight = rng.random_range(1..1024) as f64 / 1024.0;
+                        if rng.random_bool(0.5) {
+                            Centroid::<F>::new_atomic_f64(mean, weight)
+                        } else {
+                            Centroid::<F>::new_mixed_f64(mean, weight)
+                        }
+                    })
+                    .collect();
+                run.sort_by(|a, b| a.mean_f64().total_cmp(b.mean_f64()));
+                run
+            };
+            let left = make_run();
+            let right = make_run();
+            check_two_way_against_heap(&left, &right);
+        }
+    }
+
+    #[test]
+    fn two_way_f32_preserves_heap_bits_ties_and_remaining_length() {
+        two_way_fixtures::<f32>();
+    }
+
+    #[test]
+    fn two_way_f64_preserves_heap_bits_ties_and_remaining_length() {
+        two_way_fixtures::<f64>();
+    }
 
     #[test]
     fn normalization_preserves_mixed_kind_and_fractional_mass() {

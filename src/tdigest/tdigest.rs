@@ -4,7 +4,7 @@ use ordered_float::{FloatCore, OrderedFloat};
 
 use crate::tdigest::centroids::{is_sorted_strict_by_mean, Centroid};
 use crate::tdigest::compressor::compress_into;
-use crate::tdigest::merges::{KWayCentroidMerge, MergeByMean};
+use crate::tdigest::merges::{KWayCentroidMerge, MergeByMean, TwoWayCentroidMerge};
 use crate::tdigest::precision::{FloatLike, Precision};
 use crate::tdigest::scale::ScaleFamily;
 use crate::tdigest::singleton_policy::SingletonPolicy;
@@ -613,12 +613,15 @@ impl<F: FloatLike + FloatCore> TDigest<F> {
             delta: chosen_delta,
         };
 
-        // Producer: k-way merge of centroid runs (no extra coalescing beyond equal-mean heads).
-        let merged_stream = KWayCentroidMerge::from_runs(&runs);
-
-        // Same pipeline as values.
-        let compressed: Vec<Centroid<F>> =
-            compress_into(&mut result, chosen_max_size, merged_stream);
+        // Pairwise merges need no heap; retain the heap's run-index tie order.
+        // Both producers feed the unchanged compression pipeline.
+        let compressed: Vec<Centroid<F>> = if runs.len() == 2 {
+            let stream = TwoWayCentroidMerge::from_runs(runs[0], runs[1]);
+            compress_into(&mut result, chosen_max_size, stream)
+        } else {
+            let stream = KWayCentroidMerge::from_runs(&runs);
+            compress_into(&mut result, chosen_max_size, stream)
+        };
         result.centroids = compressed;
 
         debug_assert!(
