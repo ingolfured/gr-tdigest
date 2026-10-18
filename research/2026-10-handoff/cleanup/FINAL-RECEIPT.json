@@ -383,7 +383,7 @@
     "nested_refs_preserved": true,
     "ignored_build_outputs_and_reports_retained": true
   },
-  "new_archive_ref_count": 7,
+  "new_archive_ref_count": 8,
   "personal_pr_heads_and_bases_unchanged": true,
   "upstream_pr38": {
     "baseRefName": "main",
@@ -393,5 +393,47 @@
   },
   "original_archive_payload_unchanged": true,
   "builds_tests_benchmarks_run": false,
-  "local_only_ignored_context_preserved": true
+  "local_only_ignored_context_preserved": true,
+  "archived_stashes_total": 4,
+  "isolated_stash_preserved": {
+    "ref": "refs/heads/archive/20261018/isolated-stash-exact-numerical-gate",
+    "commit": "a22c027d10b36beb50187c9c0c61161c7a1f41fc",
+    "parents": [
+      "28b68b77ddd24e81c2b4691a278817d864fb4972",
+      "7aeb7f98c6bca7b7cced7fd172f7167fccd67876",
+      "5f58326d93d2fc857e6deee0417bc2b352ab5022"
+    ],
+    "independent_fetch_verified": true
+  },
+  "stash_checks": [
+    {
+      "repository": "/var/tmp/codex-tdigest-pr3-20261014/work/gr-tdigest",
+      "stash_count": 0
+    },
+    {
+      "repository": "/var/tmp/codex-tdigest-pr3-20261014/work/tdigest-rs-upstream38",
+      "stash_count": 0
+    },
+    {
+      "repository": "/var/tmp/codex-tdigest-pr3-20261014/handoff-clean-clone-20261018",
+      "stash_count": 0
+    },
+    {
+      "repository": "/home/ingo/git/gr-tdigest",
+      "stash_count": 0
+    },
+    {
+      "repository": "/home/ingo/git/tdigest-rs",
+      "stash_count": 0
+    },
+    {
+      "repository": "/home/ingo/git/tdigest-rs-upstream-original",
+      "stash_count": 0
+    }
+  ],
+  "windows_checkouts_clean": [
+    "C:/Users/ingol/Documents/Codex/2026-10-14/hi/work/gr-tdigest",
+    "C:/Users/ingol/Documents/Codex/2026-10-14/hi/work/upstream-tdigest-rs"
+  ],
+  "total_audited_clean_checkouts": 35
 }

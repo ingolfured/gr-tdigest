@@ -4,7 +4,7 @@ This branch preserves the project for continuation on another computer. It is ba
 
 [Fresh GitHub clone and full extraction verified](research/2026-10-handoff/RESTORE-VERIFIED.json): all 92,680 files, all 67 archive parts, 35 personal branch mappings and two upstream-fork mappings passed. The final receipt commit changes only documentation/verification metadata; archive bytes and product source remain the same.
 
-[Later cleanup and recovered historical work](research/2026-10-handoff/CLEANUP.md): the formerly excluded original source, three stashes (including auto-scale research), and old branch heads are now archived. This supplement records the user-authorized cleanup after the initial migration.
+[Later cleanup and recovered historical work](research/2026-10-handoff/CLEANUP.md): the formerly excluded original source, four stashes (including auto-scale research and an earlier numerical gate), and old branch heads are now archived. This supplement records the user-authorized cleanup after the initial migration.
 
 ## Resume from a fresh Linux clone
 

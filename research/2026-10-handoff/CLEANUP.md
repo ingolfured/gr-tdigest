@@ -2,13 +2,14 @@
 
 After the initial handoff, the user authorized preserving useful changes and cleaning all dirty tdigest checkouts, explicitly including the formerly protected original checkout. This supersedes the earlier instruction to leave that checkout dirty. Current product PRs remain the review path; nothing from this historical recovery is approved for integration.
 
-[Final cleanup receipt](cleanup/FINAL-RECEIPT.json): all 33 audited Linux checkouts are clean, the original stash list is empty, and PR #6/#7/#8/#9 and upstream #38 heads/bases are unchanged. The two Windows copies were independently audited clean before cleanup.
+[Final cleanup receipt](cleanup/FINAL-RECEIPT.json): all 33 audited Linux checkouts are clean, all audited stash lists are empty (four historical stashes were archived), and PR #6/#7/#8/#9 and upstream #38 heads/bases are unchanged. The two Windows copies were independently audited clean before cleanup.
 
 ## What had value
 
-- The original checkout had 16 modified tracked files and 18 nonempty untracked source/document files. All 34 are preserved exactly in a separate archive commit. Eight untracked compatibility files match PR #9 byte for byte. The tracked changes are earlier delta/adapter work carried forward or superseded; the audit found no missing current production fix or regression test.
+- The original checkout had 16 modified tracked files and 18 untracked source/document files. All 34 are preserved exactly in a separate archive commit. Eight untracked compatibility files match PR #9 byte for byte. The tracked changes are earlier delta/adapter work carried forward or superseded; the audit found no missing current production fix or regression test.
 - Seven old documents are useful historical drafts but include stale median, f32-weight, atomic-provenance and 70-pass/21-fail compatibility claims. Follow the current compatibility guide instead. The old top-level pure-Python `tdigest_rs` shim ignores delta and substitutes a trimmed mean after merging; never reactivate it as the compatibility implementation.
 - Three previously unpublished stashes are now preserved as exact Git merge commits, including all parents. The first contains an automatic scale-selection prototype and quality tests in its third parent. These two files are not in the top commit tree. The other stashes preserve Python binding refactoring and shared-centroid/Polars decode experiments. All are unvalidated historical research; the old decode-cache experiment has a potential metadata-reuse defect.
+- A fourth stash in the isolated review checkout preserves an earlier exact numerical-compatibility gate, including golden outputs and source guards. Its full Git stash topology is also archived and its local stash entry is cleared; see [its audit](cleanup/cleanup-isolated-stash-audit.json).
 - Three old local branch heads now have archive refs in this repository. The old PR38 head was already archived in the upstream fork, and is also preserved here to make recovery from the original clone explicit.
 - A unique generated Python lockfile from `/home/ingo/git/tdigest-rs/bindings/python/uv.lock` is preserved as [upstream-python-uv.lock](cleanup/upstream-python-uv.lock), SHA256 `3cdf3703e3d8605c819a711206d86bc1e182b9268c3e290d22f7084e71f80082`. It belongs to historical base `52cda0f4341df6a2befbd32639f90846b18d60da`; it is not the current project lock.
 
@@ -25,6 +26,7 @@ All refs below are in `ingolfured/gr-tdigest`. A normal clone or `git fetch orig
 | `archive/20261018/original-local-pr38-docs-compat` | `e8562fd1c25a33cfd09359f671da126837c7bba4` | historical_branch |
 | `archive/20261018/original-local-bigbang-review-1-core-delta` | `90962e90a09fc7fe72f43290ff17db808930560b` | historical_branch |
 | `archive/20261018/original-local-bigbang-review-2-python-api` | `1c043b16b19f526a3213e1bf585ba14a4fe11f61` | historical_branch |
+| `archive/20261018/isolated-stash-exact-numerical-gate` | `a22c027d10b36beb50187c9c0c61161c7a1f41fc` | isolated_stash |
 
 To recover the first stash including its index and two untracked source files, use a new isolated worktree at its original base:
 

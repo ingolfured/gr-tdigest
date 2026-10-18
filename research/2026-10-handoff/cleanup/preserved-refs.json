@@ -35,6 +35,11 @@
       "ref": "refs/heads/archive/20261018/original-local-bigbang-review-2-python-api",
       "commit": "1c043b16b19f526a3213e1bf585ba14a4fe11f61",
       "kind": "historical_branch"
+    },
+    {
+      "ref": "refs/heads/archive/20261018/isolated-stash-exact-numerical-gate",
+      "commit": "a22c027d10b36beb50187c9c0c61161c7a1f41fc",
+      "kind": "isolated_stash"
     }
   ]
 }

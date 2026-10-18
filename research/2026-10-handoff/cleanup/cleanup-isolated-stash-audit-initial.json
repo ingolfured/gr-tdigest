@@ -1,0 +1,248 @@
+{
+  "schema": "cleanup-isolated-stash-audit-v1",
+  "created_utc": "2026-10-18T08:24:37.098008+00:00",
+  "status": "read_only_audit_complete",
+  "repo": "/var/tmp/codex-tdigest-pr3-20261014/work/gr-tdigest",
+  "branch": "review/3-upstream-compatibility-gate",
+  "head": "25c8c1642029a640b153c160c22a89795d29ad91",
+  "stash_ref": "stash@{0}",
+  "commit": "a22c027d10b36beb50187c9c0c61161c7a1f41fc",
+  "subject": "On review/3-upstream-compatibility-gate: exact-numerical-gate-before-embedding-core",
+  "tree": "5ce7277a5da963bcd7d8f7c9f257c464ae373481",
+  "parents": [
+    "28b68b77ddd24e81c2b4691a278817d864fb4972",
+    "7aeb7f98c6bca7b7cced7fd172f7167fccd67876",
+    "5f58326d93d2fc857e6deee0417bc2b352ab5022"
+  ],
+  "parent_roles": [
+    "original_base",
+    "index_snapshot",
+    "untracked_or_ignored_snapshot"
+  ],
+  "index_diff": "",
+  "tracked_diff_stat": "CHANGELOG.md                       |   1 +\n Makefile                           |   1 +\n api_design.md                      |   2 +-\n comparison_design.md               |  19 +++---\n compat/gr_tdigest_vs_tdigest_rs.md | 115 ++++++++++++++++---------------------\n scripts/test_legacy_wheel.py       |  16 +++++-\n 6 files changed, 73 insertions(+), 81 deletions(-)",
+  "files": [
+    {
+      "role": "tracked",
+      "path": "CHANGELOG.md",
+      "mode": "100644",
+      "kind": "blob",
+      "blob": "83384a94f0626bc83ab86debdf0eef7948370b7f",
+      "bytes": 13821,
+      "sha256": "eacb9a263f120fd5dab89563499d62c47061d262c60081d220e5dbc38b2ce31e",
+      "binary": false,
+      "blob_already_in_remote_history": false,
+      "ignored_by_current_rules": false
+    },
+    {
+      "role": "tracked",
+      "path": "Makefile",
+      "mode": "100644",
+      "kind": "blob",
+      "blob": "ef6e8e1a7761db0546b393a9090bca434ebf24b1",
+      "bytes": 20590,
+      "sha256": "d19e39002c4f388ab2f48535dbbf37477a49f41b0ff033bada9b58d525f7417a",
+      "binary": false,
+      "blob_already_in_remote_history": true,
+      "ignored_by_current_rules": false
+    },
+    {
+      "role": "tracked",
+      "path": "api_design.md",
+      "mode": "100644",
+      "kind": "blob",
+      "blob": "ad14a0df454857fa322b13cd29a84c12f61a5748",
+      "bytes": 6312,
+      "sha256": "102ac0d28add957246bda41a382c424a0a5184050781c12327d0839df6554870",
+      "binary": false,
+      "blob_already_in_remote_history": true,
+      "ignored_by_current_rules": false
+    },
+    {
+      "role": "tracked",
+      "path": "comparison_design.md",
+      "mode": "100644",
+      "kind": "blob",
+      "blob": "b45e11a599ff4b13959f1404656131b906caf680",
+      "bytes": 10334,
+      "sha256": "508e0d0877b8e6c519a9f3806fa17fa29e89007fbe5173f0aa0538b4326996ca",
+      "binary": false,
+      "blob_already_in_remote_history": true,
+      "ignored_by_current_rules": false
+    },
+    {
+      "role": "tracked",
+      "path": "compat/gr_tdigest_vs_tdigest_rs.md",
+      "mode": "100644",
+      "kind": "blob",
+      "blob": "120ac290cdbf7ea07e00a0e5cfb19a1875b0e538",
+      "bytes": 3217,
+      "sha256": "a289717289f55a04ad516ee760110afba692f86a15d77a5e8e3491b81da322d2",
+      "binary": false,
+      "blob_already_in_remote_history": false,
+      "ignored_by_current_rules": false
+    },
+    {
+      "role": "tracked",
+      "path": "scripts/test_legacy_wheel.py",
+      "mode": "100644",
+      "kind": "blob",
+      "blob": "127b9e404838060ad09c2a6f62c62c15acb7b4d2",
+      "bytes": 3931,
+      "sha256": "dec1b60a8e88c13f33f023f60c0434cd8795228ce5eb94708bdfb721888c1412",
+      "binary": false,
+      "blob_already_in_remote_history": true,
+      "ignored_by_current_rules": false
+    },
+    {
+      "role": "third_parent",
+      "path": "bindings/python/tests/data/upstream_numerical_golden.json",
+      "mode": "100644",
+      "kind": "blob",
+      "blob": "2be4a64cd5514f0682e6d030bb0fbcf0736b72d4",
+      "bytes": 144997,
+      "sha256": "517ec82ec124e55920c7049a95f0eb0c9f3e96cf60b4ee7d4457bf31b7a98560",
+      "binary": false,
+      "blob_already_in_remote_history": true,
+      "ignored_by_current_rules": false
+    },
+    {
+      "role": "third_parent",
+      "path": "bindings/python/tests/test_original_numerics.py",
+      "mode": "100644",
+      "kind": "blob",
+      "blob": "a13b27f4a8b5925ae55918263270f069c24745f7",
+      "bytes": 3525,
+      "sha256": "ec1fa7b34c5ca67967dc4dfb8bb99d42b937638a98c0ed6e44fd964bb82ac73a",
+      "binary": false,
+      "blob_already_in_remote_history": true,
+      "ignored_by_current_rules": false
+    },
+    {
+      "role": "third_parent",
+      "path": "compat/numerical-parity/README.md",
+      "mode": "100644",
+      "kind": "blob",
+      "blob": "68346ed702f9a26087caa3ba1d98eb42fda57a13",
+      "bytes": 1696,
+      "sha256": "6e97e44eacd0ca046fabaa2113f573252fe72342ab01a95d33cc655b44bb7be0",
+      "binary": false,
+      "blob_already_in_remote_history": false,
+      "ignored_by_current_rules": false
+    },
+    {
+      "role": "third_parent",
+      "path": "compat/numerical-parity/generate.rs",
+      "mode": "100644",
+      "kind": "blob",
+      "blob": "3b01683a2bce5d9296ccf8247ccfcb66d856fde6",
+      "bytes": 4122,
+      "sha256": "0a90228b8aec92e2fdef8a134bee4cdf1a3779f9860dbff4c76401e3cec7cbcc",
+      "binary": false,
+      "blob_already_in_remote_history": true,
+      "ignored_by_current_rules": false
+    },
+    {
+      "role": "third_parent",
+      "path": "scripts/check_upstream_sources.py",
+      "mode": "100644",
+      "kind": "blob",
+      "blob": "e1a1ea027a29cc9c36515ff5eb99a32734a9b8e1",
+      "bytes": 874,
+      "sha256": "31eebf8a75950171f2dc991278b753b5269f47de049793949afa3a573ed1f0a9",
+      "binary": false,
+      "blob_already_in_remote_history": false,
+      "ignored_by_current_rules": false
+    }
+  ],
+  "third_parent_file_count": 5,
+  "third_parent_bytes": 155214,
+  "remote_url": "https://github.com/ingolfured/gr-tdigest.git",
+  "remote_heads": {
+    "refs/heads/archive/20261018/day20-accuracy": "142df1280616f1851c25ad0f1d808314822a62d4",
+    "refs/heads/archive/20261018/day20-bucket-tail": "b46690ac2fbc366ff1ac35cc46be14d72dd19119",
+    "refs/heads/archive/20261018/day20-cap-count": "a61fc430d0371e2323127e0d03952ebf5fa7a866",
+    "refs/heads/archive/20261018/day20-direction": "bf700c6c31312c205cfb53c6a3644d1da03aa0b0",
+    "refs/heads/archive/20261018/day20-finite-mean": "bfbd5f0ebb78c39dc8dab3ea54ba05acde5df168",
+    "refs/heads/archive/20261018/day20-frontend": "dadd511d9a44fabc1c60e58f4bf918157595076d",
+    "refs/heads/archive/20261018/day20-gap-cap": "0a3f4afcda62f641ad0dbaf53b188967b9d62e18",
+    "refs/heads/archive/20261018/day20-harness": "9bfc2d49542462b66d17bc93e16768b60fd5463d",
+    "refs/heads/archive/20261018/day20-heap-root": "fd935c2d42f9b40c4f95ce80595377286500ed1c",
+    "refs/heads/archive/20261018/day20-numpy-input": "f658994cf5cae45ac03a96d83fabb0adef11c946",
+    "refs/heads/archive/20261018/day20-numpy-output": "9633ab4834b0a7f17467d033a92fb80e6f5f38e6",
+    "refs/heads/archive/20261018/day20-polars-decode": "5e0667c3843bb03a7198039eb9dd1b42357b6130",
+    "refs/heads/archive/20261018/day20-python-bytes": "fdf69d14a333245a21ec04cef405f825b8c5e491",
+    "refs/heads/archive/20261018/day20-quantile-prefix": "40b0f23880c590499ea875780f11be9b345e0a3f",
+    "refs/heads/archive/20261018/day20-scalar-cdf": "9809113def8c16a27427b1efc04f806a17726f49",
+    "refs/heads/archive/20261018/day20-scale-hoist": "5722606d55825179bb3dd0ca48326deaafabc210",
+    "refs/heads/archive/20261018/day20-sorted-cdf": "e42760fe173257981d8dc0efe9fab1dd5a5ea4f3",
+    "refs/heads/archive/20261018/day20-speed": "b001268d6559960d83b6959af154a33215c8ad9d",
+    "refs/heads/archive/20261018/day20-subnormal-compress": "80aa1105bf55e68762615ff8b1de781ffbcfe4e5",
+    "refs/heads/archive/20261018/day20-two-run": "5eef8e0923ae0bb4a8bbe4ce9d5f588c2952753d",
+    "refs/heads/archive/20261018/day20-vector-move": "e8bad4555da2647059545e27b1343aa52435a144",
+    "refs/heads/archive/20261018/original-dirty-checkout": "ea0b0dd46c5e39bca69c915c8be9cf1107852cf0",
+    "refs/heads/archive/20261018/original-local-bigbang-review-1-core-delta": "90962e90a09fc7fe72f43290ff17db808930560b",
+    "refs/heads/archive/20261018/original-local-bigbang-review-2-python-api": "1c043b16b19f526a3213e1bf585ba14a4fe11f61",
+    "refs/heads/archive/20261018/original-local-pr38-docs-compat": "e8562fd1c25a33cfd09359f671da126837c7bba4",
+    "refs/heads/archive/20261018/original-stash-0-wip-before-v0.2.4-release": "3adf4e8a4b629ad0d4b7cfa50b984ad78c3e68e3",
+    "refs/heads/archive/20261018/original-stash-1-new-world-837a7c8": "6a6fb4f31b84ede48815b15c302ab3a47c3e29a6",
+    "refs/heads/archive/20261018/original-stash-2-new-world-c9f8a6d": "59a782557e8482a7667f7a3eb25bad41261dba5d",
+    "refs/heads/archive/20261018/review-candidate-f64-weights": "fae92a4aa31231e054c88e12a9c8502c629bf2bd",
+    "refs/heads/archive/20261018/review-candidate-original-rust-api": "4bb78de91f7214cb811a35b3ed4bdcb7b2fe4685",
+    "refs/heads/archive/20261018/review-overnight-first-batch": "52e345eaae754472a4ea7db7e46ae17f3b02f4fa",
+    "refs/heads/codex/legacy-compatibility": "402c24c8f4c374d3a143697cfed91de06a428130",
+    "refs/heads/master": "cd4f14c4924ec31264db3a3e8243011b204d268a",
+    "refs/heads/research/handoff-20261018": "f4cdf5441b308149850b42e753bdfb9878959522",
+    "refs/heads/review/1-digest-correctness": "6eb4203fe1c4ad8d337636d5aca549e0fec155b3",
+    "refs/heads/review/2-legacy-python-api": "911dc35493f1774fed1320f9da30d553b41f59b2",
+    "refs/heads/review/3-upstream-compatibility-gate": "25c8c1642029a640b153c160c22a89795d29ad91",
+    "refs/heads/review/4-numpy-output-copy": "42d620428520a74fec8c57d5dc6d4db0f6b1920e",
+    "refs/heads/review/archive-before-overnight-20261014": "b89527187219c83768f50416fa8ac61fe3ca2f6d",
+    "refs/heads/review/evidence-numerical-boundaries-20261014": "c5dec35059990b40fe6f036dc83590bf0cdf2a70",
+    "refs/heads/review/evidence-scaling-packaging-20261015": "52f6212008111b62fa07374278b850868b9ea77e",
+    "refs/heads/tmp/bigbang-review-3-legacy-harness": "dd2e4d6039726f3a66fbf0b464235456a0adcf0b",
+    "refs/heads/tmp/bigbang-review-4-docs-plumbing": "850ebba40b514dbf869477856c62076b1dfb0df2"
+  },
+  "remote_object_count": 3790,
+  "stash_already_remote_reachable": false,
+  "containing_remote_heads": [],
+  "parent_remote_reachability": [
+    {
+      "commit": "28b68b77ddd24e81c2b4691a278817d864fb4972",
+      "already_remote_reachable": false
+    },
+    {
+      "commit": "7aeb7f98c6bca7b7cced7fd172f7167fccd67876",
+      "already_remote_reachable": false
+    },
+    {
+      "commit": "5f58326d93d2fc857e6deee0417bc2b352ab5022",
+      "already_remote_reachable": false
+    }
+  ],
+  "recommended_archive_ref": "refs/heads/archive/20261018/isolated-stash-exact-numerical-gate",
+  "value": "Historical pre-embedding exact-original-numerics gate: 70-case golden fixture, numerical regression test, source checksum guard, generator and provenance README, plus make/installed-wheel wiring and comparison documentation. Preserve the exact intermediate state even where blobs were subsequently committed.",
+  "preservation": "Push this exact stash merge commit under the archive ref, preserving all three parents. A tracked diff/top-tree snapshot alone omits five third-parent files. Verify remote SHA and all parent objects before dropping local stash. Restore only in an isolated checkout with stash-aware apply/extraction.",
+  "secret_findings": [
+    {
+      "path": "Makefile",
+      "rule": "credential_assignment",
+      "line": 402
+    },
+    {
+      "path": "Makefile",
+      "rule": "credential_assignment",
+      "line": 402
+    }
+  ],
+  "secret_scan": "Heuristic patterns and sensitive filenames across all six changed tracked snapshots and five third-parent blobs. No values are emitted. A clean scan is not proof of absence of all secrets; original stash inclusion flags cannot be inferred.",
+  "scope_limits": [
+    "Read-only source review; no tests/builds or claim that this obsolete intermediate state is current release truth.",
+    "Current remote graph comparison checks exact blobs, not semantic equivalence.",
+    "No source/ref/stash/index mutations, fetch or cleanup performed by this audit."
+  ],
+  "worktree_status_unchanged_during_audit": true,
+  "stash_oid_unchanged": true,
+  "fetch_executed": false,
+  "builds_executed": false
+}
