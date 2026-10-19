@@ -31,6 +31,7 @@ For current implementation internals, see `tdigest_design.md`.
 
 3. Explicit cast only.
 - No implicit precision/config coercion in merge or decode.
+- Polars struct decoding rejects delta configurations unless the scale is K2Norm and singleton policy is Off, matching binary decoding and training validation.
 - Precision cast helpers are explicit API calls.
 
 ## 3. Capability parity contract

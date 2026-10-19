@@ -434,6 +434,9 @@ Decode behavior:
   their original defaults and weight-based kind inference. Mutation/serialization
   upgrades to the current schema without changing mean precision. Single-digest
   serialization avoids recompression.
+  Struct decoding checks delta/scale/policy compatibility before building the
+  digest, so malformed configurations return codec errors before queries or
+  serialization can use them.
 
 ## 7. Frontend service role
 
