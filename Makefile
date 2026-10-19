@@ -42,8 +42,8 @@ CARGO  ?= cargo
 UV     ?= uv
 
 # Force uv to use the repo-root venv
-UV_CACHE_DIR ?= $(PWD)/.uv-cache
-UV_ENV := UV_PROJECT_ENVIRONMENT=$(PWD)/.venv UV_CACHE_DIR=$(UV_CACHE_DIR)
+UV_CACHE_DIR ?= $(CURDIR)/.uv-cache
+UV_ENV := UV_PROJECT_ENVIRONMENT="$(CURDIR)/.venv" UV_CACHE_DIR="$(UV_CACHE_DIR)"
 
 # Python layout
 PY_DIR          := bindings/python
@@ -63,7 +63,7 @@ JAVA_BUILD_REL  := build
 JAVA_LIBS_REL   := $(JAVA_BUILD_REL)/libs
 GRADLEW_PATH    := $(JAVA_SRC)/gradlew
 GRADLE          := $(GRADLEW_PATH)
-GRADLE_USER_HOME ?= $(PWD)/.gradle-user-home
+GRADLE_USER_HOME ?= $(CURDIR)/.gradle-user-home
 
 # Integration tests
 INTEG_DIR       := integration/api_coherence
@@ -172,24 +172,24 @@ setup-hooks:
 	$(call banner,Install pre-commit hooks with repo-local cache)
 	mkdir -p .pre-commit-cache
 	mkdir -p .uv-cache
-	@if [ ! -x "$(PWD)/.venv/bin/python" ]; then \
-	  echo "$(STYLE_ERR)✗ Missing .venv Python at $(PWD)/.venv/bin/python$(STYLE_RESET)"; \
+	@if [ ! -x "$(CURDIR)/.venv/bin/python" ]; then \
+	  echo "$(STYLE_ERR)✗ Missing .venv Python at $(CURDIR)/.venv/bin/python$(STYLE_RESET)"; \
 	  echo "  Run: make setup"; \
 	  exit 1; \
 	fi
-	@if ! "$(PWD)/.venv/bin/python" -m pre_commit --version >/dev/null 2>&1; then \
+	@if ! "$(CURDIR)/.venv/bin/python" -m pre_commit --version >/dev/null 2>&1; then \
 	  echo "pre_commit module missing in .venv; syncing Python deps from $(PY_DIR)"; \
 	  (cd "$(PY_DIR)" && $(UV_ENV) $(UV) sync --locked --python 3.12 --all-groups); \
 	fi
-	PRE_COMMIT_HOME="$(PWD)/.pre-commit-cache" UV_CACHE_DIR="$(PWD)/.uv-cache" "$(PWD)/.venv/bin/python" -m pre_commit install
-	@HOOK=".git/hooks/pre-commit"; \
+	PRE_COMMIT_HOME="$(CURDIR)/.pre-commit-cache" UV_CACHE_DIR="$(CURDIR)/.uv-cache" "$(CURDIR)/.venv/bin/python" -m pre_commit install
+	@HOOK="$$(git rev-parse --git-path hooks/pre-commit)"; \
 	if [ ! -f "$$HOOK" ]; then \
 	  echo "$(STYLE_ERR)✗ pre-commit hook not found at $$HOOK$(STYLE_RESET)"; \
 	  exit 1; \
 	fi; \
 	if ! grep -q 'PRE_COMMIT_HOME' "$$HOOK" || ! grep -q 'UV_CACHE_DIR' "$$HOOK"; then \
 	  TMP_HOOK="$$(mktemp)"; \
-	  awk '/^export PRE_COMMIT_HOME=/ {next} /^export UV_CACHE_DIR=/ {next} 1; /# end templated/ {print "export PRE_COMMIT_HOME=\"$${PRE_COMMIT_HOME:-$(PWD)/.pre-commit-cache}\""; print "export UV_CACHE_DIR=\"$${UV_CACHE_DIR:-$(PWD)/.uv-cache}\""}' "$$HOOK" > "$$TMP_HOOK"; \
+	  awk '/^export PRE_COMMIT_HOME=/ {next} /^export UV_CACHE_DIR=/ {next} 1; /# end templated/ {print "export PRE_COMMIT_HOME=\"$${PRE_COMMIT_HOME:-$(CURDIR)/.pre-commit-cache}\""; print "export UV_CACHE_DIR=\"$${UV_CACHE_DIR:-$(CURDIR)/.uv-cache}\""}' "$$HOOK" > "$$TMP_HOOK"; \
 	  mv "$$TMP_HOOK" "$$HOOK"; \
 	  chmod +x "$$HOOK"; \
 	fi
@@ -340,7 +340,7 @@ release-wheel:
 	mkdir -p "$(DIST)"
 	@(cd "$(PY_DIR)" && $(UV_ENV) $(UV) run --no-sync maturin build --locked -r -F python --compatibility manylinux_2_28 --zig -o "$(abspath $(DIST))")
 	@printf "$(STYLE_OK)✓ wheel(s) in $(DIST)$(STYLE_RESET)\n"
-	$(MAKE) -f $(CURDIR)/Makefile smoke-wheel
+	$(MAKE) -f "$(CURDIR)/Makefile" smoke-wheel
 
 release-jar: JAVA_WRAPPER_CHECK
 	$(call banner,Release: Java (Gradle) + publish to dist)
