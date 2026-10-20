@@ -5,6 +5,7 @@ All notable changes to this project are documented in this file.
 ## [Unreleased]
 
 ### Fixed
+- Add pinned recorded-data quality checks, independent rank/value/CDF references,90 fast weighted/reference cases,756 extended merge/precision/storage profiles and explicit existing numerical-failure controls; publish full win/tie/loss evidence and regression gates without changing either engine arithmetic or hiding known accuracy failures.
 - Support standard CPython3.10–3.15 with an aligned PyO30.29/NumPy0.29/Polars0.55 binding stack, tested Polars2.0 optional integration and Rust1.95; extend installed-wheel gates through3.15 and rebuild the source archive with3.12,3.14,3.15, retaining original numerical sources and tests.
 - Make Java11/17 first-class build/runtime targets with Gradle8.14.5, actual bytecode checks, opt-in checksum-verified JDK/Gradle bootstrap, exclusive internal Maven sources and strict prepared-cache offline builds; respect native Cargo output paths and retain publishing settings separately.
 - Copy aligned, native-endian contiguous NumPy f32/f64 training inputs directly into owned Rust vectors before construction or update, preserving generic conversion for other layouts/dtypes and the existing query conversion path.

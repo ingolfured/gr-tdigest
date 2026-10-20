@@ -1,0 +1,121 @@
+"""Small hand-checkable controls for the independent accuracy measurements."""
+
+import importlib.util
+from fractions import Fraction
+from pathlib import Path
+import sys
+import pytest
+
+spec = importlib.util.spec_from_file_location(
+    "quality_suite", Path(__file__).resolve().parents[2] / "scripts/quality_suite.py"
+)
+quality = importlib.util.module_from_spec(spec)
+sys.modules[spec.name] = quality
+spec.loader.exec_module(quality)
+Exact = quality.Exact
+
+
+def test_ties_have_a_rank_interval_instead_of_a_penalty_for_correct_values():
+    exact = Exact([0, 0, 0, 10])
+    assert exact.rank_interval(0) == (0.0, 0.75)
+    assert exact.rank_error(0.5, 0) == 0
+    assert exact.rank_error(0.9, 0) == pytest.approx(0.15)
+    assert exact.cdf(0) == 0.375
+    assert exact.cdf(5) == 0.75
+
+
+@pytest.mark.parametrize("values", [[7] * 8, [-3, -1, 0, 0, 0, 2, 90], list(range(8))])
+def test_ecdf_reference_matches_exact_rational_counting(values):
+    reference = Exact(values)
+    for probe in sorted(set(values + [min(values) - 1, max(values) + 1, 0.5])):
+        left = Fraction(sum(v < probe for v in values), len(values))
+        right = Fraction(sum(v <= probe for v in values), len(values))
+        assert reference.cdf(probe) == float((left + right) / 2)
+        assert reference.rank_interval(probe) == (float(left), float(right))
+
+
+def test_type7_value_reference_is_hand_checkable_and_handles_endpoints():
+    exact = Exact([0, 2, 10, 20])
+    assert [exact.quantile(q) for q in [0, 0.25, 0.5, 0.75, 1]] == [0, 1.5, 6, 12.5, 20]
+    assert exact.value_scale == 11
+    assert Exact([4, 4]).value_scale == 1
+    with pytest.raises(ValueError):
+        exact.quantile(1.01)
+
+
+@pytest.mark.parametrize("bad", [[], [float("nan")], [float("inf")]])
+def test_bad_reference_data_is_rejected(bad):
+    with pytest.raises(ValueError):
+        Exact(bad)
+
+
+class Fake:
+    import numpy as np
+
+    means = np.array([0.0, 10.0])
+    weights = np.array([3, 1])
+
+    def quantile(self, q):
+        return 0.0
+
+    def cdf(self, x):
+        return 0.0
+
+
+def test_bad_predictor_negative_control_is_detected_in_separate_metrics():
+    metrics = quality.score(Fake(), Exact([0, 0, 0, 10]), True)
+    assert metrics["rank_max"] == 0.25
+    assert metrics["value_abs_max"] == 10
+    assert metrics["median_rank"] == 0
+    assert metrics["cdf_max"] == 0.875
+
+
+def test_original_cdf_is_unavailable_and_never_fabricated():
+    result = quality.score(Fake(), Exact([0, 0, 0, 10]), False)
+    assert result["cdf_max"] is None
+    assert result["cdf_mean"] is None
+    assert result["cdf_probe_count"] == 0
+
+
+def test_accuracy_failure_is_retained_in_win_loss_comparison():
+    row = {
+        "kind": "real",
+        "comparison_eligible": True,
+        "error": "quality regression",
+        "accuracy_limits": ["rank_max"],
+        "modern": dict.fromkeys(quality.METRICS, 0.2),
+        "original": dict.fromkeys(quality.METRICS, 0.1),
+    }
+    summary = quality.summarize([row])["real"]
+    assert summary["eligible_pairs"] == 1
+    assert summary["accuracy_limit_failures"] == 1
+    assert summary["metrics"]["rank_mean"]["original_better"] == 1
+
+
+def test_baseline_limits_are_small_and_metric_specific():
+    assert quality.regression_limit("rank_max", 0.01, 1000, "f64") == pytest.approx(0.011)
+    assert quality.regression_limit("value_iqr_mean", 0.01, 1000, "f64") == pytest.approx(0.01, abs=2e-12)
+    assert quality.regression_limit("cdf_max", 0.01, 1000, "f32") == pytest.approx(0.010002)
+
+
+def test_real_corpus_contains_all_nine_measured_columns():
+    import json
+
+    directory = Path(__file__).resolve().parent / "data"
+    manifest = json.loads((directory / "manifest.json").read_text())
+    assert [s["rows"] for s in manifest] == [17379, 19735]
+    assert all(s["license"] == "CC-BY-4.0" for s in manifest)
+    assert not {"rv1", "rv2"} & {column for s in manifest for column in s["columns"]}
+    real = [data for data in quality.datasets(directory, "fast") if data[1] == "real"]
+    assert len(real) == 9
+    assert all(len(values) == 512 for _, _, values in real)
+
+
+def test_corrupted_real_fixture_is_rejected_before_use(tmp_path):
+    import shutil
+
+    directory = Path(__file__).resolve().parent / "data"
+    shutil.copyfile(directory / "manifest.json", tmp_path / "manifest.json")
+    (tmp_path / "bike.csv.gz").write_bytes(b"changed fixture")
+    with pytest.raises(RuntimeError, match="checksum mismatch"):
+        list(quality.datasets(tmp_path, "fast"))

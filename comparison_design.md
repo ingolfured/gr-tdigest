@@ -249,3 +249,9 @@ The scenario discussion above describes architectural fit, not a measured
 world ranking. This study covers one independent original implementation on
 one machine; it cannot establish superiority over tdunning, DataSketches,
 Elasticsearch, Appian or other quantile libraries.
+
+## Recorded-data comparison (20 October 2026)
+
+The [new quality report](compat/quality-20261020/RESULTS.md) compares the opt-in modern K2/Use engine and the preserved original on two pinned UCI datasets (nine measured columns),12 deterministic distributions, actual f32/f64 storage, three sizes, reversal and40-way merge paths. Parameters are matched by observed logical field-byte budget, with count-only selection for the original. This is distinct from retained memory, wire size and RSS.
+
+Across324 matched recorded-data profiles, modern mean rank error is lower in279 and higher in45. Modern average normalized value error is lower in260 and higher in64; its worst value error is lower in119 and higher in205. Tail-rank error is lower in295, tied in17 and higher in12. All recorded-data profiles pass the stated empirical limits; ten small synthetic merge profiles do not. These correlated profile counts are coverage, not independent statistical confidence. The original lacks a CDF API, so no original CDF result is invented. The report preserves all losses, quality-limit failures and separate boundary defects rather than asserting universal superiority.

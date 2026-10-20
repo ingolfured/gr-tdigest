@@ -74,6 +74,24 @@ def verify_sdist_contents(sdist: Path, root: Path) -> None:
             "src/upstream_py.rs",
         ):
             require_same(relative, relative)
+        # make test now includes the offline recorded-data gate. A source
+        # distribution must carry the actual runners, controls and fixtures.
+        for relative in (
+            "scripts/quality_suite.py",
+            "scripts/audit_quality_boundaries.py",
+            "scripts/fetch_quality_data.py",
+            "examples/quality_boundaries.rs",
+            "tests/quality/test_reference.py",
+            "tests/quality/test_weighted_quality.py",
+            "tests/quality/baseline-fast.json.gz",
+            "tests/quality/baseline-extended.json.gz",
+            "tests/quality/known-limits.json",
+            "tests/quality/known-boundaries.json",
+            "tests/quality/data/manifest.json",
+            "tests/quality/data/bike.csv.gz",
+            "tests/quality/data/energy.csv.gz",
+        ):
+            require_same(relative, relative)
         require_same("PYTHON_README.md", "bindings/python/PYTHON_README.md")
         normalized_build = manifests["pyproject.toml"].get("tool", {}).get("maturin", {})
         if normalized_build.get("manifest-path") != "Cargo.toml":

@@ -1,0 +1,460 @@
+{
+  "base_commit": "9b11ac9",
+  "boundary_audit": {
+    "accuracy_status": "FAIL",
+    "binary_sha256": "1a7fccb15c30c0f435df71ef07525dcb29859875f54d72fc08088002718091ff",
+    "command": [
+      "cargo",
+      "run",
+      "--locked",
+      "--quiet",
+      "--release",
+      "--example",
+      "quality_boundaries"
+    ],
+    "controls": [
+      {
+        "expected": 4.0,
+        "id": "tiny_use_mass_cap1/f32",
+        "observed": 2.0,
+        "status": "FAIL"
+      },
+      {
+        "expected": 4.0,
+        "id": "tiny_use_mass_cap2/f32",
+        "observed": 2.0,
+        "status": "FAIL"
+      },
+      {
+        "expected": 1.5,
+        "id": "residual_tail_moment/f32",
+        "observed": 0.5,
+        "status": "FAIL"
+      },
+      {
+        "expected": 0.3333333333333333,
+        "id": "finite_cancellation_mean/f32",
+        "observed": 0.0,
+        "status": "FAIL"
+      },
+      {
+        "expected": 2.5,
+        "id": "fractional_symmetric_median_0/f32",
+        "observed": 3.0,
+        "status": "FAIL"
+      },
+      {
+        "expected": 2.5,
+        "id": "fractional_symmetric_median_1/f32",
+        "observed": 2.0,
+        "status": "FAIL"
+      },
+      {
+        "expected": 2.5,
+        "id": "fractional_symmetric_median_2/f32",
+        "observed": 2.5,
+        "status": "PASS"
+      },
+      {
+        "expected": 4.0,
+        "id": "tiny_use_mass_cap1/f64",
+        "observed": 2.0,
+        "status": "FAIL"
+      },
+      {
+        "expected": 4.0,
+        "id": "tiny_use_mass_cap2/f64",
+        "observed": 2.0,
+        "status": "FAIL"
+      },
+      {
+        "expected": 1.5,
+        "id": "residual_tail_moment/f64",
+        "observed": 0.5,
+        "status": "FAIL"
+      },
+      {
+        "expected": 0.3333333333333333,
+        "id": "finite_cancellation_mean/f64",
+        "observed": 0.0,
+        "status": "FAIL"
+      },
+      {
+        "expected": 2.5,
+        "id": "fractional_symmetric_median_0/f64",
+        "observed": 3.0,
+        "status": "FAIL"
+      },
+      {
+        "expected": 2.5,
+        "id": "fractional_symmetric_median_1/f64",
+        "observed": 2.0,
+        "status": "FAIL"
+      },
+      {
+        "expected": 2.5,
+        "id": "fractional_symmetric_median_2/f64",
+        "observed": 2.5,
+        "status": "PASS"
+      },
+      {
+        "expected": 5e-324,
+        "id": "subnormal_aggregate_mean/f64",
+        "observed": 0.0,
+        "status": "FAIL"
+      }
+    ],
+    "failed": 13,
+    "regression_status": "PASS",
+    "source_sha256": {
+      "Cargo.lock": "872ee407a963e9649b7c792c00d6e6259d255cc67ccf071db74763d2fe8a9a71",
+      "Cargo.toml": "c14971aabf50087734e34b5a991393fa95d15aa2364423299c969d6ba1c20fbb",
+      "examples/quality_boundaries.rs": "42b37a93d4389615fded94f8fb751be8edb1bad0828497aca04a5a4cac5b78f6",
+      "src/bin/tdigest_cli.rs": "2ab7290ea18d6e0d7d7423df8b5bc2c76db28c5ed755f12c8a98221df953b904",
+      "src/compact_storage.rs": "8517c6704081a6527c95356b685535bdaecea558751807a817b06cef31ba2dc2",
+      "src/error.rs": "35e6f01c103d0006ed0c1d61c258e9dd545e2ca06963187e5840c25c3e902d51",
+      "src/jni.rs": "aa00c2af6e97e51959345d9e5175ae01479514d0c529354eeb35bae99e7d5562",
+      "src/lib.rs": "f8f6b12762dc84bed6991aa9ef0b0471b5709cdd682757652a0843e832efe8b5",
+      "src/polars_expr.rs": "ea42c7df1fc15ca25e6fe666e5599563dd46ecc653e135070602a6a8e958730a",
+      "src/py.rs": "1cc5cd16e3e7e317f909ae196b09be715b0858c5d417b110052e3acf6183abea",
+      "src/quality/cdf_quality.rs": "1ade3775b5ed47b4893ca84a4e549331c2cfa012f46c71725948ccb6261acc85",
+      "src/quality/quality_base.rs": "caea4dbc50bcc2420930105db05030823e8c74218e5138bc2acaa7c3d032fffa",
+      "src/quality/quantile_quality.rs": "df4efa0b8a0beab654b01f40ed51fb37c22a372b3b5f728b4f65393fb2f86920",
+      "src/tdigest/cdf.rs": "55eeb11a1da871aee389d1256308fdc64a6c66d43d3f08d7f60e1729c80e65cc",
+      "src/tdigest/centroids.rs": "8b25d23223086bde557c5ba365e72892fc006f5c1e2be97be3f954dfd50ebe02",
+      "src/tdigest/codecs.rs": "45bc4c4f4bd2cdc12d2232742a3a1f074c75885f601a0b08d0ed093603ac4f2d",
+      "src/tdigest/compressor.rs": "302108296e1ee8b13e49a0cb83c64e9105eef3a1709208532417cb94ddc56adc",
+      "src/tdigest/frontends.rs": "700aa6b18be1e26cc3f718469c15d090eb95c93c309b702954b4dd0b82e6201e",
+      "src/tdigest/merges.rs": "20631b3fe7e9af922d2b633ff0926a2a0598f7694508188e81d7e67cf878e765",
+      "src/tdigest/mod.rs": "eee25a98a6b0e935a7cec9baa109e0090ba39e1811db4725ab799450b6754fe1",
+      "src/tdigest/precision.rs": "7473c43ec96afc101a39c6bda8b83e82e1b13e8d5725c3556805b3585bfe14d7",
+      "src/tdigest/quantile.rs": "a99599dcc81c0623e3182ce2ede325cd7c34ac263985af217d6e7a865d9eb0e1",
+      "src/tdigest/scale.rs": "dfed088ef9d9b189475424283d65f8f9096670956cc8f2eba6469bb725d1693b",
+      "src/tdigest/singleton_policy.rs": "1f26944b9aa7575a5d86a5c31b97ed5bc80f2a9c9f12cf5ed9db1ca7436e5fa7",
+      "src/tdigest/tdigest.rs": "3f5b7aec088962341dde5fbf125aabcfff0ae7889bbe27979930c53951994f40",
+      "src/tdigest/test_helpers.rs": "f4556c0dee84cfad9c05325c8cea58c449e0135a8849fbefda6385761d94c0c5",
+      "src/tdigest/wire.rs": "7ab74c1e27105975d3ac40b2370666482d01e8834819ea59ba465f689a23a9cf",
+      "src/upstream/core.rs": "447766914f92398a43a01e53ecbc61231909eb641f2634c3fc31da2de71c3af8",
+      "src/upstream/lib.rs": "38ecb6bd5d3f17f3d19da2f8b613f50198a613d47edae413f275744ade8a3e4c",
+      "src/upstream/scale.rs": "c4b3cce4ba57da48a6e427f4d2f5f04a4b6c67f790c5b32d7334320f57246bb0",
+      "src/upstream/tests/public_api.rs": "b8448a7cf81999232f3c396d35ce4d9922c33204c3747a3edfa09f169426c16b",
+      "src/upstream/traits.rs": "74324e7ec5fc5e9e8d448b88fa35c8a0525354eef10eb7fead694cf2d9754868",
+      "src/upstream_py.rs": "f9d763ce6c43abf855b469f963c1c93e126e00e876af99684c65171759594284"
+    }
+  },
+  "canonical_checks": {
+    "quality-canonical-completion.log": "918b147b7ff12f91410c0c5be442088fffe8ca7042482e92caef471643978c12",
+    "quality-last-lint.log": "bd76d05581b4d61de4701b566b124709505ae848cfef04d9824f519d050b1700"
+  },
+  "cleanup": {
+    "freed_disk_bytes": 813318144,
+    "preserved": [
+      "All source commits and active PR branches/worktrees",
+      "Pinned original implementation, wrapper, oracle and tests",
+      "Canonical real datasets, original data archives and measured records",
+      "Verified tool archives and one complete JDK11/JDK17/Gradle installation cache"
+    ],
+    "removed": [
+      {
+        "bytes": 152994295,
+        "files": 318,
+        "path": "mirror-toolchains/gradle-6f74b601422d6d6fc4e1f9a1ab6522f642c2fdcbc15ae33ebd30ba3d7198e854",
+        "retained": "toolchains/gradle-6f74b601422d6d6fc4e1f9a1ab6522f642c2fdcbc15ae33ebd30ba3d7198e854",
+        "tree_sha256": "143cafb4a4ba1cfb1c78bdfea931c65ab2011930c1e1f2fe8bf36abafc08891b"
+      },
+      {
+        "bytes": 332109684,
+        "files": 247,
+        "path": "mirror-toolchains/jdk-3808d1d15e3ec6bd5b84057fb5d84c33d8a1536a258146bcea2e603fc726e08e",
+        "retained": "toolchains/jdk-3808d1d15e3ec6bd5b84057fb5d84c33d8a1536a258146bcea2e603fc726e08e",
+        "tree_sha256": "6d15c2df1cb6f4b6144266d5a458583f943af857a3091e78ed0e61e35a085992"
+      },
+      {
+        "bytes": 325687622,
+        "files": 277,
+        "path": "mirror-toolchains/jdk-5c3f68887c325d36d852ba534303e1f5f1f5cae7d6cc1e951d73e0d8e98a058d",
+        "retained": "toolchains/jdk-5c3f68887c325d36d852ba534303e1f5f1f5cae7d6cc1e951d73e0d8e98a058d",
+        "tree_sha256": "dfcffe1cc558d79bbccce73945252f3d2dd27120b87e6ab6f0a92f34eacd9738"
+      }
+    ],
+    "status": "complete"
+  },
+  "data_manifest_provenance": {
+    "canonical_byte_sha256": "f9a900e8f147fcb91a8067d6f337c00602b96469497f52b05533c439dba5fffc",
+    "decoded_fields_identical": true,
+    "measured_byte_sha256": "a490cd9ed0e525c59765ca8cfdb55e3a3a97c8b0e477e991a98c5f0ec2e488fa",
+    "measured_copy": "measured-data-manifest.json.gz",
+    "reason": "Repository JSON formatting sorts object keys; data bytes, column order, rows, protocol and every numerical baseline remain unchanged."
+  },
+  "extended": {
+    "accuracy_status": "FAIL",
+    "artifact_sha256": "a35a309112a64feccf5fe9388ea69b8476aa6d97a9642d4c2e91e08e4f62fa53",
+    "elapsed_seconds": 51.35591788199963,
+    "known_limit_profiles": 10,
+    "matched_profiles": 702,
+    "native_sha256": "c24b514614b0b2e5816a4585e4e4d1f2cfa573c5eedf6fb6373f8db96879f643",
+    "numeric_rows_sha256": "cb41d33eb5ac7adcc8f950f7ebb6eff1db43176b7d6096c5b740fe809def1517",
+    "ordinary_errors": 0,
+    "profiles": 756,
+    "real_profiles": 324,
+    "regression_status": "PASS"
+  },
+  "fast": {
+    "accuracy_status": "PASS",
+    "artifact_sha256": "61614d4d6f1c87b3e2f86f7d356679ff487d216fb75c24d157fb254aa5c448c0",
+    "elapsed_seconds": 0.22907228999974905,
+    "profiles": 42
+  },
+  "final_runtime_gate": {
+    "artifact": {
+      "distribution": "gr-tdigest",
+      "native_sha256": "3e310f0e59adf0be9b7c34f38cd38682de0d259936102bf177a7693b4e5fc461",
+      "requires_dist": [
+        "numpy>=1.26.4,<3",
+        "polars==2.0.0 ; extra == 'polars'"
+      ],
+      "requires_python": ">=3.10, <3.16",
+      "sdist_sha256": "6f167beb8c8ae4c80e9dbf44c6fc38cf3d9175899150c868ad96e06b3ce0e3c4",
+      "tags": [
+        "cp310-abi3-linux_x86_64"
+      ],
+      "version": "0.2.4",
+      "wheel_sha256": "664b725505b8ab900fb63a37440d63352212777044810c3291dfce9058828f26"
+    },
+    "cells": [
+      {
+        "compatibility_passed": 208,
+        "label": "py310-numpy1",
+        "modern_passed": 184,
+        "numpy": "1.26.4",
+        "polars": "2.0.0",
+        "python": "3.10",
+        "status": "PASS"
+      },
+      {
+        "compatibility_passed": 208,
+        "label": "py310-numpy2",
+        "modern_passed": 184,
+        "numpy": "2.2.6",
+        "polars": "2.0.0",
+        "python": "3.10",
+        "status": "PASS"
+      },
+      {
+        "compatibility_passed": 208,
+        "label": "py311-numpy1",
+        "modern_passed": 184,
+        "numpy": "1.26.4",
+        "polars": "2.0.0",
+        "python": "3.11",
+        "status": "PASS"
+      },
+      {
+        "compatibility_passed": 208,
+        "label": "py311-numpy2",
+        "modern_passed": 184,
+        "numpy": "2.3.4",
+        "polars": "2.0.0",
+        "python": "3.11",
+        "status": "PASS"
+      },
+      {
+        "compatibility_passed": 208,
+        "label": "py312-numpy1",
+        "modern_passed": 184,
+        "numpy": "1.26.4",
+        "polars": "2.0.0",
+        "python": "3.12",
+        "status": "PASS"
+      },
+      {
+        "compatibility_passed": 208,
+        "label": "py312-numpy2",
+        "modern_passed": 184,
+        "numpy": "2.3.4",
+        "polars": "2.0.0",
+        "python": "3.12",
+        "status": "PASS"
+      },
+      {
+        "compatibility_passed": 208,
+        "label": "py313-numpy2",
+        "modern_passed": 184,
+        "numpy": "2.3.4",
+        "polars": "2.0.0",
+        "python": "3.13",
+        "status": "PASS"
+      },
+      {
+        "compatibility_passed": 208,
+        "label": "py314-numpy2",
+        "modern_passed": 184,
+        "numpy": "2.5.4",
+        "polars": "2.0.0",
+        "python": "3.14",
+        "status": "PASS"
+      },
+      {
+        "compatibility_passed": 208,
+        "label": "py315-numpy2",
+        "modern_passed": 184,
+        "numpy": "2.5.4",
+        "polars": "2.0.0",
+        "python": "3.15",
+        "status": "PASS"
+      },
+      {
+        "compatibility_passed": 208,
+        "label": "py310-numpy1-no-polars",
+        "modern_python_passed": 120,
+        "numpy": "1.26.4",
+        "polars": null,
+        "python": "3.10",
+        "status": "PASS"
+      },
+      {
+        "compatibility_passed": 208,
+        "label": "py315-numpy2-no-polars",
+        "modern_python_passed": 120,
+        "numpy": "2.5.4",
+        "polars": null,
+        "python": "3.15",
+        "status": "PASS"
+      }
+    ],
+    "source_builds": [
+      {
+        "native_sha256": "3e310f0e59adf0be9b7c34f38cd38682de0d259936102bf177a7693b4e5fc461",
+        "passed": 392,
+        "python": "3.12",
+        "wheel_sha256": "9ae7a80b14c1921912d64578c0292c83357c5d873af14597038e5aa4e9e458b5"
+      },
+      {
+        "native_sha256": "3e310f0e59adf0be9b7c34f38cd38682de0d259936102bf177a7693b4e5fc461",
+        "passed": 392,
+        "python": "3.14",
+        "wheel_sha256": "cbf310edc1148f8d599a96a28702823ae27f4069a92f10e12e5ffb8ea31e7ffa"
+      },
+      {
+        "native_sha256": "3e310f0e59adf0be9b7c34f38cd38682de0d259936102bf177a7693b4e5fc461",
+        "passed": 392,
+        "python": "3.15",
+        "wheel_sha256": "7412a6ce6bd163e0bd64ae0aaf03a59fdd854eb58f3cc907d77bc8bfe9c9df3d"
+      }
+    ],
+    "testcase_runs": 5360
+  },
+  "installed_release_quality_cells": [
+    {
+      "accuracy_status": "FAIL",
+      "extended_profiles": 756,
+      "fast_profiles": 42,
+      "native_sha256": "3e310f0e59adf0be9b7c34f38cd38682de0d259936102bf177a7693b4e5fc461",
+      "numeric_rows_sha256": "cb41d33eb5ac7adcc8f950f7ebb6eff1db43176b7d6096c5b740fe809def1517",
+      "ordinary_tests_passed": 482,
+      "python": "3.12.15 (main, Oct 14 2026, 01:05:27) [Clang 23.1.3 ]",
+      "regression_status": "PASS",
+      "result_sha256": "12706d38d238e8f3e8ee75bfc31ae1319c2d670221b6056096ada321451cb0a0"
+    },
+    {
+      "accuracy_status": "FAIL",
+      "extended_profiles": 756,
+      "fast_profiles": 42,
+      "native_sha256": "3e310f0e59adf0be9b7c34f38cd38682de0d259936102bf177a7693b4e5fc461",
+      "numeric_rows_sha256": "cb41d33eb5ac7adcc8f950f7ebb6eff1db43176b7d6096c5b740fe809def1517",
+      "ordinary_tests_passed": 482,
+      "python": "3.14.8 (main, Oct 14 2026, 01:04:34) [Clang 23.1.3 ]",
+      "regression_status": "PASS",
+      "result_sha256": "be57ce7639d7bf2a72b675f8a5659607aae3cf1f920daac251f210ce59defc6f"
+    },
+    {
+      "accuracy_status": "FAIL",
+      "extended_profiles": 756,
+      "fast_profiles": 42,
+      "native_sha256": "3e310f0e59adf0be9b7c34f38cd38682de0d259936102bf177a7693b4e5fc461",
+      "numeric_rows_sha256": "cb41d33eb5ac7adcc8f950f7ebb6eff1db43176b7d6096c5b740fe809def1517",
+      "ordinary_tests_passed": 482,
+      "python": "3.15.0 (main, Oct 14 2026, 01:05:07) [Clang 23.1.3 ]",
+      "regression_status": "PASS",
+      "result_sha256": "6c82174e01264a924a1ef701d512c9b534a435379b8e01b0bd5d45eace9c49a6"
+    }
+  ],
+  "java_final_source": {
+    "11": {
+      "class_major_versions": [
+        55
+      ],
+      "isolated_jar": "PASS",
+      "jar_sha256": "cab9676c0f82796b8b60018a9cd50373a0b44294934e0ef28da1b0ef8c85aa23",
+      "junit": {
+        "errors": 0,
+        "failures": 0,
+        "skipped": 0,
+        "tests": 13
+      },
+      "log_sha256": "4588a0a835c2c5fc065812b0ab3d1d52c008a5d09cde2d09fe6c8550fc4fd3a3",
+      "native_sha256": {
+        "META-INF/native/linux-x86_64/libgr_tdigest.so": "711080db5f1f1c5d2b6786739ad9d8d08ce8fee0a86d4b0113e9358cd62ec5b8"
+      },
+      "offline_clean_build": "PASS"
+    },
+    "17": {
+      "class_major_versions": [
+        55
+      ],
+      "isolated_jar": "PASS",
+      "jar_sha256": "a71cfdbf34cad18308b418d05af0094b1f0bc7b5a8e27714d393aafbd17d7c89",
+      "junit": {
+        "errors": 0,
+        "failures": 0,
+        "skipped": 0,
+        "tests": 13
+      },
+      "log_sha256": "67a91f0bc6513f93cd63ce20c86971c361dd0986a801d85d5a9f64434f075c1a",
+      "native_sha256": {
+        "META-INF/native/linux-x86_64/libgr_tdigest.so": "711080db5f1f1c5d2b6786739ad9d8d08ce8fee0a86d4b0113e9358cd62ec5b8"
+      },
+      "offline_clean_build": "PASS"
+    }
+  },
+  "limitations": [
+    "Ten size32 synthetic repeated-merge profiles fail the empirical rank/CDF envelope.",
+    "Thirteen of15 exact modern numerical boundary controls fail; outcomes are documented, never labeled fixed.",
+    "Logical field bytes exclude padding, metadata, retained capacity and RSS.",
+    "Correlated fixtures are coverage, not independent statistical trials or universal guarantees.",
+    "Linux x86_64 and standard CPython only; other OS/free-threaded/PyPy need qualification."
+  ],
+  "negative_control": {
+    "detected_regressions": 38,
+    "exit_code": 1,
+    "purpose": "Tightened baseline must reject current nonzero errors",
+    "status": "negative_control_detected"
+  },
+  "protocol_sha256": "fd40a56da637f76258665f2c200de18d51a9c00e7d72492bb8f7c9867b9d706d",
+  "reproduction": {
+    "data_files_regenerated_under_Python3_12_with_pinned_source_and_derived_hashes": true,
+    "source_archive_includes_attribution_and_methods_byte_for_byte": true,
+    "source_archive_sha256": "6f167beb8c8ae4c80e9dbf44c6fc38cf3d9175899150c868ad96e06b3ce0e3c4"
+  },
+  "scope": "Quality coverage and evidence only; both engines arithmetic unchanged",
+  "source_archive_includes_QA_data_and_runners": "PASS",
+  "source_sha256": {
+    ".github/workflows/ci.yml": "51be60d87962ca53e77aeb204d941f2e1f1c6ab404aed122542508666c71e400",
+    "Makefile": "626c73c52ecdd8aa7dd065077dbb8192695c01219999c04455aefd5deedd0d93",
+    "examples/quality_boundaries.rs": "e892d93f621aff610cac5c6ce963109844f7173dc4f72a62c57070f0d038317e",
+    "scripts/audit_quality_boundaries.py": "6f93c4f083711c1cedd6c46fefda24e6caf1f34c77bb728ecfafb853f9127756",
+    "scripts/check_python_sdist.py": "16e808ad77a8c64d2d18366b322cedfda6da9de0e611908733b57a505a53ad7b",
+    "scripts/fetch_quality_data.py": "a96fade17979317bad3cfd6bd9f20a691bbec29a06529dd49f245c0fdf8de883",
+    "scripts/quality_suite.py": "7fe812cb399c0c3afa2767e19cf469dcfdbe7631b93cb3d0b81ba9c7ebceacc9",
+    "tests/quality/baseline-extended.json.gz": "289f48563dfd38e37c10797ede3c3ebdc8c8cb626d6d8aa89814973ce06879a4",
+    "tests/quality/baseline-fast.json.gz": "cf9d09ee9a891a77ad66257165f7b1d0a516f599ec3333bc2ca0186ce1e45717",
+    "tests/quality/data/bike.csv.gz": "a1327622da718c91a5eacb97eacd29339609dfaf86b93db2e5593e4359e9c088",
+    "tests/quality/data/energy.csv.gz": "0fd54becb3b41b08b593a5ad1cb0872300d6efc55636b3ecb01459c78c038cd0",
+    "tests/quality/data/manifest.json": "f9a900e8f147fcb91a8067d6f337c00602b96469497f52b05533c439dba5fffc",
+    "tests/quality/known-boundaries.json": "464909c5f77c07bde4910aa78dde9909cb5d8f59e582066b2c6fddd64074e1f8",
+    "tests/quality/known-limits.json": "f04202771caf9bc07092beb54523b8275dcc19ec8b4269d0119047b624e3789a",
+    "tests/quality/test_reference.py": "51afd2cf7b7be190b53d951036b8050d54bf91cb560ef6aeb434648979c58433",
+    "tests/quality/test_weighted_quality.py": "632c4311f1c35399ce5bf98b5e674d3debc13df1962a3bd163d2edac08806d28"
+  },
+  "status": "completed_with_explicit_numerical_failures"
+}
