@@ -1,0 +1,144 @@
+{
+  "accuracy_status": "PASS",
+  "binary_sha256": "212b8ab2bb23ea88bdd77ea55c43a0301985cf67d5146fcba37e573aa5fffad6",
+  "command": [
+    "cargo",
+    "run",
+    "--locked",
+    "--quiet",
+    "--release",
+    "--example",
+    "quality_boundaries"
+  ],
+  "controls": [
+    {
+      "expected": 4.0,
+      "id": "tiny_use_mass_cap1/f32",
+      "observed": 4.0,
+      "status": "PASS"
+    },
+    {
+      "expected": 4.0,
+      "id": "tiny_use_mass_cap2/f32",
+      "observed": 4.0,
+      "status": "PASS"
+    },
+    {
+      "expected": 1.5,
+      "id": "residual_tail_moment/f32",
+      "observed": 1.5,
+      "status": "PASS"
+    },
+    {
+      "expected": 0.3333333333333333,
+      "id": "finite_cancellation_mean/f32",
+      "observed": 0.3333333333333333,
+      "status": "PASS"
+    },
+    {
+      "expected": 2.5,
+      "id": "fractional_symmetric_median_0/f32",
+      "observed": 2.5,
+      "status": "PASS"
+    },
+    {
+      "expected": 2.5,
+      "id": "fractional_symmetric_median_1/f32",
+      "observed": 2.5,
+      "status": "PASS"
+    },
+    {
+      "expected": 2.5,
+      "id": "fractional_symmetric_median_2/f32",
+      "observed": 2.5,
+      "status": "PASS"
+    },
+    {
+      "expected": 4.0,
+      "id": "tiny_use_mass_cap1/f64",
+      "observed": 4.0,
+      "status": "PASS"
+    },
+    {
+      "expected": 4.0,
+      "id": "tiny_use_mass_cap2/f64",
+      "observed": 4.0,
+      "status": "PASS"
+    },
+    {
+      "expected": 1.5,
+      "id": "residual_tail_moment/f64",
+      "observed": 1.5,
+      "status": "PASS"
+    },
+    {
+      "expected": 0.3333333333333333,
+      "id": "finite_cancellation_mean/f64",
+      "observed": 0.3333333333333333,
+      "status": "PASS"
+    },
+    {
+      "expected": 2.5,
+      "id": "fractional_symmetric_median_0/f64",
+      "observed": 2.5,
+      "status": "PASS"
+    },
+    {
+      "expected": 2.5,
+      "id": "fractional_symmetric_median_1/f64",
+      "observed": 2.5,
+      "status": "PASS"
+    },
+    {
+      "expected": 2.5,
+      "id": "fractional_symmetric_median_2/f64",
+      "observed": 2.5,
+      "status": "PASS"
+    },
+    {
+      "expected": 5e-324,
+      "id": "subnormal_aggregate_mean/f64",
+      "observed": 5e-324,
+      "status": "PASS"
+    }
+  ],
+  "failed": 0,
+  "regression_errors": [],
+  "regression_status": "PASS",
+  "source_sha256": {
+    "Cargo.lock": "4df90426561bd6161b5589d1cbb2f95503a55bfdd449b228fb1bc8f8cf9a5253",
+    "Cargo.toml": "5eb295c8305fcfc2f3a48a30991eb3d07e4dbc1413e7ed40b626b6f77f425c9f",
+    "examples/quality_boundaries.rs": "fa8bbf7172c7c2b554b443d0f25756e8661037affaf6558b93dc0a8e157aa5e8",
+    "src/bin/tdigest_cli.rs": "2ab7290ea18d6e0d7d7423df8b5bc2c76db28c5ed755f12c8a98221df953b904",
+    "src/compact_storage.rs": "8517c6704081a6527c95356b685535bdaecea558751807a817b06cef31ba2dc2",
+    "src/error.rs": "35e6f01c103d0006ed0c1d61c258e9dd545e2ca06963187e5840c25c3e902d51",
+    "src/jni.rs": "225857a26e1178cd0d0c8af4049a29a53e32f5da083e06fe115ca83209435eaa",
+    "src/lib.rs": "cacc0cf288c6651b54e8998f9b58c133a238a03a7cfd34836484783aa906f23e",
+    "src/polars_expr.rs": "7f3d8d758b290e543691f476d8b79b0a9ae78f20c8d5dc5e33db4bc77fea3565",
+    "src/py.rs": "61fd8780f08ed51c61103331a9d5fe81b9db01da62c96f607bcb8414dc620619",
+    "src/quality/cdf_quality.rs": "1ade3775b5ed47b4893ca84a4e549331c2cfa012f46c71725948ccb6261acc85",
+    "src/quality/quality_base.rs": "c07c956af5006339f8e7a40cd35b9788444ebdff7f6633cd833aeb4a542bce38",
+    "src/quality/quantile_quality.rs": "df4efa0b8a0beab654b01f40ed51fb37c22a372b3b5f728b4f65393fb2f86920",
+    "src/tdigest/cdf.rs": "a2172aa4fea38e43484fc3d5454dfc1920cf1b007a8c5fb0d69b1a151b83bf9f",
+    "src/tdigest/centroids.rs": "5f5fba6d2f160e79f9efb5b869935c1989a959a3057892f6a19c2d364421581c",
+    "src/tdigest/codecs.rs": "8d439916c69acadb23a125cb1fb000cf19399fba544e14555b46b22dd8e8ec3f",
+    "src/tdigest/compressor.rs": "060b5227a4e12a122eed9193242eb1e356da76ddf4dcc612256e2cb55e5da4e9",
+    "src/tdigest/frontends.rs": "f20e34e57541447425621ce4e654c0db240f02b5f2f8238e5fafc96effc9db26",
+    "src/tdigest/merges.rs": "c1c4b84f22a26c2adc13f05a0562bc935b2dc0a401b40315ccbc7dba37fca428",
+    "src/tdigest/mod.rs": "bec8f9202dadb96af844b812231f11a4b90b10ebe19370c8a35378951f4bcbb7",
+    "src/tdigest/precision.rs": "bea7debc6b11b836673c486fe86451eba6ae71c7c677463923c2d85980905935",
+    "src/tdigest/quantile.rs": "a2e27cb7913d621d6cd9b45ed77b9b49a11efb59f28d3e5918fe7d9111f4702f",
+    "src/tdigest/scale.rs": "dfed088ef9d9b189475424283d65f8f9096670956cc8f2eba6469bb725d1693b",
+    "src/tdigest/singleton_policy.rs": "1f26944b9aa7575a5d86a5c31b97ed5bc80f2a9c9f12cf5ed9db1ca7436e5fa7",
+    "src/tdigest/summation.rs": "f055d1189afaca621f2285143eaf8a7445085d83a587c5e7977b16caa1a455e9",
+    "src/tdigest/tdigest.rs": "c7657f029350f363aed31a61647f53440de870b8be2817ffa6a496bdea984f9c",
+    "src/tdigest/test_helpers.rs": "f4556c0dee84cfad9c05325c8cea58c449e0135a8849fbefda6385761d94c0c5",
+    "src/tdigest/wire.rs": "d4a528648346d9793c5f5a774862f9f7e5df4840907d7d0ce47569aef143769f",
+    "src/upstream/core.rs": "447766914f92398a43a01e53ecbc61231909eb641f2634c3fc31da2de71c3af8",
+    "src/upstream/lib.rs": "38ecb6bd5d3f17f3d19da2f8b613f50198a613d47edae413f275744ade8a3e4c",
+    "src/upstream/scale.rs": "c4b3cce4ba57da48a6e427f4d2f5f04a4b6c67f790c5b32d7334320f57246bb0",
+    "src/upstream/tests/public_api.rs": "b8448a7cf81999232f3c396d35ce4d9922c33204c3747a3edfa09f169426c16b",
+    "src/upstream/traits.rs": "74324e7ec5fc5e9e8d448b88fa35c8a0525354eef10eb7fead694cf2d9754868",
+    "src/upstream_py.rs": "f9d763ce6c43abf855b469f963c1c93e126e00e876af99684c65171759594284"
+  }
+}

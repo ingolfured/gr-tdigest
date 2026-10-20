@@ -1,0 +1,86 @@
+{
+  "accuracy_status": "FAIL",
+  "artifact_qualification": "PENDING_NEW_CANONICAL_WHEEL_AND_JAR",
+  "exact_boundaries": {
+    "expected_values_changed": false,
+    "failed": 0,
+    "passed": 15
+  },
+  "files": {
+    "all-targets.log.gz": {
+      "bytes": 91,
+      "sha256": "0964c207edd2e43a938361c555e36eb95d4661319d16b5b9880c8e1b275b3750"
+    },
+    "boundaries.json": {
+      "bytes": 5619,
+      "sha256": "4477b1575386284156672222e417f664edb9e78cc8246a122aa4a4438ec580d7"
+    },
+    "build.log.gz": {
+      "bytes": 1013,
+      "sha256": "8b3675201b3254379810f95b9eb92e99acd676a459b2f0206d2d39eea1ef60f1"
+    },
+    "jni-rust.log.gz": {
+      "bytes": 303,
+      "sha256": "d3711b592849eaf6b64128a9cf70b18ab42314534d7f0829b1bc1dce898d8328"
+    },
+    "lint.log.gz": {
+      "bytes": 443,
+      "sha256": "5205ba0ef72624434e1a885cb2c231d8149988ba3513f82cbbe5e75ca01538aa"
+    },
+    "quality-756.json.gz": {
+      "bytes": 154675,
+      "sha256": "10bc3c6e46c64af61c891cab7a30d3710b677a94591912f47f398e7168cc105a"
+    },
+    "quality-regression.log.gz": {
+      "bytes": 1207,
+      "sha256": "5fbe3d8f4755ed512522552d120296aef762d484217e2a54bdaecc4c96e53d1f"
+    },
+    "rejected-median-compressor.rs.gz": {
+      "bytes": 9409,
+      "sha256": "cb06e0e1fc1843767f9ded376ae1a67e34b5c7dba179872b906467dd4df5ad51"
+    },
+    "rejected-median-tradeoffs.json.gz": {
+      "bytes": 1228,
+      "sha256": "64af748560a4ab3031ff119e00c65019fc0e43c4d4ce70b940cf7a4dd2174845"
+    },
+    "rejected-median-trial.json.gz": {
+      "bytes": 156504,
+      "sha256": "071daa3a900d0738514a0d9287c81a7828a9483452e7b8f71d91401714bd32a7"
+    },
+    "source-gates.json.gz": {
+      "bytes": 37470,
+      "sha256": "536269fa5bccc2555ff264be17bd741a5994d9c8d4263fb808b73ce93b60d060"
+    },
+    "test.log.gz": {
+      "bytes": 3093,
+      "sha256": "1168193d79346e60de665672bc739e95150463b885e99c5ad4e1ad7258a7b051"
+    }
+  },
+  "known_accuracy_failures": 10,
+  "limits": [
+    "Ten known small-capacity repeated-merge accuracy profiles remain failures; no threshold/reference changed.",
+    "Known-regression PASS is not accuracy acceptance.",
+    "Source checks use local development binaries; no current-source canonical manylinux/JVM minimum-ABI/runtime or performance claim.",
+    "Prior a9c368f/version001 artifact evidence is retained separately for those exact bytes.",
+    "Private/internal cluster and100-plus-CPU checks remain consumer qualification; SSD comparison remains TODO."
+  ],
+  "new_regression_errors": 0,
+  "original_implementation": "Pinned oracle/arith/wrapper/fixtures unchanged; source guard and91original tests pass",
+  "profiles": 756,
+  "python_version": "0.2.5.dev2026102002",
+  "regression_status": "PASS",
+  "rejected_trial": {
+    "canonical": false,
+    "envelope_failures": 0,
+    "kind": "transient development prototype with source-input fingerprints and loaded-binary hash in its measurement",
+    "regressed_profiles": 290,
+    "status": "REJECTED_NOT_SHIPPED",
+    "worst_median_rank_after": 0.0816650390625,
+    "worst_median_rank_before": 0.0084228515625
+  },
+  "source_gate_status": "PASS",
+  "source_sha": "5d00ba49d222b5afe04cd127fa916e9d20a28eb4",
+  "status": "DEVELOPMENT_SOURCE_CHECKS_PASS_NOT_FINAL_PRODUCT",
+  "updated_utc": "2026-10-20T21:29:25.305940+00:00",
+  "version": "0.2.5-dev2026102002"
+}

@@ -47,6 +47,13 @@ NumPy combinations. Python glibc2.28 and JNI glibc2.17 remain separate targets.
   changed failures are rejected. Quality runs invalidate their evidence if source
   or the loaded native binary changes during measurement.
 
+[Source-check evidence](integration-v2/receipt.json) identifies implementation
+`5d00ba49d222b5afe04cd127fa916e9d20a28eb4`. Its combined `make build`, `make test`,
+`make lint`, complete quality-regression audit, JNI-feature Rust tests and all-target
+compilation pass on the unchanged measured source. The quality report still has
+`accuracy_status=FAIL` for the ten known approximate profiles; regression status
+is separately `PASS`. The fifteen exact controls have both statuses `PASS`.
+
 These are development/source checks. The latest uniquely versioned wheel and JAR
 still need final packaging and the complete same-artifact runtime qualification.
 

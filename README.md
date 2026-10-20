@@ -197,6 +197,9 @@ The [source-specific gap assessment](compat/consumer-20261020/ASSESSMENT.md) rec
 Modern consumer candidate guides: [Python/NumPy](bindings/python/OBJECT_API.md), [Polars](bindings/python/POLARS_API.md), and [source/build/qualification procedure](compat/consumer-20261020/BUILD.md). This is a development candidate with explicit remaining numerical and internal qualification limits, not a production release.
 
 The [combined candidate report](compat/consumer-20261020/CANDIDATE.md) identifies the exact wheel/JAR source and bytes, passed runtime checks, failed accuracy gates, workload costs and remaining acceptance work. Read it alongside the historical assessment before reviewing or merging the modern stack.
+The [current integration status and proposed review story](compat/consumer-20261020/INTEGRATION.md)
+supersede that report for ongoing work; [new source-check evidence](compat/consumer-20261020/integration-v2/receipt.json)
+is separate from the earlier exact-artifact qualification.
 
 Current integration work makes modern Rust construction checked:
 `TDigest::<f64>::builder().max_size(1000).build()?` returns valid state or an

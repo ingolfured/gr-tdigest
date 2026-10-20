@@ -5,6 +5,7 @@ All notable changes to this project are documented in this file.
 ## [Unreleased]
 
 ### Fixed
+- Record source-bound integration evidence for5d00ba4: combined build/test/lint, JNI/all-target checks,15exact boundary passes and756profiles with no new regressions but ten failed accuracy profiles. Preserve the rejected median-partition trial and separate new source checks from prior canonical artifact qualification; recommend no merges before final product completion.
 - Continue the combined development candidate as0.2.5-dev2026102002; keep prior0.2.5-dev2026102001artifact receipts bound to their original source and defer final PR splitting/merges. Invalidate quality measurements if their source or loaded native binary changes while running.
 - Preserve exact-point queries and recover transformed moments when a Float64 weighted sum is subnormal; retain explicit errors for unsupported mixed-observation products. Reject Float32 training conversions that would lose a nonzero value, and validate transformed/copied state before committing. Accept genuine exact-boundary fixes against unchanged frozen targets while rejecting changed or missing controls.
 - Preserve established finite same-sign cluster averaging while retaining compensation for cancellation/overflow; remove the seven newly introduced accuracy regression profiles without changing the frozen quality references.
