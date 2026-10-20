@@ -107,3 +107,18 @@ boundaries and the final combined result determine the actual split. Performance
 experiments with unaccepted tradeoffs remain separate; experimental CDF PR13 is
 not included automatically. No existing PR will be closed or rewritten until its
 useful changes and evidence have a clear replacement.
+
+## Wider investigation follow-up
+
+The [accuracy investigation](accuracy-investigation/REPORT.md) now provides a
+concrete explanation and recommendation. Three more source-bound compressor
+trials were rejected. A new 4,140-profile diagnostic, repeated exactly, exposes
+114 failed profiles across small capacities and additional shapes. It also
+measures consumer capacities 200 and 1,000 and fair original-engine comparisons.
+The ten frozen failures remain unresolved; the wider failures are not hidden.
+
+The numerical engine/defaults are retained. CI's installed-wheel coverage count
+is corrected from 222 to 225 modern cases after adding tests; full source-build
+coverage is 433. Numerical targets and skip/failure checks remain strict, and
+runtime logs are retained. Fresh artifact matrix results are separate from the
+historical candidate and the source-only numerical study.

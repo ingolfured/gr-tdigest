@@ -148,6 +148,14 @@ jobs:
       - name: Extended quality regression gate (known accuracy limits remain explicit)
         run: make quality-regression
 
+      - name: Preserve installed-wheel runtime evidence even when a gate fails
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: python-support-results
+          path: build/python-support/
+          if-no-files-found: ignore
+
       - name: Preserve quality findings even when a gate fails
         if: always()
         uses: actions/upload-artifact@v4

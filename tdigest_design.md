@@ -538,3 +538,21 @@ Training conversion to Float32 rejects nonfinite results and nonzero values roun
 to zero in the shared Python/JNI frontend and Polars additions. Ordinary rounding
 remains allowed. Full-state aggregate-mean validation allows mean-precision
 roundoff (Float32 or Float64); weights and aggregate statistics remain Float64.
+
+## Capacity and scale investigation
+
+Source-bound trials compare direct cap on the original normalized stream,
+equal-mass allocation and reverse-direction k-limit scanning against the unchanged
+per-profile reference. They are rejected because gains in some cases introduce
+hundreds of regressions. K2continues to devote substantial small-budget resolution
+to tails; repeated merges can leave large mixed central clusters. Their internal
+value layout is no longer retained by means/weights/global extrema, so a query-only
+rewrite cannot reconstruct arbitrary lost detail. The one-centroid Rust example
+shows distinct populations with identical complete state; it does not prove that
+capacity32cannot improve.
+
+The wider diagnostic sweeps current scales/capacities and fresh deterministic
+shapes, records the new failures, and makes no algorithm/default/wire-layout
+change. Its saved-byte comparisons are not per-digest RSS or temporary-allocation
+claims. The empirical results and rejected variants are documented in the
+consumer accuracy report.

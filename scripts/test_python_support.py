@@ -40,6 +40,12 @@ MATRIX = (
     ("3.14", "2.5.4", "1.18.1", "9.1.1"),
     ("3.15", "2.5.4", "1.18.1", "9.1.1"),
 )
+# Coverage inventory for the staged suites in this revision. Keep source-build
+# totals derived from these values, and reject failures/skips independently.
+COMPATIBILITY_CASES = 208
+MODERN_CASES = 225
+NUMPY_ONLY_CASES = 120
+
 MODERN_TESTS = (
     "bindings/python/tests/test_api_python.py",
     "bindings/python/tests/test_consumer_contracts.py",
@@ -284,9 +290,9 @@ def main() -> None:
                 run(label + "-pip-check", [python, "-I", "-m", "pip", "check"], work)
                 imports = run(label + "-imports", [python, "-I", "-c", INSPECT, json.dumps({**artifact, **cell})], work)
                 result["installed"] = json.loads(imports)
-                suites = [("compatibility", [tests, parity], 208)]
+                suites = [("compatibility", [tests, parity], COMPATIBILITY_CASES)]
                 if cell["polars"]:
-                    suites.append(("modern", [modern], 222))
+                    suites.append(("modern", [modern], MODERN_CASES))
                 else:
                     suites.append(
                         (
@@ -300,7 +306,7 @@ def main() -> None:
                                     "test_digest_regressions.py",
                                 )
                             ],
-                            120,
+                            NUMPY_ONLY_CASES,
                         )
                     )
                 for suite, directories, expected in suites:
@@ -330,6 +336,7 @@ def main() -> None:
             except Exception as error:
                 result["status"] = "FAIL"
                 result["error"] = str(error)
+                print(f"{label}: FAIL: {error}", flush=True)
             (output / "matrix.json").write_text(json.dumps(results, indent=2) + "\n")
         require(hashlib.sha256(wheel.read_bytes()).hexdigest() == artifact["wheel_sha256"], "wheel changed during gate")
         require(
@@ -423,12 +430,13 @@ def main() -> None:
                     ],
                     work,
                 )
-                passed = check_results(xml, 430)
+                passed = check_results(xml, COMPATIBILITY_CASES + MODERN_CASES)
                 source_results.append({"python": minor, "artifact": built, "installed": installed, "passed": passed})
                 (output / "source-builds.json").write_text(json.dumps(source_results, indent=2) + "\n")
             require(len(source_results) == 3, "incomplete source-build matrix")
     print(
-        f"Ten full cells passed 208 compatibility + 222 modern cases each; two Polars-free cells passed 208 + 120; evidence: {output}"
+        f"Ten full cells passed {COMPATIBILITY_CASES} compatibility + {MODERN_CASES} modern cases each; "
+        f"two Polars-free cells passed {COMPATIBILITY_CASES} + {NUMPY_ONLY_CASES}; evidence: {output}"
     )
     print(
         "Source rebuilds: " + ("3.12, 3.14 and 3.15 passed" if sdist else "not requested: no source archive supplied")

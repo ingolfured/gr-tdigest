@@ -1,0 +1,16 @@
+{
+  "inputs": {
+    "results/capacity-study.json": "dc34023ae5bebc36a4d42fdc8813748a782b01f56bca32cbfc00530fe5b05dbb",
+    "results/holdouts.json": "a27f054f66e258feceb024599e5e4c3c853d203486603bc343211fa5c0c7c0ed",
+    "results/information-loss.json": "afb26696e579ace18444c300dbd08b2abfce00d745df66452a27f1cc0d28e7b6"
+  },
+  "matplotlib": "3.10.7",
+  "numpy": "2.3.4",
+  "outputs": {
+    "accuracy-capacity.png": "675ae7c4dd4ffc0131096e67e396c25d9444cc3150db4bf064be2f3b11d99c2a",
+    "accuracy-capacity.svg": "5ddb6278d27fc1f507bd6b03c285a1699c9fe20b7f5e5bd30b1a17b41a35aa57",
+    "information-loss.png": "646fc57644e329dbca4a53cf77629e8799eb24354e3a2719797c3a335002902a",
+    "information-loss.svg": "3e729d6d0c67e74c3e63d575ba2d6e147063b0183c6d6430de1a028dc8e3b3c9"
+  },
+  "script_sha256": "644ffefc2b21c4921bb629921a181255852e680f92ac5c3acaaf7063bd104072"
+}

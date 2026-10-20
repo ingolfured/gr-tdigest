@@ -450,7 +450,7 @@ fn cap_with_second_klimit<F: FloatLike + FloatCore>(
 
 /// **(4) Cap** — order-preserving equal-weight bucketization into `buckets` groups.
 ///
-/// - Emits up to `buckets` outputs; a tiny trailing remainder may be skipped (see [`cap_core`]).
+/// - Emits up to `buckets` outputs, retaining every positive residual contribution.
 /// - Multi-item buckets are **mixed**; a one-item bucket retains its input kind.
 fn bucketize_equal_weight<F: FloatLike + FloatCore>(
     cs: &[Centroid<F>],

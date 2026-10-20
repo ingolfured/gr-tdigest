@@ -286,3 +286,10 @@ the candidate. Measurements are retained in the task's final-product evidence
 ledger; no threshold or reference was relaxed to accept the trial. The combined
 candidate remains development work until its accuracy and exact-artifact
 qualification are complete.
+
+The [wider accuracy investigation](compat/consumer-20261020/accuracy-investigation/REPORT.md)
+adds consumer capacities200/1000and additional shapes. All three new compressor
+trials regress existing profiles and remain rejected. At matched logical storage,
+K2/1000usually improves rank/tail errors over the original; the original still
+frequently wins worst normalized value error. No universal-superiority claim or
+changed acceptance gate follows from the measured operating envelope.

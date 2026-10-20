@@ -40,3 +40,18 @@ Both engines receive identical observations after the same precision cast. The o
 Modern logical bytes count mean(4/8)+weight8+kind1 per centroid; original bytes count mean(4/8)+weight4. This excludes headers, padding, spare capacity, allocation and RSS. Modern wire length is recorded separately. Original states filling less than90% or exceeding100% of that field budget remain in the results but are excluded from matched-budget win/loss totals. Accuracy-limit failures **remain** in those totals when both measurements exist.
 
 These are empirical fixtures on two related domains, not a universal accuracy guarantee. Reversed single-build cases can be identical, and many profiles share data. The counts are test coverage, not independent statistical trials or confidence levels. No throughput ranking is inferred from test duration.
+
+## Wider capacity/scale diagnostics
+
+`make quality-budgets` is a separate slower4140-profile measurement:3276on the
+established full-data corpus plus864on12additional deterministic shapes. It tests
+K2capacities16/32/64/128/200/512/1000and selectedQuad/K1sizes, actualf32/f64,
+input reversal and40-way merge paths. Modern/original comparisons atK2/200and1000
+reuse the actual logical-byte budget search. Original CDF remains unavailable.
+
+The current source has114failed diagnostic profiles across the complete matrix,
+including newly exposed small-capacity/shape failures. The runner exits nonzero;
+these are not waived, skipped or disguised as completed accuracy fixes. The old
+756-profile frozen baseline and its ten-case inventory are unchanged. Profiles
+share data and are not independent trials. See the consumer accuracy report for
+per-metric tradeoffs, original win/loss counts and reproduction instructions.

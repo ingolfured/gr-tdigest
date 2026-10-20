@@ -1,0 +1,161 @@
+{
+  "external_native_archives": {
+    "control": {
+      "bytes": 5097031,
+      "path": "/home/ingo/Documents/ChatGPT/gr-tdigest 2/accuracy-20261020/results/control-native.so.gz",
+      "sha256": "07290366a53ee7eb5a2eaeb2c5ddc3e96fed5bd7aa16c330e5918c19fc182dd3"
+    },
+    "direct-cap": {
+      "bytes": 5097536,
+      "path": "/home/ingo/Documents/ChatGPT/gr-tdigest 2/accuracy-20261020/results/direct-cap-native.so.gz",
+      "sha256": "c9c262b348850428c150eee3ae2f357736314092a901f2512cebf5a7117918f3"
+    },
+    "equal-mass": {
+      "bytes": 5097218,
+      "path": "/home/ingo/Documents/ChatGPT/gr-tdigest 2/accuracy-20261020/results/equal-mass-native.so.gz",
+      "sha256": "15c2a095da5f10b8ba02f886d7c045e143a288b3ecdc89ac39dcb18469a38db3"
+    },
+    "reverse-scan": {
+      "bytes": 5096367,
+      "path": "/home/ingo/Documents/ChatGPT/gr-tdigest 2/accuracy-20261020/results/reverse-scan-native.so.gz",
+      "sha256": "74a8382c0527c597ae8060cd29b5d6132cec4e6fcaf12f551379c73cef4fa50f"
+    }
+  },
+  "files": {
+    "accuracy-capacity.png": {
+      "bytes": 196817,
+      "sha256": "675ae7c4dd4ffc0131096e67e396c25d9444cc3150db4bf064be2f3b11d99c2a"
+    },
+    "accuracy-capacity.svg.gz": {
+      "bytes": 4436,
+      "compression": "gzip",
+      "sha256": "09ffaf5a7f72295a96e813f3110b2c86e141a90674d2897f6e68813cddc038de",
+      "uncompressed_sha256": "5ddb6278d27fc1f507bd6b03c285a1699c9fe20b7f5e5bd30b1a17b41a35aa57"
+    },
+    "evidence/analysis.json.gz": {
+      "bytes": 5725,
+      "sha256": "840c976a89b42fe18a08f266b82dbad5708123d7610cc78837f1d86539d5d26e"
+    },
+    "evidence/capacity-study.json.gz": {
+      "bytes": 317383,
+      "sha256": "4b4897d96c79905689f591d4d19d0d16aa8aef8dd9783e31904f92bd5c54c806"
+    },
+    "evidence/control.json.gz": {
+      "bytes": 154671,
+      "sha256": "5d856df1fa73ec5e2319169de1bbfe38407ced51edd1e1bde4840ec6856b7e6f"
+    },
+    "evidence/direct-cap.json.gz": {
+      "bytes": 155307,
+      "sha256": "9e357bc0e59265c12c16b2e1b4b7b0b1361d2809f4f80ad5531d0183e75b53b1"
+    },
+    "evidence/equal-mass.json.gz": {
+      "bytes": 174623,
+      "sha256": "ed036e28bd62cf519ff0052ec9ea1616417607aa6284d65546441ca3b626114b"
+    },
+    "evidence/holdouts.json.gz": {
+      "bytes": 75962,
+      "sha256": "c0796e28cb5e638a2695b1d6ebbaf3717057f145fa4a4de39f32813608bd3060"
+    },
+    "evidence/information-loss.json.gz": {
+      "bytes": 555,
+      "sha256": "21e619818fa4e9e5d7773fa2c32bcf5d61677c84737d5e9e67fed50d751b6c58"
+    },
+    "evidence/merge-traces.json.gz": {
+      "bytes": 55026,
+      "sha256": "5007569199102ff39ded4cc43ec7355e6346ba4a4e5850ddd0f5d5e74a5c5d74"
+    },
+    "evidence/remote-ci.json.gz": {
+      "bytes": 362,
+      "sha256": "af5b1823bc03ca3b8a70963de83f5e64c1376f6f36eeb3753c907ab66f6b2770"
+    },
+    "evidence/repeat-verification.json.gz": {
+      "bytes": 143,
+      "sha256": "d14b767a92994e987c3ea9133bd3cd3e96f38afffddac281125de8cd464d1917"
+    },
+    "evidence/reproducible-budgets.json.gz": {
+      "bytes": 387157,
+      "sha256": "7f222ec89ec18fadc94a6fed9a205712e0e1d3bbc3e0b1008d65346d129c6edb"
+    },
+    "evidence/reverse-scan.json.gz": {
+      "bytes": 156819,
+      "sha256": "dbe7b332dcef3cb8c4d8a086b71d93880e87ca315710dc79bb76953a040cb07d"
+    },
+    "evidence/study-postprocess-repair.json.gz": {
+      "bytes": 489,
+      "sha256": "e69a512e65532c2b159d50223adee39c5bd1f1cc797d5d3b6bca040278a91c0c"
+    },
+    "evidence/trials.json.gz": {
+      "bytes": 941,
+      "sha256": "95488443f9d33c9ce82a25c850d2bef1cc738166ada8d71637a0056548de1fa3"
+    },
+    "figures.json": {
+      "bytes": 864,
+      "sha256": "b46cd79f7c3d30fda9913337944fb19b22feceb8b20f46da224ac9eaa5c6b064"
+    },
+    "information-loss.png": {
+      "bytes": 115701,
+      "sha256": "646fc57644e329dbca4a53cf77629e8799eb24354e3a2719797c3a335002902a"
+    },
+    "information-loss.svg.gz": {
+      "bytes": 2482,
+      "compression": "gzip",
+      "sha256": "bf3a957826947e1707d1c5551bc90b3d45f0ecf10f4bec2fc47f8d831831a7aa",
+      "uncompressed_sha256": "3e729d6d0c67e74c3e63d575ba2d6e147063b0183c6d6430de1a028dc8e3b3c9"
+    },
+    "patches/control.patch.gz": {
+      "bytes": 20,
+      "compression": "gzip",
+      "sha256": "9ceffb7310338057cfe71a4ae1e2c98d2c485d81cdef906532a801f457a38d64",
+      "uncompressed_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "patches/direct-cap.patch.gz": {
+      "bytes": 249,
+      "compression": "gzip",
+      "sha256": "f936aaf4282e19bc4e9aade71ec1d4de652fc9ec715a8427961f0054b93aa9d6",
+      "uncompressed_sha256": "324fdb50c2ee9dace7f97c20a95fd17d2c4e802d2d1af43093423571d3dca7bf"
+    },
+    "patches/equal-mass.patch.gz": {
+      "bytes": 295,
+      "compression": "gzip",
+      "sha256": "21eb3a15182e604e5d83a95a21d600e54828741d96a2430652c87a05e7a01cc4",
+      "uncompressed_sha256": "dd1c3e161b2aa1c199b63d323ed9f7d1dd5dc9c589931a741f736b9426d043eb"
+    },
+    "patches/reverse-scan.patch.gz": {
+      "bytes": 430,
+      "compression": "gzip",
+      "sha256": "ffe0fd0f5957170edf03e2cfad9ce12c04b32caa8da42a0b7a0be3343303bfad",
+      "uncompressed_sha256": "d5511b38ffcb9d606b78506abb88c67d485387d0c86ed966af7579dbadbcc8f9"
+    },
+    "tools/analyze_study.py.gz": {
+      "bytes": 1925,
+      "sha256": "ee5c845df44808622b245154e1e792a29d6b51588fe34de2be8ae6cf96c2960f"
+    },
+    "tools/capacity_study.initial.py.gz": {
+      "bytes": 2681,
+      "sha256": "9266fe8cc4464f51d64307e730ca767fb4b1b6514786de58f5b77c58a92c9564"
+    },
+    "tools/capacity_study.py.gz": {
+      "bytes": 2273,
+      "sha256": "d5bd2afbc6d5dde1956fa86f22ce400a7bc7f4afa94331f09619962d2e9ad289"
+    },
+    "tools/holdout_study.py.gz": {
+      "bytes": 1795,
+      "sha256": "63c3a83e29821a54cbfa97cf068c146c9cb831f0d87f6e9945eda9a9d4bd7889"
+    },
+    "tools/plot_study.py.gz": {
+      "bytes": 1977,
+      "sha256": "f83e642d04714c3bf437e99d5623d05e2966208eb2010e57e0ed2125e40157f3"
+    },
+    "tools/run_trials.py.gz": {
+      "bytes": 1925,
+      "sha256": "2440b5147701aded721c10eba0397ec8b84dabd8127736e0667ba91cfc7aeaf3"
+    },
+    "tools/trace_failures.py.gz": {
+      "bytes": 1459,
+      "sha256": "4e6c6c935aee11d055a2d26e52fc85121c7deb510f73ebc3777db8af9b505b4b"
+    }
+  },
+  "implementation_sha": "5d00ba49d222b5afe04cd127fa916e9d20a28eb4",
+  "kind": "source-bound numerical investigation; no trial shipped; not release acceptance",
+  "numerical_base_sha": "35b0d799a6212399fed32de689609abb880b3e18"
+}

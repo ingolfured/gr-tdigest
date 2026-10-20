@@ -258,3 +258,12 @@ quantiles and mean even when the rounded Float64 weighted moment is zero or
 subnormal; its full state and positive transforms preserve point identity. Mixed
 training products that are not representable still fail explicitly and leave
 receivers unchanged. The sum getter remains the rounded Float64 weighted moment.
+
+The separate `make quality-budgets` diagnostic covers explicit modern capacities
+200/1000, smaller capacities, alternate named scales and additional data shapes.
+Its sampled rank/CDF criteria extend the existing diagnostic envelope and are not
+a new owner-approved universal guarantee. Rank, value, CDF and tail results stay
+separate. Known small-summary failures remain release-acceptance issues; no
+implicit scale selection, new API default or original-engine change is made.
+Python training currently requires capacity>=10; checked modern Rust allows
+positive capacities including1. These limits are stated separately.

@@ -210,3 +210,12 @@ preserves exact tiny point masses, rejects Float32 training underflow and retain
 the unchanged targets of the numerical boundary checks.
 
 The JVM candidate includes [Scala/sbt and Kotlin/Gradle examples](bindings/java/examples/README.md), with configured repository credentials and offline checks. The coverage report distinguishes build JDK, runtime JDKs and actual cluster checks.
+
+## Measured summary-size tradeoffs
+
+`make quality-budgets` separately measures4140capacity/scale/data/merge profiles,
+including explicit200/1000sizes and additional deterministic shapes. It is a
+slower diagnostic and returns failure for the observed accuracy failures. Small
+summaries remain a numerical acceptance issue; changing the scale does not
+universally fix them. The default remainsK2/1000 and the original engine is
+unchanged. See the [accuracy investigation and recommendation](compat/consumer-20261020/accuracy-investigation/REPORT.md).
