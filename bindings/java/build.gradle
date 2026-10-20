@@ -6,7 +6,27 @@ plugins {
   id 'signing'
 }
 
-repositories { mavenCentral() }
+// An internal repository is exclusive: failed requests never fall back to Central.
+def dependencyRepo = providers.environmentVariable('TDIGEST_MAVEN_REPOSITORY_URL').orNull
+repositories {
+  if (dependencyRepo != null) {
+    if (dependencyRepo.isBlank()) throw new GradleException('TDIGEST_MAVEN_REPOSITORY_URL must not be blank')
+    maven {
+      name = 'internalDependencies'
+      url = uri(dependencyRepo)
+      allowInsecureProtocol = uri(dependencyRepo).scheme == 'http'
+      def user = providers.environmentVariable('TDIGEST_MAVEN_USERNAME').orNull
+      if (user != null) {
+        credentials {
+          username = user
+          password = providers.environmentVariable('TDIGEST_MAVEN_PASSWORD').orNull
+        }
+      }
+    }
+  } else {
+    mavenCentral()
+  }
+}
 
 dependencies {
   testImplementation 'org.junit.jupiter:junit-jupiter:5.11.4'
@@ -49,13 +69,19 @@ java {
 tasks.withType(JavaCompile).configureEach { options.release = 11 }
 
 /* -------- Paths -------- */
-def targetRel = new File(repoRoot, 'target/release')
+def cargoTarget = providers.environmentVariable('CARGO_TARGET_DIR').orNull
+def targetDir = cargoTarget ? repoRoot.toPath().resolve(cargoTarget).toFile() : new File(repoRoot, 'target')
+def targetRel = new File(targetDir, 'release')
 def genResDir = new File(buildDir, 'generated-resources')
 
 /* -------- Build native with feature `java` -------- */
 tasks.register('cargoBuild', Exec) {
   workingDir repoRoot
-  commandLine 'cargo', 'build', '--release', '--features', 'java'
+  def args = ['cargo', 'build', '--locked', '--release', '--features', 'java']
+  if (providers.environmentVariable('TDIGEST_OFFLINE').orElse('0').get().toLowerCase(Locale.ROOT) in ['1','true','yes']) {
+    args.add('--offline')
+  }
+  commandLine args
   standardOutput = System.out
   errorOutput    = System.err
 }
@@ -129,6 +155,23 @@ tasks.named('test').configure {
     jvmArgs '--enable-native-access=ALL-UNNAMED'
   }
 }
+
+tasks.register('verifyJava11Bytecode') {
+  dependsOn tasks.named('classes'), tasks.named('testClasses')
+  doLast {
+    [sourceSets.main.output.classesDirs, sourceSets.test.output.classesDirs].each { dirs ->
+      dirs.asFileTree.matching { include '**/*.class' }.each { classFile ->
+        classFile.withDataInputStream { stream ->
+          if (stream.readInt() != (0xCAFEBABE as int)) throw new GradleException("Invalid class: ${classFile.name}")
+          stream.readUnsignedShort()
+          def major = stream.readUnsignedShort()
+          if (major != 55) throw new GradleException("Expected Java11 bytecode, got major=${major} in ${classFile.name}")
+        }
+      }
+    }
+  }
+}
+tasks.named('check').configure { dependsOn tasks.named('verifyJava11Bytecode') }
 
 /* -------- Smoke test: run SmokeMain from the built JAR -------- */
 tasks.register('smoke', JavaExec) {

@@ -1,0 +1,137 @@
+{
+  "base_commit": "17f41f864f788d2f8234cc0f559c24948f6b5e80",
+  "bootstrap_tests": 8,
+  "gradle": "8.14.5",
+  "internal_mirror": {
+    "cold_archive_downloads": [
+      {
+        "exit_code": 0,
+        "name": "jvm-mirror-prepare-11",
+        "offline": "0",
+        "seconds": 1.9450364112854004
+      },
+      {
+        "exit_code": 0,
+        "name": "jvm-mirror-prepare-17",
+        "offline": "0",
+        "seconds": 1.535280466079712
+      }
+    ],
+    "exclusive_local_http_with_basic_auth": true,
+    "requests_after_dependency_cache_warmup": 125,
+    "server_stopped_before_offline_tests": true
+  },
+  "jars": {
+    "11": {
+      "class_count": 10,
+      "major_versions": [
+        55
+      ],
+      "native_sha256": {
+        "META-INF/native/linux-x86_64/libgr_tdigest.so": "21c8eb3024f6ab4e53a27e4511611094db99742956426dd811104c5a50aee6a9"
+      },
+      "sha256": "388ce972c7bbbacda48b10c60852ed76faa3e3a0381e39653da9b1e4051e0b40"
+    },
+    "17": {
+      "class_count": 10,
+      "major_versions": [
+        55
+      ],
+      "native_sha256": {
+        "META-INF/native/linux-x86_64/libgr_tdigest.so": "21c8eb3024f6ab4e53a27e4511611094db99742956426dd811104c5a50aee6a9"
+      },
+      "sha256": "abcfb40c95b2fe04aa63a4c5b92eeae7a9a2dc4eb5a00214e52cb5915ae35384"
+    }
+  },
+  "java_versions": [
+    "Temurin 11.0.32.1+1",
+    "Temurin 17.0.20.1+1"
+  ],
+  "junit": {
+    "11": {
+      "errors": 0,
+      "failures": 0,
+      "skipped": 0,
+      "tests": 13
+    },
+    "17": {
+      "errors": 0,
+      "failures": 0,
+      "skipped": 0,
+      "tests": 13
+    }
+  },
+  "limits": [
+    "Linux x86_64 only validated locally; Windows launcher has portable archive tests but no native Windows run.",
+    "Offline Cargo source/toolchain caches were pre-provisioned; Python targets used an existing locked uv cache.",
+    "The initial full test attempt failed because the test fixture ignored CARGO_TARGET_DIR; repaired fixture and all canonical checks passed."
+  ],
+  "platform": "Linux x86_64",
+  "runs": [
+    {
+      "exit_code": 0,
+      "name": "jvm-mirror-prepare-11",
+      "offline": "0",
+      "seconds": 0.05428361892700195
+    },
+    {
+      "exit_code": 0,
+      "name": "jvm-mirror-prepare-17",
+      "offline": "0",
+      "seconds": 0.044863224029541016
+    },
+    {
+      "exit_code": 0,
+      "name": "jvm-make-build-11",
+      "offline": "0",
+      "seconds": 5.922987699508667
+    },
+    {
+      "exit_code": 0,
+      "name": "jvm-make-test-11",
+      "offline": "0",
+      "seconds": 16.736273050308228
+    },
+    {
+      "exit_code": 0,
+      "name": "jvm-make-lint",
+      "offline": "0",
+      "seconds": 6.760154724121094
+    },
+    {
+      "exit_code": 0,
+      "name": "jvm-offline-11",
+      "offline": "1",
+      "seconds": 4.134671688079834
+    },
+    {
+      "exit_code": 0,
+      "name": "jvm-isolated-jar-11",
+      "offline": "1",
+      "seconds": 0.09110665321350098
+    },
+    {
+      "exit_code": 0,
+      "name": "jvm-offline-17",
+      "offline": "1",
+      "seconds": 3.66837215423584
+    },
+    {
+      "exit_code": 0,
+      "name": "jvm-isolated-jar-17",
+      "offline": "1",
+      "seconds": 0.09618258476257324
+    }
+  ],
+  "source_sha256": {
+    ".github/workflows/ci.yml": "282c5dfe52aea85b9fec3de4f4ff740cbb89f727fb020b4ef2e1a02753ceef75",
+    "Makefile": "b04f5194df63a078e42954fe42bae5c978995ee515f067a3f7d2c86332be2307",
+    "bindings/java/bootstrap.py": "bc93561d2ec25062a177f7d8db292bf39f609b0790ec5504941641a572e18e7e",
+    "bindings/java/build.gradle": "e92628d1dcff087c0f995abbf5ee2e5f83a1b8fd45156d4d74313103c25ed1f2",
+    "bindings/java/gradle/wrapper/gradle-wrapper.properties": "fd78648bfa19ddc7463b6c70afff76453730998de7f5c8cca50d1a06fe38f6f4",
+    "bindings/java/gradlew": "9490f07a4fe313a3c4862c984c247368cce657e79fd77e40c58f55b971ad4c91",
+    "bindings/java/gradlew.bat": "5a9355faca4e2563e862bccbc7d316b9e6f0b3265b3c426ff2e73a8515b4a57c",
+    "bindings/java/tests/test_bootstrap.py": "39fdb3e44de5cd240facea6d415114d858dac9d2708862789d7d5d16af566c14",
+    "integration/api_coherence/conftest.py": "e7012ccef7f77e7f212007728694d9f0c9b3eb21e5b02bbeed082a89a3eaf3ac"
+  }
+}

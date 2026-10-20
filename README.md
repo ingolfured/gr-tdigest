@@ -1,4 +1,12 @@
 # tdigest-rs
+
+Java builds support JDK11 and17, including an optional checksum-verified JDK and
+Gradle bootstrap from internal URLs or local archives. Configure
+`TDIGEST_JDK_URL`, `TDIGEST_GRADLE_URL` and an exclusive
+`TDIGEST_MAVEN_REPOSITORY_URL`; use `TDIGEST_OFFLINE=1` with prepared caches.
+See [Java setup and offline builds](bindings/java/README.md) for all environment
+settings and actual Java11 bytecode/runtime checks.
+
 T-Digest provides a mergeable summary of a distribution, enabling approximate quantiles and CDF with strong tail accuracy.
 `gr-tdigest` ships one Rust core with Rust, Python, Polars, and Java surfaces.
 

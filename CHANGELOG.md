@@ -5,6 +5,7 @@ All notable changes to this project are documented in this file.
 ## [Unreleased]
 
 ### Fixed
+- Make Java11/17 first-class build/runtime targets with Gradle8.14.5, actual bytecode checks, opt-in checksum-verified JDK/Gradle bootstrap, exclusive internal Maven sources and strict prepared-cache offline builds; respect native Cargo output paths and retain publishing settings separately.
 - Copy aligned, native-endian contiguous NumPy f32/f64 training inputs directly into owned Rust vectors before construction or update, preserving generic conversion for other layouts/dtypes and the existing query conversion path.
 - Release the Python GIL during modern raw and weighted Rust digest construction after converting input containers to owned vectors, allowing independent constructors to run concurrently without changing numerical calculations.
 - Reject Polars digest structs that combine delta with an incompatible scale or singleton policy before querying or exporting them, returning a configuration error instead of panicking during serialization.
