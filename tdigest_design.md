@@ -482,3 +482,5 @@ The measured NumPy output change and its remaining inconclusive observations are
 ## Modern Python construction and the GIL
 
 The raw constructor calls the unchanged `FrontendDigest::from_values` inside `Python::allow_threads` once input conversion and configuration resolution are complete. The weighted constructor creates an unexposed empty digest, then releases the GIL around its unchanged `add_weighted_f64` call. Both closures work with owned vectors and Rust state only; error translation and returning the new Python object occur with the GIL held. Existing object methods and pinned original arithmetic retain their existing paths.
+
+Modern Python training uses `training_array_values` for constructors and updates. Aligned native-endian contiguous one-dimensional NumPy f32/f64 arrays are borrowed read-only while copying into an owned f64 vector; the borrow ends before the constructor releases the GIL. Other layouts/dtypes use the existing NumPy/Python conversion. Query conversion remains unchanged.
