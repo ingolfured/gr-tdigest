@@ -9,8 +9,10 @@ This is not the final product. The current development version is
 `0.2.5-dev2026102003` (Python `0.2.5.dev2026102003`). The previous artifact manifest,
 coverage and report in this directory describe source `a9c368f`, version
 `0.2.5-dev2026102001`. They remain historical evidence for those exact bytes.
-They do not qualify the latest code, and no replacement canonical artifacts have
-been declared yet.
+They do not qualify the latest code. The current uniquely identified version003
+review artifacts and fresh bounded checks are recorded in
+[the artifact report](accuracy-investigation/ARTIFACTS.md). Numerical acceptance
+remains incomplete.
 
 ## The product we are finishing
 
@@ -54,8 +56,11 @@ compilation pass on the unchanged measured source. The quality report still has
 `accuracy_status=FAIL` for the ten known approximate profiles; regression status
 is separately `PASS`. The fifteen exact controls have both statuses `PASS`.
 
-These are development/source checks. The latest uniquely versioned wheel and JAR
-still need final packaging and the complete same-artifact runtime qualification.
+These source checks are now supplemented by version003 wheel/JAR packaging,
+installed runtime/source rebuild, Linux floor, Scala/Kotlin, typing/ownership and
+current workload checks. See the [current artifact report](accuracy-investigation/ARTIFACTS.md)
+and [coverage](accuracy-investigation/coverage-v3.json); private/internal checks
+and numerical acceptance remain separate.
 
 ## What prevents a final-product claim
 
@@ -75,11 +80,11 @@ explicitly. That restriction is not a silently approved exclusion from the
 requested domain. Any unresolved accuracy limit or changed domain needs a concrete
 proposal and the user's decision before release acceptance.
 
-After the algorithm and public contracts are settled, freeze one source revision
-and build new uniquely identified artifacts. Rerun the combined build/test/lint,
-quality gates, exact wheel/JAR runtime and minimum-ABI checks, installed docs/types,
-source archive rebuilds, cross-language roundtrips and relevant workload comparisons.
-Passing checks from earlier branches or earlier artifacts cannot fill these rows.
+Source60b2951 is frozen into the uniquely identified version003 review artifacts.
+Their combined source, exact wheel/JAR runtime, minimum-ABI, installed docs/types,
+source rebuild, cross-language and current workload checks have completed. Any
+further implementation change needs new uniquely identified artifacts and
+relevant checks; earlier artifacts cannot fill those rows.
 
 Private0.1.9/0.1.11 regression tests, original JVM0.1.16 provenance, real internal
 repositories/trust, the exact Spark/serializer/checkpoint/executor matrix and

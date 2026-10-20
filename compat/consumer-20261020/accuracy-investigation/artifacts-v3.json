@@ -1,0 +1,264 @@
+{
+  "artifact_policy": "Test/import these exact bytes. Source rebuild wheels are separate receipt variants even when native hashes match. No production publication. Older version001 and failed version002 receipts remain historical.",
+  "artifacts": {
+    "gr-tdigest-0.2.5-dev2026102003.jar": {
+      "bytes": 1892116,
+      "retained_path": "/home/ingo/Documents/ChatGPT/gr-tdigest 2/accuracy-20261020/artifacts-v3/gr-tdigest-0.2.5-dev2026102003.jar",
+      "sha256": "c9d8841f6beadd65c68325ac82dd0e0faaaa4ce668304b7a5179181433f77122"
+    },
+    "gr-tdigest-source-60b2951.tar.gz": {
+      "bytes": 5404070,
+      "retained_path": "/home/ingo/Documents/ChatGPT/gr-tdigest 2/accuracy-20261020/artifacts-v3/gr-tdigest-source-60b2951.tar.gz",
+      "sha256": "6fb4aa3f1b5928565c614cae0fd4dcfd6192aee0fd7d6a4f04d3be0a7be2dc0f"
+    },
+    "gr_tdigest-0.2.5.dev2026102003-cp310-abi3-manylinux_2_28_x86_64.whl": {
+      "bytes": 5260336,
+      "retained_path": "/home/ingo/Documents/ChatGPT/gr-tdigest 2/accuracy-20261020/artifacts-v3/gr_tdigest-0.2.5.dev2026102003-cp310-abi3-manylinux_2_28_x86_64.whl",
+      "sha256": "f142db78ea211c1fdfff690d6976e8d316a89e5e66ce8f2be1a18ad67ee1151f"
+    },
+    "gr_tdigest-0.2.5.dev2026102003.tar.gz": {
+      "bytes": 5386686,
+      "retained_path": "/home/ingo/Documents/ChatGPT/gr-tdigest 2/accuracy-20261020/artifacts-v3/gr_tdigest-0.2.5.dev2026102003.tar.gz",
+      "sha256": "2c339d67851dfa4225333ee836badbfd6096a9eb080da3f28eac72887b9fa3a6"
+    },
+    "libgr_tdigest-jni-glibc217.so": {
+      "bytes": 7389936,
+      "retained_path": "/home/ingo/Documents/ChatGPT/gr-tdigest 2/accuracy-20261020/artifacts-v3/libgr_tdigest-jni-glibc217.so",
+      "sha256": "68b81960d52e11be245049a359e2e0787274dbe5595a07b9e5f11b5369f0047d"
+    },
+    "libgr_tdigest-python-glibc228.so": {
+      "bytes": 19373424,
+      "retained_path": "/home/ingo/Documents/ChatGPT/gr-tdigest 2/accuracy-20261020/artifacts-v3/libgr_tdigest-python-glibc228.so",
+      "sha256": "f89b96ebf0d72adee3699599416a1c4e0daeb988921502dfaee6797052bdada6"
+    }
+  },
+  "build": {
+    "build_jdk": "17.0.20.1+1",
+    "cargo": "1.95.0",
+    "commands": "evidence/artifact-qualification-v3.json.gz; logs-v3.tar.gz; ARTIFACTS.md",
+    "gradle": "8.14.5",
+    "jni_class_release": 11,
+    "maturin": "1.15.0",
+    "python_build_commands": [
+      {
+        "command": [
+          "maturin",
+          "sdist",
+          "--out",
+          "<artifacts-v3>"
+        ],
+        "cwd": "bindings/python"
+      },
+      {
+        "command": [
+          "maturin",
+          "build",
+          "--release",
+          "--locked",
+          "--zig",
+          "--compatibility",
+          "manylinux_2_28",
+          "--auditwheel",
+          "check",
+          "--interpreter",
+          "<source .venv Python3.12>",
+          "--out",
+          "<artifacts-v3>"
+        ],
+        "cwd": "bindings/python"
+      }
+    ],
+    "release_native_targets": {
+      "jni": "x86_64-unknown-linux-gnu.2.17, java feature, system allocator",
+      "python": "x86_64-unknown-linux-gnu, manylinux_2_28, cp310-abi3"
+    },
+    "rust": "1.95.0",
+    "source_archive_checked_paths": [
+      "Cargo.toml",
+      "Cargo.lock",
+      "rust-toolchain.toml",
+      "bindings/java/gradlew",
+      "bindings/java/gradlew.bat",
+      "bindings/java/gradle/wrapper/gradle-wrapper.jar",
+      "bindings/java/gradle/wrapper/gradle-wrapper.properties",
+      "bindings/java/bootstrap.py",
+      "scripts/quality_budgets.py",
+      "examples/accuracy_information_loss.rs"
+    ],
+    "tools_and_topology": "evidence/host-tools-v3.json.gz",
+    "zig": "0.12.1"
+  },
+  "comparison_source": "1451f94c4d809dd43d851b91c7c777ad3c3ff2f3",
+  "created_utc": "2026-10-20T22:53:37.737850+00:00",
+  "kind": "combined development review artifacts, not an approved release",
+  "merge_recommendation": "Do not merge the existing stack yet; numerical acceptance remains unresolved. Preserve history and split into review chapters after the combined product is accepted.",
+  "original": {
+    "diff_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "oracle_source": "8d9cf1fe82c5c9254e5dc9593f01717e317f4333",
+    "preserved_diff_paths": [
+      "src/upstream",
+      "bindings/python/tdigest_rs",
+      "bindings/python/tests/data",
+      "scripts/check_upstream_sources.py"
+    ],
+    "public_compatibility_cases_per_full_cell": 208,
+    "source_guard": "PASS; see final-gates-v3.json.gz"
+  },
+  "production_release": false,
+  "qualification": {
+    "100plus_cpu_servers": "UNTESTED",
+    "bounded_artifact_checks": "PASS",
+    "coverage": "coverage-v3.json",
+    "internal_repository_and_publication": "UNTESTED; owner qualification",
+    "performance": "completed exact-wheel ABBA comparison; measured costs remain explicit; not an acceptance gate",
+    "private_consumer_binaries": "UNTESTED",
+    "spark_cluster": "UNTESTED; Spark3.5/Scala2.12 provisional, exact executor/serializer/checkpoint configuration pending",
+    "ssd_comparison": "PENDING TODO; historical material retained"
+  },
+  "quality": {
+    "diagnostic_exceptions": 0,
+    "diagnostic_failed_profiles": 114,
+    "diagnostic_profiles": 4140,
+    "exact_boundary_passes": 15,
+    "frozen_accuracy_failures": 10,
+    "frozen_new_regressions": 0,
+    "frozen_profiles": 756,
+    "installed_reproduction": "All4140modern and available original scores exactly match measured control",
+    "numerical_acceptance": "FAIL; no changed gate/domain approved"
+  },
+  "runtime": {
+    "count_limit": "Repeated test executions, not unique requirements. Additional floor and numerical cases are separately reported.",
+    "jdk_runtimes": [
+      "11.0.32.1+1",
+      "17.0.20.1+1",
+      "21.0.12.1+1 (Arch Linux OpenJDK; recorded release metadata)"
+    ],
+    "junit_cases_each": 20,
+    "jvm_floor": "actual CentOS7 glibc2.17, Java11, network disabled",
+    "language_build_runtime": "Scala2.12.16/sbt1.12.11 and Kotlin2.4.21/Gradle8.14.5; JDK17 build,Java11 runtime; authenticated staged-only fixture and server-stopped offline reruns",
+    "python_cells": [
+      {
+        "label": "py310-numpy1.26.4",
+        "numpy": "1.26.4",
+        "polars": "2.0.0",
+        "python": "3.10",
+        "status": "PASS"
+      },
+      {
+        "label": "py310-numpy2.2.6",
+        "numpy": "2.2.6",
+        "polars": "2.0.0",
+        "python": "3.10",
+        "status": "PASS"
+      },
+      {
+        "label": "py311-numpy1.26.4",
+        "numpy": "1.26.4",
+        "polars": "2.0.0",
+        "python": "3.11",
+        "status": "PASS"
+      },
+      {
+        "label": "py311-numpy2.3.4",
+        "numpy": "2.3.4",
+        "polars": "2.0.0",
+        "python": "3.11",
+        "status": "PASS"
+      },
+      {
+        "label": "py312-numpy1.26.4",
+        "numpy": "1.26.4",
+        "polars": "2.0.0",
+        "python": "3.12",
+        "status": "PASS"
+      },
+      {
+        "label": "py312-numpy2.3.4",
+        "numpy": "2.3.4",
+        "polars": "2.0.0",
+        "python": "3.12",
+        "status": "PASS"
+      },
+      {
+        "label": "py312-numpy2.5.4",
+        "numpy": "2.5.4",
+        "polars": "2.0.0",
+        "python": "3.12",
+        "status": "PASS"
+      },
+      {
+        "label": "py313-numpy2.3.4",
+        "numpy": "2.3.4",
+        "polars": "2.0.0",
+        "python": "3.13",
+        "status": "PASS"
+      },
+      {
+        "label": "py314-numpy2.5.4",
+        "numpy": "2.5.4",
+        "polars": "2.0.0",
+        "python": "3.14",
+        "status": "PASS"
+      },
+      {
+        "label": "py315-numpy2.5.4",
+        "numpy": "2.5.4",
+        "polars": "2.0.0",
+        "python": "3.15",
+        "status": "PASS"
+      },
+      {
+        "label": "py310-numpy1.26.4-no-polars",
+        "numpy": "1.26.4",
+        "polars": null,
+        "python": "3.10",
+        "status": "PASS"
+      },
+      {
+        "label": "py315-numpy2.5.4-no-polars",
+        "numpy": "2.5.4",
+        "polars": null,
+        "python": "3.15",
+        "status": "PASS"
+      }
+    ],
+    "python_executed_cases_including_source_rebuilds": 6285,
+    "python_floor": "actual Rocky8 glibc2.28,433installed cases,network disabled",
+    "source_rebuilds": [
+      {
+        "native_sha256": "f89b96ebf0d72adee3699599416a1c4e0daeb988921502dfaee6797052bdada6",
+        "passed": 433,
+        "python": "3.12",
+        "wheel_sha256": "b90248785417a7c833b315c524d924a584c11288f67748bba1621c2df9c941cc"
+      },
+      {
+        "native_sha256": "f89b96ebf0d72adee3699599416a1c4e0daeb988921502dfaee6797052bdada6",
+        "passed": 433,
+        "python": "3.14",
+        "wheel_sha256": "c38d8645ec6d230048d8af23fd2e07e698590097726bbfba57aaa3fdc66c3b3b"
+      },
+      {
+        "native_sha256": "f89b96ebf0d72adee3699599416a1c4e0daeb988921502dfaee6797052bdada6",
+        "passed": 433,
+        "python": "3.15",
+        "wheel_sha256": "fb1736d361b502487297d797e9e691a823d1941febc2c65b1f81d405ea3c809a"
+      }
+    ],
+    "symbols": {
+      "jni": {
+        "maximum_required_glibc": "2.16",
+        "sha256": "68b81960d52e11be245049a359e2e0787274dbe5595a07b9e5f11b5369f0047d"
+      },
+      "python": {
+        "maximum_required_glibc": "2.28",
+        "sha256": "f89b96ebf0d72adee3699599416a1c4e0daeb988921502dfaee6797052bdada6"
+      }
+    }
+  },
+  "source_sha": "60b295140d5eed81df24a8aed05f89767646c7d8",
+  "source_tree": "be1b63fa1bb40c3b4800a516113143db3d002031",
+  "version": {
+    "python": "0.2.5.dev2026102003",
+    "rust_jvm": "0.2.5-dev2026102003"
+  }
+}

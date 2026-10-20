@@ -1,4 +1,8 @@
-# Combined consumer candidate — 20 October 2026
+# Historical version001 consumer candidate — 20 October 2026
+
+This report is retained for source `a9c368f`, version001. See the
+[current version003 artifact report](accuracy-investigation/ARTIFACTS.md) and
+[integration status](INTEGRATION.md) for current fixes, measurements and limits.
 
 **A reviewable candidate is ready. Acceptance and production release remain blocked.** The combined source is `a9c368f2e766e602e2b0269486de089297e66de1`, compared with `1451f94c4d809dd43d851b91c7c777ad3c3ff2f3`. The development version is `0.2.5-dev2026102001` on the JVM and `0.2.5.dev2026102001` in Python. Later evidence-only commits do not change the artifact source revision.
 

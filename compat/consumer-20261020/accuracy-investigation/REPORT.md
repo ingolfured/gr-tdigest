@@ -128,14 +128,14 @@ public defaults, arithmetic, serialization or scale meanings.
 CI revealed a separate audit bug after three modern tests were added: the matrix
 still expected 222 rather than 225 modern cases. The inventory is corrected to 225,
 source totals derive 208 + 225 = 433, failures/skips remain strict, and CI now retains
-runtime evidence. A fresh same-wheel matrix must verify this fix; its results are
-recorded separately rather than inferred from the earlier candidate.
+runtime evidence. The fresh version003 same-wheel matrix and three source
+rebuilds pass; [their receipts](ARTIFACTS.md) identify every current artifact.
 
 Numerical acceptance is still incomplete. The safe next release decision is an
 explicit, workload-based accuracy contract, or a redesigned compressor with a
 reviewed set of tradeoffs. Do not claim these measurements close the small-capacity
-requirements. New canonical wheel/JAR and final same-artifact qualification remain
-separate from this source-level investigation. Private consumer/Spark/internal
+requirements. Current version003 wheel/JAR bounded checks are complete and
+[recorded separately](ARTIFACTS.md) from this source-level investigation. Private consumer/Spark/internal
 repository/representative-server checks remain the owner's qualification work.
 
 ## Reproduction and identities
@@ -187,3 +187,11 @@ verifies the finished archive. CI deliberately builds with a renamed input and
 runs the JAR outside the checkout. This is an integration fix, not a claim that
 the unresolved small-summary accuracy losses were removed. Its uniquely named
 artifacts and fresh qualification are separate from version002 evidence.
+
+## Current exact-artifact follow-through
+
+The [version003 artifact report](ARTIFACTS.md) records completed fresh installed
+checks, current workload measurements, hashes and coverage from source60b2951.
+All4,140 modern and available original diagnostic scores reproduced exactly on
+the canonical wheel. The frozen ten and wider114 accuracy failures remain; no
+packaging, runtime or regression PASS turns them into numerical acceptance.

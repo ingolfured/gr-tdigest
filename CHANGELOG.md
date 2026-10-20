@@ -5,6 +5,7 @@ All notable changes to this project are documented in this file.
 ## [Unreleased]
 
 ### Fixed
+- Record source60b2951/version003 exact review artifacts and fresh runtime, Linux-floor, Scala/Kotlin authenticated/offline, typing/ownership, cross-language and workload receipts. Preserve all ten frozen and114 diagnostic accuracy failures and keep numerical/internal acceptance explicit; correct stale builder documentation without rebuilding or substituting canonical bytes.
 - Keep installed diagnostic runs compatible with Python isolated mode by loading only their explicitly named reference helper; verify completed numerical reports and native identities rather than accepting a nonzero process code as proof of a measured failure.
 - Fix standalone JVM packaging for custom native override basenames: remove stale generated payloads, rename the selected library to the loader's canonical resource name and reject malformed JAR resource layouts. Add an actual renamed-override/outside-checkout CI smoke test; advance the new review artifact version to0.2.5-dev2026102003and preserve failed version002JAR evidence.
 - Preserve measured trial patches and SVG exports as byte-exact compressed evidence and verify every manifest hash after repository formatting hooks.

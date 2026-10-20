@@ -110,4 +110,6 @@ executor images, private data, representative servers and internal publication
 remain user-arranged acceptance steps. Spark 3.5 / Scala 2.12 is provisional;
 the precise configuration must be confirmed before cluster sign-off.
 
-Advanced raw Rust builders can seed state directly. Such callers must call `validate_state()` before queries; this candidate does not turn the builder into a fallible restoration API. Public codecs and modern binding reconstruction paths validate externally supplied state. This remaining raw-builder boundary is recorded as a coverage gap.
+Modern Rust builders and seed restoration are fallible and validate state before exposing it. Handle their `Result`; malformed configuration/state is an error. Requested capacity is retained when oversized seeds are compressed. Public codecs and modern binding reconstruction use checked state. The original `tdigest_core` API remains separately pinned.
+
+Current version003 review bytes and exact-source qualification are in [the artifact report](accuracy-investigation/ARTIFACTS.md) and [coverage](accuracy-investigation/coverage-v3.json). The original manifests beside this guide describe the historical version001 artifact source; they do not replace current receipts.
