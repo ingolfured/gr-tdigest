@@ -1,0 +1,62 @@
+{
+  "private_baselines_tested": false,
+  "steps": [
+    {
+      "native_sha256": "3e310f0e59adf0be9b7c34f38cd38682de0d259936102bf177a7693b4e5fc461",
+      "original_class": "tdigest_rs.lib",
+      "owners": {
+        "gr_tdigest": [
+          "gr-tdigest"
+        ],
+        "tdigest_rs": [
+          "gr-tdigest"
+        ]
+      },
+      "step": "baseline",
+      "version": "0.2.4"
+    },
+    {
+      "native_sha256": "5b14c191f75bae4954219477e59d67da684af548e3967562048955a883ad0789",
+      "original_class": "tdigest_rs.lib",
+      "owners": {
+        "gr_tdigest": [
+          "gr-tdigest"
+        ],
+        "tdigest_rs": [
+          "gr-tdigest"
+        ]
+      },
+      "step": "upgrade",
+      "version": "0.2.5.dev2026102001"
+    },
+    {
+      "native_sha256": "3e310f0e59adf0be9b7c34f38cd38682de0d259936102bf177a7693b4e5fc461",
+      "original_class": "tdigest_rs.lib",
+      "owners": {
+        "gr_tdigest": [
+          "gr-tdigest"
+        ],
+        "tdigest_rs": [
+          "gr-tdigest"
+        ]
+      },
+      "step": "rollback",
+      "version": "0.2.4"
+    },
+    {
+      "native_sha256": "5b14c191f75bae4954219477e59d67da684af548e3967562048955a883ad0789",
+      "original_class": "tdigest_rs.lib",
+      "owners": {
+        "gr_tdigest": [
+          "gr-tdigest"
+        ],
+        "tdigest_rs": [
+          "gr-tdigest"
+        ]
+      },
+      "step": "candidate-reinstall",
+      "version": "0.2.5.dev2026102001"
+    }
+  ],
+  "uninstall_removes_both_imports": true
+}

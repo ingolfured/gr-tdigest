@@ -1,0 +1,22 @@
+{
+  "command": [
+    "maturin",
+    "build",
+    "--release",
+    "--locked",
+    "--zig",
+    "--compatibility",
+    "manylinux_2_28",
+    "--auditwheel",
+    "check",
+    "--interpreter",
+    "/home/ingo/Documents/ChatGPT/gr-tdigest 2/gr-tdigest-candidate/.venv/bin/python",
+    "--out",
+    "/home/ingo/Documents/ChatGPT/gr-tdigest 2/candidate-20261020/comparison-baseline-artifact"
+  ],
+  "exit_code": 0,
+  "scope": "new comparison build from exact public starting revision; not a recovered internal 0.1.9/0.1.11 artifact",
+  "source_sha": "1451f94c4d809dd43d851b91c7c777ad3c3ff2f3",
+  "wheel": "/home/ingo/Documents/ChatGPT/gr-tdigest 2/candidate-20261020/comparison-baseline-artifact/gr_tdigest-0.2.4-cp310-abi3-manylinux_2_28_x86_64.whl",
+  "wheel_sha256": "e98b9df15feeadbe6b2017316c8d1e7fab7df341e7a609b716aeda396db60b47"
+}

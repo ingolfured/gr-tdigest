@@ -1,0 +1,46 @@
+[
+  {
+    "build_jdk": "/home/ingo/Documents/ChatGPT/gr-tdigest 2/followup-20261020/toolchains/jdk-3808d1d15e3ec6bd5b84057fb5d84c33d8a1536a258146bcea2e603fc726e08e/jdk-17.0.20.1+1",
+    "command": [
+      "/home/ingo/Documents/ChatGPT/gr-tdigest 2/followup-20261020/toolchains/jdk-3808d1d15e3ec6bd5b84057fb5d84c33d8a1536a258146bcea2e603fc726e08e/jdk-17.0.20.1+1/bin/java",
+      "-Xmx1g",
+      "-XX:ActiveProcessorCount=4",
+      "-Dsbt.task.cpus=2",
+      "-Dsbt.supershell=false",
+      "-Dsbt.override.build.repos=true",
+      "-Dsbt.repository.config=/home/ingo/Documents/ChatGPT/gr-tdigest 2/candidate-20261020/sbt-repositories",
+      "-Dsbt.boot.credentials=/home/ingo/Documents/ChatGPT/gr-tdigest 2/candidate-20261020/sbt-fixture.credentials",
+      "-Dsbt.boot.directory=/home/ingo/Documents/ChatGPT/gr-tdigest 2/candidate-20261020/sbt-boot",
+      "-Dtdigest.version=0.2.5-dev2026102001",
+      "-jar",
+      "/home/ingo/Documents/ChatGPT/gr-tdigest 2/candidate-20261020/sbt-launch-1.12.11.jar",
+      "set offline := true",
+      "clean",
+      "run"
+    ],
+    "exit_code": 0,
+    "name": "scala",
+    "repository_unavailable": true,
+    "runtime_jdk": "/home/ingo/Documents/ChatGPT/gr-tdigest 2/followup-20261020/toolchains/jdk-5c3f68887c325d36d852ba534303e1f5f1f5cae7d6cc1e951d73e0d8e98a058d/jdk-11.0.32.1+1"
+  },
+  {
+    "build_jdk": "/home/ingo/Documents/ChatGPT/gr-tdigest 2/followup-20261020/toolchains/jdk-3808d1d15e3ec6bd5b84057fb5d84c33d8a1536a258146bcea2e603fc726e08e/jdk-17.0.20.1+1",
+    "command": [
+      "/home/ingo/Documents/ChatGPT/gr-tdigest 2/gr-tdigest-candidate/bindings/java/gradlew",
+      "--no-daemon",
+      "--console=plain",
+      "--offline",
+      "--init-script",
+      "/home/ingo/Documents/ChatGPT/gr-tdigest 2/candidate-20261020/kotlin-runtime.init.gradle",
+      "-p",
+      "/home/ingo/Documents/ChatGPT/gr-tdigest 2/gr-tdigest-candidate/bindings/java/examples/kotlin",
+      "-PtdigestVersion=0.2.5-dev2026102001",
+      "clean",
+      "run"
+    ],
+    "exit_code": 0,
+    "name": "kotlin",
+    "repository_unavailable": true,
+    "runtime_jdk": "/home/ingo/Documents/ChatGPT/gr-tdigest 2/followup-20261020/toolchains/jdk-5c3f68887c325d36d852ba534303e1f5f1f5cae7d6cc1e951d73e0d8e98a058d/jdk-11.0.32.1+1"
+  }
+]

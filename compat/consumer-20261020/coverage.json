@@ -1,0 +1,264 @@
+{
+  "definitions": {
+    "FAIL": "Observed or source-inspected unmet requirement; no waiver implied",
+    "PASS": "The explicitly bounded checks listed passed; not universal proof",
+    "UNTESTED": "Evidence not produced externally; not failure due to private-data unavailability"
+  },
+  "overall_status": "REVIEW_CANDIDATE_NOT_ACCEPTED_FOR_RELEASE",
+  "requirements": [
+    {
+      "evidence": "artifact-manifest.json; source guard; diff1451f94 original paths is empty",
+      "id": "source_and_original_identity",
+      "limit": "Original identity uses pinned8d9cf1f oracle; current upstream adaptation remains a separate source",
+      "scope": "Combined code frozen at a9c368f; original source/wrapper/oracle/fixtures unchanged",
+      "status": "PASS"
+    },
+    {
+      "evidence": "a9c368f-test.log; installed-matrix/matrix.json",
+      "id": "original_rust_and_python_api",
+      "limit": "Bounded public compatibility coverage, including inherited saved-format limitations",
+      "scope": "tdigest_core tests;91 unchanged upstream cases;70 exact-output cases and208 installed compatibility cases per full runtime",
+      "status": "PASS"
+    },
+    {
+      "evidence": "a9c368f-build.log; a9c368f-test.log; a9c368f-lint.log",
+      "id": "combined_build_unit_lint_rustdoc",
+      "limit": "Three pre-existing slow Rust proof/story tests remain ignored; separate JNI-feature run62pass/3ignored",
+      "scope": "make build/test/lint and warnings-denied rustdoc on combined frozen source",
+      "status": "PASS"
+    },
+    {
+      "evidence": "test_consumer_contracts.py; TDigestConsumerTest.java; f32_weight_mass.rs; installed matrix",
+      "id": "weighted_training_mass",
+      "limit": "Finite precision cannot retain every increment beside an arbitrary f64 total",
+      "scope": "Positive fractional weighted construction/addition, observable mutations, f64 weights independent of mean precision, mass16777217 retained",
+      "status": "PASS"
+    },
+    {
+      "evidence": "consumer probes22/22; installed38consumer cases; JVM18cases",
+      "id": "modern_scaling_copy",
+      "limit": "Unrepresentable nonzero weighted products are rejected; subnormal domain exclusion is not release-approved",
+      "scope": "Positive weight/value transforms; full-state copies; finite overflow/underflow errors before committing",
+      "status": "PASS"
+    },
+    {
+      "evidence": "consumer probes; Python/Rust/JVM public tests",
+      "id": "modern_failure_atomicity",
+      "limit": "Does not promise recovery from allocator abort or all OOM events",
+      "scope": "Multi-item additions and merges, invalid later iterable item, incompatible/overflow transforms leave receiver unchanged",
+      "status": "PASS"
+    },
+    {
+      "evidence": "installed-matrix/matrix.json; consumer probes",
+      "id": "queries_ties_containers",
+      "limit": "Modern output/default migration approved; original outputs remain separate",
+      "scope": "Median=q0.5; atomic midpoint CDF; endpoints; scalar/list/tuple/0D/1D containers and explicit multidimensional rejection",
+      "status": "PASS"
+    },
+    {
+      "evidence": "installed consumer and coherence tests",
+      "id": "empty_missing_nonfinite",
+      "limit": "No application imputation; modern NaN quantiles rejected",
+      "scope": "Valid empty state distinct from missing; strict NaN/inf training/invalid-state rejection; NaN/inf CDF policies",
+      "status": "PASS"
+    },
+    {
+      "evidence": "test_consumer_contracts.py; combined coherence tests",
+      "id": "polars_cardinality_composition",
+      "limit": "from_bytes remains group reduction, requires explicit f32/f64; no new row-wise mode",
+      "scope": "Shape-based broadcast/alignment; groups/windows/lazy joins/conditionals; zero/one/many List planning and binary schema",
+      "status": "PASS"
+    },
+    {
+      "evidence": "installed matrix; codec/wire/coherence tests",
+      "id": "polars_state_and_schema",
+      "limit": "Older integer polars_tdigest schema and transitional aliases not newly supported",
+      "scope": "Malformed metadata/count/sum/NaN mean rejected; six-field old reads retain documented inference; new f64-weight/config/kind schema explicit",
+      "status": "PASS"
+    },
+    {
+      "evidence": "installed matrix; consumer probes; installed-extra.json",
+      "id": "wire_pickle_roundtrips",
+      "limit": "Older v3 readers may reject full-width f32-weight extension; original saved format remains historically lossy",
+      "scope": "TDIGv1/v2/v3 reads and explicit write limits; modern copy/pickle and exact full-state roundtrips",
+      "status": "PASS"
+    },
+    {
+      "evidence": "Source inspection: builder with_centroids_and_stats().build(); BUILD.md limitation",
+      "id": "raw_rust_builder_restoration",
+      "limit": "Call validate_state before raw queries; a fallible builder/restoration API remains work",
+      "scope": "Advanced public seed builder can still construct unchecked raw state before queries",
+      "status": "FAIL"
+    },
+    {
+      "evidence": "installed-matrix/matrix.json; installed-matrix/source-builds.json",
+      "id": "python_runtimes_exact_wheel",
+      "limit": "Only exact listed NumPy1.26.4/2.2.6/2.3.4/2.5.4 combinations; no blanket NumPy2.x promise",
+      "scope": "Same canonical wheel:10full cells and2Polars-free cells;3source rebuilds separately tested",
+      "status": "PASS"
+    },
+    {
+      "evidence": "python-glibc228.json; python-glibc228.log; final-jvm-and-symbols.json",
+      "id": "python_manylinux_floor",
+      "limit": "Linuxx86-64 only; current package tests use Polars2.0 approved migration",
+      "scope": "430 installed tests in Rocky8 glibc2.28; wheel audit/symbol check",
+      "status": "PASS"
+    },
+    {
+      "evidence": "installed-extra.json; pyarrow-glibc228.json",
+      "id": "target_pyarrow_interchange",
+      "limit": "Polars1.38.1 is unqualified and no longer the selected modern dependency stack",
+      "scope": "Python3.12.15/NumPy2.5.4/Polars2.0.0/PyArrow24.0.0 Arrow/Parquet full-struct roundtrips; actual glibc2.28 execution passed",
+      "status": "PASS"
+    },
+    {
+      "evidence": "installed matrix inspection; installed-typing.log; ownership-upgrade-rollback.json",
+      "id": "installed_docs_types_ownership",
+      "limit": "Upgrade/rollback used identified public0.2.4 comparison wheel, not unavailable internal0.1.9/0.1.11",
+      "scope": "Native class/method docs, named weights signature, py.typed/stubs, external mypy consumer, fresh/upgrade/rollback/uninstall/import ownership",
+      "status": "PASS"
+    },
+    {
+      "evidence": "jvm-tools-api.json; jar API logs; final-jvm-and-symbols.json",
+      "id": "jvm_actual_public_jar_api",
+      "limit": "Personal gr.tdigest namespace retained; no approved upstream coordinate migration",
+      "scope": "Actual JAR exposes arrays/weighted construction/fluent additions and merge/query/scale/cast/serialization; class major55",
+      "status": "PASS"
+    },
+    {
+      "evidence": "final-jvm-and-symbols.json; final-java*-junit.log",
+      "id": "jvm_runtime_and_abi",
+      "limit": "Build JDK17 separately declared; native maximum imported GLIBC2.16 does not change retained deployment floor2.17",
+      "scope": "Same canonical JAR:18JUnit cases on Java11/17/21;18on Java11CentOS7/glibc2.17",
+      "status": "PASS"
+    },
+    {
+      "evidence": "TDigestConsumerTest.java; TDigestSerializationTest.java; installed JUnit",
+      "id": "jvm_lifecycle_serialization",
+      "limit": "Independent handles supported; concurrent mutation of one handle unsupported",
+      "scope": "Fresh restored handles, multiple objects/streams, original close and GC survival, exactly-once close behavior, predictable closed-handle errors",
+      "status": "PASS"
+    },
+    {
+      "evidence": "final-rust-jni-unit.log; final-jvm-loading-pressure.json",
+      "id": "jni_loading_panic_allocator",
+      "limit": "Panic guard tested in Rust unit; no live JVM panic injection hook; allocator abort/invalid pointers/all OOM not catchable guarantees",
+      "scope": "System allocator, catchable-panic unit, relative exact overrides, selected extraction directory and useful failure diagnostics",
+      "status": "PASS"
+    },
+    {
+      "evidence": "final-jvm-loading-pressure.json; final-jvm-pressure-second.log",
+      "id": "bounded_jvm_memory_pressure",
+      "limit": "Bounded public synthetic check, not representative internal Spark executor pressure",
+      "scope": "32768digests/4096peak-live/4194304observations under64MiB Java heap; peak process RSS66716KiB",
+      "status": "PASS"
+    },
+    {
+      "evidence": "final-language-examples.json; final-language-offline.json",
+      "id": "scala_kotlin_examples",
+      "limit": "Kotlin compiler tested, required minimum still unconfirmed; no Kotlin-for-Spark claim",
+      "scope": "Scala2.12.16/sbt1.12.11 and Kotlin2.4.21/Gradle8.14.5 compile/run actual final JAR, JDK17build/Java11runtime",
+      "status": "PASS"
+    },
+    {
+      "evidence": "final-language-offline.json; final-maven-negative.json; final-bootstrap.log; jni-build.json",
+      "id": "configured_sources_auth_offline",
+      "limit": "Real internal Artifactory/trust/Cargo/Python-index access remains consumer qualification",
+      "scope": "Authenticated loopback Maven fixture; bad credentials fail in fresh cache; same Scala/Kotlin examples offline with repository stopped; bootstrap9cases; Rust JNI offline build",
+      "status": "PASS"
+    },
+    {
+      "evidence": "artifact-manifest.json; artifact-builds.json; jni-build.json",
+      "id": "archive_and_artifact_identity",
+      "limit": "Source rebuilds are evidence variants, never replacements for canonical bytes",
+      "scope": "One frozen source revision, unique development version, full wrapper/examples and source archive, canonical wheel/JAR/native hashes",
+      "status": "PASS"
+    },
+    {
+      "evidence": "installed-extra.json",
+      "id": "cross_language_precision",
+      "limit": "Toy exact data only; does not imply every approximation trajectory is cross-platform bit-identical",
+      "scope": "Canonical wheel/JAR f32/f64 weighted construction and full-state byte/query parity in both directions",
+      "status": "PASS"
+    },
+    {
+      "evidence": "a9c368f-test.log; quality-fast/results.json",
+      "id": "fast_accuracy_gate",
+      "limit": "Empirical suite, not universal accuracy guarantee",
+      "scope": "90reference/weighted checks and42comparison profiles; per-metric unchanged fast baseline gate",
+      "status": "PASS"
+    },
+    {
+      "evidence": "quality-extended/results.json; quality-differences.json",
+      "id": "extended_approximate_accuracy",
+      "limit": "No tolerance or frozen baseline relaxed/regenerated; regression outcome is FAIL",
+      "scope": "756profiles:10existing accuracy-envelope failures,15gated metric regressions across7real-data profiles",
+      "status": "FAIL"
+    },
+    {
+      "evidence": "final-boundaries.json",
+      "id": "exact_numeric_boundaries",
+      "limit": "Baseline had13FAIL/2PASS; unsupported case is not a new numerical pass or approved exclusion",
+      "scope": "14of15 exact controls PASS; remaining subnormal-product case explicitly UNSUPPORTED",
+      "status": "FAIL"
+    },
+    {
+      "evidence": "performance-summary.json; performance/ledger.json",
+      "id": "large_workload_comparison",
+      "limit": "Measured-comparison deliverable only; no percentage speedup/memory gate or100+CPU qualification",
+      "scope": "Measured thousands of groups,16/64/128columns,40-way fan-in, fragmented CDF, streaming, bridge and1/2/4/8/16workers",
+      "status": "PASS"
+    },
+    {
+      "evidence": "Consumer-arranged or pending TODO",
+      "id": "private_baseline_regressions",
+      "limit": "No invented evidence; publication/sign-off remains blocked",
+      "scope": "Internal0.1.9/0.1.11 exact identified wheels/private fixtures",
+      "status": "UNTESTED"
+    },
+    {
+      "evidence": "Consumer-arranged or pending TODO",
+      "id": "historical_jvm_binary",
+      "limit": "No invented evidence; publication/sign-off remains blocked",
+      "scope": "Original working0.1.16JAR/build receipt unrecovered",
+      "status": "UNTESTED"
+    },
+    {
+      "evidence": "Consumer-arranged or pending TODO",
+      "id": "spark_cluster",
+      "limit": "No invented evidence; publication/sign-off remains blocked",
+      "scope": "Actual Sparkdriver/executor shuffle/broadcast/checkpoint/serializer and executor image",
+      "status": "UNTESTED"
+    },
+    {
+      "evidence": "Consumer-arranged or pending TODO",
+      "id": "internal_repositories_publication",
+      "limit": "No invented evidence; publication/sign-off remains blocked",
+      "scope": "Real internal authenticated repositories/trust/publication/import/deployment",
+      "status": "UNTESTED"
+    },
+    {
+      "evidence": "Consumer-arranged or pending TODO",
+      "id": "representative_server_qualification",
+      "limit": "No invented evidence; publication/sign-off remains blocked",
+      "scope": "100+CPU server/actual CPU quota and NUMA/memory workload",
+      "status": "UNTESTED"
+    },
+    {
+      "evidence": "Consumer-arranged or pending TODO",
+      "id": "final_spark_kotlin_matrix",
+      "limit": "No invented evidence; publication/sign-off remains blocked",
+      "scope": "Exact Spark3.5/Scala2.12consumer versions/settings and minimum Kotlin compiler",
+      "status": "UNTESTED"
+    },
+    {
+      "evidence": "Consumer-arranged or pending TODO",
+      "id": "external_ssd_comparison",
+      "limit": "No invented evidence; publication/sign-off remains blocked",
+      "scope": "Pending SSDREADME/AGENTS/source/ancestry/experiment comparison; preserve historical refs",
+      "status": "UNTESTED"
+    }
+  ],
+  "source_sha": "a9c368f2e766e602e2b0269486de089297e66de1",
+  "updated_utc": "2026-10-20T19:27:38.911772+00:00"
+}

@@ -1,0 +1,80 @@
+[
+  {
+    "command": [
+      "/home/ingo/Documents/ChatGPT/gr-tdigest 2/followup-20261020/toolchains/jdk-5c3f68887c325d36d852ba534303e1f5f1f5cae7d6cc1e951d73e0d8e98a058d/jdk-11.0.32.1+1/bin/java",
+      "-cp",
+      "/home/ingo/Documents/ChatGPT/gr-tdigest 2/candidate-20261020/artifacts/gr-tdigest-0.2.5-dev2026102001.jar:/home/ingo/Documents/ChatGPT/gr-tdigest 2/candidate-20261020/jvm-probe-classes",
+      "JvmProbe"
+    ],
+    "exit_code": 0,
+    "expected_exit_code": 0,
+    "label": "bundled"
+  },
+  {
+    "command": [
+      "/home/ingo/Documents/ChatGPT/gr-tdigest 2/followup-20261020/toolchains/jdk-5c3f68887c325d36d852ba534303e1f5f1f5cae7d6cc1e951d73e0d8e98a058d/jdk-11.0.32.1+1/bin/java",
+      "-Dgr.tdigest.native=native/libgr_tdigest.so",
+      "-cp",
+      "/home/ingo/Documents/ChatGPT/gr-tdigest 2/candidate-20261020/artifacts/gr-tdigest-0.2.5-dev2026102001.jar:/home/ingo/Documents/ChatGPT/gr-tdigest 2/candidate-20261020/jvm-probe-classes",
+      "JvmProbe"
+    ],
+    "exit_code": 0,
+    "expected_exit_code": 0,
+    "label": "relative"
+  },
+  {
+    "command": [
+      "/home/ingo/Documents/ChatGPT/gr-tdigest 2/followup-20261020/toolchains/jdk-5c3f68887c325d36d852ba534303e1f5f1f5cae7d6cc1e951d73e0d8e98a058d/jdk-11.0.32.1+1/bin/java",
+      "-Dgr.tdigest.extractDir=/home/ingo/Documents/ChatGPT/gr-tdigest 2/candidate-20261020/jvm-runtime/extracted",
+      "-cp",
+      "/home/ingo/Documents/ChatGPT/gr-tdigest 2/candidate-20261020/artifacts/gr-tdigest-0.2.5-dev2026102001.jar:/home/ingo/Documents/ChatGPT/gr-tdigest 2/candidate-20261020/jvm-probe-classes",
+      "JvmProbe"
+    ],
+    "exit_code": 0,
+    "expected_exit_code": 0,
+    "label": "extraction"
+  },
+  {
+    "command": [
+      "/home/ingo/Documents/ChatGPT/gr-tdigest 2/followup-20261020/toolchains/jdk-5c3f68887c325d36d852ba534303e1f5f1f5cae7d6cc1e951d73e0d8e98a058d/jdk-11.0.32.1+1/bin/java",
+      "-Dgr.tdigest.native=missing.so",
+      "-cp",
+      "/home/ingo/Documents/ChatGPT/gr-tdigest 2/candidate-20261020/artifacts/gr-tdigest-0.2.5-dev2026102001.jar:/home/ingo/Documents/ChatGPT/gr-tdigest 2/candidate-20261020/jvm-probe-classes",
+      "JvmProbe"
+    ],
+    "exit_code": 1,
+    "expected_exit_code": 1,
+    "label": "bad-override"
+  },
+  {
+    "command": [
+      "/home/ingo/Documents/ChatGPT/gr-tdigest 2/followup-20261020/toolchains/jdk-5c3f68887c325d36d852ba534303e1f5f1f5cae7d6cc1e951d73e0d8e98a058d/jdk-11.0.32.1+1/bin/java",
+      "-Dgr.tdigest.extractDir=/home/ingo/Documents/ChatGPT/gr-tdigest 2/candidate-20261020/jvm-runtime/not-a-directory",
+      "-cp",
+      "/home/ingo/Documents/ChatGPT/gr-tdigest 2/candidate-20261020/artifacts/gr-tdigest-0.2.5-dev2026102001.jar:/home/ingo/Documents/ChatGPT/gr-tdigest 2/candidate-20261020/jvm-probe-classes",
+      "JvmProbe"
+    ],
+    "exit_code": 1,
+    "expected_exit_code": 1,
+    "label": "bad-extraction"
+  },
+  {
+    "command": [
+      "/home/ingo/Documents/ChatGPT/gr-tdigest 2/followup-20261020/toolchains/jdk-5c3f68887c325d36d852ba534303e1f5f1f5cae7d6cc1e951d73e0d8e98a058d/jdk-11.0.32.1+1/bin/java",
+      "-Xmx64m",
+      "-XX:ActiveProcessorCount=4",
+      "-cp",
+      "/home/ingo/Documents/ChatGPT/gr-tdigest 2/candidate-20261020/artifacts/gr-tdigest-0.2.5-dev2026102001.jar:/home/ingo/Documents/ChatGPT/gr-tdigest 2/candidate-20261020/jvm-probe-classes",
+      "JvmProbe",
+      "pressure"
+    ],
+    "elapsed_seconds": 0.2846741820103489,
+    "exit_code": 0,
+    "expected_exit_code": 0,
+    "label": "bounded-pressure",
+    "observations": 4194304,
+    "peak_live_digests": 4096,
+    "peak_rss_kib": 66716,
+    "total_digests": 32768
+  }
+]

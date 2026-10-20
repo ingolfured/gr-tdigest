@@ -1,0 +1,28 @@
+{
+  "command": [
+    "cargo-zigbuild",
+    "zigbuild",
+    "--release",
+    "--locked",
+    "--offline",
+    "--features",
+    "java",
+    "--lib",
+    "--target",
+    "x86_64-unknown-linux-gnu.2.17"
+  ],
+  "exit_code": 0,
+  "jar_command": [
+    "/home/ingo/Documents/ChatGPT/gr-tdigest 2/gr-tdigest-candidate/bindings/java/gradlew",
+    "--no-daemon",
+    "--console=plain",
+    "--offline",
+    "-p",
+    "/home/ingo/Documents/ChatGPT/gr-tdigest 2/gr-tdigest-candidate/bindings/java",
+    "clean",
+    "jar"
+  ],
+  "jar_sha256": "056da58e404485ee5f46fc0c7af32d5d0c14bad2304f6537c4539308a915ec7b",
+  "native_sha256": "3e437a2657e256f9236ad6bf62a6801c8a7935f47d23e2bdce7b6f7ef4adca08",
+  "source_sha": "a9c368f2e766e602e2b0269486de089297e66de1"
+}

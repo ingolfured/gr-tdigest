@@ -1,0 +1,36 @@
+{
+  "jar_sha256": "056da58e404485ee5f46fc0c7af32d5d0c14bad2304f6537c4539308a915ec7b",
+  "numpy": "2.5.4",
+  "python_native_sha256": "5b14c191f75bae4954219477e59d67da684af548e3967562048955a883ad0789",
+  "rows": [
+    {
+      "byte_identity": true,
+      "cdf_and_quantiles": true,
+      "path": "construct",
+      "precision": "f32"
+    },
+    {
+      "byte_identity": true,
+      "cdf_and_quantiles": true,
+      "path": "restore",
+      "precision": "f32"
+    },
+    {
+      "byte_identity": true,
+      "cdf_and_quantiles": true,
+      "path": "construct",
+      "precision": "f64"
+    },
+    {
+      "byte_identity": true,
+      "cdf_and_quantiles": true,
+      "path": "restore",
+      "precision": "f64"
+    },
+    {
+      "arrow_and_parquet_full_struct_roundtrip": true,
+      "polars": "2.0.0",
+      "pyarrow": "24.0.0"
+    }
+  ]
+}

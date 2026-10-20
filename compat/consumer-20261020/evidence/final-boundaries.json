@@ -1,0 +1,144 @@
+{
+  "accuracy_status": "FAIL",
+  "binary_sha256": "007b4645863faf4f5f4ca42f00a2125469e7c24fd4d1ac606a87871a9e7af496",
+  "command": [
+    "cargo",
+    "run",
+    "--locked",
+    "--quiet",
+    "--release",
+    "--example",
+    "quality_boundaries"
+  ],
+  "controls": [
+    {
+      "expected": 4.0,
+      "id": "tiny_use_mass_cap1/f32",
+      "observed": 4.0,
+      "status": "PASS"
+    },
+    {
+      "expected": 4.0,
+      "id": "tiny_use_mass_cap2/f32",
+      "observed": 4.0,
+      "status": "PASS"
+    },
+    {
+      "expected": 1.5,
+      "id": "residual_tail_moment/f32",
+      "observed": 1.5,
+      "status": "PASS"
+    },
+    {
+      "expected": 0.3333333333333333,
+      "id": "finite_cancellation_mean/f32",
+      "observed": 0.3333333333333333,
+      "status": "PASS"
+    },
+    {
+      "expected": 2.5,
+      "id": "fractional_symmetric_median_0/f32",
+      "observed": 2.5,
+      "status": "PASS"
+    },
+    {
+      "expected": 2.5,
+      "id": "fractional_symmetric_median_1/f32",
+      "observed": 2.5,
+      "status": "PASS"
+    },
+    {
+      "expected": 2.5,
+      "id": "fractional_symmetric_median_2/f32",
+      "observed": 2.5,
+      "status": "PASS"
+    },
+    {
+      "expected": 4.0,
+      "id": "tiny_use_mass_cap1/f64",
+      "observed": 4.0,
+      "status": "PASS"
+    },
+    {
+      "expected": 4.0,
+      "id": "tiny_use_mass_cap2/f64",
+      "observed": 4.0,
+      "status": "PASS"
+    },
+    {
+      "expected": 1.5,
+      "id": "residual_tail_moment/f64",
+      "observed": 1.5,
+      "status": "PASS"
+    },
+    {
+      "expected": 0.3333333333333333,
+      "id": "finite_cancellation_mean/f64",
+      "observed": 0.3333333333333333,
+      "status": "PASS"
+    },
+    {
+      "expected": 2.5,
+      "id": "fractional_symmetric_median_0/f64",
+      "observed": 2.5,
+      "status": "PASS"
+    },
+    {
+      "expected": 2.5,
+      "id": "fractional_symmetric_median_1/f64",
+      "observed": 2.5,
+      "status": "PASS"
+    },
+    {
+      "expected": 2.5,
+      "id": "fractional_symmetric_median_2/f64",
+      "observed": 2.5,
+      "status": "PASS"
+    },
+    {
+      "error": "tdigest: non-finite values are not allowed (weighted value product overflow or underflow). hint: clean your data or drop NaN/\u00b1inf before building the digest",
+      "expected": 5e-324,
+      "id": "subnormal_aggregate_mean/f64",
+      "observed": null,
+      "status": "UNSUPPORTED"
+    }
+  ],
+  "failed": 1,
+  "regression_status": "NOT_CHECKED",
+  "source_sha256": {
+    "Cargo.lock": "31f52e64aaf3bd8ea3980ea6f8c96fa677f4d80d43e581f03bc85d34472fadd5",
+    "Cargo.toml": "58632d330ca0ecbecc243f4c643e1b49bdb8a7753c7a51a1b0a8e61a44063e00",
+    "examples/quality_boundaries.rs": "09c06e877b60fad5b6aba7404dcafdfc8b81781a3bca88319dde3d44de2b86f5",
+    "src/bin/tdigest_cli.rs": "2ab7290ea18d6e0d7d7423df8b5bc2c76db28c5ed755f12c8a98221df953b904",
+    "src/compact_storage.rs": "8517c6704081a6527c95356b685535bdaecea558751807a817b06cef31ba2dc2",
+    "src/error.rs": "35e6f01c103d0006ed0c1d61c258e9dd545e2ca06963187e5840c25c3e902d51",
+    "src/jni.rs": "225857a26e1178cd0d0c8af4049a29a53e32f5da083e06fe115ca83209435eaa",
+    "src/lib.rs": "cacc0cf288c6651b54e8998f9b58c133a238a03a7cfd34836484783aa906f23e",
+    "src/polars_expr.rs": "04cd2942714d4c6c8f0dc70528b72d01ee4d85bc802a24e85f08c373507cec4e",
+    "src/py.rs": "61fd8780f08ed51c61103331a9d5fe81b9db01da62c96f607bcb8414dc620619",
+    "src/quality/cdf_quality.rs": "1ade3775b5ed47b4893ca84a4e549331c2cfa012f46c71725948ccb6261acc85",
+    "src/quality/quality_base.rs": "caea4dbc50bcc2420930105db05030823e8c74218e5138bc2acaa7c3d032fffa",
+    "src/quality/quantile_quality.rs": "df4efa0b8a0beab654b01f40ed51fb37c22a372b3b5f728b4f65393fb2f86920",
+    "src/tdigest/cdf.rs": "55eeb11a1da871aee389d1256308fdc64a6c66d43d3f08d7f60e1729c80e65cc",
+    "src/tdigest/centroids.rs": "5f5fba6d2f160e79f9efb5b869935c1989a959a3057892f6a19c2d364421581c",
+    "src/tdigest/codecs.rs": "d4178908f41dca3f9b289e72b3bcdfb975068ab9459d0158ee48e170ee615713",
+    "src/tdigest/compressor.rs": "ccfdb94d5d923cb35252e552e02ca7ee863b60dad7053f7483dd5b2ff4d54f3c",
+    "src/tdigest/frontends.rs": "cb8c7280a9486465061f86edf764307b80e44fdbf6f0b8e6c3df3edcede63680",
+    "src/tdigest/merges.rs": "c1c4b84f22a26c2adc13f05a0562bc935b2dc0a401b40315ccbc7dba37fca428",
+    "src/tdigest/mod.rs": "bec8f9202dadb96af844b812231f11a4b90b10ebe19370c8a35378951f4bcbb7",
+    "src/tdigest/precision.rs": "7473c43ec96afc101a39c6bda8b83e82e1b13e8d5725c3556805b3585bfe14d7",
+    "src/tdigest/quantile.rs": "2571f234770deb47e01af10295ebec020019691fa0d299252183e1ac0166c62d",
+    "src/tdigest/scale.rs": "dfed088ef9d9b189475424283d65f8f9096670956cc8f2eba6469bb725d1693b",
+    "src/tdigest/singleton_policy.rs": "1f26944b9aa7575a5d86a5c31b97ed5bc80f2a9c9f12cf5ed9db1ca7436e5fa7",
+    "src/tdigest/summation.rs": "f055d1189afaca621f2285143eaf8a7445085d83a587c5e7977b16caa1a455e9",
+    "src/tdigest/tdigest.rs": "aa8e3a281a648f59b53d078895c27d1c9dbc7389a66403d62afc11bfd83ba0fd",
+    "src/tdigest/test_helpers.rs": "f4556c0dee84cfad9c05325c8cea58c449e0135a8849fbefda6385761d94c0c5",
+    "src/tdigest/wire.rs": "5e9f7b5c82fb20dc4360e58cf361a82d66d0a0c302cf267c1dbfb866f7fc2cd3",
+    "src/upstream/core.rs": "447766914f92398a43a01e53ecbc61231909eb641f2634c3fc31da2de71c3af8",
+    "src/upstream/lib.rs": "38ecb6bd5d3f17f3d19da2f8b613f50198a613d47edae413f275744ade8a3e4c",
+    "src/upstream/scale.rs": "c4b3cce4ba57da48a6e427f4d2f5f04a4b6c67f790c5b32d7334320f57246bb0",
+    "src/upstream/tests/public_api.rs": "b8448a7cf81999232f3c396d35ce4d9922c33204c3747a3edfa09f169426c16b",
+    "src/upstream/traits.rs": "74324e7ec5fc5e9e8d448b88fa35c8a0525354eef10eb7fead694cf2d9754868",
+    "src/upstream_py.rs": "f9d763ce6c43abf855b469f963c1c93e126e00e876af99684c65171759594284"
+  }
+}

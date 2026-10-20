@@ -196,4 +196,6 @@ The [source-specific gap assessment](compat/consumer-20261020/ASSESSMENT.md) rec
 
 Modern consumer candidate guides: [Python/NumPy](bindings/python/OBJECT_API.md), [Polars](bindings/python/POLARS_API.md), and [source/build/qualification procedure](compat/consumer-20261020/BUILD.md). This is a development candidate with explicit remaining numerical and internal qualification limits, not a production release.
 
+The [combined candidate report](compat/consumer-20261020/CANDIDATE.md) identifies the exact wheel/JAR source and bytes, passed runtime checks, failed accuracy gates, workload costs and remaining acceptance work. Read it alongside the historical assessment before reviewing or merging the modern stack.
+
 The JVM candidate includes [Scala/sbt and Kotlin/Gradle examples](bindings/java/examples/README.md), with configured repository credentials and offline checks. The coverage report distinguishes build JDK, runtime JDKs and actual cluster checks.

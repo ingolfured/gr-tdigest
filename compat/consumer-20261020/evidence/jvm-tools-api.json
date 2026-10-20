@@ -1,0 +1,25 @@
+[
+  {
+    "home": "/home/ingo/Documents/ChatGPT/gr-tdigest 2/followup-20261020/toolchains/jdk-3808d1d15e3ec6bd5b84057fb5d84c33d8a1536a258146bcea2e603fc726e08e/jdk-17.0.20.1+1",
+    "name": "build_and_runtime_java17",
+    "version": "openjdk version \"17.0.20.1\" 2026-08-18\nOpenJDK Runtime Environment Temurin-17.0.20.1+1 (build 17.0.20.1+1)\nOpenJDK 64-Bit Server VM Temurin-17.0.20.1+1 (build 17.0.20.1+1, mixed mode, sharing)\n"
+  },
+  {
+    "home": "/home/ingo/Documents/ChatGPT/gr-tdigest 2/followup-20261020/toolchains/jdk-5c3f68887c325d36d852ba534303e1f5f1f5cae7d6cc1e951d73e0d8e98a058d/jdk-11.0.32.1+1",
+    "name": "runtime_java11",
+    "version": "openjdk version \"11.0.32.1\" 2026-08-18\nOpenJDK Runtime Environment Temurin-11.0.32.1+1 (build 11.0.32.1+1)\nOpenJDK 64-Bit Server VM Temurin-11.0.32.1+1 (build 11.0.32.1+1, mixed mode)\n"
+  },
+  {
+    "home": "/usr/lib/jvm/java-21-openjdk",
+    "name": "runtime_java21",
+    "version": "openjdk version \"21.0.12.1\" 2026-08-18\nOpenJDK Runtime Environment (build 21.0.12.1+1)\nOpenJDK 64-Bit Server VM (build 21.0.12.1+1, mixed mode, sharing)\n"
+  },
+  {
+    "class_file_major_version": 55,
+    "class_name": "gr.tdigest.TDigest"
+  },
+  {
+    "class_file_major_version": 55,
+    "class_name": "gr.tdigest.TDigest$Builder"
+  }
+]

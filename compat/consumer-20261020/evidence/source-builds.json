@@ -1,0 +1,122 @@
+[
+  {
+    "artifact": {
+      "distribution": "gr-tdigest",
+      "native_sha256": "5b14c191f75bae4954219477e59d67da684af548e3967562048955a883ad0789",
+      "requires_dist": [
+        "numpy>=1.26.4,<3",
+        "polars==2.0.0 ; extra == 'polars'"
+      ],
+      "requires_python": ">=3.10, <3.16",
+      "tags": [
+        "cp310-abi3-manylinux_2_28_x86_64"
+      ],
+      "version": "0.2.5.dev2026102001",
+      "wheel": "/home/ingo/Documents/ChatGPT/gr-tdigest 2/candidate-20261020/results/installed-matrix/source-py312/gr_tdigest-0.2.5.dev2026102001-cp310-abi3-manylinux_2_28_x86_64.whl",
+      "wheel_sha256": "a7f4246886a177d013a6e14675f653a5f96fb9be2fa777bd618aff09583a1bc8"
+    },
+    "installed": {
+      "dependencies": {
+        "numpy": "2.3.4",
+        "pip": "25.0.1",
+        "polars": "2.0.0",
+        "pytest": "8.4.2",
+        "scipy": "1.17.1"
+      },
+      "distribution": "gr-tdigest",
+      "executable": "/tmp/tdigest-support-cells-agv8ch0o/py312-numpy2.3.4/bin/python",
+      "imports": {
+        "gr_tdigest": "/tmp/tdigest-support-cells-agv8ch0o/py312-numpy2.3.4/lib/python3.12/site-packages/gr_tdigest/__init__.py",
+        "gr_tdigest._gr_tdigest": "/tmp/tdigest-support-cells-agv8ch0o/py312-numpy2.3.4/lib/python3.12/site-packages/gr_tdigest/_gr_tdigest.abi3.so",
+        "tdigest_rs": "/tmp/tdigest-support-cells-agv8ch0o/py312-numpy2.3.4/lib/python3.12/site-packages/tdigest_rs/__init__.py",
+        "tdigest_rs.lib": "/tmp/tdigest-support-cells-agv8ch0o/py312-numpy2.3.4/lib/python3.12/site-packages/tdigest_rs/lib.py",
+        "tdigest_rs.tdigest_rs": "/tmp/tdigest-support-cells-agv8ch0o/py312-numpy2.3.4/lib/python3.12/site-packages/tdigest_rs/tdigest_rs.py"
+      },
+      "native_sha256": "5b14c191f75bae4954219477e59d67da684af548e3967562048955a883ad0789",
+      "python": "3.12.15 (main, Oct 14 2026, 01:05:27) [Clang 23.1.3 ]",
+      "version": "0.2.5.dev2026102001"
+    },
+    "passed": 430,
+    "python": "3.12"
+  },
+  {
+    "artifact": {
+      "distribution": "gr-tdigest",
+      "native_sha256": "5b14c191f75bae4954219477e59d67da684af548e3967562048955a883ad0789",
+      "requires_dist": [
+        "numpy>=1.26.4,<3",
+        "polars==2.0.0 ; extra == 'polars'"
+      ],
+      "requires_python": ">=3.10, <3.16",
+      "tags": [
+        "cp310-abi3-manylinux_2_28_x86_64"
+      ],
+      "version": "0.2.5.dev2026102001",
+      "wheel": "/home/ingo/Documents/ChatGPT/gr-tdigest 2/candidate-20261020/results/installed-matrix/source-py314/gr_tdigest-0.2.5.dev2026102001-cp310-abi3-manylinux_2_28_x86_64.whl",
+      "wheel_sha256": "7b5bc95bd2369ffaacb087d7b4cfa7363994eea44d962d847f33185a755cc6d1"
+    },
+    "installed": {
+      "dependencies": {
+        "numpy": "2.5.4",
+        "pip": "26.2.1",
+        "polars": "2.0.0",
+        "pytest": "9.1.1",
+        "scipy": "1.18.1"
+      },
+      "distribution": "gr-tdigest",
+      "executable": "/tmp/tdigest-support-cells-agv8ch0o/py314-numpy2.5.4/bin/python",
+      "imports": {
+        "gr_tdigest": "/tmp/tdigest-support-cells-agv8ch0o/py314-numpy2.5.4/lib/python3.14/site-packages/gr_tdigest/__init__.py",
+        "gr_tdigest._gr_tdigest": "/tmp/tdigest-support-cells-agv8ch0o/py314-numpy2.5.4/lib/python3.14/site-packages/gr_tdigest/_gr_tdigest.abi3.so",
+        "tdigest_rs": "/tmp/tdigest-support-cells-agv8ch0o/py314-numpy2.5.4/lib/python3.14/site-packages/tdigest_rs/__init__.py",
+        "tdigest_rs.lib": "/tmp/tdigest-support-cells-agv8ch0o/py314-numpy2.5.4/lib/python3.14/site-packages/tdigest_rs/lib.py",
+        "tdigest_rs.tdigest_rs": "/tmp/tdigest-support-cells-agv8ch0o/py314-numpy2.5.4/lib/python3.14/site-packages/tdigest_rs/tdigest_rs.py"
+      },
+      "native_sha256": "5b14c191f75bae4954219477e59d67da684af548e3967562048955a883ad0789",
+      "python": "3.14.8 (main, Oct 14 2026, 01:04:34) [Clang 23.1.3 ]",
+      "version": "0.2.5.dev2026102001"
+    },
+    "passed": 430,
+    "python": "3.14"
+  },
+  {
+    "artifact": {
+      "distribution": "gr-tdigest",
+      "native_sha256": "5b14c191f75bae4954219477e59d67da684af548e3967562048955a883ad0789",
+      "requires_dist": [
+        "numpy>=1.26.4,<3",
+        "polars==2.0.0 ; extra == 'polars'"
+      ],
+      "requires_python": ">=3.10, <3.16",
+      "tags": [
+        "cp310-abi3-manylinux_2_28_x86_64"
+      ],
+      "version": "0.2.5.dev2026102001",
+      "wheel": "/home/ingo/Documents/ChatGPT/gr-tdigest 2/candidate-20261020/results/installed-matrix/source-py315/gr_tdigest-0.2.5.dev2026102001-cp310-abi3-manylinux_2_28_x86_64.whl",
+      "wheel_sha256": "a19a3e7325db73cc5eb01bacea784c614c34c977426987eb3bca3f69661b08e4"
+    },
+    "installed": {
+      "dependencies": {
+        "numpy": "2.5.4",
+        "pip": "26.2.1",
+        "polars": "2.0.0",
+        "pytest": "9.1.1",
+        "scipy": "1.18.1"
+      },
+      "distribution": "gr-tdigest",
+      "executable": "/tmp/tdigest-support-cells-agv8ch0o/py315-numpy2.5.4/bin/python",
+      "imports": {
+        "gr_tdigest": "/tmp/tdigest-support-cells-agv8ch0o/py315-numpy2.5.4/lib/python3.15/site-packages/gr_tdigest/__init__.py",
+        "gr_tdigest._gr_tdigest": "/tmp/tdigest-support-cells-agv8ch0o/py315-numpy2.5.4/lib/python3.15/site-packages/gr_tdigest/_gr_tdigest.abi3.so",
+        "tdigest_rs": "/tmp/tdigest-support-cells-agv8ch0o/py315-numpy2.5.4/lib/python3.15/site-packages/tdigest_rs/__init__.py",
+        "tdigest_rs.lib": "/tmp/tdigest-support-cells-agv8ch0o/py315-numpy2.5.4/lib/python3.15/site-packages/tdigest_rs/lib.py",
+        "tdigest_rs.tdigest_rs": "/tmp/tdigest-support-cells-agv8ch0o/py315-numpy2.5.4/lib/python3.15/site-packages/tdigest_rs/tdigest_rs.py"
+      },
+      "native_sha256": "5b14c191f75bae4954219477e59d67da684af548e3967562048955a883ad0789",
+      "python": "3.15.0 (main, Oct 14 2026, 01:05:07) [Clang 23.1.3 ]",
+      "version": "0.2.5.dev2026102001"
+    },
+    "passed": 430,
+    "python": "3.15"
+  }
+]

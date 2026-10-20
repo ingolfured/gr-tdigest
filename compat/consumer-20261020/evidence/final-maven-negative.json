@@ -1,0 +1,14 @@
+{
+  "command": [
+    "/home/ingo/Documents/ChatGPT/gr-tdigest 2/gr-tdigest-candidate/bindings/java/gradlew",
+    "--no-daemon",
+    "--console=plain",
+    "-p",
+    "/home/ingo/Documents/ChatGPT/gr-tdigest 2/gr-tdigest-candidate/bindings/java/examples/kotlin",
+    "-PtdigestVersion=0.2.5-dev2026102001",
+    "run"
+  ],
+  "exit_code": 1,
+  "expected": "failure: controlled credentials rejected, exclusive repository has no public fallback",
+  "fresh_dependency_cache": true
+}

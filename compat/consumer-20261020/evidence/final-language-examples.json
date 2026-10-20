@@ -1,0 +1,38 @@
+[
+  {
+    "command": [
+      "/home/ingo/Documents/ChatGPT/gr-tdigest 2/followup-20261020/toolchains/jdk-3808d1d15e3ec6bd5b84057fb5d84c33d8a1536a258146bcea2e603fc726e08e/jdk-17.0.20.1+1/bin/java",
+      "-Xmx1g",
+      "-XX:ActiveProcessorCount=4",
+      "-Dsbt.task.cpus=2",
+      "-Dsbt.supershell=false",
+      "-Dsbt.override.build.repos=true",
+      "-Dsbt.repository.config=/home/ingo/Documents/ChatGPT/gr-tdigest 2/candidate-20261020/sbt-repositories",
+      "-Dsbt.boot.credentials=/home/ingo/Documents/ChatGPT/gr-tdigest 2/candidate-20261020/sbt-fixture.credentials",
+      "-Dsbt.boot.directory=/home/ingo/Documents/ChatGPT/gr-tdigest 2/candidate-20261020/sbt-boot",
+      "-Dtdigest.version=0.2.5-dev2026102001",
+      "-jar",
+      "/home/ingo/Documents/ChatGPT/gr-tdigest 2/candidate-20261020/sbt-launch-1.12.11.jar",
+      "clean",
+      "run"
+    ],
+    "exit_code": 0,
+    "jar_sha256": "056da58e404485ee5f46fc0c7af32d5d0c14bad2304f6537c4539308a915ec7b",
+    "name": "scala"
+  },
+  {
+    "command": [
+      "/home/ingo/Documents/ChatGPT/gr-tdigest 2/gr-tdigest-candidate/bindings/java/gradlew",
+      "--no-daemon",
+      "--console=plain",
+      "-p",
+      "/home/ingo/Documents/ChatGPT/gr-tdigest 2/gr-tdigest-candidate/bindings/java/examples/kotlin",
+      "-PtdigestVersion=0.2.5-dev2026102001",
+      "clean",
+      "run"
+    ],
+    "exit_code": 0,
+    "jar_sha256": "056da58e404485ee5f46fc0c7af32d5d0c14bad2304f6537c4539308a915ec7b",
+    "name": "kotlin"
+  }
+]

@@ -1,0 +1,185 @@
+{
+  "all_gated_metric_regressions": [
+    {
+      "absolute_difference": 5.865955719226799e-05,
+      "baseline": 0.004993065545262164,
+      "candidate": 0.005051725102454432,
+      "id": "bike/hum/f64/size32/reverse/balanced40",
+      "limit": 0.005050606256314526,
+      "metric": "rank_mean"
+    },
+    {
+      "absolute_difference": 0.0003130704929216986,
+      "baseline": 0.010729749978351988,
+      "candidate": 0.011042820471273687,
+      "id": "bike/hum/f64/size32/reverse/balanced40",
+      "limit": 0.010729749979351989,
+      "metric": "value_iqr_mean"
+    },
+    {
+      "absolute_difference": 0.02299442872984262,
+      "baseline": 0.04730335707087251,
+      "candidate": 0.07029778580071513,
+      "id": "bike/hum/f64/size32/reverse/balanced40",
+      "limit": 0.04730335707187251,
+      "metric": "value_iqr_max"
+    },
+    {
+      "absolute_difference": 0.001031596839652038,
+      "baseline": 0.01907910190153428,
+      "candidate": 0.020110698741186317,
+      "id": "bike/hum/f64/size32/reverse/balanced40",
+      "limit": 0.019079101902534278,
+      "metric": "cdf_max"
+    },
+    {
+      "absolute_difference": 0.00010154522398176258,
+      "baseline": 0.003957249210889086,
+      "candidate": 0.004058794434870849,
+      "id": "bike/hum/f64/size32/reverse/balanced40",
+      "limit": 0.0039572492118890865,
+      "metric": "cdf_mean"
+    },
+    {
+      "absolute_difference": 0.000631888142893302,
+      "baseline": 0.00016974917658985067,
+      "candidate": 0.0008016373194831526,
+      "id": "energy/T_out/f64/size128/reverse/left40",
+      "limit": 0.00022042057358681038,
+      "metric": "tail_rank_max"
+    },
+    {
+      "absolute_difference": 3.8774166182772504e-05,
+      "baseline": 0.001945376064755349,
+      "candidate": 0.0019841502309381216,
+      "id": "energy/T_out/f64/size128/reverse/left40",
+      "limit": 0.001945376065755349,
+      "metric": "value_iqr_mean"
+    },
+    {
+      "absolute_difference": 0.0005474892993857696,
+      "baseline": 0.00962571075399682,
+      "candidate": 0.01017320005338259,
+      "id": "energy/T_out/f64/size128/reverse/left40",
+      "limit": 0.009625710754996821,
+      "metric": "value_iqr_max"
+    },
+    {
+      "absolute_difference": 0.000267250117066159,
+      "baseline": 0.002513762028108435,
+      "candidate": 0.002781012145174594,
+      "id": "energy/T_out/f64/size128/reverse/balanced40",
+      "limit": 0.002513762029108435,
+      "metric": "cdf_max"
+    },
+    {
+      "absolute_difference": 1.874412654503932e-05,
+      "baseline": 0.0006662055818095704,
+      "candidate": 0.0006849497083546097,
+      "id": "energy/T_out/f64/size128/reverse/balanced40",
+      "limit": 0.0006662055828095704,
+      "metric": "cdf_mean"
+    },
+    {
+      "absolute_difference": 1.2002848388435348e-05,
+      "baseline": 0.0011638519531520846,
+      "candidate": 0.00117585480154052,
+      "id": "energy/T_out/f64/size512/natural/left40",
+      "limit": 0.0011638519541520846,
+      "metric": "value_iqr_mean"
+    },
+    {
+      "absolute_difference": 2.889203993925192e-06,
+      "baseline": 0.00015895829427731202,
+      "candidate": 0.00016184749827123722,
+      "id": "energy/T_out/f64/size512/natural/left40",
+      "limit": 0.00015895829527731202,
+      "metric": "cdf_mean"
+    },
+    {
+      "absolute_difference": 6.926534876434899e-06,
+      "baseline": 0.0001461980043224638,
+      "candidate": 0.0001531245391988987,
+      "id": "energy/T_out/f64/size512/natural/balanced40",
+      "limit": 0.0001461980053224638,
+      "metric": "cdf_mean"
+    },
+    {
+      "absolute_difference": 0.00025078110983733914,
+      "baseline": 0.0009504360805085987,
+      "candidate": 0.0012012171903459379,
+      "id": "energy/T_out/f64/size512/reverse/balanced40",
+      "limit": 0.0009504360815085987,
+      "metric": "cdf_max"
+    },
+    {
+      "absolute_difference": 6.632419574161821e-05,
+      "baseline": 0.0029660991947093036,
+      "candidate": 0.003032423390450922,
+      "id": "energy/RH_out/f64/size128/natural/left40",
+      "limit": 0.0029660991957093036,
+      "metric": "value_iqr_mean"
+    }
+  ],
+  "all_gated_metric_regressions_count": 15,
+  "baseline_file": "tests/quality/baseline-extended.json.gz",
+  "original_fixtures_regenerated": false,
+  "relative_regressions": [
+    {
+      "absolute_difference": 5.865955719226799e-05,
+      "baseline": 0.004993065545262164,
+      "candidate": 0.005051725102454432,
+      "error": "AssertionError: quality regression: rank_mean",
+      "id": "bike/hum/f64/size32/reverse/balanced40",
+      "metric": "rank_mean"
+    },
+    {
+      "absolute_difference": 0.000631888142893302,
+      "baseline": 0.00016974917658985067,
+      "candidate": 0.0008016373194831526,
+      "error": "AssertionError: quality regression: tail_rank_max",
+      "id": "energy/T_out/f64/size128/reverse/left40",
+      "metric": "tail_rank_max"
+    },
+    {
+      "absolute_difference": 0.000267250117066159,
+      "baseline": 0.002513762028108435,
+      "candidate": 0.002781012145174594,
+      "error": "AssertionError: quality regression: cdf_max",
+      "id": "energy/T_out/f64/size128/reverse/balanced40",
+      "metric": "cdf_max"
+    },
+    {
+      "absolute_difference": 1.2002848388435348e-05,
+      "baseline": 0.0011638519531520846,
+      "candidate": 0.00117585480154052,
+      "error": "AssertionError: quality regression: value_iqr_mean",
+      "id": "energy/T_out/f64/size512/natural/left40",
+      "metric": "value_iqr_mean"
+    },
+    {
+      "absolute_difference": 6.926534876434899e-06,
+      "baseline": 0.0001461980043224638,
+      "candidate": 0.0001531245391988987,
+      "error": "AssertionError: quality regression: cdf_mean",
+      "id": "energy/T_out/f64/size512/natural/balanced40",
+      "metric": "cdf_mean"
+    },
+    {
+      "absolute_difference": 0.00025078110983733914,
+      "baseline": 0.0009504360805085987,
+      "candidate": 0.0012012171903459379,
+      "error": "AssertionError: quality regression: cdf_max",
+      "id": "energy/T_out/f64/size512/reverse/balanced40",
+      "metric": "cdf_max"
+    },
+    {
+      "absolute_difference": 6.632419574161821e-05,
+      "baseline": 0.0029660991947093036,
+      "candidate": 0.003032423390450922,
+      "error": "AssertionError: quality regression: value_iqr_mean",
+      "id": "energy/RH_out/f64/size128/natural/left40",
+      "metric": "value_iqr_mean"
+    }
+  ]
+}

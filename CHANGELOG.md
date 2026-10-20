@@ -5,6 +5,7 @@ All notable changes to this project are documented in this file.
 ## [Unreleased]
 
 ### Fixed
+- Record exact-source consumer candidate artifacts and installed Python/JVM/Linux-floor qualification, public data accuracy and controlled workload comparisons. Keep ten accuracy failures, fifteen metric regressions across seven profiles, the unsupported subnormal case and internal qualification gaps explicit; no release approval or numerical baseline update.
 - Require explicit Polars binary-column precision at planning and execution; document standalone Scala 2.12.16/sbt and Kotlin 2.4.21/Gradle consumers and checked modern Rust merge/conversion APIs.
 - Stage a modern consumer candidate with weighted Python construction, failure-atomic iterable updates, shape-based Polars broadcasting, strict missing/state validation, independent full-state copies and explicit NumPy migration/stubs/docstrings; leave pinned original calculations and fixtures unchanged.
 - Preserve aggregate metadata and positive residual mass through small-capacity and bucket compression; improve modern finite cancellation and fractional atomic boundaries, reject unrepresentable aggregate/products and transactional transforms, and retain unresolved accuracy/unsupported profiles explicitly.

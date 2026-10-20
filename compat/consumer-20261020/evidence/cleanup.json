@@ -1,0 +1,22 @@
+{
+  "preserved": [
+    "historical branches and experiment material",
+    "original sources/oracle/fixtures",
+    "all measured/candidate artifacts",
+    "SSD checkout pending explicit comparison",
+    "staged offline build inputs"
+  ],
+  "removed": [
+    {
+      "bytes": 1119741747,
+      "path": "/home/ingo/Documents/ChatGPT/gr-tdigest 2/gr-tdigest-candidate/target",
+      "reason": "failed initial setup in task-created worktree; ignored generated files, no tracked source or qualified artifact; active builds use external cache/explicit root venv"
+    },
+    {
+      "bytes": 30221,
+      "path": "/home/ingo/Documents/ChatGPT/gr-tdigest 2/gr-tdigest-candidate/bindings/python/.venv",
+      "reason": "failed initial setup in task-created worktree; ignored generated files, no tracked source or qualified artifact; active builds use external cache/explicit root venv"
+    }
+  ],
+  "updated_utc": "2026-10-20T19:17:51.227934+00:00"
+}

@@ -1,0 +1,35 @@
+[
+  {
+    "command": [
+      "maturin",
+      "sdist",
+      "--out",
+      "/home/ingo/Documents/ChatGPT/gr-tdigest 2/candidate-20261020/artifacts"
+    ],
+    "exit_code": 0,
+    "name": "sdist",
+    "source_sha": "a9c368f2e766e602e2b0269486de089297e66de1",
+    "started_utc": "2026-10-20T19:04:49.488192+00:00"
+  },
+  {
+    "command": [
+      "maturin",
+      "build",
+      "--release",
+      "--locked",
+      "--zig",
+      "--compatibility",
+      "manylinux_2_28",
+      "--auditwheel",
+      "check",
+      "--interpreter",
+      "/home/ingo/Documents/ChatGPT/gr-tdigest 2/gr-tdigest-candidate/.venv/bin/python",
+      "--out",
+      "/home/ingo/Documents/ChatGPT/gr-tdigest 2/candidate-20261020/artifacts"
+    ],
+    "exit_code": 0,
+    "name": "wheel",
+    "source_sha": "a9c368f2e766e602e2b0269486de089297e66de1",
+    "started_utc": "2026-10-20T19:04:50.019228+00:00"
+  }
+]

@@ -1,0 +1,135 @@
+[
+  {
+    "command": [
+      "/home/ingo/Documents/ChatGPT/gr-tdigest 2/followup-20261020/toolchains/jdk-5c3f68887c325d36d852ba534303e1f5f1f5cae7d6cc1e951d73e0d8e98a058d/jdk-11.0.32.1+1/bin/java",
+      "-Xmx256m",
+      "-XX:ActiveProcessorCount=4",
+      "-jar",
+      "/home/ingo/Documents/ChatGPT/gr-tdigest 2/candidate-20261020/junit-platform-console-standalone-1.11.4.jar",
+      "execute",
+      "--disable-ansi-colors",
+      "--class-path",
+      "/home/ingo/Documents/ChatGPT/gr-tdigest 2/candidate-20261020/artifacts/gr-tdigest-0.2.5-dev2026102001.jar:/home/ingo/Documents/ChatGPT/gr-tdigest 2/candidate-20261020/jvm-test-classes",
+      "--scan-classpath",
+      "--fail-if-no-tests",
+      "--details",
+      "summary"
+    ],
+    "exit_code": 0,
+    "label": "java11"
+  },
+  {
+    "command": [
+      "/home/ingo/Documents/ChatGPT/gr-tdigest 2/followup-20261020/toolchains/jdk-3808d1d15e3ec6bd5b84057fb5d84c33d8a1536a258146bcea2e603fc726e08e/jdk-17.0.20.1+1/bin/java",
+      "-Xmx256m",
+      "-XX:ActiveProcessorCount=4",
+      "-jar",
+      "/home/ingo/Documents/ChatGPT/gr-tdigest 2/candidate-20261020/junit-platform-console-standalone-1.11.4.jar",
+      "execute",
+      "--disable-ansi-colors",
+      "--class-path",
+      "/home/ingo/Documents/ChatGPT/gr-tdigest 2/candidate-20261020/artifacts/gr-tdigest-0.2.5-dev2026102001.jar:/home/ingo/Documents/ChatGPT/gr-tdigest 2/candidate-20261020/jvm-test-classes",
+      "--scan-classpath",
+      "--fail-if-no-tests",
+      "--details",
+      "summary"
+    ],
+    "exit_code": 0,
+    "label": "java17"
+  },
+  {
+    "command": [
+      "/usr/lib/jvm/java-21-openjdk/bin/java",
+      "-Xmx256m",
+      "-XX:ActiveProcessorCount=4",
+      "-jar",
+      "/home/ingo/Documents/ChatGPT/gr-tdigest 2/candidate-20261020/junit-platform-console-standalone-1.11.4.jar",
+      "execute",
+      "--disable-ansi-colors",
+      "--class-path",
+      "/home/ingo/Documents/ChatGPT/gr-tdigest 2/candidate-20261020/artifacts/gr-tdigest-0.2.5-dev2026102001.jar:/home/ingo/Documents/ChatGPT/gr-tdigest 2/candidate-20261020/jvm-test-classes",
+      "--scan-classpath",
+      "--fail-if-no-tests",
+      "--details",
+      "summary"
+    ],
+    "exit_code": 0,
+    "label": "java21"
+  },
+  {
+    "command": [
+      "podman",
+      "--root",
+      "/home/ingo/.cache/gr-tdigest-20261020/containers",
+      "--runroot",
+      "/tmp/gr-tdigest-containers-run",
+      "--storage-driver",
+      "vfs",
+      "--storage-opt",
+      "ignore_chown_errors=true",
+      "run",
+      "--rm",
+      "--network",
+      "none",
+      "-v",
+      "/home/ingo/Documents/ChatGPT/gr-tdigest 2/candidate-20261020:/checks:ro",
+      "-v",
+      "/home/ingo/Documents/ChatGPT/gr-tdigest 2/followup-20261020/toolchains/jdk-5c3f68887c325d36d852ba534303e1f5f1f5cae7d6cc1e951d73e0d8e98a058d/jdk-11.0.32.1+1:/jdk:ro",
+      "-w",
+      "/tmp",
+      "quay.io/centos/centos:7",
+      "/jdk/bin/java",
+      "-Xmx256m",
+      "-XX:ActiveProcessorCount=4",
+      "-jar",
+      "/checks/junit-platform-console-standalone-1.11.4.jar",
+      "execute",
+      "--disable-ansi-colors",
+      "--class-path",
+      "/checks/artifacts/gr-tdigest-0.2.5-dev2026102001.jar:/checks/jvm-test-classes",
+      "--scan-classpath",
+      "--fail-if-no-tests",
+      "--details",
+      "summary"
+    ],
+    "exit_code": 0,
+    "label": "java11-glibc217"
+  },
+  {
+    "max_required_glibc": "2.16",
+    "native": "libgr_tdigest-jni-glibc217.so",
+    "required_glibc_versions": [
+      "2.2.5",
+      "2.3",
+      "2.3.4",
+      "2.12",
+      "2.14",
+      "2.16"
+    ],
+    "sha256": "3e437a2657e256f9236ad6bf62a6801c8a7935f47d23e2bdce7b6f7ef4adca08"
+  },
+  {
+    "max_required_glibc": "2.28",
+    "native": "libgr_tdigest-python-glibc228.so",
+    "required_glibc_versions": [
+      "2.2.5",
+      "2.3",
+      "2.3.2",
+      "2.3.4",
+      "2.6",
+      "2.12",
+      "2.14",
+      "2.16",
+      "2.17",
+      "2.18",
+      "2.25",
+      "2.27",
+      "2.28"
+    ],
+    "sha256": "5b14c191f75bae4954219477e59d67da684af548e3967562048955a883ad0789"
+  },
+  {
+    "bundled_native_sha256": "3e437a2657e256f9236ad6bf62a6801c8a7935f47d23e2bdce7b6f7ef4adca08",
+    "jar_manifest": "Manifest-Version: 1.0\r\nMain-Class: gr.SmokeMain\r\nImplementation-Title: gr-tdigest\r\nImplementation-Version: 0.2.5-dev2026102001\r\nTDigest-Source-SHA: a9c368f2e766e602e2b0269486de089297e66de1\r\nTDigest-Native-Allocator: system\r\nTDigest-Native-SHA256: 3e437a2657e256f9236ad6bf62a6801c8a7935f47d23e2bdc\r\n e7b6f7ef4adca08\r\n\r\n"
+  }
+]

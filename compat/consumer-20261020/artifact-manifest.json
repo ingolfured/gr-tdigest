@@ -1,0 +1,100 @@
+{
+  "artifact_policy": "canonical bytes below; source-rebuild test wheels are separate evidence artifacts and must not be substituted",
+  "artifacts": [
+    {
+      "bytes": 1887766,
+      "name": "gr-tdigest-0.2.5-dev2026102001.jar",
+      "sha256": "056da58e404485ee5f46fc0c7af32d5d0c14bad2304f6537c4539308a915ec7b"
+    },
+    {
+      "bytes": 3005575,
+      "name": "gr-tdigest-a9c368f-source.tar.gz",
+      "sha256": "7de3c671228498bce20edfdc7cd8947f80bbd5f41bbd65fb964eb10a3637ee25"
+    },
+    {
+      "bytes": 5249856,
+      "name": "gr_tdigest-0.2.5.dev2026102001-cp310-abi3-manylinux_2_28_x86_64.whl",
+      "sha256": "6b1056894004da81cf393d95c1cf8373c071ae4cbbb7f5c90a7f6712b730754a"
+    },
+    {
+      "bytes": 2986755,
+      "name": "gr_tdigest-0.2.5.dev2026102001.tar.gz",
+      "sha256": "d1dd15379f7976166b94653821651002ef2ce2708b4d8282fb91889566dd8c23"
+    },
+    {
+      "bytes": 7382840,
+      "name": "libgr_tdigest-jni-glibc217.so",
+      "sha256": "3e437a2657e256f9236ad6bf62a6801c8a7935f47d23e2bdce7b6f7ef4adca08"
+    },
+    {
+      "bytes": 19348800,
+      "name": "libgr_tdigest-python-glibc228.so",
+      "sha256": "5b14c191f75bae4954219477e59d67da684af548e3967562048955a883ad0789"
+    }
+  ],
+  "build": {
+    "cargo": "1.95.0",
+    "cargo_build_jobs": 8,
+    "cargo_config_sha256": {},
+    "cargo_zigbuild": "0.23.4",
+    "commands_receipts": [
+      "artifact-builds.json",
+      "jni-build.json"
+    ],
+    "gradle": "8.14.5",
+    "inherited_flags": {
+      "CARGO_ENCODED_RUSTFLAGS": null,
+      "CFLAGS": null,
+      "CXXFLAGS": null,
+      "RUSTC_WRAPPER": null,
+      "RUSTFLAGS": null
+    },
+    "maturin": "1.15.0",
+    "os": "GNU/Linux",
+    "rust": "1.95.0",
+    "source_build_interpreter": "CPython3.12.15",
+    "target_arch": "x86_64",
+    "zig": "0.12.1"
+  },
+  "comparison_source_git_commit": "1451f94c4d809dd43d851b91c7c777ad3c3ff2f3",
+  "created_utc": "2026-10-20T19:22:08.315887+00:00",
+  "development_version": {
+    "cargo_jvm": "0.2.5-dev2026102001",
+    "python": "0.2.5.dev2026102001"
+  },
+  "jvm": {
+    "allocator": "system",
+    "build_jdk": "Temurin 17.0.20.1+1",
+    "class_file_major": 55,
+    "class_name": "gr.tdigest.TDigest",
+    "coordinates": "gr.tdigest:gr-tdigest:0.2.5-dev2026102001",
+    "executed_glibc_floor": "2.17",
+    "maximum_imported_glibc_symbol": "2.16",
+    "minimum_glibc_target": "2.17",
+    "runtime_jdks": [
+      "Temurin 11.0.32.1+1",
+      "Temurin 17.0.20.1+1",
+      "OpenJDK 21 exact runtime receipt in jvm-tools-api.json"
+    ]
+  },
+  "production_release": false,
+  "python": {
+    "allocator": "jemalloc",
+    "executed_glibc_floor": "2.28",
+    "mean_precisions": [
+      "f32",
+      "f64"
+    ],
+    "minimum_glibc": "2.28",
+    "tag": "cp310-abi3-manylinux_2_28_x86_64",
+    "weight_precision": "f64"
+  },
+  "required_unavailable_internal_baselines": {
+    "0.1.11": "c05d47d7d0e2a065a6ba4bc4b05693772c946dc3a582f3b8cd57bc4005c23e75",
+    "0.1.9": "f086b068988dfb0547b1eb37d652588c0b352d8831e4c1458fd6a27b42ee13d3",
+    "jvm_0.1.16": "original binary and receipt not recovered"
+  },
+  "source_archive_check": "Maturin normalized active sources checked against source tree, complete Gradle wrapper/examples, unchanged original core/wrapper, typing metadata and public QA fixtures",
+  "source_git_commit": "a9c368f2e766e602e2b0269486de089297e66de1",
+  "source_git_tree": "6d3073df5822d73d71f1629e5c108d18b4647409"
+}
