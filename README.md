@@ -189,3 +189,7 @@ Modern training and updates copy compatible aligned, native-endian contiguous on
 The modern engine usually improves percentile position and average value error on these real-data profiles; the original often has the better worst value error. Small summaries and numerical edge cases still have explicit failures. See the [readable findings](compat/quality-20261020/RESULTS.md) and [test methods](tests/quality/README.md). `make quality-regression` protects the recorded outcomes while preserving their failed accuracy status.
 
 The configured JDK also supplies the direct Java compiler/runtime subprocesses used by `make test`; an environment-selected JDK does not require a separate system Java installation.
+
+## Consumer candidate assessment (20 October 2026)
+
+The [source-specific gap assessment](compat/consumer-20261020/ASSESSMENT.md) records the consumer handoff and subsequent decisions. The modern API may migrate to new defaults/dependencies; the original `tdigest_rs` engine remains pinned and numerically identical. Historical validation does not qualify a new combined candidate or a production release.

@@ -5,6 +5,7 @@ All notable changes to this project are documented in this file.
 ## [Unreleased]
 
 ### Fixed
+- Assess consumer handoff against exact source1451f94, enumerate public NumPy receipts and remaining numerical, packaging, JVM and integration gaps; record new modern migration decisions separately from pinned original compatibility.
 - Use the explicitly selected or downloaded JDK for direct cross-language test subprocesses as well as Gradle; environment-only JDK setup now supports the full canonical test run without relying on host Java commands.
 - Add pinned recorded-data quality checks, independent rank/value/CDF references,90 fast weighted/reference cases,756 extended merge/precision/storage profiles and explicit existing numerical-failure controls; publish full win/tie/loss evidence and regression gates without changing either engine arithmetic or hiding known accuracy failures.
 - Support standard CPython3.10–3.15 with an aligned PyO30.29/NumPy0.29/Polars0.55 binding stack, tested Polars2.0 optional integration and Rust1.95; extend installed-wheel gates through3.15 and rebuild the source archive with3.12,3.14,3.15, retaining original numerical sources and tests.

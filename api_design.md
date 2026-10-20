@@ -230,3 +230,7 @@ Surface mapping:
 ## Empirical accuracy contract
 
 Quality acceptance uses separate rank, percentile-value and midpoint-CDF measurements against sorted observed data, with tie intervals and actual precision casts. The original API remains numerically unchanged and has no fabricated CDF comparison. The fast suite runs in `make test`; extended results and explicit unresolved boundary controls are documented in `tests/quality/README.md`. A passing known-outcome regression check must not be presented as passing accuracy. These are measured operating envelopes, not formal guarantees or universal superiority over the original engine.
+
+## Consumer candidate assessment (20 October 2026)
+
+The [source-specific gap assessment](compat/consumer-20261020/ASSESSMENT.md) records the consumer handoff and subsequent decisions. The modern API may migrate to new defaults/dependencies; the original `tdigest_rs` engine remains pinned and numerically identical. Historical validation does not qualify a new combined candidate or a production release.

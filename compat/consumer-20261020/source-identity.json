@@ -1,0 +1,16 @@
+{
+  "assessment_base": "1451f94c4d809dd43d851b91c7c777ad3c3ff2f3",
+  "candidate_qualification_status": "NOT_STARTED",
+  "handoff_ref": "adaf1949d95e42161ca7c490cf8e980025e2275b",
+  "internal_baseline_artifacts_available": false,
+  "original_oracle_sha": "8d9cf1fe82c5c9254e5dc9593f01717e317f4333",
+  "personal_ref": "refs/heads/codex/comprehensive-quality-20261020",
+  "production_publication_authorized": false,
+  "required_internal_binary_baselines": {
+    "gr-tdigest0.1.11": "c05d47d7d0e2a065a6ba4bc4b05693772c946dc3a582f3b8cd57bc4005c23e75",
+    "gr-tdigest0.1.9": "f086b068988dfb0547b1eb37d652588c0b352d8831e4c1458fd6a27b42ee13d3"
+  },
+  "upstream_pr": 38,
+  "upstream_sha": "57e7978d0811baed4a546ff2f08dccaeff03c321",
+  "verified_utc": "2026-10-20T18:14:26.032430+00:00"
+}
