@@ -186,6 +186,8 @@ pub struct TDigestBuilder<F: FloatLike + FloatCore> {
     scale: ScaleFamily,
     policy: SingletonPolicy,
     delta: Option<f64>,
+    scale_explicit: bool,
+    policy_explicit: bool,
     // optional seeds
     init_centroids: Option<Vec<Centroid<F>>>,
     init_stats: Option<DigestStats>,
@@ -198,6 +200,8 @@ impl<F: FloatLike + FloatCore> Default for TDigestBuilder<F> {
             scale: ScaleFamily::K2,
             policy: SingletonPolicy::Use,
             delta: None,
+            scale_explicit: false,
+            policy_explicit: false,
             init_centroids: None,
             init_stats: None,
             override_max_size: None,
@@ -222,6 +226,7 @@ impl<F: FloatLike + FloatCore> TDigestBuilder<F> {
     #[inline]
     pub fn scale(mut self, s: ScaleFamily) -> Self {
         self.scale = s;
+        self.scale_explicit = true;
         self
     }
 
@@ -229,16 +234,13 @@ impl<F: FloatLike + FloatCore> TDigestBuilder<F> {
     #[inline]
     pub fn singleton_policy(mut self, p: SingletonPolicy) -> Self {
         self.policy = p;
+        self.policy_explicit = true;
         self
     }
 
-    /// Enable legacy tdigest-rs `delta` mode.
+    /// Select modern K2Norm/Off delta mode; this never selects the original engine.
     #[inline]
     pub fn delta(mut self, delta: f64) -> Self {
-        assert!(
-            delta.is_finite() && delta > 0.0,
-            "delta must be finite and > 0"
-        );
         self.delta = Some(delta);
         self
     }
@@ -276,8 +278,35 @@ impl<F: FloatLike + FloatCore> TDigestBuilder<F> {
         self
     }
 
-    /// Build the digest, seeding if seeds were provided.
-    pub fn build(self) -> TDigest<F> {
+    /// Build valid modern state or return an error without exposing a partial digest.
+    /// Delta mode defaults to K2Norm/Off; explicitly incompatible settings error.
+    pub fn build(mut self) -> TdResult<TDigest<F>> {
+        if self.delta.is_some() {
+            if !self.scale_explicit {
+                self.scale = ScaleFamily::K2Norm;
+            }
+            if !self.policy_explicit {
+                self.policy = SingletonPolicy::Off;
+            }
+        }
+        if self
+            .init_centroids
+            .as_ref()
+            .is_some_and(|centroids| !centroids.is_empty())
+        {
+            if let Some(stats) = self.init_stats {
+                F::try_from_f64(stats.data_min)?;
+                F::try_from_f64(stats.data_max)?;
+            }
+        }
+        let digest = self.build_unchecked();
+        digest.validate_state()?;
+        Ok(digest)
+    }
+
+    // Only internal transient streams may bypass state validation. They are
+    // normalized/coalesced before a checked public result is returned.
+    fn build_unchecked(self) -> TDigest<F> {
         // If seeded, construct directly from the provided centroids and stats.
         if let (Some(cents), Some(st)) = (self.init_centroids, self.init_stats) {
             let max_size = self.override_max_size.unwrap_or(self.max_size);
@@ -426,7 +455,9 @@ impl<F: FloatLike + FloatCore> TDigest<F> {
         if let Some(delta) = self.delta() {
             builder = builder.delta(delta);
         }
-        builder.with_centroids_and_stats(cents, stats).build()
+        builder
+            .with_centroids_and_stats(cents, stats)
+            .build_unchecked()
     }
 
     // --- internal metadata setters (small & inlined) ---
@@ -450,7 +481,7 @@ impl<F: FloatLike + FloatCore> TDigest<F> {
     /// Build from **unsorted** values (convenience over [`TDigest::merge_unsorted`]).
     pub fn from_unsorted(values: &[F], max_size: usize) -> TdResult<TDigest<F>> {
         ensure_no_non_finite_values(values)?;
-        let base = Self::builder().max_size(max_size).build();
+        let base = Self::builder().max_size(max_size).build()?;
         base.merge_unsorted(values.to_vec())
     }
 
@@ -463,7 +494,7 @@ impl<F: FloatLike + FloatCore> TDigest<F> {
         weights: &[f64],
         max_size: usize,
     ) -> TdResult<TDigest<F>> {
-        let base = Self::builder().max_size(max_size).build();
+        let base = Self::builder().max_size(max_size).build()?;
         base.merge_weighted_unsorted(values, weights)
     }
 
@@ -559,6 +590,19 @@ impl<F: FloatLike + FloatCore> TDigest<F> {
             .collect();
         pairs.sort_by(|a, b| a.0.total_cmp(b.0));
 
+        // An exact point retains its full distribution even when its rounded
+        // Float64 weighted moment is zero. Mixed observations cannot use that
+        // recovery rule: their individual underflows remain explicit errors.
+        let same_point = pairs
+            .first()
+            .map(|p| p.0)
+            .filter(|first| pairs.iter().all(|p| p.0 == *first));
+        let combined_point = same_point.is_some_and(|mean| {
+            self.centroids.is_empty()
+                || (self.is_exact_point()
+                    && self.centroids[0].mean_f64() == <F as FloatLike>::to_f64(mean))
+        });
+        let mut point_product_underflow = false;
         let mut cents: Vec<Centroid<F>> = Vec::with_capacity(pairs.len());
         let mut moment = crate::tdigest::summation::Sum::default();
         let mut mass = crate::tdigest::summation::Sum::default();
@@ -570,7 +614,8 @@ impl<F: FloatLike + FloatCore> TDigest<F> {
                 cents.push(Centroid::<F>::new_atomic_f64(mean, *w));
             }
             let product = mean * *w;
-            if !product.is_finite() || (mean != 0.0 && product == 0.0) {
+            point_product_underflow |= mean != 0.0 && product == 0.0;
+            if !product.is_finite() || (point_product_underflow && !combined_point) {
                 return Err(TdError::NonFiniteInput {
                     context: "weighted value product overflow or underflow",
                 });
@@ -579,8 +624,12 @@ impl<F: FloatLike + FloatCore> TDigest<F> {
             mass.add(*w);
         }
 
-        let data_sum = moment.total();
         let total_weight = mass.total();
+        let data_sum = if point_product_underflow {
+            <F as FloatLike>::to_f64(same_point.unwrap()) * total_weight
+        } else {
+            moment.total()
+        };
         if !data_sum.is_finite() || !total_weight.is_finite() {
             return Err(TdError::NonFiniteInput {
                 context: "weighted aggregate overflow",
@@ -607,12 +656,16 @@ impl<F: FloatLike + FloatCore> TDigest<F> {
         }
         let weighted = weighted_builder
             .with_centroids_and_stats(cents, stats)
-            .build();
+            .build_unchecked();
 
         // The private weighted stream deliberately contains equal-mean runs;
         // normalize it before requiring the external strict-state invariant.
         self.validate_state()?;
-        let merged = TDigest::merge_digests_unchecked(vec![self.clone(), weighted]);
+        let recover_point_moment = point_product_underflow || self.has_subnormal_point_moment();
+        let mut merged = TDigest::merge_digests_unchecked(vec![self.clone(), weighted]);
+        if recover_point_moment && merged.is_exact_point() {
+            merged.sum = merged.centroids[0].mean_f64() * merged.count;
+        }
         merged.validate_state()?;
         Ok(merged)
     }
@@ -679,7 +732,7 @@ impl<F: FloatLike + FloatCore> TDigest<F> {
     }
 
     /// Checked modern merge. All inputs, including empties, must have matching
-    /// configuration. The raw recompression helper remains available separately.
+    /// configuration. The raw recompression helper is private.
     pub fn try_merge_digests(digests: Vec<TDigest<F>>) -> TdResult<TDigest<F>> {
         for digest in &digests {
             digest.validate_state()?;
@@ -707,7 +760,11 @@ impl<F: FloatLike + FloatCore> TDigest<F> {
         if !digests.is_empty() && count == 0.0 {
             return Ok(digests[0].clone());
         }
-        let result = Self::merge_digests_unchecked(digests);
+        let recover_point_moment = digests.iter().any(Self::has_subnormal_point_moment);
+        let mut result = Self::merge_digests_unchecked(digests);
+        if recover_point_moment && result.is_exact_point() {
+            result.sum = result.centroids[0].mean_f64() * result.count;
+        }
         result.validate_state()?;
         Ok(result)
     }
@@ -715,6 +772,10 @@ impl<F: FloatLike + FloatCore> TDigest<F> {
     /// Checked explicit precision conversion; never returns malformed state.
     pub fn try_cast_precision<T: FloatLike + FloatCore>(&self) -> TdResult<TDigest<T>> {
         self.validate_state()?;
+        if !self.centroids.is_empty() {
+            T::try_from_f64(self.min())?;
+            T::try_from_f64(self.max())?;
+        }
         let mut converted = self.cast_precision_unchecked::<T>();
         for (before, after) in self.centroids.iter().zip(converted.centroids.iter()) {
             if before.mean_f64() != 0.0 && after.mean_f64() == 0.0 {
@@ -811,7 +872,7 @@ impl<F: FloatLike + FloatCore> TDigest<F> {
     /// This preserves quantile/cdf/median shape while re-weighting the digest,
     /// subject to floating-point rounding. If a scaled centroid weight becomes
     /// zero/nonfinite or either mass total becomes nonfinite, return an error without
-    /// changing the digest. This does not validate weighted-value sum overflow.
+    /// changing the digest. Weighted-sum overflow/underflow is checked too.
     pub fn scale_weights(&mut self, factor: f64) -> TdResult<&mut Self> {
         ensure_positive_finite_scale_factor(factor, "weight scale factor must be finite and > 0")?;
         if self.centroids.is_empty() {
@@ -843,16 +904,25 @@ impl<F: FloatLike + FloatCore> TDigest<F> {
             });
         }
 
-        let scaled_sum = self.sum * factor;
-        if !scaled_sum.is_finite() || (self.sum != 0.0 && scaled_sum == 0.0) {
+        let scaled_sum = if self.has_subnormal_point_moment() {
+            self.centroids[0].mean_f64() * scaled_count
+        } else {
+            self.sum * factor
+        };
+        if !scaled_sum.is_finite()
+            || (self.sum != 0.0 && scaled_sum == 0.0 && !self.is_exact_point())
+        {
             return Err(TdError::NonFiniteInput {
                 context: "scaled sum overflow or underflow",
             });
         }
         // Commit only after all products and both total representations pass.
-        self.centroids = scaled_centroids;
-        self.count = scaled_count;
-        self.sum = scaled_sum;
+        let mut candidate = self.clone();
+        candidate.centroids = scaled_centroids;
+        candidate.count = scaled_count;
+        candidate.sum = scaled_sum;
+        candidate.validate_state()?;
+        *self = candidate;
         Ok(self)
     }
 
@@ -884,8 +954,12 @@ impl<F: FloatLike + FloatCore> TDigest<F> {
         }
         let minimum = scaled(self.min())?;
         let maximum = scaled(self.max())?;
-        let sum = self.sum * factor;
-        if !sum.is_finite() || (self.sum != 0.0 && sum == 0.0) {
+        let sum = if self.has_subnormal_point_moment() {
+            minimum * self.count
+        } else {
+            self.sum * factor
+        };
+        if !sum.is_finite() || (self.sum != 0.0 && sum == 0.0 && !self.is_exact_point()) {
             return Err(TdError::NonFiniteInput {
                 context: "scaled sum overflow or underflow",
             });
@@ -921,29 +995,31 @@ impl<F: FloatLike + FloatCore> TDigest<F> {
         max: F,
         min: F,
         max_size: usize,
-    ) -> Self {
-        if centroids.len() <= max_size {
-            TDigest {
-                centroids,
-                max_size,
-                sum,
-                count,
-                max: OrderedFloat::from(max),
-                min: OrderedFloat::from(min),
-                scale: ScaleFamily::K2,
-                policy: SingletonPolicy::Use,
-                delta: None,
-            }
-        } else {
-            let sz = centroids.len();
-            let digests = vec![
-                TDigest::<F>::builder().max_size(100).build(),
-                TDigest::<F>::builder()
-                    .with_centroids(centroids, sum, count, max, min, sz)
-                    .build(),
-            ];
-            Self::merge_digests_unchecked(digests)
+    ) -> TdResult<Self> {
+        let seeded = Self::builder()
+            .max_size(max_size)
+            .with_centroids(centroids, sum, count, max, min, max_size)
+            .build()?;
+        if seeded.centroids.len() <= max_size {
+            return Ok(seeded);
         }
+        let result = Self::merge_digests_unchecked(vec![seeded]);
+        result.validate_state()?;
+        Ok(result)
+    }
+
+    fn is_exact_point(&self) -> bool {
+        self.centroids.len() == 1
+            && self.centroids[0].is_atomic()
+            && self.min() == self.max()
+            && self.min() == self.centroids[0].mean_f64()
+    }
+
+    fn has_subnormal_point_moment(&self) -> bool {
+        self.is_exact_point()
+            && self.sum.abs() < f64::MIN_POSITIVE
+            && self.centroids[0].mean_f64() != 0.0
+            && self.centroids[0].mean_f64() * self.count == self.sum
     }
 
     /// Validate an externally reconstructed modern state without recompressing.
@@ -954,6 +1030,16 @@ impl<F: FloatLike + FloatCore> TDigest<F> {
         let invalid = |what| TdError::Invariant { what };
         if self.max_size == 0 {
             return Err(invalid("capacity must be positive"));
+        }
+        if let Some(delta) = self.delta {
+            if !delta.is_finite() || delta <= 0.0 {
+                return Err(invalid("delta must be finite and positive"));
+            }
+            if self.scale != ScaleFamily::K2Norm || self.policy != SingletonPolicy::Off {
+                return Err(invalid(
+                    "delta mode requires K2Norm scale and singleton policy Off",
+                ));
+            }
         }
         if self.centroids.is_empty() {
             return if self.count == 0.0
@@ -980,10 +1066,16 @@ impl<F: FloatLike + FloatCore> TDigest<F> {
             ));
         }
         let aggregate_mean = self.sum / self.count;
-        let tolerance = 4.0 * f64::EPSILON * self.min().abs().max(self.max().abs());
-        if !aggregate_mean.is_finite()
+        let mean_epsilon = if Precision::of_type::<F>().is_f32() {
+            f32::EPSILON as f64
+        } else {
+            f64::EPSILON
+        };
+        let tolerance = 4.0 * mean_epsilon * self.min().abs().max(self.max().abs());
+        if (!aggregate_mean.is_finite()
             || aggregate_mean < self.min() - tolerance
-            || aggregate_mean > self.max() + tolerance
+            || aggregate_mean > self.max() + tolerance)
+            && !self.has_subnormal_point_moment()
         {
             return Err(invalid(
                 "weighted sum is inconsistent with observed extrema",
@@ -1016,6 +1108,9 @@ impl<F: FloatLike + FloatCore> TDigest<F> {
     /// Mean of the represented distribution (`∑x / ∑w`) in **f64** for stability.
     #[inline]
     pub fn mean(&self) -> f64 {
+        if self.has_subnormal_point_moment() {
+            return self.centroids[0].mean_f64();
+        }
         let n = self.count;
         if n > 0.0 {
             self.sum / n
@@ -1089,7 +1184,7 @@ impl<F: FloatLike + FloatCore> TDigest<F> {
             .max_size(opts.max_size)
             .scale(opts.scale)
             .singleton_policy(opts.singleton_policy)
-            .build();
+            .build()?;
         base.merge_unsorted(vals)
     }
 
@@ -1411,6 +1506,7 @@ mod tests {
                 .scale(scale)
                 .singleton_policy(policy)
                 .build()
+                .unwrap()
                 .merge_unsorted(chunk.to_vec())
                 .expect("chunk digest");
             out.push(td);
@@ -1423,7 +1519,7 @@ mod tests {
         let values = vec![3.0, -1.0, 5.0, 3.0];
         let weights = vec![4.0, 2.0, 3.0, 1.0];
 
-        let mut weighted = TDigest::<f64>::builder().max_size(128).build();
+        let mut weighted = TDigest::<f64>::builder().max_size(128).build().unwrap();
         weighted
             .add_weighted_many(&values, &weights)
             .expect("weighted add");
@@ -1433,7 +1529,7 @@ mod tests {
             expanded_values.extend(std::iter::repeat_n(v, w as usize));
         }
 
-        let mut expanded = TDigest::<f64>::builder().max_size(128).build();
+        let mut expanded = TDigest::<f64>::builder().max_size(128).build().unwrap();
         expanded.add_many(expanded_values).expect("expanded add");
 
         assert!(approx(weighted.count(), expanded.count(), 1e-12));
@@ -1461,7 +1557,7 @@ mod tests {
 
     #[test]
     fn weighted_add_rejects_bad_inputs() {
-        let mut td = TDigest::<f64>::builder().build();
+        let mut td = TDigest::<f64>::builder().build().unwrap();
 
         let err = td
             .add_weighted_many(&[1.0, 2.0], &[1.0])
@@ -1496,7 +1592,7 @@ mod tests {
 
     #[test]
     fn add_weighted_single_updates_digest_stats() {
-        let mut td = TDigest::<f64>::builder().build();
+        let mut td = TDigest::<f64>::builder().build().unwrap();
         td.add_weighted(2.5, 4.0).expect("add weighted");
         assert!(approx(td.count(), 4.0, 1e-12));
         assert!(approx(td.sum(), 10.0, 1e-12));
@@ -1510,7 +1606,8 @@ mod tests {
             .max_size(256)
             .scale(ScaleFamily::K3)
             .singleton_policy(SingletonPolicy::UseWithProtectedEdges(2))
-            .build();
+            .build()
+            .unwrap();
         td.add_many(vec![-3.0, -1.0, 0.0, 0.5, 10.0, 12.0])
             .expect("seed");
         td.add_weighted_many(&[5.0, 6.0], &[3.0, 2.0])

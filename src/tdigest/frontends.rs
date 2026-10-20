@@ -274,7 +274,8 @@ impl FrontendDigest {
                 .max_size(1000)
                 .scale(ScaleFamily::K2)
                 .singleton_policy(SingletonPolicy::Use)
-                .build(),
+                .build()
+                .unwrap(),
         )
     }
 
@@ -293,7 +294,10 @@ impl FrontendDigest {
 
         match precision {
             DigestPrecision::F32 => {
-                let xs: Vec<f32> = values.into_iter().map(|v| v as f32).collect();
+                let xs: Vec<f32> = values
+                    .into_iter()
+                    .map(<f32 as crate::tdigest::precision::FloatLike>::try_from_f64)
+                    .collect::<TdResult<_>>()?;
                 let mut builder = TDigest::<f32>::builder()
                     .max_size(config.max_size)
                     .scale(config.scale)
@@ -302,7 +306,7 @@ impl FrontendDigest {
                     builder = builder.delta(delta);
                 }
                 let td = builder
-                    .build()
+                    .build()?
                     .merge_unsorted(xs)
                     .map_err(FrontendError::from)?;
                 Ok(FrontendDigest::F32(td))
@@ -316,7 +320,7 @@ impl FrontendDigest {
                     builder = builder.delta(delta);
                 }
                 let td = builder
-                    .build()
+                    .build()?
                     .merge_unsorted(values)
                     .map_err(FrontendError::from)?;
                 Ok(FrontendDigest::F64(td))
@@ -380,7 +384,10 @@ impl FrontendDigest {
 
         match self {
             FrontendDigest::F32(td) => {
-                let xs: Vec<f32> = values.into_iter().map(|v| v as f32).collect();
+                let xs: Vec<f32> = values
+                    .into_iter()
+                    .map(<f32 as crate::tdigest::precision::FloatLike>::try_from_f64)
+                    .collect::<TdResult<_>>()?;
                 td.add_many(xs).map_err(FrontendError::from)?;
             }
             FrontendDigest::F64(td) => {
@@ -397,7 +404,10 @@ impl FrontendDigest {
     ) -> Result<(), FrontendError> {
         match self {
             FrontendDigest::F32(td) => {
-                let xs: Vec<f32> = values.into_iter().map(|v| v as f32).collect();
+                let xs: Vec<f32> = values
+                    .into_iter()
+                    .map(<f32 as crate::tdigest::precision::FloatLike>::try_from_f64)
+                    .collect::<TdResult<_>>()?;
                 td.add_weighted_many(&xs, &weights)
                     .map_err(FrontendError::from)?;
             }

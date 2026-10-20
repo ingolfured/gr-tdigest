@@ -28,6 +28,7 @@ fn mixed_edges() -> TDigest<f64> {
             },
         )
         .build()
+        .unwrap()
 }
 
 #[test]
@@ -70,6 +71,7 @@ fn compressed_extrema_survive_updates<F: FloatLike + FloatCore>() {
         .singleton_policy(SingletonPolicy::Off)
         .delta(1.0)
         .build()
+        .unwrap()
         .merge_unsorted(values)
         .unwrap();
     assert!(base.centroids()[0].mean_f64() > base.min());
@@ -110,7 +112,8 @@ fn compressed_extrema_survive_updates<F: FloatLike + FloatCore>() {
                 data_max: 100.0,
             },
         )
-        .build();
+        .build()
+        .unwrap();
     let mut updated = mixed.clone();
     updated.add(F::from_f64(50.0)).unwrap();
     let merged = TDigest::merge_digests(vec![mixed.clone(), mixed]).unwrap();
@@ -144,7 +147,8 @@ fn one_mixed_centroid_retains_both_tails() {
                 data_max: 100.0,
             },
         )
-        .build();
+        .build()
+        .unwrap();
     for factor in [0.001, 1.0, 1000.0] {
         let mut td = base.clone();
         td.scale_weights(factor).unwrap();
@@ -177,7 +181,8 @@ fn finite_extreme_centroid_ranges_do_not_overflow_interpolation() {
                 data_max: 1.1e308,
             },
         )
-        .build();
+        .build()
+        .unwrap();
     assert_eq!(td.quantile(0.0), -1e308);
     assert_eq!(td.quantile(0.25), 0.0);
     assert_eq!(td.quantile(0.5), 1e308);
@@ -206,6 +211,7 @@ fn touching_or_overlapping_protected_edges_keep_all_mass() {
                 .max_size(1000)
                 .singleton_policy(SingletonPolicy::UseWithProtectedEdges(pin))
                 .build()
+                .unwrap()
                 .merge_unsorted(values.clone())
                 .unwrap();
             assert_eq!(td.count(), n as f64);

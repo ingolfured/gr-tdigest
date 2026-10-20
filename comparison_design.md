@@ -270,3 +270,19 @@ serialization/bridge costs and independent construction with 1–16 workers.
 Streaming and merging regressions remain visible. These are descriptive local
 comparisons, with no agreed speedup/memory gate or 100-plus-CPU qualification.
 Internal 0.1.9/0.1.11 binaries and actual cluster/server tests remain separate.
+
+## Current integration accuracy work
+
+The unnecessary change in finite same-sign centroid averaging was removed, while
+mixed-sign cancellation compensation was retained. The unchanged756-profile
+reference then has no newly regressed profiles; ten established size32 synthetic
+merge cases remain outside the accuracy envelope. The15exact boundary controls
+now pass their unchanged targets.
+
+A median-partition compression trial removed the ten envelope failures but
+introduced290regressed profiles against the frozen measurements, with the worst
+median rank error rising from0.00842to0.08167. It was rejected and is not part of
+the candidate. Measurements are retained in the task's final-product evidence
+ledger; no threshold or reference was relaxed to accept the trial. The combined
+candidate remains development work until its accuracy and exact-artifact
+qualification are complete.

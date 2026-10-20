@@ -74,6 +74,11 @@ def source_hashes() -> dict[str, str]:
     return {str(p.relative_to(root)): sha(p) for p in paths}
 
 
+def verify_inputs_unchanged(receipt, native):
+    if source_hashes() != receipt["source_inputs_sha256"] or sha(native) != receipt["native_sha256"]:
+        raise RuntimeError("Source or installed native binary changed during quality measurements")
+
+
 @dataclass
 class Exact:
     values: list[float]
@@ -347,6 +352,7 @@ def main():
         "platform": platform.platform(),
         "source_inputs_sha256": source_hashes(),
         "mode": args.mode,
+        "input_status": "NOT_VERIFIED",
         "rows": [],
     }
     baseline = {}
@@ -422,6 +428,13 @@ def main():
         atomic_json(args.output / "results.json", receipt)
     if baseline and set(baseline) != {r["id"] for r in receipt["rows"]}:
         raise RuntimeError("Baseline/case coverage differs")
+    try:
+        verify_inputs_unchanged(receipt, native)
+    except RuntimeError:
+        receipt["input_status"] = "INVALID_INPUTS_CHANGED"
+        atomic_json(args.output / "results.json", receipt)
+        raise
+    receipt["input_status"] = "UNCHANGED"
     receipt["elapsed_seconds"] = time.perf_counter() - start
     receipt["summary"] = summarize(receipt["rows"])
     receipt["facets"] = {

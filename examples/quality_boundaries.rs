@@ -19,6 +19,7 @@ fn main() {
                     .max_size(cap)
                     .singleton_policy(SingletonPolicy::Use)
                     .build()
+                    .unwrap()
                     .merge_unsorted(vec![0., 1., 2., 100.])
                     .unwrap();
                 let mass: f64 = d.centroids_ref().iter().map(|c| c.weight_f64()).sum();
@@ -34,6 +35,7 @@ fn main() {
                 .max_size(2)
                 .singleton_policy(SingletonPolicy::Off)
                 .build()
+                .unwrap()
                 .merge_weighted_unsorted(
                     &[0., 1., 2f64.powi(60) as $float],
                     &[0.5, 0.5, 2f64.powi(-60)],
@@ -50,6 +52,7 @@ fn main() {
                 .max_size(1)
                 .singleton_policy(SingletonPolicy::Off)
                 .build()
+                .unwrap()
                 .merge_unsorted(vec![-1e16 as $float, 1., 1e16 as $float])
                 .unwrap();
             record(
@@ -71,6 +74,7 @@ fn main() {
                     .max_size(128)
                     .singleton_policy(SingletonPolicy::Off)
                     .build()
+                    .unwrap()
                     .merge_weighted_unsorted(&[0., 1., 2., 3., 4., 5.], weights)
                     .unwrap();
                 // Pairwise-identical binary weights imply exact reflection.
@@ -90,6 +94,7 @@ fn main() {
     let d = TDigest::<f64>::builder()
         .max_size(128)
         .build()
+        .unwrap()
         .merge_weighted_unsorted(&[tiny], &[0.1]);
     match d {
         Ok(d) => record(&mut rows, "subnormal_aggregate_mean", "f64", tiny, d.mean()),

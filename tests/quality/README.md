@@ -4,17 +4,25 @@ The suite measures specific errors. It does not turn them into one flattering sc
 
 ## Routine checks
 
-`make test` includes `make quality-fast`:90 small reference/weighted tests and42 comparison profiles. The real-data part samples512 evenly spaced observations per column. The distributions cover constant values, ties, zero-heavy data, separated groups, drifting values, ordinary bell-shaped data and long tails. They are deterministic grids, not claims about the quality of a random-number generator.
+`make test` includes `make quality-fast`:small reference/weighted tests and42 comparison profiles. The real-data part samples512 evenly spaced observations per column. The distributions cover constant values, ties, zero-heavy data, separated groups, drifting values, ordinary bell-shaped data and long tails. They are deterministic grids, not claims about the quality of a random-number generator.
 
 The weighted controls use exact rational arithmetic for the input masses. They cover all three singleton policies, actual f32/f64 storage, decimal/binary fractions, large piles, subnormal through very large weights, serialization and query ordering.
 
 `make quality-extended` reads every row of both real datasets and runs756 profiles:21 data columns/distributions ×2 precisions ×3 sizes ×2 orders ×3 construction/merge paths. The paths are a single build,40 sequential merges and a balanced40-way merge. It currently returns **failure** for ten size32 synthetic merge profiles. See [recorded findings](../../compat/quality-20261020/RESULTS.md).
 
-`make quality-boundaries` runs15 hand-checkable Rust controls and currently returns **failure** for13. They expose existing tiny-capacity mass loss, a dropped tiny tail contribution, cancellation, fractional-weight median asymmetry and subnormal aggregate-mean loss. These are numerical failures, not skipped tests.
+`make quality-boundaries` runs15 hand-checkable Rust controls. Current integration
+work passes all15 without changing the expected values; the historical baseline
+has13failures. They cover tiny-capacity mass, small tail contributions,
+cancellation, fractional-weight medians and subnormal exact-point means. This
+boundary result is separate from the ten approximate-accuracy failures.
 
 ## Regression checks with known limits
 
-`make quality-regression` runs the complete comparison and boundary audit against frozen measurements and an explicit known-failure inventory. It may pass the **regression** check while reporting `accuracy_status=FAIL` and `status=KNOWN_LIMITS`. It does not turn an unresolved defect into a passing accuracy result. CI stores the reports even when a check fails. Added, removed or changed known findings require review; improvements should update the inventory after being examined.
+`make quality-regression` runs the complete comparison and boundary audit against frozen measurements and an explicit known-failure inventory. It may pass the **regression** check while reporting `accuracy_status=FAIL` and `status=KNOWN_LIMITS`. It does not turn an unresolved defect into a passing accuracy result. CI stores the reports even when a check fails. Added, removed or changed approximate-accuracy findings require review;
+improvements should update that inventory after being examined. The exact boundary
+audit accepts a known failure becoming a verified exact pass against the same
+target; it rejects changed targets, missing/duplicate/new controls, incorrect PASS
+labels and new or changed failures. Historical boundary measurements stay intact.
 
 The frozen per-profile gate permits no relative error deterioration. Rank metrics allow one observation of resolution; other normalized errors allow2e-6 for f32 or1e-12 for f64. Each metric is checked independently. Dataset/protocol hashes, duplicate/missing cases and unexpected exceptions are also checked. Changing a baseline requires reviewed fresh evidence, not regeneration to hide a failure.
 

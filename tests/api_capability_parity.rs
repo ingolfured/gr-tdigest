@@ -6,7 +6,8 @@ fn rust_f64_supports_add_merge_quantile_cdf_median_and_wire_roundtrip() {
     let mut a = TDigest::<f64>::builder()
         .max_size(128)
         .scale(ScaleFamily::K2)
-        .build();
+        .build()
+        .unwrap();
     a.add_many(vec![0.0, 1.0, 2.0, 3.0]).expect("add base");
     a.add(4.0).expect("add scalar");
     a.add_many(vec![5.0, 6.0]).expect("add batch");
@@ -14,7 +15,8 @@ fn rust_f64_supports_add_merge_quantile_cdf_median_and_wire_roundtrip() {
     let mut b = TDigest::<f64>::builder()
         .max_size(128)
         .scale(ScaleFamily::K2)
-        .build();
+        .build()
+        .unwrap();
     b.add_many(vec![10.0, 11.0, 12.0, 13.0]).expect("add rhs");
 
     let mut merged_in_place = a.clone();
@@ -47,7 +49,8 @@ fn rust_f32_supports_add_merge_and_f32_wire_precision() {
     let mut a = TDigest::<f32>::builder()
         .max_size(128)
         .scale(ScaleFamily::K2)
-        .build();
+        .build()
+        .unwrap();
     a.add_many(vec![0.0_f32, 1.0, 2.0, 3.0]).expect("add base");
     a.add(4.0_f32).expect("add scalar");
     a.add_many(vec![5.0_f32, 6.0]).expect("add batch");
@@ -55,7 +58,8 @@ fn rust_f32_supports_add_merge_and_f32_wire_precision() {
     let mut b = TDigest::<f32>::builder()
         .max_size(128)
         .scale(ScaleFamily::K2)
-        .build();
+        .build()
+        .unwrap();
     b.add_many(vec![10.0_f32, 11.0, 12.0, 13.0])
         .expect("add rhs");
 
@@ -92,7 +96,8 @@ fn rust_core_rejects_infinities_in_training_and_add_paths() {
     let mut d = TDigest::<f64>::builder()
         .max_size(64)
         .scale(ScaleFamily::K2)
-        .build();
+        .build()
+        .unwrap();
     assert!(d.add(f64::NEG_INFINITY).is_err(), "add must reject -inf");
     assert!(
         d.add_many(vec![1.0_f64, f64::INFINITY]).is_err(),
@@ -105,7 +110,8 @@ fn rust_scaling_weights_and_values_behaves_as_expected() {
     let mut d = TDigest::<f64>::builder()
         .max_size(128)
         .scale(ScaleFamily::K2)
-        .build();
+        .build()
+        .unwrap();
     d.add_many(vec![0.0, 1.0, 2.0, 3.0]).expect("add");
 
     let q0 = d.quantile(0.5);
@@ -138,7 +144,8 @@ fn rust_scaling_rejects_invalid_factors() {
     let mut d = TDigest::<f64>::builder()
         .max_size(64)
         .scale(ScaleFamily::K2)
-        .build();
+        .build()
+        .unwrap();
     d.add_many(vec![0.0, 1.0, 2.0]).expect("add");
 
     for bad in [0.0, -1.0, f64::NAN, f64::INFINITY] {

@@ -5,6 +5,10 @@ All notable changes to this project are documented in this file.
 ## [Unreleased]
 
 ### Fixed
+- Continue the combined development candidate as0.2.5-dev2026102002; keep prior0.2.5-dev2026102001artifact receipts bound to their original source and defer final PR splitting/merges. Invalidate quality measurements if their source or loaded native binary changes while running.
+- Preserve exact-point queries and recover transformed moments when a Float64 weighted sum is subnormal; retain explicit errors for unsupported mixed-observation products. Reject Float32 training conversions that would lose a nonzero value, and validate transformed/copied state before committing. Accept genuine exact-boundary fixes against unchanged frozen targets while rejecting changed or missing controls.
+- Preserve established finite same-sign cluster averaging while retaining compensation for cancellation/overflow; remove the seven newly introduced accuracy regression profiles without changing the frozen quality references.
+- Make modern Rust builder/seed construction fallible and validate state before exposing it; default delta mode consistently to K2Norm/Off, reject explicit conflicts, preserve requested capacity on oversized seeds and use the checked shared conversion for Polars summaries.
 - Record exact-source consumer candidate artifacts and installed Python/JVM/Linux-floor qualification, public data accuracy and controlled workload comparisons. Keep ten accuracy failures, fifteen metric regressions across seven profiles, the unsupported subnormal case and internal qualification gaps explicit; no release approval or numerical baseline update.
 - Require explicit Polars binary-column precision at planning and execution; document standalone Scala 2.12.16/sbt and Kotlin 2.4.21/Gradle consumers and checked modern Rust merge/conversion APIs.
 - Stage a modern consumer candidate with weighted Python construction, failure-atomic iterable updates, shape-based Polars broadcasting, strict missing/state validation, independent full-state copies and explicit NumPy migration/stubs/docstrings; leave pinned original calculations and fixtures unchanged.

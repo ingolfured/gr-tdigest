@@ -21,7 +21,7 @@
 //! use gr_tdigest::tdigest::TDigest;
 //!
 //! // build a digest (details elided) and round-trip via a Series:
-//! let td: TDigest<f64> = TDigest::builder().max_size(256).build();
+//! let td: TDigest<f64> = TDigest::builder().max_size(256).build().unwrap();
 //! let series: Series = td.to_series("td")?;
 //! let round_tripped: Vec<TDigest<f64>> = TDigest::<f64>::from_series(&series)?;
 //!
@@ -430,12 +430,12 @@ where
                     data_max,
                 },
             )
-            .build();
-        digest.validate_state().map_err(|_| {
-            CodecError::InvalidConfiguration(
-                "invalid digest state: mass, extrema or aggregate metadata",
-            )
-        })?;
+            .build()
+            .map_err(|_| {
+                CodecError::InvalidConfiguration(
+                    "invalid digest state: mass, extrema or aggregate metadata",
+                )
+            })?;
         out.push(digest);
     }
 

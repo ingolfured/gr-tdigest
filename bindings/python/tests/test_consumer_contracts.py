@@ -164,3 +164,32 @@ def test_invalid_binary_state_is_rejected_without_checksum_masking(corruption):
         struct.pack_into("<Q", payload, 12, 0)
     with pytest.raises(ValueError):
         gr.TDigest.from_bytes(bytes(payload))
+
+
+def test_exact_tiny_point_preserves_queries_and_recovers_transformed_sum():
+    tiny = float.fromhex("0x0.0000000000001p-1022")
+    d = digest([tiny], weights=[0.1])
+    assert d.median() == tiny
+    assert d.cdf([0.0, tiny, tiny * 2]) == [0.0, 0.5, 1.0]
+    before = d.to_bytes()
+    restored = pickle.loads(pickle.dumps(d))
+    assert restored.to_bytes() == before
+    restored.scale_weights(10.0)
+    assert restored.sum == tiny
+    assert d.to_bytes() == before
+
+
+@pytest.mark.parametrize("value", [float.fromhex("0x0.0000000000001p-1022"), 1e308])
+def test_f32_training_never_silently_loses_nonzero_values(value):
+    with pytest.raises(ValueError, match="precision"):
+        digest([value], precision="f32")
+    d = digest([1.0], precision="f32")
+    before = d.to_bytes()
+    for update in (lambda: d.add([2.0, value]), lambda: d.add_weighted([2.0, value], [1.0, 1.0])):
+        with pytest.raises(ValueError, match="precision"):
+            update()
+        assert d.to_bytes() == before
+    frame = pl.DataFrame({"x": pl.Series([1.0], dtype=pl.Float32)}).select(gr.tdigest("x").alias("d"))
+    for expression in (gr.add_values("d", value), gr.add_weighted_values("d", value, 1.0)):
+        with pytest.raises(pl.exceptions.ComputeError, match="precision"):
+            frame.select(expression)

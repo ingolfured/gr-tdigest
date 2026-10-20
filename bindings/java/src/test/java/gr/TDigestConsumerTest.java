@@ -89,4 +89,30 @@ class TDigestConsumerTest {
     assertEquals(2.0, restored[1].median());
     restored[1].close();
   }
+
+  @Test void exactTinyPointSurvivesBytesAndScaling() {
+    try (TDigest d = TDigest.builder().build(new double[] {})) {
+      d.addWeighted(Double.MIN_VALUE, .1);
+      assertEquals(Double.MIN_VALUE, d.median());
+      assertEquals(.5, d.cdf(new double[] {Double.MIN_VALUE})[0]);
+      try (TDigest restored = TDigest.fromBytes(d.toBytes())) {
+        restored.scaleWeights(10.0);
+        assertEquals(1.0, mass(restored));
+        assertEquals(Double.MIN_VALUE, restored.median());
+      }
+    }
+  }
+
+  @Test void f32TrainingRejectsUnrepresentableDoubleWithoutMutation() {
+    assertThrows(IllegalArgumentException.class,
+      () -> TDigest.builder().precision(TDigest.Precision.F32).build(new double[] {Double.MIN_VALUE}));
+    try (TDigest d = TDigest.builder().precision(TDigest.Precision.F32).build(new double[] {1})) {
+      byte[] before = d.toBytes();
+      assertThrows(IllegalArgumentException.class, () -> d.add(new double[] {2, Double.MIN_VALUE}));
+      assertArrayEquals(before, d.toBytes());
+      assertThrows(IllegalArgumentException.class,
+        () -> d.addWeighted(new double[] {2, Double.MIN_VALUE}, new double[] {1, 1}));
+      assertArrayEquals(before, d.toBytes());
+    }
+  }
 }

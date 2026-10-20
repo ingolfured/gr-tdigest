@@ -516,6 +516,25 @@ JVM test tool selection is shared through `bindings/java/bootstrap.py::java_envi
 
 The consumer candidate validates externally reconstructed mass, finite metadata, ordered finite means, positive weights and extrema before accepting structs or TDIG. Empty state requires zero aggregates and NaN extrema. Count agreement uses a centroid-count-dependent floating summation roundoff bound; data sum is retained independently of compressed means.
 
-Capacity1/2 Use compresses all input mass rather than reserving edges with zero interior capacity. Equal-weight bucketization reserves its final bucket for all residual contributions. Compensated modern aggregate/cluster moments improve finite cancellation; atomic quantile boundaries use a directly accumulated prefix. These changes do not touch the original engine. Unsupported nonzero weighted products that underflow to zero now return an error. The boundary measurement retains this historical profile as unsupported, not a successful numerical result.
+Capacity1/2 Use compresses all input mass rather than reserving edges with zero interior capacity. Equal-weight bucketization reserves its final bucket for all residual contributions. Compensated modern aggregate/cluster moments improve finite cancellation; atomic quantile boundaries use a directly accumulated prefix. These changes do not touch the original engine. Unsupported mixed-observation weighted products that underflow to zero return an error. A single exact Atomic point retains sufficient information to represent its distribution even when its rounded Float64 moment is subnormal or zero. Its mean query uses the retained point value, and merges or transforms recover a newly representable moment from that value and total mass. This rule does not restore information lost from mixed centroids. Exact-boundary targets remain frozen; a failed control may improve to a verified exact pass without editing the reference.
 
 Checked Rust `try_merge_digests` and `try_cast_precision` validate state/configuration and output. Public in-place merge/merge_many use checked preparation and return Result before committing. The public `merge_digests` and `cast_precision` also return checked Results. Unchecked recompression/conversion helpers are private. Python/JVM/Polars use checked paths. Collapsed means during an explicit precision conversion coalesce as Mixed, preserving mass and distinguishing them from an exact point.
+
+Public modern builder/seed construction now returns `Result` and validates before
+exposing state. The private builder bypass exists only for transient equal-mean
+observation streams and precision conversion, followed by normalization and final
+validation. Explicitly invalid delta settings no longer panic during option
+selection: build reports the error. Default delta configuration is K2Norm/Off.
+Oversized `TDigest::new` seeds compress using their requested capacity, rather than
+choosing the configuration from an unrelated empty digest.
+
+Cluster averaging retains the established finite same-sign addition order, because
+an unnecessary final-bit change can alter subsequent cluster boundaries. Mixed-sign
+cancellation and intermediate overflow still use the compensated accumulator.
+The full unchanged comparison suite verifies both numerical safeguards and the
+absence of newly introduced per-profile regressions.
+
+Training conversion to Float32 rejects nonfinite results and nonzero values rounded
+to zero in the shared Python/JNI frontend and Polars additions. Ordinary rounding
+remains allowed. Full-state aggregate-mean validation allows mean-precision
+roundoff (Float32 or Float64); weights and aggregate statistics remain Float64.

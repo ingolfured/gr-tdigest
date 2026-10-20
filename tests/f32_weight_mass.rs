@@ -85,6 +85,7 @@ fn compressed_large_mass_and_modest_fan_in_stay_conservative() {
         .max_size(2)
         .singleton_policy(SingletonPolicy::Off)
         .build()
+        .unwrap()
         .merge_weighted_unsorted(&values, &[1_000_000_000.0; 40])
         .unwrap();
     for _ in 0..100 {
@@ -222,12 +223,14 @@ fn wide_weight_capability_composes_with_delta_and_pin_extensions() {
         .singleton_policy(SingletonPolicy::Off)
         .delta(17.0)
         .build()
+        .unwrap()
         .merge_weighted_unsorted(&[0.0, 10.0], &[16_777_217.0, 16_777_216.0])
         .unwrap();
     let pinned = TDigest::<f32>::builder()
         .scale(ScaleFamily::K3)
         .singleton_policy(SingletonPolicy::UseWithProtectedEdges(300))
         .build()
+        .unwrap()
         .merge_weighted_unsorted(&[0.0, 10.0], &[16_777_217.0, 16_777_216.0])
         .unwrap();
     for (td, extension_flag) in [(delta, 2), (pinned, 4)] {

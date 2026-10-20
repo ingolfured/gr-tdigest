@@ -264,45 +264,6 @@ fn tdigest(inputs: &[Series], kwargs: TDigestKwargs) -> PolarsResult<Series> {
     tdigest_from_array_helper(inputs, &kwargs)
 }
 
-// --- plain helper (no macro attribute), can live anywhere NOT immediately after a #[polars_expr] ---
-fn upcast_tdigest<From, To>(src: &TDigest<From>) -> TDigest<To>
-where
-    From: Copy + 'static + FloatCore + FloatLike,
-    To: Copy + 'static + FloatCore + FloatLike,
-{
-    use crate::tdigest::centroids::Centroid;
-    use crate::tdigest::tdigest::DigestStats;
-
-    let cents_to: Vec<Centroid<To>> = src
-        .centroids()
-        .iter()
-        .map(|c| {
-            if c.is_atomic_unit() {
-                Centroid::<To>::new_atomic_unit_f64(c.mean_f64())
-            } else if c.is_atomic() {
-                Centroid::<To>::new_atomic_f64(c.mean_f64(), c.weight_f64())
-            } else {
-                Centroid::<To>::new_mixed_f64(c.mean_f64(), c.weight_f64())
-            }
-        })
-        .collect();
-
-    TDigest::<To>::builder()
-        .max_size(src.max_size())
-        .scale(src.scale())
-        .singleton_policy(src.singleton_policy())
-        .with_centroids_and_stats(
-            cents_to,
-            DigestStats {
-                data_sum: src.sum(),
-                total_weight: src.count(),
-                data_min: src.min(),
-                data_max: src.max(),
-            },
-        )
-        .build()
-}
-
 #[polars_expr(output_type = Binary)]
 fn to_bytes(inputs: &[Series]) -> PolarsResult<Series> {
     polars_ensure!(
@@ -389,9 +350,15 @@ fn from_bytes(inputs: &[Series]) -> PolarsResult<Series> {
 
     if s.len() == 0 {
         return if inputs[1].dtype() == &DataType::Float32 {
-            TDigest::<f32>::builder().build().to_series("tdigest")
+            TDigest::<f32>::builder()
+                .build()
+                .unwrap()
+                .to_series("tdigest")
         } else {
-            TDigest::<f64>::builder().build().to_series("tdigest")
+            TDigest::<f64>::builder()
+                .build()
+                .unwrap()
+                .to_series("tdigest")
         };
     }
 
@@ -444,7 +411,9 @@ fn from_bytes(inputs: &[Series]) -> PolarsResult<Series> {
 fn tdigest_summary(inputs: &[Series]) -> PolarsResult<Series> {
     // Always summarize in f64 for stable formatting (upcast if needed)
     let td = if is_compact_digest_dtype(inputs[0].dtype()) {
-        upcast_tdigest::<f32, f64>(&parse_and_merge::<f32>(inputs)?)
+        parse_and_merge::<f32>(inputs)?
+            .cast_precision::<f64>()
+            .map_err(|e| PolarsError::ComputeError(e.to_string().into()))?
     } else {
         parse_and_merge::<f64>(inputs)?
     };
@@ -575,6 +544,18 @@ fn tdigest_from_array_helper(inputs: &[Series], kwargs: &TDigestKwargs) -> Polar
     }
 }
 
+// Training conversions share the same representability rule as Python/JNI.
+fn checked_training_values<F: FloatLike>(
+    values: impl IntoIterator<Item = f64>,
+) -> PolarsResult<Vec<F>> {
+    values
+        .into_iter()
+        .map(|value| {
+            F::try_from_f64(value).map_err(|e| PolarsError::ComputeError(e.to_string().into()))
+        })
+        .collect()
+}
+
 fn build_from_values<F>(
     values: &Series,
     max_size: usize,
@@ -606,7 +587,7 @@ where
                 ));
             }
             let ca = values.f64()?;
-            ca.no_null_iter().map(F::from_f64).collect()
+            checked_training_values(ca.no_null_iter())?
         }
         DataType::Float32 => {
             let ca = values.f32()?;
@@ -619,7 +600,7 @@ where
                 ));
             }
             let ca = values.f32()?;
-            ca.no_null_iter().map(|x| F::from_f64(x as f64)).collect()
+            checked_training_values(ca.no_null_iter().map(|x| x as f64))?
         }
         dt if dt.is_numeric() => {
             let casted = values.cast(&DataType::Float64)?;
@@ -633,7 +614,7 @@ where
                 ));
             }
             let ca = casted.f64()?;
-            ca.no_null_iter().map(F::from_f64).collect()
+            checked_training_values(ca.no_null_iter())?
         }
         other => {
             return Err(PolarsError::ComputeError(
@@ -648,7 +629,7 @@ where
         .scale(scale)
         .singleton_policy(policy)
         .build()
-        .merge_unsorted(vf)
+        .and_then(|digest| digest.merge_unsorted(vf))
         .map_err(|e| PolarsError::ComputeError(e.to_string().into()))
 }
 
@@ -741,7 +722,7 @@ where
                     polars_bail!(ComputeError:
                         "tdigest.add_values: values contain non-finite values (NaN or ±inf)");
                 }
-                out.extend(vals_f64.into_iter().map(F::from_f64));
+                out.extend(checked_training_values::<F>(vals_f64)?);
             }
             Ok(out)
         }
@@ -765,7 +746,7 @@ where
                 polars_bail!(ComputeError:
                     "tdigest.add_values: values contain non-finite values (NaN or ±inf)");
             }
-            Ok(vals_f64.into_iter().map(F::from_f64).collect())
+            checked_training_values(vals_f64)
         }
         other => polars_bail!(ComputeError:
             "tdigest.add_values: unsupported values dtype {other:?}; expected numeric or list"),
@@ -824,7 +805,7 @@ where
                         "tdigest.add_weighted_values: weights must be finite and > 0");
                 }
 
-                out_v.extend(vals_f64.into_iter().map(F::from_f64));
+                out_v.extend(checked_training_values::<F>(vals_f64)?);
                 out_w.extend(weights_f64);
             }
 
@@ -873,7 +854,7 @@ where
                     "tdigest.add_weighted_values: weights must be finite and > 0");
             }
 
-            Ok((vals_f64.into_iter().map(F::from_f64).collect(), weights_f64))
+            Ok((checked_training_values(vals_f64)?, weights_f64))
         }
         _ => polars_bail!(ComputeError:
             "tdigest.add_weighted_values: values and weights must both be numeric or both be list"),

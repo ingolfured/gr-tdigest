@@ -198,4 +198,12 @@ Modern consumer candidate guides: [Python/NumPy](bindings/python/OBJECT_API.md),
 
 The [combined candidate report](compat/consumer-20261020/CANDIDATE.md) identifies the exact wheel/JAR source and bytes, passed runtime checks, failed accuracy gates, workload costs and remaining acceptance work. Read it alongside the historical assessment before reviewing or merging the modern stack.
 
+Current integration work makes modern Rust construction checked:
+`TDigest::<f64>::builder().max_size(1000).build()?` returns valid state or an
+error. The original `tdigest_core` API is unchanged. Existing candidate artifacts
+remain bound to the source SHA in their manifest; implementation updates require
+a newly identified and qualified artifact set before acceptance. Current work also
+preserves exact tiny point masses, rejects Float32 training underflow and retains
+the unchanged targets of the numerical boundary checks.
+
 The JVM candidate includes [Scala/sbt and Kotlin/Gradle examples](bindings/java/examples/README.md), with configured repository credentials and offline checks. The coverage report distinguishes build JDK, runtime JDKs and actual cluster checks.

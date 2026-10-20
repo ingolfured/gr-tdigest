@@ -51,6 +51,19 @@ pub trait FloatLike:
     fn from_f64(x: f64) -> Self;
     fn to_f64(self) -> f64;
 
+    /// Convert finite training data without losing a nonzero value to zero.
+    /// Ordinary rounding in the selected mean precision remains permitted.
+    fn try_from_f64(x: f64) -> crate::TdResult<Self> {
+        let converted = Self::from_f64(x);
+        let represented = converted.to_f64();
+        if !represented.is_finite() || (x != 0.0 && represented == 0.0) {
+            return Err(crate::TdError::NonFiniteInput {
+                context: "training value overflows or underflows selected precision",
+            });
+        }
+        Ok(converted)
+    }
+
     /// Total ordering consistent with IEEE semantics.
     #[inline]
     fn total_cmp(self, other: Self) -> Ordering {

@@ -65,6 +65,7 @@ macro_rules! domain_regression {
                         .scale(ScaleFamily::K2Norm)
                         .singleton_policy(SingletonPolicy::Off)
                         .build()
+                        .unwrap()
                 };
                 let check = |td: &TDigest<$float>| {
                     assert_eq!(td.centroids().len(), 2, "delta={delta}");
@@ -140,6 +141,7 @@ fn max_size_k2norm_retains_tiny_interiors_and_keeps_normal_caps() {
             .scale(ScaleFamily::K2Norm)
             .singleton_policy(policy)
             .build()
+            .unwrap()
             .merge_unsorted(vec![-100.0, 0.0, 100.0, 200.0])
             .unwrap();
         assert_eq!(td.centroids().len(), 4);
@@ -155,6 +157,7 @@ fn max_size_k2norm_retains_tiny_interiors_and_keeps_normal_caps() {
         .scale(ScaleFamily::K2Norm)
         .singleton_policy(SingletonPolicy::Use)
         .build()
+        .unwrap()
         .merge_unsorted((0..30).map(|x| x as f64).collect())
         .unwrap();
     assert!(capped.centroids().len() <= 10);
@@ -179,6 +182,7 @@ fn tiny_positive_delta_keeps_its_existing_aggressive_compression() {
         .scale(ScaleFamily::K2Norm)
         .singleton_policy(SingletonPolicy::Off)
         .build()
+        .unwrap()
         .merge_unsorted(vec![0.0, 100.0])
         .unwrap();
     assert_eq!(td.centroids().len(), 1);
