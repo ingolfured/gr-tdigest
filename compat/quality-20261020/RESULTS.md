@@ -63,3 +63,5 @@ Use the recorded results to choose a size and merge strategy for the workload. T
 - [Known accuracy-limit cases](../../tests/quality/known-limits.json)
 - [Exact boundary outcomes](../../tests/quality/known-boundaries.json)
 - [Validation and artifact identities](validation.json)
+
+The final build checks also passed on Java11 and17 using only the JDK/Gradle archive environment settings, with `JAVA_HOME` unset and host Java commands disabled. Gradle and direct cross-language test processes now select the same verified JDK. The final source archive includes that wiring, and its Python3.15 rebuild reproduces the already qualified Python/native package contents.

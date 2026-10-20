@@ -1,5 +1,6 @@
 {
   "base_commit": "9b11ac9",
+  "bootstrap_contract_tests": 9,
   "boundary_audit": {
     "accuracy_status": "FAIL",
     "binary_sha256": "1a7fccb15c30c0f435df71ef07525dcb29859875f54d72fc08088002718091ff",
@@ -417,6 +418,57 @@
       "offline_clean_build": "PASS"
     }
   },
+  "jdk_environment_lint_sha256": "eb79063d2f4225a3eb591eedf18a679b8ec7b5bb4568046661cf08a2e6d0e27f",
+  "jdk_environment_only_full_project_gate": {
+    "host_java_commands": "poisoned to exit99",
+    "initial_JAVA_HOME": "unset",
+    "runs": [
+      {
+        "command": [
+          "make",
+          "build",
+          "test"
+        ],
+        "exit_code": 0,
+        "jdk": 11,
+        "log_sha256": "b47844eb33d17eb926dbac0a7635c943e5db4e44c01f7562de3ef8ee820d91bf"
+      },
+      {
+        "command": [
+          "make",
+          "build",
+          "test"
+        ],
+        "exit_code": 0,
+        "jdk": 17,
+        "log_sha256": "1052ba25e9b9ee470462faaa2b4fd20d5312f63c1705e03f6d0c7accd10e8f59"
+      }
+    ],
+    "status": "PASS"
+  },
+  "jdk_selection_followup_source_build": {
+    "all_python_and_native_payloads_identical_to_11_runtime_qualified_wheel": true,
+    "artifact": {
+      "distribution": "gr-tdigest",
+      "native_sha256": "3e310f0e59adf0be9b7c34f38cd38682de0d259936102bf177a7693b4e5fc461",
+      "requires_dist": [
+        "numpy>=1.26.4,<3",
+        "polars==2.0.0 ; extra == 'polars'"
+      ],
+      "requires_python": ">=3.10, <3.16",
+      "tags": [
+        "cp310-abi3-linux_x86_64"
+      ],
+      "version": "0.2.4",
+      "wheel": "/home/ingo/Documents/ChatGPT/gr-tdigest 2/followup-20261020/results/jvm-followup-source/wheel/gr_tdigest-0.2.4-cp310-abi3-linux_x86_64.whl",
+      "wheel_sha256": "d91c69680c5d18d471ffbe968ca84ff0997493c52c472b27c74bb405376f6a94"
+    },
+    "source_archive_sha256": "89afcf985d21821aad5fa66e689ad31454a74f77b8476cfea07880a6daed2eaf",
+    "source_build_python": "3.15",
+    "source_changes_since_3_12_3_14_3_15_build_matrix": "JVM bootstrap and Java test-subprocess selection only; Rust and Python package source inputs unchanged",
+    "source_contains_current_JDK_selection_and_direct_test_launcher": true,
+    "status": "PASS"
+  },
   "limitations": [
     "Ten size32 synthetic repeated-merge profiles fail the empirical rank/CDF envelope.",
     "Thirteen of15 exact modern numerical boundary controls fail; outcomes are documented, never labeled fixed.",
@@ -441,7 +493,10 @@
   "source_sha256": {
     ".github/workflows/ci.yml": "51be60d87962ca53e77aeb204d941f2e1f1c6ab404aed122542508666c71e400",
     "Makefile": "626c73c52ecdd8aa7dd065077dbb8192695c01219999c04455aefd5deedd0d93",
+    "bindings/java/bootstrap.py": "684bde9468d83e542f38ed916e1b073480fba8576779702dd004086432f0891e",
+    "bindings/java/tests/test_bootstrap.py": "f23ea2bee749313e1a55d07d16a160ee33a809ac8714d446e179d9db416ac9a8",
     "examples/quality_boundaries.rs": "e892d93f621aff610cac5c6ce963109844f7173dc4f72a62c57070f0d038317e",
+    "integration/api_coherence/helpers_java.py": "de7189401095f5d87e656affa8794d50e6564d99b02f1902711163978e4c886f",
     "scripts/audit_quality_boundaries.py": "6f93c4f083711c1cedd6c46fefda24e6caf1f34c77bb728ecfafb853f9127756",
     "scripts/check_python_sdist.py": "16e808ad77a8c64d2d18366b322cedfda6da9de0e611908733b57a505a53ad7b",
     "scripts/fetch_quality_data.py": "a96fade17979317bad3cfd6bd9f20a691bbec29a06529dd49f245c0fdf8de883",

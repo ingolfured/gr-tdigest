@@ -75,3 +75,5 @@ destination.
 
 Fast bootstrap checks need no external network, installed JDK or Gradle:
 `make java-bootstrap-test`.
+
+Direct Java subprocesses in the cross-language tests use the same selected JDK as Gradle. Setting the archive environment variables is sufficient for `make build test`, including on a host with no usable `java`/`javac` on `PATH`; `JAVA_HOME` is also honored when explicitly supplied.

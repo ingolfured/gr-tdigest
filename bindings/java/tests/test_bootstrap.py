@@ -56,6 +56,20 @@ class BootstrapTest(unittest.TestCase):
         if os.name != "nt":
             self.assertTrue(os.access(home / "bin/gradle", os.X_OK))
 
+    def test_selected_jdk_is_available_to_direct_subprocesses_without_host_java(self):
+        source, digest = self.archive("jdk", {"bin/javac": b"compiler", "bin/java": b"runtime"})
+        original = {
+            "TDIGEST_JDK_URL": str(source),
+            "TDIGEST_JDK_SHA256": digest,
+            "TDIGEST_TOOLCHAIN_CACHE": str(self.cache),
+            "TDIGEST_OFFLINE": "1",
+            "PATH": "/no-host-java",
+        }
+        selected = bootstrap.java_environment(original)
+        self.assertNotIn("JAVA_HOME", original)
+        self.assertEqual(Path(selected["PATH"].split(os.pathsep)[0]), Path(selected["JAVA_HOME"]) / "bin")
+        self.assertTrue((Path(selected["JAVA_HOME"]) / "bin/java").is_file())
+
     def test_checksum_failure_never_installs(self):
         source, _ = self.archive("jdk", {"bin/javac": b"compiler"})
         with self.assertRaisesRegex(bootstrap.BootstrapError, "checksum mismatch"):
