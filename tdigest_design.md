@@ -478,3 +478,7 @@ output regression tests.
 Modern Python NumPy outputs use PyArray1::from_slice to copy f64 results directly into NumPy-owned memory. List and tuple outputs retain their existing container paths. The direct copy preserves dtype, shape, independent writable storage, OWNDATA and resizing. Moving Rust vectors into NumPy was considered but excluded because Rust-owned ndarray buffers cannot be resized.
 
 The measured NumPy output change and its remaining inconclusive observations are documented in `compat/performance/numpy-output-20261015`. It changes conversion overhead only; core query arithmetic and both public interfaces retain their results.
+
+## Modern Python construction and the GIL
+
+The raw constructor calls the unchanged `FrontendDigest::from_values` inside `Python::allow_threads` once input conversion and configuration resolution are complete. The weighted constructor creates an unexposed empty digest, then releases the GIL around its unchanged `add_weighted_f64` call. Both closures work with owned vectors and Rust state only; error translation and returning the new Python object occur with the GIL held. Existing object methods and pinned original arithmetic retain their existing paths.

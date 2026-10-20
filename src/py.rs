@@ -188,8 +188,11 @@ impl PyTDigest {
             DigestPrecision::F64
         };
 
-        let inner =
-            FrontendDigest::from_values(values_f64, config, precision).map_err(map_frontend_err)?;
+        // Python input conversion is complete; only owned Rust data crosses
+        // the GIL boundary, before the new digest is exposed to Python.
+        let inner = py
+            .allow_threads(|| FrontendDigest::from_values(values_f64, config, precision))
+            .map_err(map_frontend_err)?;
         Ok(Self { inner })
     }
 
@@ -236,8 +239,8 @@ impl PyTDigest {
 
         let mut inner =
             FrontendDigest::from_values(Vec::new(), config, precision).map_err(map_frontend_err)?;
-        inner
-            .add_weighted_f64(means_f64, weights_f64)
+        // This digest is still local and all input vectors are owned.
+        py.allow_threads(|| inner.add_weighted_f64(means_f64, weights_f64))
             .map_err(map_frontend_err)?;
         Ok(Self { inner })
     }

@@ -169,3 +169,5 @@ When a query returns an ndarray, it is an independent writable Float64 snapshot 
 The NumPy output conversion measurements and their scope are recorded in [the validation note](compat/performance/numpy-output-20261015/README.md).
 
 Polars digest structs with delta require K2Norm scale and singleton policy Off, as binary digests do. Incompatible structs return a configuration error when read for queries or serialization.
+
+Modern `TDigest.from_array` and `TDigest.from_means_weights` release the Python GIL during Rust construction after copying input into owned vectors. Independent constructors can therefore run in a caller-managed thread pool. Python input conversion still holds the GIL, and the library does not create a separate constructor pool. This change applies to the opt-in `gr_tdigest` interface.

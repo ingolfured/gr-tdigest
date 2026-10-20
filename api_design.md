@@ -106,6 +106,10 @@ versions and both NumPy lines, and also tests a genuinely Polars-free baseline.
 The bounded Python metadata is narrower than upstream's open-ended >=3.10
 declaration. The development tool environment remains Python 3.12.
 
+### 4.1.4 Modern Python constructor concurrency
+
+`gr_tdigest.TDigest.from_array` and `from_means_weights` convert their Python inputs to owned Rust vectors before releasing the GIL for native construction. Each call builds a private digest and retains existing validation and numerical order. Independent calls may overlap in a caller-managed pool; input conversion remains serialized by the GIL. This does not add a shared-object mutation guarantee or change the original `tdigest_rs` interface.
+
 ### 4.2 Queries
 
 Quantile:

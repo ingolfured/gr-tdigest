@@ -5,6 +5,7 @@ All notable changes to this project are documented in this file.
 ## [Unreleased]
 
 ### Fixed
+- Release the Python GIL during modern raw and weighted Rust digest construction after converting input containers to owned vectors, allowing independent constructors to run concurrently without changing numerical calculations.
 - Reject Polars digest structs that combine delta with an incompatible scale or singleton policy before querying or exporting them, returning a configuration error instead of panicking during serialization.
 - Resolve development paths from Make's working directory, quote environment paths and locate pre-commit hooks through Git, allowing setup and wheel smoke checks from linked worktrees and paths with spaces, including subprocess launches with inherited PWD.
 - Copy modern Python NumPy query results and centroid arrays directly into NumPy-owned memory, avoiding intermediate Python float/list objects while preserving exact values and independent writable/resizable arrays. Qualified NumPy 2 heldout batches used 44.86–54.76% less CDF time and 36.53–51.39% less quantile time in the recorded single-thread Linux workload; unresolved and noisy cases are retained in `compat/performance/numpy-output-20261015`.
