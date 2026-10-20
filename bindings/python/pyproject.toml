@@ -1,5 +1,5 @@
 [build-system]
-requires = ["maturin[patchelf,zig]>=1.9.5,<2.0"]
+requires = ["maturin[patchelf,zig]>=1.15.0,<2.0"]
 build-backend = "maturin"
 
 [project]
@@ -8,13 +8,16 @@ dynamic = ["version"]
 description = "Rust TDigest with Python, Polars and JNI"
 readme = "PYTHON_README.md"
 license = { text = "Apache-2.0" }
-requires-python = ">=3.10,<3.13"
+requires-python = ">=3.10,<3.16"
 authors = [{ name = "Ingolfur Edvardsson", email = "ingo.edvardsson@gresearch.co.uk" }]
 classifiers = [
   "Programming Language :: Python :: 3",
   "Programming Language :: Python :: 3.10",
   "Programming Language :: Python :: 3.11",
   "Programming Language :: Python :: 3.12",
+  "Programming Language :: Python :: 3.13",
+  "Programming Language :: Python :: 3.14",
+  "Programming Language :: Python :: 3.15",
   "Programming Language :: Python :: Implementation :: CPython",
   "Programming Language :: Rust",
   "License :: OSI Approved :: Apache Software License",
@@ -27,17 +30,17 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
-polars = ["polars==1.34.0"]
+polars = ["polars==2.0.0"]
 
 # Dev groups (PEP 735). uv understands these and can install with --group/--all-groups.
 [dependency-groups]
 dev = [
-  "polars==1.34.0",
+  "polars==2.0.0",
   "tomli>=2; python_version < '3.11'",
   "pytest>=8.4.2",
   "ruff>=0.13.3",
   "pre-commit>=4.3.0",
-  "maturin[patchelf,zig]>=1.9.5,<2.0",
+  "maturin[patchelf,zig]>=1.15.0,<2.0",
   "numpy>=1.26.4,<3",
   "scipy>=1.15.3",
   "mypy>=1.18.2",

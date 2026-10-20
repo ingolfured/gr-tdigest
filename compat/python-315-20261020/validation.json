@@ -1,0 +1,213 @@
+{
+  "base_commit": "16a1364",
+  "canonical_checks": [
+    "make build test (after final lint)",
+    "make lint",
+    "original source/wrapper checksums and91 unchanged tests"
+  ],
+  "junit_sha256": {
+    "py310-numpy1-compatibility.xml": "d573ffff877987435b8b19b5ea17efe7d0007b422e11a30da8134d099da689ae",
+    "py310-numpy1-modern.xml": "5f7f70b89d11658ce6bf583f2892c03a988b3910332a2e7f3ad424bc1cabab98",
+    "py310-numpy1-no-polars-compatibility.xml": "c5492862f3ce7cad5f73ca117b623ccea7cf949431dc0f9b7f8aeaba7c5a0a18",
+    "py310-numpy1-no-polars-modern_python.xml": "b3cc603a07537af4dacf3f818af98b4bd2538c11303f57c02b1015ca61d6f400",
+    "py310-numpy2-compatibility.xml": "ce61a658bafc90a6606b8d753e000953dcf2367ef1798893b66e594b393259c5",
+    "py310-numpy2-modern.xml": "3cd763a62f8c626f59c2ff7253ee27f2d3db3e2d1a171c67499c4f03cbec99f5",
+    "py311-numpy1-compatibility.xml": "9aa4fd8b498dfb53b35e487c332a47d5438a85342060f09506d614d5ed37e0a3",
+    "py311-numpy1-modern.xml": "f842c2acefdf9ee27fc1a240e477a5646510e189d066e809ee50adfe9206ac60",
+    "py311-numpy2-compatibility.xml": "1cc2f46429fb8f6f7226fb0b00bc98a2ff0f60c6bfd3c3cac840fb85c71b7b1a",
+    "py311-numpy2-modern.xml": "74f231e96874c20ea09f6a939d654b15af78f6ae1bbed5ffc7b6675911aba675",
+    "py312-numpy1-compatibility.xml": "df613c7aaa91bef9da664197976c8696c04f0a7cb09ed10a5f13b53cf77e9735",
+    "py312-numpy1-modern.xml": "580fa4ef8123b7326453d39450b08b2e4c3f1719b8133d5f7d8977a3e5adf146",
+    "py312-numpy2-compatibility.xml": "0f241117a2b53742d017599a2b025d9626cbee01e4a70ea0ee788d65613423ad",
+    "py312-numpy2-modern.xml": "67ec3c51f17cd1e1e36b74a9dd7ccb7fb7545140f0c15409134e50f21d477eab",
+    "py313-numpy2-compatibility.xml": "46993f591db09955ecde00d8bdc7c22b0f4d68d9b1bf53c3d498891340196cb5",
+    "py313-numpy2-modern.xml": "686c930abdf6345d41dfae62bf81abc8ad4df2f3b2b373199b7bf8a39e6ce461",
+    "py314-numpy2-compatibility.xml": "c9dbfea4d5dda5ddd6050799a86fb80fa3e12dc2f21c6110b7cfdaa9e17a98b9",
+    "py314-numpy2-modern.xml": "1cc17f421c15db67eba14ff3b87c194b676354d2e8dbe41111ee14db0be0ab4f",
+    "py315-numpy2-compatibility.xml": "32511876fab266e72f34a87c5546fa44f8b18afed988377a4e1479b1df557071",
+    "py315-numpy2-modern.xml": "2facc3fa7d0535f1b148dc1b313d9ff8fe651cc0ecdfb9b8fa1e05fb77d291e4",
+    "py315-numpy2-no-polars-compatibility.xml": "cf31fe2e512a821d1e3255f2fe70662ddb29c3946df5277e60586c6aab524b84",
+    "py315-numpy2-no-polars-modern_python.xml": "66508d4dfa7e07b85ed01fba208d97193c69eee41195a65c55a92a6df0e446ff",
+    "source-py312.xml": "50e44a95bf255c9938a1000491fe13f45eab8ca2ac176320228a6073b9c9d52c",
+    "source-py314.xml": "ba9884f5c970ab1c7e5be096af13438f28c0e9e3fb7efcffd19663fca6dfb79e",
+    "source-py315.xml": "25de93cc5f3635419d998008bc8e7018732572a922b2b8fbb508cb9ca1d7c242"
+  },
+  "notes": [
+    "Rust1.95 is required by the aligned Polars dependency tree.",
+    "All three independently rebuilt source wheels have the same native library hash.",
+    "Only binding API migrations; original and modern digest arithmetic is unchanged in this change."
+  ],
+  "platform": "Linux x86_64",
+  "release_artifact": {
+    "distribution": "gr-tdigest",
+    "native_sha256": "3e310f0e59adf0be9b7c34f38cd38682de0d259936102bf177a7693b4e5fc461",
+    "requires_dist": [
+      "numpy>=1.26.4,<3",
+      "polars==2.0.0 ; extra == 'polars'"
+    ],
+    "requires_python": ">=3.10, <3.16",
+    "sdist_sha256": "a4c5e4e1f21c8ccd45eb631b3d51929ed8ba7ee3a2b60fbc2e7cb64df75fed62",
+    "tags": [
+      "cp310-abi3-linux_x86_64"
+    ],
+    "version": "0.2.4",
+    "wheel_sha256": "73aec640fda3c70ed7240bb48af7df23ffc09520769527ae16662f2c14c1cfad"
+  },
+  "runtime_cells": [
+    {
+      "compatibility_passed": 208,
+      "label": "py310-numpy1",
+      "modern_passed": 184,
+      "numpy": "1.26.4",
+      "polars": "2.0.0",
+      "pytest": "8.4.2",
+      "python": "3.10",
+      "scipy": "1.15.3",
+      "status": "PASS"
+    },
+    {
+      "compatibility_passed": 208,
+      "label": "py310-numpy2",
+      "modern_passed": 184,
+      "numpy": "2.2.6",
+      "polars": "2.0.0",
+      "pytest": "8.4.2",
+      "python": "3.10",
+      "scipy": "1.15.3",
+      "status": "PASS"
+    },
+    {
+      "compatibility_passed": 208,
+      "label": "py311-numpy1",
+      "modern_passed": 184,
+      "numpy": "1.26.4",
+      "polars": "2.0.0",
+      "pytest": "8.4.2",
+      "python": "3.11",
+      "scipy": "1.17.1",
+      "status": "PASS"
+    },
+    {
+      "compatibility_passed": 208,
+      "label": "py311-numpy2",
+      "modern_passed": 184,
+      "numpy": "2.3.4",
+      "polars": "2.0.0",
+      "pytest": "8.4.2",
+      "python": "3.11",
+      "scipy": "1.17.1",
+      "status": "PASS"
+    },
+    {
+      "compatibility_passed": 208,
+      "label": "py312-numpy1",
+      "modern_passed": 184,
+      "numpy": "1.26.4",
+      "polars": "2.0.0",
+      "pytest": "8.4.2",
+      "python": "3.12",
+      "scipy": "1.17.1",
+      "status": "PASS"
+    },
+    {
+      "compatibility_passed": 208,
+      "label": "py312-numpy2",
+      "modern_passed": 184,
+      "numpy": "2.3.4",
+      "polars": "2.0.0",
+      "pytest": "8.4.2",
+      "python": "3.12",
+      "scipy": "1.17.1",
+      "status": "PASS"
+    },
+    {
+      "compatibility_passed": 208,
+      "label": "py313-numpy2",
+      "modern_passed": 184,
+      "numpy": "2.3.4",
+      "polars": "2.0.0",
+      "pytest": "8.4.2",
+      "python": "3.13",
+      "scipy": "1.17.1",
+      "status": "PASS"
+    },
+    {
+      "compatibility_passed": 208,
+      "label": "py314-numpy2",
+      "modern_passed": 184,
+      "numpy": "2.5.4",
+      "polars": "2.0.0",
+      "pytest": "9.1.1",
+      "python": "3.14",
+      "scipy": "1.18.1",
+      "status": "PASS"
+    },
+    {
+      "compatibility_passed": 208,
+      "label": "py315-numpy2",
+      "modern_passed": 184,
+      "numpy": "2.5.4",
+      "polars": "2.0.0",
+      "pytest": "9.1.1",
+      "python": "3.15",
+      "scipy": "1.18.1",
+      "status": "PASS"
+    },
+    {
+      "compatibility_passed": 208,
+      "label": "py310-numpy1-no-polars",
+      "modern_python_passed": 120,
+      "numpy": "1.26.4",
+      "polars": null,
+      "pytest": "8.4.2",
+      "python": "3.10",
+      "scipy": "1.15.3",
+      "status": "PASS"
+    },
+    {
+      "compatibility_passed": 208,
+      "label": "py315-numpy2-no-polars",
+      "modern_python_passed": 120,
+      "numpy": "2.5.4",
+      "polars": null,
+      "pytest": "9.1.1",
+      "python": "3.15",
+      "scipy": "1.18.1",
+      "status": "PASS"
+    }
+  ],
+  "scope": "Standard CPython3.10-3.15; NumPy1 and2 on3.10-3.12, NumPy2 on3.13-3.15; optional Polars2.0.0; no free-threaded or PyPy qualification",
+  "source_builds": [
+    {
+      "native_sha256": "3e310f0e59adf0be9b7c34f38cd38682de0d259936102bf177a7693b4e5fc461",
+      "passed": 392,
+      "python": "3.12",
+      "wheel_sha256": "8ed927756a312737ae4de33d484bf8e738bdf9581cca9bfb648f4dcf8169e049"
+    },
+    {
+      "native_sha256": "3e310f0e59adf0be9b7c34f38cd38682de0d259936102bf177a7693b4e5fc461",
+      "passed": 392,
+      "python": "3.14",
+      "wheel_sha256": "ff36b7d147a3385012913e2cbdafce4fbfde44d60317ecf23066f317f6d26995"
+    },
+    {
+      "native_sha256": "3e310f0e59adf0be9b7c34f38cd38682de0d259936102bf177a7693b4e5fc461",
+      "passed": 392,
+      "python": "3.15",
+      "wheel_sha256": "280e434fc7364d158d1632b6b18e5d086a245eb311488d247a88093250c15dd7"
+    }
+  ],
+  "source_sha256": {
+    "Cargo.lock": "872ee407a963e9649b7c792c00d6e6259d255cc67ccf071db74763d2fe8a9a71",
+    "Cargo.toml": "c14971aabf50087734e34b5a991393fa95d15aa2364423299c969d6ba1c20fbb",
+    "bindings/python/pyproject.toml": "75e3896f7f34655abb94a7de92fe4e036c28c508bdec5481518df2468cf2afd2",
+    "bindings/python/uv.lock": "5255c2f2b26060099093c6104d5bba3122ba3d996574e83e0493bb45df5a0179",
+    "rust-toolchain.toml": "cc0f88d6c1dcbe33658d0e3fffdc589465ec2baefeacee46f19ec28809e408b8",
+    "scripts/test_python_support.py": "7958c3e0f83743a8e171f753df03243e38f512ae209c7494e88baf7289e6dc12",
+    "src/polars_expr.rs": "ea42c7df1fc15ca25e6fe666e5599563dd46ecc653e135070602a6a8e958730a",
+    "src/py.rs": "1cc5cd16e3e7e317f909ae196b09be715b0858c5d417b110052e3acf6183abea",
+    "src/tdigest/codecs.rs": "45bc4c4f4bd2cdc12d2232742a3a1f074c75885f601a0b08d0ed093603ac4f2d",
+    "src/upstream_py.rs": "f9d763ce6c43abf855b469f963c1c93e126e00e876af99684c65171759594284"
+  },
+  "testcase_runs": 5360
+}
