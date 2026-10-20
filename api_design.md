@@ -140,6 +140,8 @@ Shape behavior:
 - Scalar probe in -> scalar out.
 - Vector/list probe in -> vector/list out (surface-appropriate shape preservation).
 
+Large modern CDF batches may use the shared Rayon pool; scheduling preserves probe order and scalar numerical results. Pool and caller concurrency are workload settings and do not imply a shared-object mutation guarantee.
+
 ### 4.3 Merge
 
 - Precision mismatch merge is an error (`f32` vs `f64`).

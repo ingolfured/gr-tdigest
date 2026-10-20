@@ -299,7 +299,7 @@ Between centroids `li` and `ri`:
 If both neighbors are atomic, `dw_span = 0`, so this becomes a strict step.
 
 Performance:
-- Rayon path is used when probe count `>= PAR_MIN` where `PAR_MIN = 32768`.
+- Rayon path is used when probe count `>= PAR_MIN` where `PAR_MIN = 32768`. Its indexed parallel iterator uses a minimum chunk of 1024 probes to expose work to larger pools. Prefix accumulation, each probe kernel and collected output order are unchanged. Local-pool tests compare scalar output bits across the threshold for both precisions, empty/atomic/mixed/fractional/subnormal state, NaN and infinite probes.
 
 ### 5.2 Quantile and median (`src/tdigest/quantile.rs`)
 

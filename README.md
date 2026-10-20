@@ -172,4 +172,6 @@ Polars digest structs with delta require K2Norm scale and singleton policy Off, 
 
 Modern `TDigest.from_array` and `TDigest.from_means_weights` release the Python GIL during Rust construction after copying input into owned vectors. Independent constructors can therefore run in a caller-managed thread pool. Python input conversion still holds the GIL, and the library does not create a separate constructor pool. This change applies to the opt-in `gr_tdigest` interface.
 
+Modern CDF batches with at least 32,768 probes use the shared Rayon pool with a minimum chunk size of 1,024 probes. `RAYON_NUM_THREADS` controls that pool when set before its initialization; smaller batches retain their scalar path. Choose caller and native pool sizes together for the workload.
+
 Modern training and updates copy compatible aligned, native-endian contiguous one-dimensional NumPy Float32/Float64 buffers directly into owned Rust vectors. Read-only arrays are supported; strided, unaligned, byte-swapped, scalar and other-dtype inputs retain their generic conversion path. Input storage is neither retained nor mutated.

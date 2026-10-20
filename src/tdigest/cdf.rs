@@ -91,7 +91,7 @@ impl<F: FloatLike + FloatCore> TDigest<F> {
         // Main path: parallel for big batches, scalar otherwise.
         if vals.len() >= PAR_MIN {
             vals.par_iter()
-                .with_min_len(4096)
+                .with_min_len(1024)
                 .map(|&v| {
                     if v.is_nan() {
                         f64::NAN
@@ -221,6 +221,113 @@ fn cdf_at_val_fast<F: FloatLike + FloatCore>(
 #[cfg(test)]
 mod tests {
     use crate::tdigest::{tdigest::TDigestBuilder, ScaleFamily};
+
+    fn parallel_cdf_matches_scalar_bits<F: super::FloatLike + super::FloatCore>() {
+        use crate::tdigest::centroids::Centroid;
+
+        let empty = TDigestBuilder::<F>::new().build();
+        let atomic = TDigestBuilder::<F>::new()
+            .max_size(64)
+            .build()
+            .merge_unsorted(
+                [-2.0, -2.0, 0.0, 2.0, 2.0, 2.0]
+                    .into_iter()
+                    .map(F::from_f64)
+                    .collect(),
+            )
+            .unwrap();
+        let mixed = TDigestBuilder::<F>::new()
+            .max_size(64)
+            .build()
+            .merge_unsorted(
+                (0..4096)
+                    .map(|i| F::from_f64(((i * 1777) % 4096) as f64 / 256.0 - 8.0))
+                    .collect(),
+            )
+            .unwrap();
+        let weighted = |w: f64| {
+            TDigestBuilder::<F>::new()
+                .with_centroids(
+                    vec![
+                        Centroid::<F>::new_atomic_f64(-1.0, w),
+                        Centroid::<F>::new_atomic_f64(1.0, 3.0 * w),
+                    ],
+                    -w + 3.0 * w,
+                    w + 3.0 * w,
+                    F::from_f64(1.0),
+                    F::from_f64(-1.0),
+                    64,
+                )
+                .build()
+        };
+        let fixtures = [
+            empty,
+            atomic,
+            mixed,
+            weighted(0.1),
+            weighted(f64::from_bits(1)),
+        ];
+        let probes = [
+            f64::NEG_INFINITY,
+            -4.0,
+            -2.0,
+            -1.0,
+            -0.0,
+            0.0,
+            0.125,
+            1.0,
+            2.0,
+            4.0,
+            f64::INFINITY,
+            f64::from_bits(0x7ff8_0000_1234_5678),
+        ];
+        for workers in [1, 4, 16, 32] {
+            let pool = rayon::ThreadPoolBuilder::new()
+                .num_threads(workers)
+                .build()
+                .unwrap();
+            for digest in &fixtures {
+                let original = digest.to_bytes();
+                let scalar_bits: Vec<_> = probes
+                    .iter()
+                    .map(|&q| digest.cdf(&[q])[0].to_bits())
+                    .collect();
+                for len in [
+                    super::PAR_MIN - 1,
+                    super::PAR_MIN,
+                    super::PAR_MIN + 1,
+                    65_537,
+                ] {
+                    let queries: Vec<_> = (0..len).map(|i| probes[i % probes.len()]).collect();
+                    let actual = pool.install(|| digest.cdf(&queries));
+                    assert_eq!(actual.len(), len);
+                    for (i, value) in actual.iter().enumerate() {
+                        assert_eq!(
+                            value.to_bits(),
+                            scalar_bits[i % probes.len()],
+                            "workers={workers}, len={len}, index={i}"
+                        );
+                    }
+                }
+                assert!(pool.install(|| digest.cdf(&[])).is_empty());
+                assert_eq!(
+                    digest.to_bytes(),
+                    original,
+                    "CDF query mutated stored state"
+                );
+            }
+        }
+    }
+
+    #[test]
+    fn parallel_cdf_f32_preserves_scalar_bits_at_batch_boundaries() {
+        parallel_cdf_matches_scalar_bits::<f32>();
+    }
+
+    #[test]
+    fn parallel_cdf_f64_preserves_scalar_bits_at_batch_boundaries() {
+        parallel_cdf_matches_scalar_bits::<f64>();
+    }
 
     fn exact_ecdf_for_sorted(sorted: &[f64]) -> Vec<f64> {
         let n = sorted.len();

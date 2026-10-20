@@ -6,6 +6,7 @@ All notable changes to this project are documented in this file.
 
 ### Fixed
 - Copy aligned, native-endian contiguous NumPy f32/f64 training inputs directly into owned Rust vectors before construction or update, preserving generic conversion for other layouts/dtypes and the existing query conversion path.
+- Use a smaller minimum Rayon chunk for large modern CDF batches so a 32,768-probe batch can occupy larger native pools, while preserving output order and scalar calculation bits.
 - Release the Python GIL during modern raw and weighted Rust digest construction after converting input containers to owned vectors, allowing independent constructors to run concurrently without changing numerical calculations.
 - Reject Polars digest structs that combine delta with an incompatible scale or singleton policy before querying or exporting them, returning a configuration error instead of panicking during serialization.
 - Resolve development paths from Make's working directory, quote environment paths and locate pre-commit hooks through Git, allowing setup and wheel smoke checks from linked worktrees and paths with spaces, including subprocess launches with inherited PWD.
