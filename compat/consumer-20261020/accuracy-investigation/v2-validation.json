@@ -1,0 +1,52 @@
+{
+  "cause": "TDIGEST_NATIVE_FILE custom basename preserved in JAR but loader expects libgr_tdigest.so",
+  "diagnostic_setup_issue": "The external -I budget invocation could not import its sibling helper; no measured budget result claimed for that failed invocation. Version003supports isolated helper loading and verifies complete report/native identity.",
+  "files": {
+    "v2-installed-matrix.json.gz": {
+      "bytes": 1135,
+      "sha256": "443e765a0c01b29f206caec137f425dc9b74fc83326bec301087330d7e531393"
+    },
+    "v2-isolated-diagnostic-setup.log.gz": {
+      "bytes": 196,
+      "sha256": "c0541469258920e4d89dfd26e8e51144827ac18d85abc927c5be9cdeffe9c782"
+    },
+    "v2-python-artifact.json.gz": {
+      "bytes": 439,
+      "sha256": "e130c28e04366e28e91f6f7503fc297dfc8524b760d1dd4f0247a951c3d6fa26"
+    },
+    "v2-source-builds.json.gz": {
+      "bytes": 924,
+      "sha256": "7ceda5b26ffeb6331ea14b8ae201dfc8b005274e8d5209009985be48d661d958"
+    },
+    "v2-standalone-jar-failure.log.gz": {
+      "bytes": 1729,
+      "sha256": "e23f8e07b24a099f6b70fde85bcc308f8d466565934575ead3ac137c6fde7d96"
+    }
+  },
+  "jar_status": "FAIL20standalone Java11tests: missing canonical native resource",
+  "not_run": [
+    "Java17/21 standalone on failed JAR",
+    "ABI-floor runtime checks on failed JAR"
+  ],
+  "preserved_artifacts": {
+    "gr-tdigest-0.2.5-dev2026102002.jar": {
+      "bytes": 1892051,
+      "sha256": "111cc1568d1ee99f04c67e0459a4e15db8b8ffbd1f408429211584341d42f80a"
+    },
+    "gr_tdigest-0.2.5.dev2026102002-cp310-abi3-manylinux_2_28_x86_64.whl": {
+      "bytes": 5261483,
+      "sha256": "3366443dfec5268e4e155e158a4aa1c7758be15ae1890facab167d0f45d28eb0"
+    },
+    "gr_tdigest-0.2.5.dev2026102002.tar.gz": {
+      "bytes": 5379328,
+      "sha256": "72121a2b01c7a39a4f276c98c3e8eb744666d662a163bc806ccd134bd83c2d6b"
+    },
+    "libgr_tdigest-jni-glibc217.so": {
+      "bytes": 7389976,
+      "sha256": "3e95145c9562579567093edb5fc9bcfbbcea07e5b51e2dd38e097dd839b0d90d"
+    }
+  },
+  "source_sha": "9268f9a203c10ff6a0cbd0900929f793a8835a45",
+  "version": "0.2.5-dev2026102002",
+  "wheel_matrix": "PASS12cells+3source rebuilds;6285executed instances, repeated cases"
+}

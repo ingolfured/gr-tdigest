@@ -219,3 +219,8 @@ slower diagnostic and returns failure for the observed accuracy failures. Small
 summaries remain a numerical acceptance issue; changing the scale does not
 universally fix them. The default remainsK2/1000 and the original engine is
 unchanged. See the [accuracy investigation and recommendation](compat/consumer-20261020/accuracy-investigation/REPORT.md).
+
+JVM builds accept a selected native file with any basename through
+`TDIGEST_NATIVE_FILE`. Packaging renames it to the native loader's canonical
+resource path, removes stale generated payloads and verifies the finished JAR.
+CI exercises a renamed override and runs that JAR outside the checkout.

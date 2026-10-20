@@ -556,3 +556,9 @@ shapes, records the new failures, and makes no algorithm/default/wire-layout
 change. Its saved-byte comparisons are not per-digest RSS or temporary-allocation
 claims. The empirical results and rejected variants are documented in the
 consumer accuracy report.
+
+The Gradle native-copy task clears its exclusively generated resource directory
+and renames the selected native file to the loader's canonical basename. The
+JAR task inspects the final archive and rejects missing, extra or misnamed native
+payloads. A renamed-override build followed by an outside-checkout JAR execution
+is a CI regression; ordinary Java tests alone previously missed this path.

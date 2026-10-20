@@ -6,7 +6,7 @@ candidate. Finish and qualify that product, then reorganize the changes into a
 small review sequence. Existing PRs and historical evidence remain preserved.
 
 This is not the final product. The current development version is
-`0.2.5-dev2026102002` (Python `0.2.5.dev2026102002`). The previous artifact manifest,
+`0.2.5-dev2026102003` (Python `0.2.5.dev2026102003`). The previous artifact manifest,
 coverage and report in this directory describe source `a9c368f`, version
 `0.2.5-dev2026102001`. They remain historical evidence for those exact bytes.
 They do not qualify the latest code, and no replacement canonical artifacts have
@@ -122,3 +122,12 @@ is corrected from 222 to 225 modern cases after adding tests; full source-build
 coverage is 433. Numerical targets and skip/failure checks remain strict, and
 runtime logs are retained. Fresh artifact matrix results are separate from the
 historical candidate and the source-only numerical study.
+
+## Standalone native packaging fix
+
+A real standalone run exposed a custom-native-basename packaging defect. Gradle
+copied a selected native file under its input name, while the runtime loader
+requires a canonical resource name. Version003 normalizes the name, removes stale
+generated payloads, verifies the final archive and adds an outside-checkout CI
+smoke check with an intentionally renamed input. Failed version002 JAR bytes and
+logs remain preserved. New version003 artifact checks are recorded separately.

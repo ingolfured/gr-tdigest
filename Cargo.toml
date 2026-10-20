@@ -1,6 +1,6 @@
 [package]
 name    = "gr-tdigest"
-version = "0.2.5-dev2026102002"
+version = "0.2.5-dev2026102003"
 edition = "2021"
 rust-version = "1.95"
 description = "Mergeable TDigest in Rust with Python, Polars, and Java bindings"

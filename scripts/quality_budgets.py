@@ -6,6 +6,7 @@ additional regression probes, not independent trials or a universal guarantee.
 
 import argparse
 import hashlib
+import importlib.util
 import json
 from pathlib import Path
 from statistics import NormalDist
@@ -14,7 +15,14 @@ import sys
 import numpy as np
 import gr_tdigest._gr_tdigest as native
 
-import quality_suite as q
+# Load only the explicit reference file, so -I can keep package imports isolated
+# to the installed wheel without adding the checkout to sys.path.
+reference_spec = importlib.util.spec_from_file_location(
+    "_tdigest_quality_reference", Path(__file__).with_name("quality_suite.py")
+)
+q = importlib.util.module_from_spec(reference_spec)
+sys.modules[reference_spec.name] = q
+reference_spec.loader.exec_module(q)
 
 
 MATRICES = {

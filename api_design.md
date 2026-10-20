@@ -267,3 +267,8 @@ separate. Known small-summary failures remain release-acceptance issues; no
 implicit scale selection, new API default or original-engine change is made.
 Python training currently requires capacity>=10; checked modern Rust allows
 positive capacities including1. These limits are stated separately.
+
+A build-time `TDIGEST_NATIVE_FILE` override may have an arbitrary basename; the
+finished JAR must contain exactly one platform-native payload under the canonical
+loader resource name. This differs from a runtime native-file override, which
+loads the selected path directly. No source/developer library is required at runtime.

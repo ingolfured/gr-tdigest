@@ -5,6 +5,8 @@ All notable changes to this project are documented in this file.
 ## [Unreleased]
 
 ### Fixed
+- Keep installed diagnostic runs compatible with Python isolated mode by loading only their explicitly named reference helper; verify completed numerical reports and native identities rather than accepting a nonzero process code as proof of a measured failure.
+- Fix standalone JVM packaging for custom native override basenames: remove stale generated payloads, rename the selected library to the loader's canonical resource name and reject malformed JAR resource layouts. Add an actual renamed-override/outside-checkout CI smoke test; advance the new review artifact version to0.2.5-dev2026102003and preserve failed version002JAR evidence.
 - Preserve measured trial patches and SVG exports as byte-exact compressed evidence and verify every manifest hash after repository formatting hooks.
 - Fix installed-wheel coverage accounting after adding three modern cases: require225modern tests per full runtime and derive433-case source-build totals from one inventory. Print cell failure reasons and retain runtime reports in CI; failures/skips and numerical references remain strict.
 - Add a separate reproducible4140-profile capacity/scale diagnostic with new deterministic shapes, consumer capacities200/1000 and matched-storage original comparisons. Retain114diagnostic failed profiles, reject three measured compression alternatives and leave all frozen references and original arithmetic unchanged; explain the accuracy/storage/value-error tradeoffs instead of shipping a test-specific algorithm change.

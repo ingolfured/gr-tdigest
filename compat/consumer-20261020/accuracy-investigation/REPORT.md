@@ -173,3 +173,17 @@ Measured patches and SVG exports are gzip-compressed to preserve their exact byt
 through source-formatting hooks. Decompress a patch before applying it, for example
 `gzip -dc patches/direct-cap.patch.gz | git apply` on the named control revision.
 PNG previews remain directly readable.
+
+## Concrete integration fixes found during follow-up
+
+The corrected version002 wheel passed all 12 installed-runtime cells and three
+source rebuilds, including the 225 modern cases per full runtime. A subsequent
+standalone JAR run exposed a separate real defect: a build-time native override
+with a custom filename was bundled under that filename, while the loader requires
+`libgr_tdigest.so`. The failed JAR and logs are preserved.
+
+Version003 fixes canonical native naming, clears stale generated payloads and
+verifies the finished archive. CI deliberately builds with a renamed input and
+runs the JAR outside the checkout. This is an integration fix, not a claim that
+the unresolved small-summary accuracy losses were removed. Its uniquely named
+artifacts and fresh qualification are separate from version002 evidence.
