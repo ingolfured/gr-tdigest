@@ -15,7 +15,7 @@ def test_delta_and_atomic_weights_survive_polars(precision):
         [0.0, 10.0], [90.0, 10.0], delta=17, precision=precision
     )
     frame = pl.DataFrame({"blob": [original.to_bytes()]}).select(
-        d=td.from_bytes("blob")
+        d=td.from_bytes("blob", precision=precision)
     )
     assert frame.select(td.median("d")).item() == 0.0
     restored = td.TDigest.from_bytes(frame.select(td.to_bytes("d")).item())
@@ -33,7 +33,7 @@ def test_polars_roundtrip_preserves_modern_configuration(scale, policy, pin):
         kwargs["pin_per_side"] = pin
     original = td.TDigest.from_array(list(range(200)), **kwargs)
     frame = pl.DataFrame({"blob": [original.to_bytes()]}).select(
-        d=td.from_bytes("blob")
+        d=td.from_bytes("blob", precision="f64")
     )
     restored = td.TDigest.from_bytes(frame.select(td.to_bytes("d")).item())
     assert restored.to_bytes() == original.to_bytes()
@@ -44,7 +44,7 @@ def test_polars_roundtrip_preserves_modern_configuration(scale, policy, pin):
 @pytest.mark.parametrize("bad_config", ["scale", "use", "edges"])
 def test_polars_rejects_incompatible_delta_struct_before_query_or_export(precision, bad_config):
     original = td.TDigest.from_array([0.0, 1.0, 2.0], delta=17, precision=precision)
-    frame = pl.DataFrame({"blob": [original.to_bytes()]}).select(d=td.from_bytes("blob"))
+    frame = pl.DataFrame({"blob": [original.to_bytes()]}).select(d=td.from_bytes("blob", precision=precision))
     replacements = {
         "scale": [pl.lit(2, dtype=pl.Int64).alias("scale")],
         "use": [pl.lit(1, dtype=pl.Int64).alias("policy")],
@@ -66,7 +66,7 @@ def test_polars_rejects_incompatible_delta_struct_before_query_or_export(precisi
 def test_old_polars_structs_remain_readable(precision):
     original = td.TDigest.from_array([0.0, 1.0, 2.0], precision=precision)
     frame = pl.DataFrame({"blob": [original.to_bytes()]}).select(
-        d=td.from_bytes("blob")
+        d=td.from_bytes("blob", precision=precision)
     )
     # Reconstruct the previous six-field schema, without configuration or kind.
     old = frame.select(

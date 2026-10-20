@@ -97,13 +97,16 @@ macro_rules! domain_regression {
                 }
                 check(&updated);
                 let mut merged = empty().merge_unsorted(vec![0.0, 0.0]).unwrap();
-                merged.merge(&empty().merge_unsorted(vec![100.0]).unwrap());
+                merged
+                    .merge(&empty().merge_unsorted(vec![100.0]).unwrap())
+                    .unwrap();
                 check(&merged);
                 let kway = TDigest::merge_digests(vec![
                     empty().merge_unsorted(vec![0.0]).unwrap(),
                     empty().merge_unsorted(vec![100.0]).unwrap(),
                     empty().merge_unsorted(vec![0.0]).unwrap(),
-                ]);
+                ])
+                .unwrap();
                 check(&kway);
                 let WireDecodedDigest::$variant(restored) =
                     decode_digest(&direct.to_bytes()).unwrap()

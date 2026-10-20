@@ -35,12 +35,14 @@ MATRIX = (
     ("3.11", "2.3.4", "1.17.1", "8.4.2"),
     ("3.12", "1.26.4", "1.17.1", "8.4.2"),
     ("3.12", "2.3.4", "1.17.1", "8.4.2"),
+    ("3.12", "2.5.4", "1.18.1", "9.1.1"),
     ("3.13", "2.3.4", "1.17.1", "8.4.2"),
     ("3.14", "2.5.4", "1.18.1", "9.1.1"),
     ("3.15", "2.5.4", "1.18.1", "9.1.1"),
 )
 MODERN_TESTS = (
     "bindings/python/tests/test_api_python.py",
+    "bindings/python/tests/test_consumer_contracts.py",
     "bindings/python/tests/test_api_polars.py",
     "bindings/python/tests/test_day_numpy_input.py",
     "bindings/python/tests/test_day_numpy_output.py",
@@ -65,6 +67,12 @@ paths = {name: pathlib.Path(module.__file__).resolve() for name, module in modul
 assert all(path.is_relative_to(prefix) for path in paths.values()), paths
 assert paths['tdigest_rs.tdigest_rs'].name == 'tdigest_rs.py', paths
 assert modules['tdigest_rs'].TDigest.__module__ == 'tdigest_rs.lib'
+import inspect
+package = paths['gr_tdigest'].parent
+assert all((package / name).is_file() for name in ('py.typed', '__init__.pyi', '_gr_tdigest.pyi'))
+assert 'Modern distribution' in modules['gr_tdigest'].TDigest.__doc__
+assert 'weights' in inspect.signature(modules['gr_tdigest'].TDigest.from_array).parameters
+assert 'Midpoint CDF' in modules['gr_tdigest'].TDigest.cdf.__doc__
 native_hash = hashlib.sha256(paths['gr_tdigest._gr_tdigest'].read_bytes()).hexdigest()
 assert native_hash == expected['native_sha256'], native_hash
 dist = metadata.distribution(expected['distribution'])
@@ -198,7 +206,7 @@ def main() -> None:
         variants = [(minor, numpy, scipy, pytest, "2.0.0") for minor, numpy, scipy, pytest in MATRIX]
         variants.extend((("3.10", "1.26.4", "1.15.3", "8.4.2", None), ("3.15", "2.5.4", "1.18.1", "9.1.1", None)))
         for minor, numpy, scipy, pytest, polars in variants:
-            label = f"py{minor.replace('.', '')}-numpy{numpy.split('.')[0]}" + ("-no-polars" if polars is None else "")
+            label = f"py{minor.replace('.', '')}-numpy{numpy}" + ("-no-polars" if polars is None else "")
             venv = work / label
             run(label + "-venv", ["uv", "venv", "--python", minor, str(venv)], work)
             python = str(venv / "bin/python")
@@ -246,8 +254,9 @@ def main() -> None:
                     "--locked",
                     "-F",
                     "python",
+                    "--zig",
                     "--compatibility",
-                    "linux",
+                    "manylinux_2_28",
                     "--interpreter",
                     cells[0]["executable"],
                     "-o",
@@ -277,7 +286,7 @@ def main() -> None:
                 result["installed"] = json.loads(imports)
                 suites = [("compatibility", [tests, parity], 208)]
                 if cell["polars"]:
-                    suites.append(("modern", [modern], 184))
+                    suites.append(("modern", [modern], 222))
                 else:
                     suites.append(
                         (
@@ -359,8 +368,9 @@ def main() -> None:
                         "--locked",
                         "-F",
                         "python",
+                        "--zig",
                         "--compatibility",
-                        "linux",
+                        "manylinux_2_28",
                         "--interpreter",
                         python,
                         "-o",
@@ -413,12 +423,12 @@ def main() -> None:
                     ],
                     work,
                 )
-                passed = check_results(xml, 392)
+                passed = check_results(xml, 430)
                 source_results.append({"python": minor, "artifact": built, "installed": installed, "passed": passed})
                 (output / "source-builds.json").write_text(json.dumps(source_results, indent=2) + "\n")
             require(len(source_results) == 3, "incomplete source-build matrix")
     print(
-        f"Nine full cells passed 208 compatibility + 184 modern cases each; two Polars-free cells passed 208 + 120; evidence: {output}"
+        f"Ten full cells passed 208 compatibility + 222 modern cases each; two Polars-free cells passed 208 + 120; evidence: {output}"
     )
     print(
         "Source rebuilds: " + ("3.12, 3.14 and 3.15 passed" if sdist else "not requested: no source archive supplied")

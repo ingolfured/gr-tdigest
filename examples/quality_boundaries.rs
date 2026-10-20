@@ -90,10 +90,15 @@ fn main() {
     let d = TDigest::<f64>::builder()
         .max_size(128)
         .build()
-        .merge_weighted_unsorted(&[tiny], &[0.1])
-        .unwrap();
-    record(&mut rows, "subnormal_aggregate_mean", "f64", tiny, d.mean());
-    let failed = rows.iter().filter(|r| r["status"] == "FAIL").count();
+        .merge_weighted_unsorted(&[tiny], &[0.1]);
+    match d {
+        Ok(d) => record(&mut rows, "subnormal_aggregate_mean", "f64", tiny, d.mean()),
+        Err(error) => rows.push(json!({"id":"subnormal_aggregate_mean/f64", "expected":tiny,
+            "observed":null, "status":"UNSUPPORTED", "error":error.to_string()})),
+    }
+    // An explicit unsupported-product error prevents silent corruption. It is
+    // still not a successful numerical result for this historical profile.
+    let failed = rows.iter().filter(|r| r["status"] != "PASS").count();
     println!("{}", serde_json::to_string_pretty(&json!({"accuracy_status":if failed==0 {"PASS"} else {"FAIL"}, "failed":failed, "controls":rows})).unwrap());
     if failed > 0 && std::env::args().any(|arg| arg == "--require-clean") {
         std::process::exit(1);

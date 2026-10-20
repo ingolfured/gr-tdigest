@@ -1039,6 +1039,8 @@ fn decode_payload_into_digest(
                 .with_centroids_and_stats(cents, stats)
                 .build();
 
+            td.validate_state()
+                .map_err(|_| WireError::InvalidPayload("invalid digest state"))?;
             Ok(WireDecodedDigest::F32(td))
         }
         WireFloatWidth::F64 => {
@@ -1093,6 +1095,8 @@ fn decode_payload_into_digest(
                 .with_centroids_and_stats(cents, stats)
                 .build();
 
+            td.validate_state()
+                .map_err(|_| WireError::InvalidPayload("invalid digest state"))?;
             Ok(WireDecodedDigest::F64(td))
         }
     }

@@ -5,6 +5,11 @@ All notable changes to this project are documented in this file.
 ## [Unreleased]
 
 ### Fixed
+- Require explicit Polars binary-column precision at planning and execution; document standalone Scala 2.12.16/sbt and Kotlin 2.4.21/Gradle consumers and checked modern Rust merge/conversion APIs.
+- Stage a modern consumer candidate with weighted Python construction, failure-atomic iterable updates, shape-based Polars broadcasting, strict missing/state validation, independent full-state copies and explicit NumPy migration/stubs/docstrings; leave pinned original calculations and fixtures unchanged.
+- Preserve aggregate metadata and positive residual mass through small-capacity and bucket compression; improve modern finite cancellation and fractional atomic boundaries, reject unrepresentable aggregate/products and transactional transforms, and retain unresolved accuracy/unsupported profiles explicitly.
+- Add public JVM array merge-all, weighted construction and K2Norm/delta settings, fix restored-handle Cleaner ownership under collection, catch native panics at JNI boundaries, use the system allocator and expose controlled extraction/relative overrides and actual payload diagnostics.
+- Add early pinned Rust/Cargo diagnostics, complete-wrapper source-archive checks and documented exact-artifact build/install/migration/qualification procedures; no production release or cluster qualification is implied.
 - Assess consumer handoff against exact source1451f94, enumerate public NumPy receipts and remaining numerical, packaging, JVM and integration gaps; record new modern migration decisions separately from pinned original compatibility.
 - Use the explicitly selected or downloaded JDK for direct cross-language test subprocesses as well as Gradle; environment-only JDK setup now supports the full canonical test run without relying on host Java commands.
 - Add pinned recorded-data quality checks, independent rank/value/CDF references,90 fast weighted/reference cases,756 extended merge/precision/storage profiles and explicit existing numerical-failure controls; publish full win/tie/loss evidence and regression gates without changing either engine arithmetic or hiding known accuracy failures.

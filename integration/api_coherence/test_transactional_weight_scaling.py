@@ -31,7 +31,7 @@ def test_invalid_scaled_weights_are_normal_errors_and_leave_state_unchanged(
         with pytest.raises(ValueError, match="scaled (centroid|total) weight"):
             digest.scale_weights(factor)
     else:
-        frame = pl.DataFrame({"blob": [before]}).select(d=td.from_bytes("blob"))
+        frame = pl.DataFrame({"blob": [before]}).select(d=td.from_bytes("blob", precision=precision))
         with pytest.raises(
             pl.exceptions.ComputeError, match="scaled (centroid|total) weight"
         ):
@@ -52,7 +52,7 @@ def test_valid_extreme_scaling_retains_cross_surface_state_and_query_shape(
     before = digest.to_bytes()
     expected_cdf = digest.cdf(values)
     expected_quantiles = digest.quantile([0.0, 0.25, 0.5, 0.75, 1.0])
-    frame = pl.DataFrame({"blob": [before]}).select(d=td.from_bytes("blob"))
+    frame = pl.DataFrame({"blob": [before]}).select(d=td.from_bytes("blob", precision=precision))
     result = frame.select(d=td.scale_weights("d", factor))
     digest.scale_weights(factor)
     assert result.select(td.to_bytes("d")).item() == digest.to_bytes()

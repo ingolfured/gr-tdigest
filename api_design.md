@@ -234,3 +234,13 @@ Quality acceptance uses separate rank, percentile-value and midpoint-CDF measure
 ## Consumer candidate assessment (20 October 2026)
 
 The [source-specific gap assessment](compat/consumer-20261020/ASSESSMENT.md) records the consumer handoff and subsequent decisions. The modern API may migrate to new defaults/dependencies; the original `tdigest_rs` engine remains pinned and numerically identical. Historical validation does not qualify a new combined candidate or a production release.
+
+## Consumer candidate migration and strict operations
+
+The user approves modern dependency/default migration, while the original `tdigest_rs` implementation remains identical to its pinned oracle. The new modern default stays1,000; historical modern callers migrate explicitly. New NumPy query outputs are Float64 one-dimensional arrays (including one element); zero-dimensional probes return scalars, list/tuple preserve containers, and multidimensional input is explicitly rejected. Native docstrings, `py.typed` and stubs ship in the actual wheel.
+
+Modern missing digests and mixed capacities are rejected. Empty contributors also undergo configuration validation. Polars broadcasts by shape, supports a scalar probe across digest rows, and never substitutes healthy state for aligned empties. Missing and valid empty state are distinct. Python iterable merge prepares private state before committing; add/scale overflow and unsupported product underflow cannot corrupt the receiver.
+
+The JVM candidate exposes array merge-all, weighted builder construction and modern delta/K2Norm configuration. Java object restoration registers the restored object itself with Cleaner; temporary referents never own restored handles. JNI catches catchable Rust panics, uses the system allocator, and reports controlled native loading paths and payload identity. Independent handles are supported; shared mutable handles are not thread-safe. Actual external and internal qualification is recorded in the candidate manifest/coverage report.
+
+The user additionally approves requiring explicit Polars binary-column precision (`f32` or `f64`) so planning matches execution. This is a consistency check, not conversion. `from_bytes` remains a group reduction, including one empty state for empty input, rather than silently becoming row-wise. Scalar/list literal CDF probes and List-valued columns now have consistent planned/runtime types for zero, one and many rows.

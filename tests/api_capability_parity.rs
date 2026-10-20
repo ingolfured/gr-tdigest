@@ -18,8 +18,8 @@ fn rust_f64_supports_add_merge_quantile_cdf_median_and_wire_roundtrip() {
     b.add_many(vec![10.0, 11.0, 12.0, 13.0]).expect("add rhs");
 
     let mut merged_in_place = a.clone();
-    merged_in_place.merge(&b);
-    let merged_static = TDigest::<f64>::merge_digests(vec![a.clone(), b.clone()]);
+    merged_in_place.merge(&b).unwrap();
+    let merged_static = TDigest::<f64>::merge_digests(vec![a.clone(), b.clone()]).unwrap();
 
     let q = merged_in_place.quantile(0.5);
     let c = merged_in_place.cdf_or_nan(&[3.0])[0];
@@ -60,7 +60,7 @@ fn rust_f32_supports_add_merge_and_f32_wire_precision() {
         .expect("add rhs");
 
     let mut merged = a.clone();
-    merged.merge_many(&[b.clone()]);
+    merged.merge_many(&[b.clone()]).unwrap();
 
     let q = merged.quantile(0.5);
     let c = merged.cdf_or_nan(&[3.0])[0];

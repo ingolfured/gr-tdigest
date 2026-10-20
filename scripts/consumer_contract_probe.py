@@ -62,9 +62,15 @@ def main():
     check("modern_copy", lambda: equal(copy.copy(weighted).to_bytes(), weighted.to_bytes()))
     check("modern_pickle", lambda: equal(pickle.loads(pickle.dumps(weighted)).to_bytes(), weighted.to_bytes()))
     check("wire_roundtrip", lambda: equal(gr.TDigest.from_bytes(weighted.to_bytes()).to_bytes(), weighted.to_bytes()))
-    check("fractional_v1_rejected", lambda: reject(lambda: gr.TDigest.from_means_weights([1.0], [0.5]).to_bytes(version=1)))
+    check(
+        "fractional_v1_rejected",
+        lambda: reject(lambda: gr.TDigest.from_means_weights([1.0], [0.5]).to_bytes(version=1)),
+    )
     check("missing_merge_rejected", lambda: reject(lambda: gr.TDigest.merge_all([weighted, None])))
-    check("mixed_capacity_rejected", lambda: reject(lambda: gr.TDigest.merge_all([weighted, gr.TDigest.from_array([1.0], max_size=1000)])))
+    check(
+        "mixed_capacity_rejected",
+        lambda: reject(lambda: gr.TDigest.merge_all([weighted, gr.TDigest.from_array([1.0], max_size=1000)])),
+    )
 
     def multi_merge_atomic():
         receiver = digest([0.0])

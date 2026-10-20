@@ -1,7 +1,7 @@
 use numpy::{PyArray1, PyArrayDescrMethods, PyArrayMethods, PyUntypedArrayMethods};
 use pyo3::exceptions::{PyTypeError, PyValueError};
 use pyo3::prelude::*;
-use pyo3::types::{PyAny, PyBytes, PyFloat, PyIterator, PyList, PyTuple, PyType};
+use pyo3::types::{PyAny, PyBytes, PyFloat, PyInt, PyIterator, PyList, PyTuple, PyType};
 
 use crate::tdigest::frontends::{
     parse_precision_hint, parse_scale_str, parse_singleton_policy_str, DigestConfig,
@@ -123,9 +123,11 @@ fn array_values(py: Python<'_>, obj: Py<PyAny>) -> PyResult<(usize, Vec<f64>)> {
     if ndim == 0 {
         let v: f64 = arr.extract()?;
         Ok((0, vec![v]))
-    } else {
+    } else if ndim == 1 {
         let values: Vec<f64> = arr.extract()?;
         Ok((ndim, values))
+    } else {
+        Err(PyValueError::new_err("expected a scalar or one-dimensional input; flatten multidimensional arrays explicitly"))
     }
 }
 
@@ -174,6 +176,12 @@ fn output_for_values(py: Python<'_>, kind: ContainerKind, values: Vec<f64>) -> P
 }
 
 #[pyclass(name = "TDigest", subclass)]
+/// Modern distribution summary with Float32/Float64 means and Float64 mass.
+///
+/// Construct with from_array or from_means_weights. Updates mutate this object;
+/// merge returns it for chaining. Queries do not mutate state. Use copy.copy or
+/// to_bytes/from_bytes for independent full-state copies. This is a separate
+/// engine from the pinned original tdigest_rs.TDigest.
 pub struct PyTDigest {
     inner: FrontendDigest,
 }
@@ -190,6 +198,7 @@ impl PyTDigest {
 impl PyTDigest {
     #[staticmethod]
     #[pyo3(signature = (values, max_size=1000, scale=None, f32_mode=false, singleton_policy=None, pin_per_side=None, delta=None))]
+    /// Build modern state from finite scalar/one-dimensional observations. Does not select original arithmetic; delta chooses modern K2Norm/Off mode.
     pub fn from_array(
         py: Python<'_>,
         values: Py<PyAny>,
@@ -230,6 +239,7 @@ impl PyTDigest {
 
     #[staticmethod]
     #[pyo3(signature = (means, weights, max_size=1000, scale=None, f32_mode=false, singleton_policy=None, pin_per_side=None, delta=None))]
+    /// Build from positive weighted observations. Means/weights alone do not restore compressed extrema, aggregate metadata or centroid kind.
     pub fn from_means_weights(
         py: Python<'_>,
         means: Py<PyAny>,
@@ -278,14 +288,17 @@ impl PyTDigest {
     }
 
     #[classmethod]
+    /// Return independent merged state. Inputs are unchanged; missing/non-digest entries are rejected. An empty iterable returns Float64/1000/K2/Use state.
     pub fn merge_all(_cls: &Bound<'_, PyType>, digests: Bound<'_, PyAny>) -> PyResult<Self> {
         merge_all_impl(digests)
     }
 
+    /// Weighted 0.5 quantile; NaN for empty state. Does not mutate this digest.
     pub fn median(&self) -> PyResult<f64> {
         Ok(self.inner.median())
     }
 
+    /// Mean between finite probability bounds 0 <= lower <= upper <= 1. Returns NaN for empty state.
     pub fn trimmed_mean(&self, lower: f64, upper: f64) -> PyResult<f64> {
         self.inner
             .trimmed_mean_strict(lower, upper)
@@ -293,6 +306,7 @@ impl PyTDigest {
     }
 
     #[getter]
+    /// Independent Float64 array of centroid means. Stored mean precision is reported by inner_kind.
     pub fn means(&self, py: Python<'_>) -> PyResult<Py<PyAny>> {
         Ok(PyArray1::from_slice(py, &self.inner.centroid_means_f64())
             .into_any()
@@ -300,6 +314,7 @@ impl PyTDigest {
     }
 
     #[getter]
+    /// Independent Float64 array of statistical masses, never narrowed to Float32.
     pub fn weights(&self, py: Python<'_>) -> PyResult<Py<PyAny>> {
         Ok(PyArray1::from_slice(py, &self.inner.centroid_weights_f64())
             .into_any()
@@ -310,15 +325,72 @@ impl PyTDigest {
         self.inner.centroid_len()
     }
 
+    /// Total statistical mass (Float64), distinct from len(self) centroid count.
+    #[getter]
+    pub fn count(&self) -> f64 {
+        self.inner.count()
+    }
+
+    /// Stored weighted data sum (Float64), preserved across recompression.
+    #[getter]
+    pub fn sum(&self) -> f64 {
+        self.inner.sum()
+    }
+
+    /// Observed minimum; NaN for empty state.
+    #[getter]
+    pub fn min(&self) -> f64 {
+        match &self.inner {
+            FrontendDigest::F32(td) => td.min(),
+            FrontendDigest::F64(td) => td.min(),
+        }
+    }
+
+    /// Observed maximum; NaN for empty state.
+    #[getter]
+    pub fn max(&self) -> f64 {
+        match &self.inner {
+            FrontendDigest::F32(td) => td.max(),
+            FrontendDigest::F64(td) => td.max(),
+        }
+    }
+
+    /// Configured capacity, not the number of observations.
+    #[getter]
+    pub fn max_size(&self) -> usize {
+        self.inner.config().max_size
+    }
+
+    /// Selected modern scale family, in lowercase.
+    #[getter]
+    pub fn scale(&self) -> String {
+        format!("{:?}", self.inner.config().scale).to_lowercase()
+    }
+
+    /// Modern delta setting, or None in max-size mode.
+    #[getter]
+    pub fn delta(&self) -> Option<f64> {
+        self.inner.config().delta
+    }
+
+    /// Strict quantile(s): finite probabilities in [0,1]. Scalar/0-D returns float; list/tuple retains its container; 1-D NumPy input returns an independent Float64 array. Multidimensional input is rejected.
     pub fn quantile(&self, py: Python<'_>, q: Py<PyAny>) -> PyResult<Py<PyAny>> {
         // scalar fast-path
-        if let Ok(v) = q.extract::<f64>(py) {
+        if q.bind(py).is_instance_of::<PyFloat>() || q.bind(py).is_instance_of::<PyInt>() {
+            let v = q.extract::<f64>(py)?;
             let out = self.inner.quantile_strict(v).map_err(map_frontend_err)?;
             return Ok(PyFloat::new(py, out).into_any().unbind());
         }
 
         let kind = container_kind(py, &q);
-        let (_ndim, qs) = array_values(py, q)?;
+        let (ndim, qs) = array_values(py, q)?;
+        if ndim == 0 {
+            let out = self
+                .inner
+                .quantile_strict(qs[0])
+                .map_err(map_frontend_err)?;
+            return Ok(PyFloat::new(py, out).into_any().unbind());
+        }
         let mut out = Vec::with_capacity(qs.len());
         for p in qs {
             out.push(self.inner.quantile_strict(p).map_err(map_frontend_err)?);
@@ -326,6 +398,7 @@ impl PyTDigest {
         output_for_values(py, kind, out)
     }
 
+    /// Add finite scalar or one-dimensional observations in place. Failure leaves state unchanged.
     pub fn add(&mut self, py: Python<'_>, values: Py<PyAny>) -> PyResult<()> {
         let (_ndim, values_f64) = training_array_values(py, values)?;
         self.inner
@@ -333,6 +406,7 @@ impl PyTDigest {
             .map_err(map_frontend_err)
     }
 
+    /// Add matching scalar/vector values and strictly positive finite Float64 weights. Failure leaves state unchanged.
     pub fn add_weighted(
         &mut self,
         py: Python<'_>,
@@ -346,28 +420,36 @@ impl PyTDigest {
             .map_err(map_frontend_err)
     }
 
+    /// Multiply weights, total mass and weighted sum by a positive finite factor. Means/extrema stay fixed. Reject unrepresentable products without mutation.
     pub fn scale_weights(&mut self, factor: f64) -> PyResult<()> {
         self.inner.scale_weights(factor).map_err(map_frontend_err)
     }
 
+    /// Multiply the value axis and sum by a positive finite factor; keep mass fixed. Reject overflow, underflow and collapsed invalid state without mutation.
     pub fn scale_values(&mut self, factor: f64) -> PyResult<()> {
         self.inner.scale_values(factor).map_err(map_frontend_err)
     }
 
+    /// Midpoint CDF: mass below plus half tied mass, divided by total mass. NaN probes return NaN; infinities give 0/1 for nonempty state. Containers follow quantile; integer probes produce floating probabilities.
     pub fn cdf(&self, py: Python<'_>, x: Py<PyAny>) -> PyResult<Py<PyAny>> {
         // scalar fast-path
-        if let Ok(v) = x.extract::<f64>(py) {
+        if x.bind(py).is_instance_of::<PyFloat>() || x.bind(py).is_instance_of::<PyInt>() {
+            let v = x.extract::<f64>(py)?;
             let out = self.inner.cdf(&[v])[0];
             return Ok(PyFloat::new(py, out).into_any().unbind());
         }
 
         let kind = container_kind(py, &x);
-        let (_ndim, xs) = array_values(py, x)?;
+        let (ndim, xs) = array_values(py, x)?;
         let out = self.inner.cdf(&xs);
+        if ndim == 0 {
+            return Ok(PyFloat::new(py, out[0]).into_any().unbind());
+        }
         output_for_values(py, kind, out)
     }
 
     #[pyo3(signature = (version=None))]
+    /// Encode full state, default TDIG v3. Versions 1/2 reject unsupported mass/configuration rather than silently losing information.
     pub fn to_bytes<'py>(
         &self,
         py: Python<'py>,
@@ -386,23 +468,30 @@ impl PyTDigest {
     }
 
     #[staticmethod]
+    /// Restore independent full state from validated TDIG v1/v2/v3 bytes. Invalid state raises ValueError.
     pub fn from_bytes(b: Bound<'_, PyBytes>) -> PyResult<Self> {
         let inner = FrontendDigest::from_bytes(b.as_bytes()).map_err(map_frontend_err)?;
         Ok(Self { inner })
     }
 
+    /// Stored mean precision: f32 or f64. Weight precision is always Float64.
     pub fn inner_kind(&self) -> &'static str {
         self.inner.inner_kind()
     }
 
     #[pyo3(signature = (precision))]
+    /// Return independent state with explicit f32/f64 mean precision and Float64 mass. Reject unrepresentable or unordered converted state.
     pub fn cast_precision(&self, precision: &str) -> PyResult<Self> {
         let target = parse_cast_precision(precision)?;
         Ok(Self {
-            inner: self.inner.cast_precision(target),
+            inner: self
+                .inner
+                .try_cast_precision(target)
+                .map_err(map_frontend_err)?,
         })
     }
 
+    /// Merge one digest or an iterable in place. All inputs must match precision/configuration, including empties. A failure leaves this digest unchanged; other inputs are never modified.
     pub fn merge(&mut self, other: Bound<'_, PyAny>) -> PyResult<()> {
         // Single TDigest
         if let Ok(one) = other.extract::<PyRef<PyTDigest>>() {
@@ -415,14 +504,19 @@ impl PyTDigest {
             PyTypeError::new_err("tdigest merge: expected a TDigest or an iterable of TDigest")
         })?;
 
+        // Prepare independently: iteration, type errors and a late incompatible
+        // digest must leave the receiver unchanged.
+        let mut candidate = self.inner.clone();
         for item_res in iter {
             let item = item_res?;
             let d: PyRef<PyTDigest> = item.extract().map_err(|_| {
                 PyTypeError::new_err("tdigest merge: iterable must contain only TDigest objects")
             })?;
-            self.merge_inner(&d)?;
+            candidate
+                .merge_in_place(&d.inner)
+                .map_err(map_frontend_err)?;
         }
-
+        self.inner = candidate;
         Ok(())
     }
 }

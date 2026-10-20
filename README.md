@@ -193,3 +193,7 @@ The configured JDK also supplies the direct Java compiler/runtime subprocesses u
 ## Consumer candidate assessment (20 October 2026)
 
 The [source-specific gap assessment](compat/consumer-20261020/ASSESSMENT.md) records the consumer handoff and subsequent decisions. The modern API may migrate to new defaults/dependencies; the original `tdigest_rs` engine remains pinned and numerically identical. Historical validation does not qualify a new combined candidate or a production release.
+
+Modern consumer candidate guides: [Python/NumPy](bindings/python/OBJECT_API.md), [Polars](bindings/python/POLARS_API.md), and [source/build/qualification procedure](compat/consumer-20261020/BUILD.md). This is a development candidate with explicit remaining numerical and internal qualification limits, not a production release.
+
+The JVM candidate includes [Scala/sbt and Kotlin/Gradle examples](bindings/java/examples/README.md), with configured repository credentials and offline checks. The coverage report distinguishes build JDK, runtime JDKs and actual cluster checks.

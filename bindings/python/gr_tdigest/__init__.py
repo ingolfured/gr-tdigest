@@ -306,10 +306,19 @@ def _from_array_cls(
     scale: Any = _UNSET,
     singleton_policy: SingletonPolicy | str | None = None,
     pin_per_side: Optional[int] = None,
+    weights: Any = _UNSET,
+    precision: str | None = None,
+    f32_mode: bool | None = None,
     **kwargs: Any,
 ) -> _NativeTDigest:
     """
-    Python-facing TDigest.from_array shim.
+    Build a modern digest from finite observations, optionally with positive weights.
+
+    The default capacity is 1,000 and automatic object precision is Float64.
+    Scalar or one-dimensional training inputs are copied. Fractional weights
+    use Float64 independently of mean precision. Unknown arguments raise
+    TypeError; invalid data/configuration or unrepresentable products raise
+    ValueError. This constructs observations, not restored compressed state.
 
     Supports both:
       - new API: precision="auto" | "f32" | "f64"
@@ -338,8 +347,8 @@ def _from_array_cls(
     policy_str = {"off": "off", "use": "use", "edges": "edges"}[m]
 
     # --- precision / f32_mode reconciliation ---------------------------------
-    prec_raw = kwargs.pop("precision", None)
-    f32_mode_raw = kwargs.pop("f32_mode", None)
+    prec_raw = precision
+    f32_mode_raw = f32_mode
 
     prec_norm = _coerce_precision(prec_raw)  # "auto" | "f64" | "f32"
 
@@ -371,6 +380,9 @@ def _from_array_cls(
         extra = ", ".join(sorted(kwargs.keys()))
         raise TypeError(f"Unsupported argument(s): {extra}")
 
+    if weights is not _UNSET:
+        # Weighted observations, not compressed-state reconstruction.
+        return _native_from_means_weights(data, weights, **call_kwargs)
     out = _native_from_array(data, **call_kwargs)
     return out
 
@@ -475,7 +487,7 @@ _native_scale_values = cast(Callable[..., Any], _native_scale_values_raw)
 
 def _merge_patched(self: _NativeTDigest, other: Any, delta: Any = _UNSET, **kwargs: Any) -> _NativeTDigest:
     if delta is not _UNSET and delta is not None:
-        _validate_delta(delta)
+        raise ValueError("modern merge cannot override delta; construct compatible digests before merging")
     if kwargs:
         extra = ", ".join(sorted(kwargs.keys()))
         raise TypeError(f"Unsupported argument(s): {extra}")
@@ -624,7 +636,18 @@ def _output_name_or_raise(e: pl.Expr, ctx: str) -> str:
 
 def cdf(digest: "IntoExpr", values: "IntoExpr") -> pl.Expr:
     d_expr = _into_expr(digest)
-    v_expr = _into_expr(values)
+    pl = _require_polars()
+    # Python sequences/Series are a probe vector. A List-valued expression is
+    # instead a column of per-row lists and keeps List output even for one row.
+    import numpy as np
+
+    if isinstance(values, np.ndarray) and values.ndim > 1:
+        raise ValueError("Polars CDF probe arrays must be scalar or one-dimensional")
+    if isinstance(values, (list, tuple, pl.Series)) or isinstance(values, np.ndarray) and values.ndim == 1:
+        probes = values if isinstance(values, pl.Series) else pl.Series("probe", values)
+        v_expr = pl.lit(probes)
+    else:
+        v_expr = _into_expr(values)
 
     expr = _register_plugin_function(
         plugin_path=str(lib),
@@ -805,28 +828,24 @@ def to_bytes(digest: "IntoExpr", *, version: int | None = None) -> pl.Expr:
 
 
 def from_bytes(blob: "IntoExpr", *, precision: str = "auto") -> pl.Expr:
-    """
-    Deserialize a TDigest from a binary blob produced by td.to_bytes().
+    """Decode and merge one logical group of binary states.
 
-    precision:
-      - "auto": let the Rust plugin sniff the wire; schema defaults to compact f32
-        when no hint is provided.
-      - "f64": Polars schema uses Float64-backed struct
-      - "f32": Polars schema uses the compact Float32-backed struct
+    precision='f32' or 'f64' is required for a deterministic planned schema.
+    The hint checks the encoded precision; it never casts state. Inspect eager
+    bytes with wire_precision/infer_column_precision before constructing a lazy
+    expression when their precision is not already known. Empty input reduces
+    to one empty digest in the specified precision. Null/malformed blobs error.
     """
     pl = _require_polars()
     b_expr = _into_expr(blob)
     prec_norm = _coerce_precision(precision)  # "auto" | "f64" | "f32"
 
     if prec_norm == "auto":
-        # No hint: Rust side infers from wire; planner defaults to compact f32.
-        args = [b_expr]
-    else:
-        if prec_norm == "f32":
-            hint = pl.lit(0.0, dtype=pl.Float32)
-        else:  # "f64"
-            hint = pl.lit(0.0, dtype=pl.Float64)
-        args = [b_expr, hint]
+        raise ValueError(
+            "Polars from_bytes requires explicit precision='f32' or 'f64' so the planned schema matches runtime; inspect eager bytes with wire_precision or infer_column_precision first"
+        )
+    hint = pl.lit(0.0, dtype=pl.Float32 if prec_norm == "f32" else pl.Float64)
+    args = [b_expr, hint]
 
     return _register_plugin_function(
         plugin_path=str(lib),

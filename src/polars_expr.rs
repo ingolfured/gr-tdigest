@@ -244,11 +244,15 @@ fn cast_precision(inputs: &[Series]) -> PolarsResult<Series> {
             td.to_series(digest_s.name())
         } else {
             let td = parse_and_merge::<f64>(std::slice::from_ref(digest_s))?;
-            td.cast_precision::<f32>().to_series(digest_s.name())
+            td.try_cast_precision::<f32>()
+                .map_err(|e| PolarsError::ComputeError(e.to_string().into()))?
+                .to_series(digest_s.name())
         }
     } else if is_compact_digest_dtype(digest_s.dtype()) {
         let td = parse_and_merge::<f32>(std::slice::from_ref(digest_s))?;
-        td.cast_precision::<f64>().to_series(digest_s.name())
+        td.try_cast_precision::<f64>()
+            .map_err(|e| PolarsError::ComputeError(e.to_string().into()))?
+            .to_series(digest_s.name())
     } else {
         let td = parse_and_merge::<f64>(std::slice::from_ref(digest_s))?;
         td.to_series(digest_s.name())
@@ -356,16 +360,15 @@ fn to_bytes_versioned(inputs: &[Series], kwargs: ToBytesKwargs) -> PolarsResult<
     Ok(builder.finish().into_series())
 }
 
-// New: from_bytes output type — uses a precision *hint* column when present.
-// Default with no hint: compact f32 schema (matches python_f32→polars_f32 tests).
+// Binary columns require an explicit precision hint at planning and execution.
 fn from_bytes_output_dtype(inputs: &[Field]) -> PolarsResult<Field> {
     // inputs[0]: blob (Binary)
-    // inputs[1]: optional precision hint (Float32 or Float64)
-    let hint_dt = inputs
-        .get(1)
-        .map(|f| f.dtype())
-        // default to Float32 (compact) when no hint is provided
-        .unwrap_or(&DataType::Float32);
+    // inputs[1]: required precision hint (Float32 or Float64)
+    polars_ensure!(
+        inputs.len() == 2,
+        ComputeError: "`from_bytes` expects a binary column and explicit precision hint"
+    );
+    let hint_dt = inputs[1].dtype();
 
     let dt = if matches!(hint_dt, DataType::Float32) {
         TDigest::<f32>::polars_dtype()
@@ -379,14 +382,17 @@ fn from_bytes_output_dtype(inputs: &[Field]) -> PolarsResult<Field> {
 #[polars_expr(output_type_func = from_bytes_output_dtype)]
 fn from_bytes(inputs: &[Series]) -> PolarsResult<Series> {
     polars_ensure!(
-        inputs.len() >= 1,
-        ComputeError: "`from_bytes` expects a binary column"
+        inputs.len() == 2,
+        ComputeError: "`from_bytes` expects a binary column and explicit precision hint"
     );
     let s = &inputs[0];
 
     if s.len() == 0 {
-        let td = TDigest::<f64>::builder().build();
-        return td.to_series("tdigest");
+        return if inputs[1].dtype() == &DataType::Float32 {
+            TDigest::<f32>::builder().build().to_series("tdigest")
+        } else {
+            TDigest::<f64>::builder().build().to_series("tdigest")
+        };
     }
 
     // Null blobs are strict errors by design.
@@ -651,11 +657,12 @@ where
     F: Copy + 'static + FloatCore + FloatLike + WireOf,
 {
     let s = &inputs[0];
-    let mut parsed = parse_digest_column_lenient::<F>(s)?;
+    let mut parsed = parse_digest_column_strict::<F>(s)?;
     if parsed.len() == 1 {
         return Ok(parsed.pop().unwrap());
     }
-    Ok(TDigest::<F>::merge_digests(parsed))
+    TDigest::<F>::try_merge_digests(parsed)
+        .map_err(|e| PolarsError::ComputeError(e.to_string().into()))
 }
 
 fn add_values_generic<F>(digest_s: &Series, values_s: &Series) -> PolarsResult<Series>
@@ -906,14 +913,25 @@ fn cdf_generic<F>(digest_s: &Series, values_s: &Series) -> PolarsResult<Series>
 where
     F: Copy + 'static + FloatCore + FloatLike + WireOf,
 {
-    let digests: Vec<TDigest<F>> = parse_digest_column_lenient::<F>(digest_s)?;
+    let digests: Vec<TDigest<F>> = parse_digest_column_strict::<F>(digest_s)?;
     let digest_len = digest_s.len();
+    // A scalar/list literal probe may also broadcast over aligned digest rows.
+    let repeated_values;
+    let values_s = if digest_len != 1 && values_s.len() == 1 {
+        repeated_values = values_s.new_from_index(0, digest_len);
+        &repeated_values
+    } else {
+        values_s
+    };
 
-    // Detect broadcast: exactly one non-empty digest across all rows
-    let mut non_empty_iter = digests.iter().filter(|td| !td.is_empty());
-    let single_non_empty = match (non_empty_iter.next(), non_empty_iter.next()) {
-        (Some(td0), None) => Some(td0.clone()),
-        _ => None,
+    // Cardinality, never digest contents, selects broadcasting. An aligned
+    // empty digest must keep its own NaN result rather than borrow a neighbor.
+    polars_ensure!(digest_len == 1 || digest_len == values_s.len(), ComputeError:
+        "tdigest.cdf: expected one digest or one digest per probe row");
+    let single_non_empty = if digest_len == 1 {
+        digests.first().cloned()
+    } else {
+        None
     };
 
     match values_s.dtype() {
@@ -941,7 +959,7 @@ where
     }
 }
 
-fn parse_digest_column_lenient<F>(s: &Series) -> PolarsResult<Vec<TDigest<F>>>
+fn parse_digest_column_strict<F>(s: &Series) -> PolarsResult<Vec<TDigest<F>>>
 where
     F: Copy + 'static + FloatCore + FloatLike + WireOf,
 {
@@ -949,23 +967,9 @@ where
         return Ok(Vec::new());
     }
 
-    if s.null_count() == 0 {
-        return TDigest::<F>::from_series(s)
-            .map_err(|e| PolarsError::ComputeError(format!("tdigest parse error: {e}").into()));
-    }
-
-    let mut out: Vec<TDigest<F>> = Vec::with_capacity(s.len());
-    for i in 0..s.len() {
-        let one = s.slice(i as i64, 1);
-        if one.null_count() > 0 {
-            out.push(TDigest::<F>::default());
-            continue;
-        }
-        let mut parsed = TDigest::<F>::from_series(&one)
-            .map_err(|e| PolarsError::ComputeError(format!("tdigest parse error: {e}").into()))?;
-        out.push(parsed.pop().unwrap_or_default());
-    }
-    Ok(out)
+    polars_ensure!(s.null_count() == 0, ComputeError: "tdigest: missing digest rows are not allowed");
+    TDigest::<F>::from_series(s)
+        .map_err(|e| PolarsError::ComputeError(format!("tdigest parse error: {e}").into()))
 }
 
 #[inline]
@@ -1028,7 +1032,7 @@ where
 /// Strict policy: any NULL list cell or inner NULL → ERROR.
 fn cdf_on_list_out<F, Out>(
     digests: &[TDigest<F>],
-    digest_len: usize,
+    _digest_len: usize,
     lc: &ListChunked,
     single_non_empty: Option<TDigest<F>>,
 ) -> PolarsResult<Series>
@@ -1039,26 +1043,6 @@ where
     // If any list element is null → ERROR (strict probe policy)
     if lc.null_count() > 0 {
         polars_bail!(ComputeError: "tdigest.cdf: probe list contains null values; nulls are not allowed");
-    }
-
-    // Fast-path: single digest row + single list row → flat vector output (not a list)
-    if digest_len == 1 && lc.len() == 1 {
-        let td = digests.get(0).cloned().unwrap_or_default();
-        let sub = lc
-            .get_as_series(0)
-            .unwrap_or_else(|| Series::new("".into(), Vec::<f64>::new()));
-
-        if sub.null_count() > 0 {
-            polars_bail!(ComputeError: "tdigest.cdf: probe list contains nulls; nulls are not allowed");
-        }
-
-        let vals = subseries_to_f64_vec(&sub)?;
-        let out_native: Vec<<Out as PolarsNumericType>::Native> = td
-            .cdf_or_nan(&vals)
-            .into_iter()
-            .map(Out::from_f64)
-            .collect();
-        return Ok(Out::series_from_vec("", out_native));
     }
 
     // General case: build list-per-row
@@ -1086,7 +1070,10 @@ where
     }
 
     let out_lc: ListChunked = rows.into_iter().collect();
-    Ok(out_lc.into_series())
+    let item_dtype = Out::series_from_vec("", Vec::new()).dtype().clone();
+    out_lc
+        .into_series()
+        .cast(&DataType::List(Box::new(item_dtype)))
 }
 
 fn quantile_impl(inputs: &[Series], q: f64) -> PolarsResult<Series> {

@@ -38,6 +38,7 @@ const CAP_SEARCH_LO: f64 = 1e-6;
 struct WeightedStats {
     w_sum: f64,
     mw_sum: f64,
+    moment: crate::tdigest::summation::Sum,
     first_mean: f64,
     last_mean: f64,
     first_atomic: bool,
@@ -55,6 +56,7 @@ impl WeightedStats {
         self.items += 1;
         self.w_sum += centroid.weight_f64();
         self.mw_sum += centroid.weight_f64() * centroid.mean_f64();
+        self.moment.add(centroid.weight_f64() * centroid.mean_f64());
     }
     #[inline]
     fn mean(&self) -> f64 {
@@ -64,7 +66,7 @@ impl WeightedStats {
             // later merges produce duplicate or out-of-order means.
             self.first_mean
         } else if self.w_sum > 0.0 {
-            let mean = self.mw_sum / self.w_sum;
+            let mean = self.moment.total() / self.w_sum;
             // Weighted averaging can round beyond both input means by an ulp.
             // Disjoint sorted clusters must retain disjoint mean intervals.
             // Do not hide aggregate/weighted-sum overflow behind this bound.
@@ -93,6 +95,7 @@ impl WeightedStats {
     fn clear(&mut self) {
         self.w_sum = 0.0;
         self.mw_sum = 0.0;
+        self.moment = crate::tdigest::summation::Sum::default();
         self.items = 0;
     }
 }
@@ -216,6 +219,7 @@ impl Policy {
                 }
                 None
             }
+            Policy::Use { max } if max <= 2 && max > 0 => Some(bucketize_equal_weight(out, max)),
             Policy::Use { .. } | Policy::UseProt { .. } => None,
         }
     }
@@ -462,12 +466,11 @@ fn bucketize_equal_weight<F: FloatLike + FloatCore>(
 
     for c in cs {
         acc.add(c);
-        if acc.w_sum >= target && acc.w_sum > 0.0 {
+        // Reserve the final bucket for all remaining positive contributions,
+        // even when rounded total/target boundaries were reached early.
+        if acc.w_sum >= target && acc.w_sum > 0.0 && out.len() < buckets - 1 {
             out.push(acc.centroid::<F>());
             acc.clear();
-            if out.len() == buckets {
-                break;
-            }
         }
     }
     if !acc.is_empty() && out.len() < buckets {

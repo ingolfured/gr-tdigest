@@ -74,8 +74,7 @@ On the tested Linux x86_64 target with Rust 1.90, a modern `Centroid<f32>` occup
 16 bytes instead of 12; `Centroid<f64>` remains 24 bytes. The f32 digest shell
 remains 96 bytes. This costs four bytes per allocated f32 centroid (one third more
 centroid storage), and its speed/cache impact must be measured. Means and extrema
-retain their chosen precision. Public Rust `weight() -> F` remains a potentially
-lossy compatibility accessor; `weight_f64()` exposes the authoritative mass.
+retain their chosen precision. Public modern Rust `weight()` and `weight_f64()` both expose authoritative Float64 mass, including for Float32 means.
 Python weights remain Float64 arrays and Java weighted inputs remain double[].
 The separate original `tdigest_rs` implementation retains its uint32 weights.
 
@@ -127,7 +126,7 @@ weighted-value product overflow, and the raw-sum overflow policy are separate.
 - This is a streaming two-way merge iterator (no prebuilt merged buffer).
 5. Run the full compressor pipeline with `compress_into`.
 
-Important: compressor stage 1 recomputes digest metadata (`count`, `sum`, `min`, `max`) from the normalized stream and writes those back to the result.
+Stage 1 computes centroid metadata, but add/merge callers retain authoritative data-level count and sum from raw observations and incoming aggregate headers. Rounded centroid means cannot reconstruct historical sums. Modern aggregate summation uses compensation and a power-of-two fallback for finite cancellation across intermediate overflow.
 
 Weighted constructor/merge helpers:
 - `from_weighted_unsorted(values, weights, max_size)` builds from weighted input directly.
@@ -136,16 +135,16 @@ Weighted constructor/merge helpers:
 ### 3.3 Digest-to-digest merge (`merge_digests`)
 
 `TDigest::merge_digests(digests)`:
-1. Scan digests and keep only non-empty runs (`count>0` and non-empty centroid vector).
-2. Pick the first non-empty digest as the config source (`max_size`, `scale`, `policy`, `delta`).
+1. Validate every input state and require matching configuration, including empty contributors. Return an error before changing any input on failure.
+2. Retain the first input's configuration (`max_size`, `scale`, `policy`, `delta`). Only non-empty inputs contribute centroid runs.
 3. Perform a streaming k-way merge of sorted centroid runs via `KWayCentroidMerge::from_runs`.
   - Implementation uses a min-heap over run heads (`O(total_len * log(k))`).
   - It avoids materializing one full concat+sort buffer before compression.
   - Historical concat+sort run merge is retained only as a `#[cfg(test)]` baseline helper.
 4. Recompress with `compress_into` using the chosen config.
-5. If all digests are empty, return `TDigest::default()`.
+5. If all inputs are empty, retain their common configuration. An empty input vector returns `TDigest::default()`.
 
-Note: core merge is permissive by design. Strict precision/config checks are enforced in `FrontendDigest::merge_in_place`.
+The public core and frontend merges are checked and return `Result`. Private recompression helpers can consume unnormalized observation streams; these are not state-restoration entry points.
 
 ## 4. Compression pipeline internals
 
@@ -512,3 +511,11 @@ The new `scripts/quality_suite.py` uses independent sorted-data references, pinn
 Exact rational weighted controls cover probability semantics across extreme mass scales. `examples/quality_boundaries.rs` separately exposes existing tiny-capacity mass/contribution loss, cancellation, fractional median asymmetry and subnormal aggregate-mean loss. A frozen expected-outcome check detects any change; it does not fix or waive these failures. The independent original arithmetic, wrapper, oracle and91 original tests stay untouched.
 
 JVM test tool selection is shared through `bindings/java/bootstrap.py::java_environment`: Gradle and direct coherence subprocesses use the same verified JDK and child environment, including when host Java commands are unavailable.
+
+## Consumer candidate numerical safeguards
+
+The consumer candidate validates externally reconstructed mass, finite metadata, ordered finite means, positive weights and extrema before accepting structs or TDIG. Empty state requires zero aggregates and NaN extrema. Count agreement uses a centroid-count-dependent floating summation roundoff bound; data sum is retained independently of compressed means.
+
+Capacity1/2 Use compresses all input mass rather than reserving edges with zero interior capacity. Equal-weight bucketization reserves its final bucket for all residual contributions. Compensated modern aggregate/cluster moments improve finite cancellation; atomic quantile boundaries use a directly accumulated prefix. These changes do not touch the original engine. Unsupported nonzero weighted products that underflow to zero now return an error. The boundary measurement retains this historical profile as unsupported, not a successful numerical result.
+
+Checked Rust `try_merge_digests` and `try_cast_precision` validate state/configuration and output. Public in-place merge/merge_many use checked preparation and return Result before committing. The public `merge_digests` and `cast_precision` also return checked Results. Unchecked recompression/conversion helpers are private. Python/JVM/Polars use checked paths. Collapsed means during an explicit precision conversion coalesce as Mixed, preserving mass and distinguishing them from an exact point.
