@@ -20,8 +20,9 @@ fn parse_policy(kind: Option<&str>, pin_per_side: Option<usize>) -> Result<Singl
 
 /// Resolve `(scale, policy)` honoring delta-mode contract.
 ///
-/// When `delta` is set, gr-tdigest acts as a drop-in for old tdigest-rs: the
-/// only knob is `delta`, and all other settings track that contract:
+/// `delta` selects the compression family used by the old tdigest-rs library.
+/// This setting preserves the modern API input and mutation contract.
+/// Compression-mode settings are:
 /// - `scale` defaults to `K2Norm` (canonical Dunning K2 from paper eq 8);
 /// - `singleton_policy` defaults to `Off` (no edge protection / pinning);
 /// - `pin_per_side` must be unset.
@@ -170,7 +171,8 @@ impl PyTDigest {
             return Err(PyValueError::new_err("max_size must be > 0"));
         }
 
-        let (sc, policy) = resolve_delta_mode_defaults(scale, singleton_policy, pin_per_side, delta)?;
+        let (sc, policy) =
+            resolve_delta_mode_defaults(scale, singleton_policy, pin_per_side, delta)?;
         let (_ndim, values_f64) = array_values(py, values)?;
 
         let config = DigestConfig {
@@ -207,7 +209,8 @@ impl PyTDigest {
             return Err(PyValueError::new_err("max_size must be > 0"));
         }
 
-        let (sc, policy) = resolve_delta_mode_defaults(scale, singleton_policy, pin_per_side, delta)?;
+        let (sc, policy) =
+            resolve_delta_mode_defaults(scale, singleton_policy, pin_per_side, delta)?;
         let (_ndim_m, means_f64) = array_values(py, means)?;
         let (_ndim_w, weights_f64) = array_values(py, weights)?;
         if means_f64.len() != weights_f64.len() {
@@ -336,6 +339,9 @@ impl PyTDigest {
     ) -> PyResult<Bound<'py, PyBytes>> {
         let bytes = if let Some(v) = version {
             let parsed = parse_wire_version(v)?;
+            parsed
+                .validate_delta(self.inner.config().delta)
+                .map_err(|e| PyValueError::new_err(e.to_string()))?;
             self.inner.to_bytes_with_version(parsed)
         } else {
             self.inner.to_bytes()

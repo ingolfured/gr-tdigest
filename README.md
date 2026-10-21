@@ -121,6 +121,8 @@ symlink to that directory for the CLI and Java development tools.
 - Publishing and release workflows are documented in `PUBLISH.md`.
 
 ## Versions and compatibility
+- Weighted medians use centroid mass. TDIG v3 and Polars round-trips retain compression configuration and centroid kind.
+- Delta-mode export requires TDIG v3; older formats cannot retain delta.
 - Rust: stable (edition 2021)
 - Python: CPython 3.12 (built with maturin)
 - Polars: 1.x line (Python)

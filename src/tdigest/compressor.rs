@@ -2,7 +2,7 @@
 //!
 //! ### Pipeline (referenced by numbers throughout)
 //! 1. **Normalize**: validate non-decreasing means; coalesce adjacent equal-means into a single
-//!    **atomic** centroid at that mean (weight adds up); compute (∑w, ∑w·mean, min, max).
+//!    centroid preserving mixed provenance (weight adds up); compute (∑w, ∑w·mean, min, max).
 //! 2. **Slice**: partition `(left edges, interior, right edges)` and compute interior capacity
 //!    from the active [`SingletonPolicy`].
 //! 3. **Merge (k-limit)**: greedily merge interior under Δk ≤ 1 for the selected [`ScaleFamily`].
@@ -77,7 +77,7 @@ fn build_centroid<F: FloatLike + FloatCore>(
     cluster_len: usize,
 ) -> Centroid<F> {
     if singleton_head && cluster_len == 1 {
-        Centroid::<F>::new_singleton_f64(mean_f64, weight_f64)
+        Centroid::<F>::new_atomic_f64(mean_f64, weight_f64)
     } else {
         Centroid::<F>::new_mixed_f64(mean_f64, weight_f64)
     }
@@ -129,7 +129,7 @@ where
     let d: f64 = result.max_size() as f64;
     let core = if let Some(delta) = delta {
         // delta-mode is contract-validated upstream (scale = K2Norm, policy = Off);
-        // strict Δk ≤ 1 reproduces old tdigest-rs byte-for-byte.
+        // Use the strict delta-mode k-limit; this is not a byte-identity guarantee.
         debug_assert_eq!(family, ScaleFamily::K2Norm);
         klimit_merge::<F>(slices.interior, delta, family, 0.0)
     } else {
@@ -292,8 +292,7 @@ impl Policy {
 /// - Multi-item clusters are **mixed**.
 ///
 /// `tol` is added to the `Δk ≤ 1` check (pass [`KLIMIT_TOL`] for the default
-/// tolerant behaviour, `0.0` for strict equality — used by delta-mode to match
-/// the old tdigest-rs merge byte-for-byte).
+/// tolerant behaviour, `0.0` for the strict delta-mode bound).
 fn klimit_merge<F: FloatLike + FloatCore>(
     items: &[Centroid<F>],
     d: f64,
@@ -592,7 +591,7 @@ mod tests {
     // ---------- streaming/coalescing pass ----------
 
     #[test]
-    fn coalesces_equal_means_into_atomic_centroid() {
+    fn coalescing_equal_means_preserves_mixed_provenance() {
         let mut td = TDigest::<Fp>::builder()
             .max_size(100)
             .scale(ScaleFamily::K2)
@@ -607,7 +606,10 @@ mod tests {
 
         let out = super::compress_into(&mut td, 100, input);
         assert_eq!(out.len(), 2);
-        assert!(out[0].is_singleton(), "equal-mean run collapses to atomic");
+        assert!(
+            !out[0].is_singleton(),
+            "a mixed centroid cannot become an exact point mass"
+        );
         assert!(approx(out[0].mean_f64(), 1.0, 1e-12));
         assert!(approx(out[0].weight_f64(), 3.5, 1e-12));
         assert!(out[1].is_singleton());
@@ -731,8 +733,7 @@ mod tests {
             // q_limit = inv(k(q0) + 1). We compute it numerically by solving
             // q_to_k(q, delta, K2Norm, n) = q_to_k(q0, ..) + 1 via bisection
             // — accurate enough for the equality assertion below.
-            let target =
-                crate::tdigest::scale::q_to_k(q0, delta, ScaleFamily::K2Norm, n) + 1.0;
+            let target = crate::tdigest::scale::q_to_k(q0, delta, ScaleFamily::K2Norm, n) + 1.0;
             let mut lo = q0;
             let mut hi = 1.0 - 1e-15;
             for _ in 0..200 {

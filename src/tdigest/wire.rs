@@ -26,7 +26,7 @@
 // v3 header (64 bytes minimum, little-endian):
 //   0..4   : magic = b"TDIG"
 //   4      : version (3)
-//   5      : flags (bit0: checksum present)
+//   5      : flags (bit0: checksum present, bit1: delta extension present)
 //   6      : header_len (u8, >= 64)
 //   7      : payload_precision (1=f32, 2=f64)
 //   8      : scale_code
@@ -40,6 +40,7 @@
 //   44..52 : centroid_count (u64)
 //   52..60 : data_sum (f64)
 //   60..64 : checksum (u32, CRC32 when flags bit0 set)
+//   64..72 : delta (f64), when flags bit1 set; header_len is then >= 72
 //
 // v3 payload:
 //   - f32: mean(f32) + weight(f64) + kind(u8)
@@ -66,6 +67,7 @@ const HEADER_LEN_V3_MIN: usize = 64;
 const V3_CHECKSUM_OFFSET: usize = 60;
 
 const V3_FLAG_CHECKSUM: u8 = 0x01;
+const V3_FLAG_DELTA: u8 = 0x02;
 
 const PRECISION_CODE_F32: u8 = 1;
 const PRECISION_CODE_F64: u8 = 2;
@@ -79,6 +81,14 @@ pub enum WireVersion {
 
 impl WireVersion {
     pub const LATEST: Self = Self::V3;
+
+    /// Older wire versions have no field for the compression delta.
+    pub fn validate_delta(self, delta: Option<f64>) -> WireResult<()> {
+        if delta.is_some() && self != Self::V3 {
+            return Err(WireError::InvalidHeader("delta mode requires TDIG v3"));
+        }
+        Ok(())
+    }
 
     #[inline]
     pub fn as_u8(self) -> u8 {
@@ -219,6 +229,7 @@ struct DecodedV3Header {
     max: f64,
     centroid_count: usize,
     data_sum: f64,
+    delta: Option<f64>,
 }
 
 pub fn wire_precision(bytes: &[u8]) -> WireResult<WirePrecision> {
@@ -343,7 +354,7 @@ fn read_u8(bytes: &[u8], offset: &mut usize) -> WireResult<u8> {
     Ok(v)
 }
 
-fn scale_to_code(s: ScaleFamily) -> u8 {
+pub(crate) fn scale_to_code(s: ScaleFamily) -> u8 {
     match s {
         ScaleFamily::Quad => 0,
         ScaleFamily::K1 => 1,
@@ -353,7 +364,7 @@ fn scale_to_code(s: ScaleFamily) -> u8 {
     }
 }
 
-fn code_to_scale(c: u8) -> WireResult<ScaleFamily> {
+pub(crate) fn code_to_scale(c: u8) -> WireResult<ScaleFamily> {
     match c {
         0 => Ok(ScaleFamily::Quad),
         1 => Ok(ScaleFamily::K1),
@@ -440,10 +451,19 @@ where
     encode_digest_with_version(td, WireVersion::LATEST)
 }
 
+/// Encode a digest using the selected TDIG format.
+///
+/// # Panics
+/// Panics when a delta-configured digest is encoded as V1 or V2, which cannot
+/// represent delta. Call [`WireVersion::validate_delta`] for a fallible check,
+/// or use [`encode_digest`] to select the latest format automatically.
 pub fn encode_digest_with_version<F>(td: &TDigest<F>, version: WireVersion) -> Vec<u8>
 where
     F: FloatLike + FloatCore,
 {
+    version
+        .validate_delta(td.delta())
+        .expect("delta mode requires TDIG v3");
     match version {
         WireVersion::V1 | WireVersion::V2 => encode_digest_v12(td, version),
         WireVersion::V3 => encode_digest_v3(td),
@@ -565,8 +585,13 @@ where
         _ => WireFloatWidth::F64,
     };
 
-    let flags = V3_FLAG_CHECKSUM;
-    let header_len = HEADER_LEN_V3_MIN;
+    let flags = V3_FLAG_CHECKSUM
+        | if td.delta().is_some() {
+            V3_FLAG_DELTA
+        } else {
+            0
+        };
+    let header_len = HEADER_LEN_V3_MIN + if td.delta().is_some() { 8 } else { 0 };
     let per_centroid_len = centroid_stride(WireVersion::V3, width);
 
     let mut buf = Vec::with_capacity(header_len + per_centroid_len * (n as usize));
@@ -592,6 +617,9 @@ where
     write_u64(&mut buf, n); // 44..52
     write_f64(&mut buf, td.sum()); // 52..60
     write_u32(&mut buf, 0); // 60..64 checksum placeholder
+    if let Some(delta) = td.delta() {
+        write_f64(&mut buf, delta); // 64..72 optional delta extension
+    }
 
     debug_assert_eq!(buf.len(), header_len);
 
@@ -725,7 +753,7 @@ fn parse_v3_header(bytes: &[u8], verify_checksum: bool) -> WireResult<DecodedV3H
     }
 
     let flags = bytes[5];
-    if (flags & !V3_FLAG_CHECKSUM) != 0 {
+    if (flags & !(V3_FLAG_CHECKSUM | V3_FLAG_DELTA)) != 0 {
         return Err(WireError::InvalidFlags(flags));
     }
 
@@ -740,6 +768,20 @@ fn parse_v3_header(bytes: &[u8], verify_checksum: bool) -> WireResult<DecodedV3H
     }
 
     let width = width_from_precision_code(bytes[7])?;
+
+    let delta = if flags & V3_FLAG_DELTA != 0 {
+        if header_len < HEADER_LEN_V3_MIN + 8 {
+            return Err(WireError::InvalidHeader("missing delta extension"));
+        }
+        let mut delta_offset = HEADER_LEN_V3_MIN;
+        let delta = read_f64(bytes, &mut delta_offset)?;
+        if !delta.is_finite() || delta <= 0.0 {
+            return Err(WireError::InvalidHeader("delta must be finite and > 0"));
+        }
+        Some(delta)
+    } else {
+        None
+    };
 
     let scale = code_to_scale(bytes[8])?;
     let policy = code_to_policy(bytes[9], bytes[10])?;
@@ -797,6 +839,7 @@ fn parse_v3_header(bytes: &[u8], verify_checksum: bool) -> WireResult<DecodedV3H
         max,
         centroid_count,
         data_sum,
+        delta,
     })
 }
 
@@ -823,6 +866,13 @@ fn decode_digest_v3(bytes: &[u8]) -> WireResult<WireDecodedDigest> {
         h.policy,
         stats,
     )
+    .map(|mut decoded| {
+        match &mut decoded {
+            WireDecodedDigest::F32(td) => td.set_delta(h.delta),
+            WireDecodedDigest::F64(td) => td.set_delta(h.delta),
+        }
+        decoded
+    })
 }
 
 #[allow(clippy::too_many_arguments)]
@@ -955,6 +1005,45 @@ fn decode_payload_into_digest(
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn delta_extension_roundtrips_and_rejects_corruption() {
+        let td = TDigest::<f64>::builder()
+            .scale(ScaleFamily::K2Norm)
+            .singleton_policy(SingletonPolicy::Off)
+            .delta(17.0)
+            .build()
+            .merge_unsorted(vec![0.0, 10.0])
+            .unwrap();
+        let blob = encode_digest(&td);
+        let WireDecodedDigest::F64(restored) = decode_digest(&blob).unwrap() else {
+            panic!("precision changed")
+        };
+        assert_eq!(restored.delta(), Some(17.0));
+        assert_eq!(encode_digest(&restored), blob);
+        let mut corrupted = blob.clone();
+        corrupted[64] ^= 1;
+        assert!(matches!(
+            decode_digest(&corrupted),
+            Err(WireError::InvalidChecksum)
+        ));
+        let mut truncated_header = blob.clone();
+        truncated_header[6] = 64;
+        assert!(matches!(
+            decode_digest(&truncated_header),
+            Err(WireError::InvalidHeader(_))
+        ));
+        for value in [f64::NAN, f64::INFINITY, 0.0, -1.0] {
+            let mut invalid = blob.clone();
+            invalid[64..72].copy_from_slice(&value.to_le_bytes());
+            assert!(matches!(
+                decode_digest(&invalid),
+                Err(WireError::InvalidHeader(_))
+            ));
+        }
+        assert!(WireVersion::V1.validate_delta(Some(17.0)).is_err());
+        assert!(WireVersion::V2.validate_delta(Some(17.0)).is_err());
+    }
 
     fn sample_digest() -> TDigest<f64> {
         let mut td = TDigest::<f64>::builder()
