@@ -1112,7 +1112,7 @@ dependencies = [
 
 [[package]]
 name = "gr-tdigest"
-version = "0.2.4"
+version = "0.2.5-dev2026102101"
 dependencies = [
  "anyhow",
  "assert_cmd",

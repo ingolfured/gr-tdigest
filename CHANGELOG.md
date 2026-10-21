@@ -4,6 +4,8 @@ All notable changes to this project are documented in this file.
 
 ## [Unreleased]
 
+- Align public guides and assign a unique review candidate version.
+
 - Verify toolchain selection, source archives and installed artifacts.
 
 - Verify toolchain selection, source archives and installed artifacts.
