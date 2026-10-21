@@ -4,9 +4,9 @@ package gr.tdigest;
  * JNI bridge for the native gr_tdigest library.
  *
  * Loading strategy:
- *  - Prefer explicit path via -Dtdigest.rs.native=/abs/path/libtdigest_rs.so
+ *  - Prefer explicit path via -Dgr.tdigest.native=path/to/libgr_tdigest.so
  *  - Otherwise load from META-INF/native/<os>-<arch>/… inside the JAR
- *  - Finally, fall back to System.loadLibrary("tdigest_rs")
+ *  - Finally, fall back to System.loadLibrary("gr_tdigest")
  *
  * Note: On JDK 22+, run with --enable-native-access=ALL-UNNAMED.
  */
@@ -30,7 +30,7 @@ final class TDigestNative {
   static native long     fromBytes(byte[] bytes);
   static native byte[]   toBytes(long handle);
   static native byte[]   toBytesVersion(long handle, int version);
-  static native long     fromArray(Object values, int maxSize, String scale, int policyCode, int edges, boolean f32mode);
+  static native long     fromArray(Object values, int maxSize, String scale, int policyCode, int edges, boolean f32mode, double delta);
   static native void     mergeArrayF64(long handle, double[] values);
   static native void     mergeArrayF32(long handle, float[] values);
   static native void     mergeWeightedF64(long handle, double[] values, double[] weights);

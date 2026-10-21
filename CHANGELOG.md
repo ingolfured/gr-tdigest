@@ -4,6 +4,10 @@ All notable changes to this project are documented in this file.
 
 ## [Unreleased]
 
+- Keep runtime payload identity with the following standalone-loader change.
+
+- Expose fluent JVM operations, safe serialization and native failures.
+
 - Make Polars cardinality, validation and binary schemas explicit.
 
 - Expose weighted modern Python operations and independent state copies.
