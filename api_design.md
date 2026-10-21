@@ -254,3 +254,7 @@ Public examples compile Scala 2.12.16 and Kotlin consumers against the shared Ja
 ## Installed Python discovery
 
 The installed package includes native method docstrings, public type stubs and py.typed metadata. The object and Polars guides describe defaults, shapes, mutation, ownership and errors separately.
+
+## Source-bound delivery gates
+
+Build checks reject an incompatible selected Rust/Cargo toolchain before native compilation. Installed-wheel qualification records exact runtime cells and source-archive rebuilds. A separate wider budget diagnostic reports accuracy failures without waiving them; benchmarks retain throughput, latency and memory separately.

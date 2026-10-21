@@ -38,6 +38,10 @@ JAR_ARTIFACT    ?= $(PROJECT_SLUG)
 # ----------------------------------------------------------------------
 PATH := $(HOME)/.local/bin:$(HOME)/.cargo/bin:$(PATH)
 
+ifneq ($(filter 1 true yes,$(TDIGEST_OFFLINE)),)
+export CARGO_NET_OFFLINE := true
+endif
+
 CARGO  ?= cargo
 UV     ?= uv
 
@@ -198,16 +202,20 @@ setup-hooks:
 # ==============================================================================
 # Build (dev by default)
 # ==============================================================================
-build: build-rust build-python build-java
+build: build-toolchain-check build-rust build-python build-java
 	@printf "$(STYLE_OK)✓ all components built (PROFILE=$(PROFILE))$(STYLE_RESET)\n"
 
-build-rust:
+.PHONY: build-toolchain-check
+build-toolchain-check:
+	@python3 scripts/check_build_tools.py
+
+build-rust: build-toolchain-check
 	$(call banner,Build: Rust lib + CLI ($(PROFILE)))
 	$(CARGO) build $(CARGO_PROFILE_FLAG)
 	$(CARGO) build $(CARGO_PROFILE_FLAG) --bin $(CLI_BIN)
 
 # Always run maturin from bindings/python where its pyproject.toml lives
-build-python:
+build-python: build-toolchain-check
 	$(call banner,Build: Python extension (maturin develop, dev))
 	@(cd "$(PY_DIR)" && $(UV_ENV) $(UV) run --no-sync maturin develop -F python)
 
@@ -215,7 +223,7 @@ build-python:
 java-prepare:
 	@"$${TDIGEST_BOOTSTRAP_PYTHON:-python3}" "$(JAVA_SRC)/bootstrap.py" --tdigest-prepare
 
-build-java: JAVA_WRAPPER_CHECK
+build-java: build-toolchain-check JAVA_WRAPPER_CHECK
 	$(call banner,Build: Java via Gradle (clean + jar))
 	@GRADLE_USER_HOME="$(GRADLE_USER_HOME)" "$(GRADLE)" --no-daemon --console=plain -p "$(JAVA_SRC)" clean jar
 	@LATEST="$$(ls -1t "$(JAVA_SRC)/$(JAVA_LIBS_REL)/$(JAR_ARTIFACT)-"*.jar 2>/dev/null | head -1)"; \
@@ -252,7 +260,7 @@ compat-test: build-python
 # Fast gates run with every make test. Extended checks preserve all measured
 # losses; the explicit regression target distinguishes known limits from fixes.
 QUALITY_RESULTS_DIR ?= $(CURDIR)/build/quality
-.PHONY: quality-fast quality-extended quality-regression quality-boundaries
+.PHONY: quality-fast quality-extended quality-regression quality-boundaries quality-budgets
 quality-fast: build-python
 	@$(UV_ENV) $(UV) run --project "$(PY_DIR)" --no-sync python -m pytest -q -c /dev/null -p no:cacheprovider tests/quality
 	@mkdir -p "$(QUALITY_RESULTS_DIR)"
@@ -267,6 +275,12 @@ quality-regression: build-python
 	@$(UV_ENV) RAYON_NUM_THREADS=1 OPENBLAS_NUM_THREADS=1 OMP_NUM_THREADS=1 $(UV) run --project "$(PY_DIR)" --no-sync python scripts/quality_suite.py --mode extended --baseline tests/quality/baseline-extended.json.gz --known-failures tests/quality/known-limits.json --output "$(QUALITY_RESULTS_DIR)/regression-$$(date +%Y%m%dT%H%M%S)-$$$$"
 	@$(UV_ENV) $(UV) run --project "$(PY_DIR)" --no-sync python scripts/audit_quality_boundaries.py --baseline tests/quality/known-boundaries.json --output "$(QUALITY_RESULTS_DIR)/boundaries-$$(date +%Y%m%dT%H%M%S)-$$$$.json"
 
+# Wider diagnostic sweep is deliberately separate from routine tests. It returns
+# failure for observed accuracy failures; no known-limit waiver is applied here.
+quality-budgets: build-python
+	@mkdir -p "$(QUALITY_RESULTS_DIR)"
+	@$(UV_ENV) RAYON_NUM_THREADS=1 OPENBLAS_NUM_THREADS=1 OMP_NUM_THREADS=1 $(UV) run --project "$(PY_DIR)" --no-sync python scripts/quality_budgets.py --output "$(QUALITY_RESULTS_DIR)/budgets-$$(date +%Y%m%dT%H%M%S)-$$$$.json"
+
 quality-boundaries:
 	@$(CARGO) run --locked --release --example quality_boundaries -- --require-clean
 
@@ -276,7 +290,7 @@ legacy-wheel-test:
 	@$(UV_ENV) $(UV) run --project "$(PY_DIR)" --no-sync python scripts/test_legacy_wheel.py
 
 python-support-test:
-	@$(UV_ENV) $(UV) run --project "$(PY_DIR)" --no-sync python scripts/test_python_support.py
+	@$(UV_ENV) $(UV) run --project "$(PY_DIR)" --no-sync python scripts/test_python_support.py --output-dir "$(CURDIR)/build/python-support/$$(date +%Y%m%dT%H%M%S)-$$$$"
 
 compat-bench: build-python
 	@$(UV_ENV) $(UV) run --project "$(PY_DIR)" --no-sync python "$(STRICT_COMPAT_BENCH)"
@@ -303,8 +317,8 @@ lint:
 	$(UV_ENV) $(UV) run --project "$(PY_DIR)" --no-sync ruff format --check --config "$(PY_DIR)/pyproject.toml" scripts/test_legacy_wheel.py scripts/test_python_support.py scripts/check_python_sdist.py
 	$(UV_ENV) $(UV) run --project "$(PY_DIR)" --no-sync ruff check --config "$(PY_DIR)/pyproject.toml" bindings/java/bootstrap.py bindings/java/tests
 	$(UV_ENV) $(UV) run --project "$(PY_DIR)" --no-sync ruff format --check --config "$(PY_DIR)/pyproject.toml" bindings/java/bootstrap.py bindings/java/tests
-	$(UV_ENV) $(UV) run --project "$(PY_DIR)" --no-sync ruff check --config "$(PY_DIR)/pyproject.toml" scripts/quality_suite.py scripts/fetch_quality_data.py scripts/audit_quality_boundaries.py tests/quality
-	$(UV_ENV) $(UV) run --project "$(PY_DIR)" --no-sync ruff format --check --config "$(PY_DIR)/pyproject.toml" scripts/quality_suite.py scripts/fetch_quality_data.py scripts/audit_quality_boundaries.py tests/quality
+	$(UV_ENV) $(UV) run --project "$(PY_DIR)" --no-sync ruff check --config "$(PY_DIR)/pyproject.toml" scripts/quality_suite.py scripts/quality_budgets.py scripts/fetch_quality_data.py scripts/audit_quality_boundaries.py tests/quality
+	$(UV_ENV) $(UV) run --project "$(PY_DIR)" --no-sync ruff format --check --config "$(PY_DIR)/pyproject.toml" scripts/quality_suite.py scripts/quality_budgets.py scripts/fetch_quality_data.py scripts/audit_quality_boundaries.py tests/quality
 
 	$(call banner,Python: mypy (auto-install types if missing))
 	@(cd "$(PY_DIR)" && $(UV_ENV) $(UV) run --no-sync python -m mypy gr_tdigest --install-types --non-interactive)
