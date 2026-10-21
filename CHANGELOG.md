@@ -4,6 +4,8 @@ All notable changes to this project are documented in this file.
 
 ## [Unreleased]
 
+- Support Python 3.14 and 3.15 on the current NumPy and Polars stack.
+
 - Build Java 11 bytecode with exclusive internal and offline dependencies.
 
 - Stage verified JDK and Gradle archives from configured sources.

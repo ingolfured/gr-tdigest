@@ -330,7 +330,7 @@ smoke-wheel:
 	TMP="$$(mktemp -d)"; \
 	$(UV) venv --python 3.12 --seed "$$TMP"; \
 	$(UV) pip install --python "$$TMP/bin/python" --upgrade pip; \
-	$(UV) pip install --python "$$TMP/bin/python" 'polars==1.34.0' 'numpy>=1.26.4,<3'; \
+	$(UV) pip install --python "$$TMP/bin/python" 'polars==2.0.0' 'numpy>=1.26.4,<3'; \
 	$(UV) pip install --python "$$TMP/bin/python" --no-index "$${LATEST}[polars]"; \
 	"$$TMP/bin/python" -c "import gr_tdigest as td; d=td.TDigest.from_array([0.0,1.0,2.0,3.0], max_size=100, scale='k2'); print('p50=', d.quantile(0.5)); print('cdf=', td.cdf); print('ok')"; \
 	rm -rf "$$TMP"; \
