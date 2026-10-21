@@ -4,6 +4,8 @@ All notable changes to this project are documented in this file.
 
 ## [Unreleased]
 
+- Resolve development paths from the active checkout, quote environment paths and install hooks through Git worktree paths.
+
 ### Changed
 - Compressor Stage 4 cap strategy now uses a second k-limit merge with binary-searched `d'` (same scale-family geometry as Stage 3) instead of always using equal-weight bucketization.
 - Added Stage 4 unit coverage for cap/weight/order invariants under the new second-pass k-limit cap behavior.

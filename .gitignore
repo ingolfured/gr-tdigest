@@ -1,7 +1,7 @@
 # =========================
 # Rust / Cargo
 # =========================
-/target/
+/target
 /Cargo.lock.old
 **/*.rlib
 **/*.dSYM
