@@ -138,6 +138,21 @@ Note: core merge is permissive by design. Strict precision/config checks are enf
 
 Output at this stage is strictly increasing by mean.
 
+All later compressor paths preserve a one-input cluster's mean bits and
+Atomic/Mixed kind. The shared accumulator emits that input without recomputing
+`mean * weight / weight`; even one rounding step would move an exact point mass,
+change CDF results at the observed value, and risk duplicate means on a later
+merge. K-limit passes, equal-weight bucketization and single-bucket collapse use
+the same emission rule. Clusters containing multiple inputs remain Mixed.
+Their weighted-average arithmetic is unchanged while its result lies within the
+cluster's first/last input means. If finite accumulation rounds that result
+outside the interval, clamp it to the nearest endpoint. Consecutive disjoint
+input clusters then retain disjoint mean intervals after compression and f32
+rounding, preventing duplicate or out-of-order centroids. The transient
+accumulator tracks the last input mean; centroid storage and wire layouts do not
+change. The bound applies only when the weight sum, weighted sum, and quotient
+are all finite. It must not hide overflow or repair invalid aggregate state.
+
 ### 4.2 Stage 2: policy slice
 
 Policy is derived from `SingletonPolicy` and current `max_size`.

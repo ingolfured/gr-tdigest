@@ -4,6 +4,8 @@ All notable changes to this project are documented in this file.
 
 ## [Unreleased]
 
+- Keep exact point means and finite cluster bounds, with explicit floating-point trait dispatch in regression fixtures.
+
 - Keep observation weights in Float64 for both mean precisions.
 
 - Preserve weighted tails, protected edges and wire settings.
