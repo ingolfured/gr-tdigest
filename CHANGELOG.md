@@ -4,6 +4,8 @@ All notable changes to this project are documented in this file.
 
 ## [Unreleased]
 
+- Build Java 11 bytecode with exclusive internal and offline dependencies.
+
 - Stage verified JDK and Gradle archives from configured sources.
 
 - Copy compatible NumPy training buffers and allow independent constructors.

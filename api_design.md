@@ -36,6 +36,17 @@ For current implementation internals, see `tdigest_design.md`.
 
 ## 3. Capability parity contract
 
+### JVM build and runtime support
+
+The Java binding targets Java11 bytecode and runs on JDK11 and17, with a
+Gradle8.14.5 build that can itself run on11. Both versions have Java/JNI tests,
+JAR smoke tests and compiled-class version checks. Internal build environments
+can select verified JDK/Gradle archives and an exclusive Maven dependency
+repository through the documented `TDIGEST_*` environment settings. Offline mode
+uses pre-staged tools/dependencies and never attempts a public fallback. It
+applies to Gradle and the native Cargo build. Publishing coordinates and the
+numerical API are unchanged.
+
 All surfaces must support:
 - Build/train from numeric values.
 - Add one value.
