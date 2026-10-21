@@ -9,7 +9,7 @@ T-Digest provides a mergeable summary of a distribution, enabling approximate qu
 - ⚡ Quantile, CDF, and median with optimized evaluation loops using half-weight bracketing and singleton-aware interpolation.
 - 🧠 Heap-stream k-way digest merge in Rust core for lower peak memory on large digest unions.
 - 🧵 Streaming two-way raw-ingest merge path in Rust core (centroids + values) to avoid extra merge buffers.
-- 🧊 TDigest precision as `f64` or `f32`, with `auto` precision selection where supported.
+- 🧊 Mean/value precision as `f64` or `f32`, with `auto` selection where supported; modern centroid weights stay `f64` in both modes to preserve accumulated mass.
 - ⚖️ Weighted ingest across Rust/Python/Polars/Java (`add_weighted`, `add_weighted_values`, Java weighted adds).
 - 🔄 Explicit precision casting across surfaces (`cast_precision` / `castPrecision`).
 - 📦 TDIG v3 wire default (flags + header length + precision code + checksum), with v1/v2 decode compatibility.

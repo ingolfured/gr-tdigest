@@ -46,7 +46,7 @@ Cross-surface behavior is enforced by integration tests in `integration/api_cohe
 ### 3.1 Core digest model
 
 - Main type: `TDigest<F>` where `F` is `f32` or `f64` (`src/tdigest/tdigest.rs`).
-- Memory precision is controlled by `F`; accumulation fields `sum` and `count` stay `f64`.
+- Mean and extrema precision is controlled by `F`; centroid weights and accumulation fields `sum` and `count` stay `f64`. Do not narrow weights when changing mean precision.
 - Centroids have kind `Atomic` or `Mixed` (`src/tdigest/centroids.rs`).
 - Compression pipeline lives in `src/tdigest/compressor.rs`:
   1. Normalize

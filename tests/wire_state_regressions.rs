@@ -51,9 +51,9 @@ fn zero_v1_centroid_weights_return_errors_in_both_precisions() {
 }
 
 #[test]
-fn unrepresentable_f32_payload_weights_return_errors() {
+fn invalid_payload_weights_return_errors() {
     let td = TDigest::<f32>::from_unsorted(&[1.0], 10).unwrap();
-    for weight in [1e-46_f64, 1e39, 0.0, f64::NAN] {
+    for weight in [0.0_f64, -1.0, f64::NAN, f64::INFINITY] {
         let mut bytes = encode_digest_with_version(&td, WireVersion::V2);
         bytes[60..68].copy_from_slice(&weight.to_le_bytes());
         assert!(decode_digest(&bytes).is_err());
