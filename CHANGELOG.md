@@ -4,6 +4,8 @@ All notable changes to this project are documented in this file.
 
 ## [Unreleased]
 
+- Add a portable Ingo-remote handoff with exact source/artifact identities, current review status and pending PR organization work.
+
 - Publish default-setting accuracy gains, comparable-storage scores and query-level tradeoff explanations; clarify practical accuracy acceptance without changing arithmetic or frozen gates.
 
 - Supply intranet owner-run qualification guidance, host/artifact receipts and configurable independent-digest concurrency measurements without requesting private inputs.
