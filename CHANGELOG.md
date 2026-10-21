@@ -4,6 +4,8 @@ All notable changes to this project are documented in this file.
 
 ## [Unreleased]
 
+- Count capacity-search trial clusters without allocating or averaging discarded centroids; retain the full final compression path and existing numerical decisions.
+
 - Record exact candidate artifacts and combined qualification.
 
 - Align public guides and assign a unique review candidate version.
