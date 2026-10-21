@@ -4,6 +4,8 @@ All notable changes to this project are documented in this file.
 
 ## [Unreleased]
 
+- Make Polars cardinality, validation and binary schemas explicit.
+
 - Expose weighted modern Python operations and independent state copies.
 
 - Expose weighted modern Python operations and independent state copies.
