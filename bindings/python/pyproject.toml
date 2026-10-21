@@ -22,6 +22,7 @@ classifiers = [
 # Runtime dependencies
 dependencies = [
   "polars>=1.34.0",
+  "numpy>=2.3.3",
 ]
 
 # Dev groups (PEP 735). uv understands these and can install with --group/--all-groups.
@@ -43,6 +44,7 @@ manifest-path = "../../Cargo.toml"
 features = ["python"]
 bindings = "pyo3"
 module-name = "gr_tdigest._gr_tdigest"
+python-packages = ["gr_tdigest", "tdigest_rs"]
 strip = true
 manylinux = "2_28"
 zig = true
@@ -53,7 +55,8 @@ zig = true
 [tool.ruff]
 line-length = 120
 target-version = "py312"
-extend-exclude = ["target","dist","build",".venv",".maturin",".pytest_cache",".ruff_cache"]
+# Keep the byte-for-byte upstream wrapper out of automatic formatting.
+extend-exclude = ["tdigest_rs/lib.py","target","dist","build",".venv",".maturin",".pytest_cache",".ruff_cache"]
 
 # ------------------------------------------------------------
 # Pytest

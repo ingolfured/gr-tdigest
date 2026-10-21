@@ -4,6 +4,8 @@ All notable changes to this project are documented in this file.
 
 ## [Unreleased]
 
+- Restore the original tdigest_rs Python engine and API.
+
 - Preserve tiny-mass queries and reject invalid scaling atomically.
 
 - Keep exact point means and finite cluster bounds, with explicit floating-point trait dispatch in regression fixtures.

@@ -63,6 +63,18 @@ Notes:
 - Any null value (where representable) is an error.
 - Adding an empty vector/list is a no-op success.
 
+### 4.1.1 Shipped legacy Python interface
+
+`tdigest_rs.TDigest` preserves the original public API and numerical behavior,
+not merely approximate accuracy or passing upstream tolerances. It uses the
+pinned original Rust arithmetic and unmodified Python wrapper. Existing calls,
+dtype inference, uint32 weights, immutable merge/update, dictionary state, and
+copy/pickle reconstruction retain their upstream behavior, including quirks.
+Do not apply modern numerical fixes or validation to this interface. The modern
+engine is explicitly selected through `gr_tdigest`; matching delta alone does
+not make its answers identical. The original interface has no new delta
+property, cdf method, or wire-state format. Focused regression tests cover immutable merge/update, dtype, copy/pickle, and the original dictionary state.
+
 ### 4.2 Queries
 
 Quantile:
