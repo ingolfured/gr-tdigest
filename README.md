@@ -193,6 +193,10 @@ The configured JDK also supplies the direct Java compiler/runtime subprocesses u
 
 Use the [Python/NumPy guide](bindings/python/OBJECT_API.md), [Polars guide](bindings/python/POLARS_API.md), and [Java build and runtime guide](bindings/java/README.md). Scala/sbt, Kotlin/Gradle and a separate-executor Spark check are in [the JVM examples](bindings/java/examples/README.md).
 
+Private consumer artifacts and representative cluster/server checks remain
+[owner-run](tests/quality/OWNER_CHECKS.md), with scripts to retain exact artifact,
+host and workload evidence inside the consuming environment.
+
 Modern Rust construction returns a checked result, for example `TDigest::<f64>::builder().max_size(1000).build()?`. Modern defaults use capacity 1,000; the separate original `tdigest_rs` and `tdigest_core` interfaces retain their pinned API and calculations.
 
 This review source has a unique development version. Earlier artifacts and measurements remain bound to their recorded source hashes; the [historical candidate evidence](https://github.com/ingolfured/gr-tdigest/blob/5801881075c6e31fec746c8c62c6a25782b6c13f/compat/consumer-20261020/accuracy-investigation/ARTIFACTS.md) is not qualification of newly rebuilt bytes.

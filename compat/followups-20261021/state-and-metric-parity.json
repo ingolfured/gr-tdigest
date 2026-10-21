@@ -1,0 +1,18 @@
+{
+  "canonical_packaged_profiles": 4140,
+  "canonical_rows_match_control_and_optimized_exactly": true,
+  "control_source": "8367b177fe5b6390bf984c5d52fef8061128307e",
+  "diagnostic_accuracy_failures": 114,
+  "diagnostic_states_compared": 4140,
+  "new_failures_or_changed_metrics": 0,
+  "optimized_source": "aaf7ab3956fed4269c1eaeef915a6faee78fa305",
+  "raw_receipts": {
+    "installed-budgets-story.json": "3dec6951429fcbb82028783a15bf70cc6363ada1e4af957f99a693f0cfcb800c",
+    "parity-control-states.json": "f84c6b033fa7e29e9fb5c6f15219eaa601d5ea7d33a71e49f9432bef7fa13495",
+    "parity-control.json": "833541e87adcd5e6bdeaac9caa5a182fbcfb3458b9fc030f62da9c2724eaffd8",
+    "parity-optimized-states.json": "f84c6b033fa7e29e9fb5c6f15219eaa601d5ea7d33a71e49f9432bef7fa13495",
+    "parity-optimized.json": "40542878a5e1f2d687db66567add4e50ec2b3c604a1e4d484fe908b56bc075b0"
+  },
+  "state_comparison_scope": "same-toolchain diagnostic release builds; 4140 TDIG state hashes; canonical packaged output independently reran all profiles",
+  "state_sha256_lists_exactly_equal": true
+}

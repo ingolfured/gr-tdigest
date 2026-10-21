@@ -1,0 +1,17 @@
+{
+  "distribution": "gr-tdigest",
+  "native_sha256": "1eaaf244db7004a0b8d2aca2edc6ff027a0d3a8871c2b8c450fdf94f19701d76",
+  "requires_dist": [
+    "numpy>=1.26.4,<3",
+    "polars==2.0.0 ; extra == 'polars'"
+  ],
+  "requires_python": ">=3.10, <3.16",
+  "sdist": "/home/ingo/Documents/ChatGPT/gr-tdigest 2/followups-20261021/artifacts/gr_tdigest-0.2.5.dev2026102102.tar.gz",
+  "sdist_sha256": "6ff2d538c59e24d09b8cfecbf859d1a6f312a7dbe71eb2f295fb6d31f7ef29e9",
+  "tags": [
+    "cp310-abi3-manylinux_2_28_x86_64"
+  ],
+  "version": "0.2.5.dev2026102102",
+  "wheel": "/home/ingo/Documents/ChatGPT/gr-tdigest 2/followups-20261021/artifacts/gr_tdigest-0.2.5.dev2026102102-cp310-abi3-manylinux_2_28_x86_64.whl",
+  "wheel_sha256": "31bbc39f962dfbcd572cfbc296cf767cf4a01f7001591bb5936742b1dee162f9"
+}

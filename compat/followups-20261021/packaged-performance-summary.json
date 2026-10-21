@@ -1,0 +1,74 @@
+{
+  "benchmark_sha256": "6f22f9352dcb42a324ff53e4b1d50060ffd4458e451b827f5b40764f1201a4db",
+  "kind": "Fresh exact-wheel measured comparison; symmetric counterbalanced blocks, fixed physical cores8-11 and nested pools; no concurrent task-owned builds or timings",
+  "rows": {
+    "fanin40": {
+      "medians_seconds": {
+        "baseline": 1.5332158119854284,
+        "optimized": 1.4664957750064787,
+        "prior": 1.6161786584852962
+      },
+      "native_sha256": {
+        "baseline": [
+          "118113333f955dae4f5c388856039f5db4945579b2d701c8f6154cfc01be5bed"
+        ],
+        "optimized": [
+          "1eaaf244db7004a0b8d2aca2edc6ff027a0d3a8871c2b8c450fdf94f19701d76"
+        ],
+        "prior": [
+          "dcc92891f18b641ca27c8184483e5f4e23fdf3bfea72133a76616cfafbd059a1"
+        ]
+      },
+      "optimized_time_change_vs_baseline_percent": -4.3516402881699445,
+      "optimized_time_change_vs_prior_percent": -9.261530752986324,
+      "peak_rss_kib_range": {
+        "baseline": [
+          983956,
+          1036384
+        ],
+        "optimized": [
+          1023980,
+          1030860
+        ],
+        "prior": [
+          1007840,
+          1019544
+        ]
+      }
+    },
+    "stream": {
+      "medians_seconds": {
+        "baseline": 0.03787419700529426,
+        "optimized": 0.03569937249994837,
+        "prior": 0.042739940487081185
+      },
+      "native_sha256": {
+        "baseline": [
+          "118113333f955dae4f5c388856039f5db4945579b2d701c8f6154cfc01be5bed"
+        ],
+        "optimized": [
+          "1eaaf244db7004a0b8d2aca2edc6ff027a0d3a8871c2b8c450fdf94f19701d76"
+        ],
+        "prior": [
+          "dcc92891f18b641ca27c8184483e5f4e23fdf3bfea72133a76616cfafbd059a1"
+        ]
+      },
+      "optimized_time_change_vs_baseline_percent": -5.742232647313649,
+      "optimized_time_change_vs_prior_percent": -16.473041157511524,
+      "peak_rss_kib_range": {
+        "baseline": [
+          102868,
+          103396
+        ],
+        "optimized": [
+          103984,
+          115144
+        ],
+        "prior": [
+          102624,
+          103120
+        ]
+      }
+    }
+  }
+}
