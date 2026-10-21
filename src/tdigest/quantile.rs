@@ -32,6 +32,21 @@ use crate::tdigest::precision::FloatLike;
 use crate::tdigest::TDigest;
 use ordered_float::FloatCore;
 
+// Convex interpolation without overflowing a finite opposite-sign span.
+fn interpolate_value(left: f64, right: f64, fraction: f64) -> f64 {
+    if fraction <= 0.0 {
+        return left;
+    }
+    if fraction >= 1.0 {
+        return right;
+    }
+    if left.is_sign_negative() == right.is_sign_negative() {
+        left + (right - left) * fraction
+    } else {
+        left * (1.0 - fraction) + right * fraction
+    }
+}
+
 impl<F: FloatLike + FloatCore> TDigest<F> {
     /// Estimate the value at quantile `q` (inclusive) using half-weight
     /// bracketing and singleton-aware interpolation.
@@ -39,7 +54,7 @@ impl<F: FloatLike + FloatCore> TDigest<F> {
     /// - `q` is clamped to `[0, 1]` (when finite).
     /// - **Empty digest** → **`NaN`**.
     /// - **NaN `q`** → **`NaN`**.
-    /// - For single-centroid digests, returns that mean.
+    /// - A single atomic centroid is constant; a mixed centroid retains its tails.
     pub fn quantile(&self, q: f64) -> f64 {
         // NaN probe propagates
         if q.is_nan() {
@@ -49,10 +64,6 @@ impl<F: FloatLike + FloatCore> TDigest<F> {
         if self.centroids().is_empty() {
             return f64::NAN;
         }
-        if self.centroids().len() == 1 {
-            return self.centroids()[0].mean_f64();
-        }
-
         // Only clamp after guarding NaN
         let q = q.clamp(0.0, 1.0);
         let (target_index, total_weight) = self.quantile_to_weight_index(q);
@@ -64,6 +75,20 @@ impl<F: FloatLike + FloatCore> TDigest<F> {
             return self.max();
         }
         let first = &self.centroids()[0];
+        if self.centroids().len() == 1 {
+            let mean = first.mean_f64();
+            if first.is_atomic() {
+                return mean;
+            }
+            // One mixed cluster still represents a range, with its center at
+            // q=0.5. Use probabilities directly so rounded f32 mass cannot
+            // create a gap between the two half-weight branches.
+            return if q <= 0.5 {
+                interpolate_value(self.min(), mean, 2.0 * q)
+            } else {
+                interpolate_value(mean, self.max(), 2.0 * q - 1.0)
+            };
+        }
         let last = self.centroids().last().unwrap();
         let first_center = first.weight_f64() / 2.0;
         let last_half = last.weight_f64() / 2.0;
@@ -71,15 +96,18 @@ impl<F: FloatLike + FloatCore> TDigest<F> {
             return if first.is_atomic() {
                 first.mean_f64()
             } else {
-                self.min() + (first.mean_f64() - self.min()) * target_index / first_center
+                interpolate_value(self.min(), first.mean_f64(), target_index / first_center)
             };
         }
         if target_index >= total_weight - last_half {
             return if last.is_atomic() {
                 last.mean_f64()
             } else {
-                self.max()
-                    - (self.max() - last.mean_f64()) * (total_weight - target_index) / last_half
+                interpolate_value(
+                    last.mean_f64(),
+                    self.max(),
+                    1.0 - (total_weight - target_index) / last_half,
+                )
             };
         }
 
@@ -176,9 +204,9 @@ impl<F: FloatLike + FloatCore> TDigest<F> {
         let denom = weight_toward_right + weight_toward_left;
 
         if denom <= 0.0 {
-            0.5 * (m_left + m_right)
+            interpolate_value(m_left, m_right, 0.5)
         } else {
-            (m_left * weight_toward_left + m_right * weight_toward_right) / denom
+            interpolate_value(m_left, m_right, weight_toward_right / denom)
         }
     }
 
