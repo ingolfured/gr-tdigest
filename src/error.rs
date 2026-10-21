@@ -17,7 +17,7 @@ pub enum TdError {
     /// Invalid scaling factor for digest-level scaling operations.
     InvalidScaleFactor { context: &'static str },
 
-    /// Weight was non-positive in a weighted-ingest path.
+    /// A weight or scaled total was non-positive or non-finite.
     InvalidWeight { context: &'static str },
 
     /// Values/weights length mismatch in weighted-ingest path.

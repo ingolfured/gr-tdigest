@@ -85,6 +85,17 @@ Weighted add path:
 - Weighted values are converted to atomic centroids, then merged through the same digest merge/compression path.
 - Frontend surfaces route weighted add through `FrontendDigest::add_weighted_f64(...)`, so Python/JNI/Polars share the same validation and merge semantics.
 
+Weight scaling is transactional. `scale_weights` validates the positive finite
+factor, prepares centroid products locally, and rejects any nonpositive or
+nonfinite product before calling checked constructors. It also rejects a
+nonfinite accumulated product total or nonpositive/nonfinite scaled stored
+count. Only then does it replace centroids and scale count/sum. Errors use the
+existing `InvalidWeight` variant and preserve the original digest bytes. Empty
+digests remain no-ops after factor validation; valid positive subnormal products
+remain supported. Successful count and sum arithmetic retains its prior order.
+This validation is limited to weight scaling: aggregate input/merge validation,
+weighted-value product overflow, and the raw-sum overflow policy are separate.
+
 ### 3.2 Raw-value ingest (`merge_unsorted` / `merge_sorted`)
 
 `merge_unsorted`:
@@ -326,6 +337,34 @@ Non-goal:
 These semantics are asserted by focused tests in:
 - `src/tdigest/cdf.rs`
 - `src/tdigest/quantile.rs`
+
+### 5.5 Positive subnormal total mass
+
+Half-weight arithmetic and `q * total` can underflow when the entire stored
+centroid mass is positive and subnormal. These queries use a temporary digest
+view whose weights first multiply by `2^1022` (`1 / f64::MIN_POSITIVE`). A
+second exact power-of-two scale, derived from that normal total's exponent,
+places the total in `[1, 2)`. The two factors stay separate because their
+combined reciprocal could overflow. Every positive weight becomes normal, and
+the total no longer makes a tiny positive `q` smaller before tail interpolation.
+Means, kinds, extrema, and configuration stay unchanged, and queries never
+mutate the stored digest.
+
+CDF uses the actual centroid total already computed for its prefix array.
+Quantile first checks its stored total, then computes actual mass only in the
+subnormal branch. The temporary count is the scaled actual mass, so recursion
+terminates after one copy even if a directly seeded subnormal header differs
+from its subnormal centroid total. Empty/NaN handling, quantile endpoints, and
+weight-independent single-centroid quantiles retain their existing branches.
+Normal-total queries keep the previous summation order, kernels, and allocation
+behavior, with only an extra condition. The rare fallback allocates a query copy.
+
+This evaluates the stored centroid distribution; it cannot recover mean or sum
+information already lost during compression. A normal total with a
+minimum-subnormal component remains on the ordinary path and may still lose
+that component's tiny half-weight or rank boundary. Malformed normal header
+counts hiding subnormal actual mass are not repaired by the quantile prefilter.
+Aggregate overflow and malformed-state validation remain separate concerns.
 
 ## 6. TDIG wire format
 
