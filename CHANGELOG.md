@@ -4,6 +4,8 @@ All notable changes to this project are documented in this file.
 
 ## [Unreleased]
 
+- Stage verified JDK and Gradle archives from configured sources.
+
 - Copy compatible NumPy training buffers and allow independent constructors.
 
 - Reject inconsistent delta settings in Polars digest structs.
