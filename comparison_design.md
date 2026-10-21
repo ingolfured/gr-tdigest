@@ -224,3 +224,7 @@ wrapper so existing applications keep their API and numbers. The modern
 91 approximate upstream tests does not establish exact output equivalence.
 The retained implementation and exact regression fixtures have explicit
 provenance; upstream quirks are preserved on this interface.
+
+## Recorded-data comparison (20 October 2026)
+
+The quality suite compares the modern K2/Use engine and the preserved original on two pinned UCI datasets, deterministic distributions, both mean precisions and repeated merge paths. Parameters are matched by observed logical field-byte budget, with count-only selection for the original. This is distinct from retained memory, wire size and RSS. Rank, value, CDF and tail errors are reported separately; the original has no CDF API. All comparison losses and quality-limit failures remain visible in the recorded results.

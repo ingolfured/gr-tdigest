@@ -504,3 +504,11 @@ Modern Python training uses `training_array_values` for constructors and updates
 The extension targets the CPython3.10 stable ABI and advertises standard CPython3.10–3.15. The binding stack uses PyO3 0.29.3, rust-numpy 0.29, pyo3-polars 0.28 and Polars Rust0.55 with Python Polars2.0. Rust1.95 is pinned because the updated Polars dependency tree requires it. PyO3 attachment/cast and Polars iterator API migrations do not change digest arithmetic. The original upstream numerical sources, wrapper and91 tests remain checksum-bound.
 
 The release gate installs one unchanged wheel into isolated runtimes, including Polars-free3.10/3.15 environments, and rebuilds the actual verified source archive under3.12/3.14/3.15. Standard CPython is the supported runtime; free-threaded and PyPy builds require separate artifacts and are not covered by these claims.
+
+## Quality measurement and failure visibility
+
+The new `scripts/quality_suite.py` uses independent sorted-data references, pinned recorded observations and deterministic distribution grids. It tests real f32/f64 storage, three budgets, input reversal and40-way sequential/balanced merges. It matches original parameters by observed logical field bytes without consulting accuracy, records all search candidates and retains poor modern outcomes in comparison totals. The earlier exponential quality-score helper is not an acceptance metric.
+
+Exact rational weighted controls cover probability semantics across extreme mass scales. `examples/quality_boundaries.rs` separately exposes existing tiny-capacity mass/contribution loss, cancellation, fractional median asymmetry and subnormal aggregate-mean loss. A frozen expected-outcome check detects any change; it does not fix or waive these failures. The independent original arithmetic, wrapper, oracle and91 original tests stay untouched.
+
+JVM test tool selection is shared through `bindings/java/bootstrap.py::java_environment`: Gradle and direct coherence subprocesses use the same verified JDK and child environment, including when host Java commands are unavailable.
