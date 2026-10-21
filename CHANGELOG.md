@@ -4,6 +4,8 @@ All notable changes to this project are documented in this file.
 
 ## [Unreleased]
 
+- Ship clean source archives with one unambiguous Python README.
+
 - Preserve published original pickle restoration behavior and keep checksum-bound independent fixtures out of automatic JSON rewrites.
 
 - Verify original outputs against independent exact fixtures.
