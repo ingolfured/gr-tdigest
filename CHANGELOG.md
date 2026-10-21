@@ -4,6 +4,8 @@ All notable changes to this project are documented in this file.
 
 ## [Unreleased]
 
+- Ship installed Python API documentation and typing metadata.
+
 - Compile Scala and Kotlin consumers through authenticated Maven fixtures.
 
 - Load and identify native payloads outside the build checkout.
