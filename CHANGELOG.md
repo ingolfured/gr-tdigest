@@ -4,6 +4,8 @@ All notable changes to this project are documented in this file.
 
 ## [Unreleased]
 
+- Record exact candidate artifacts and combined qualification.
+
 - Align public guides and assign a unique review candidate version.
 
 - Verify toolchain selection, source archives and installed artifacts.

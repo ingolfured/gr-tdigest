@@ -1,0 +1,342 @@
+{
+  "artifact_targets": {
+    "jni": "x86_64-unknown-linux-gnu.2.17; system allocator; Java class major 55",
+    "python": "cp310-abi3-manylinux_2_28_x86_64; NumPy + optional Polars 2.0.0"
+  },
+  "artifacts": {
+    "gr-tdigest-0.2.5-dev2026102101.jar": {
+      "bytes": 1891953,
+      "sha256": "45d8c7b80f14ff7b738fccbce65c0fbd5ce4f9f126feb687bb18bc5bef96adbd"
+    },
+    "gr-tdigest-source-8367b177fe5b.tar.gz": {
+      "bytes": 716678,
+      "sha256": "715e7f25453c9657cabf40f09e2c176c1d30637b481515109c8d4186c2e75b8e"
+    },
+    "gr_tdigest-0.2.5.dev2026102101-cp310-abi3-manylinux_2_28_x86_64.whl": {
+      "bytes": 5260238,
+      "sha256": "26a3126f90a50e918cd95b1e8c391418807c9028ced8d3d51058b0d438533e3d"
+    },
+    "gr_tdigest-0.2.5.dev2026102101.tar.gz": {
+      "bytes": 725514,
+      "sha256": "8b3612bbcf0480910cb1975c4a801164f9e8089916591e5b08716bdc7e4ba4bf"
+    },
+    "libgr_tdigest-jni-glibc217.so": {
+      "bytes": 7389968,
+      "sha256": "aa5de974fc148193cc552a26b29e90cf6b65da5f32e86caa00689766e6b92a2d"
+    },
+    "libgr_tdigest-python-glibc228.so": {
+      "bytes": 19373424,
+      "sha256": "dcc92891f18b641ca27c8184483e5f4e23fdf3bfea72133a76616cfafbd059a1"
+    },
+    "review-evidence.tar.gz": {
+      "bytes": 707366,
+      "sha256": "20c4af6221901a76b6a6ddfb1baf44169bdf3f54fe92b342da7759dabf941281"
+    }
+  },
+  "build_tools": {
+    "build_jdk": "17.0.20.1+1",
+    "cargo": "1.95.0",
+    "gradle": "8.14.5",
+    "maturin": "1.15.0",
+    "rust": "1.95.0",
+    "zig": "0.12.1"
+  },
+  "cleanup": {
+    "old_branches_and_archive": "PRESERVED",
+    "old_personal_prs_6_through_17": "CLOSED_WITH_REPLACEMENT_LINKS",
+    "scratch_branch": "REMOVED; exact duplicate of chapter17; no unique commits",
+    "ssd_comparison": "PENDING; untouched"
+  },
+  "commands": [
+    {
+      "args": [
+        "/home/ingo/Documents/ChatGPT/gr-tdigest 2/gr-tdigest-story/.venv/bin/maturin",
+        "build",
+        "--release",
+        "--locked",
+        "--zig",
+        "--compatibility",
+        "manylinux_2_28",
+        "--auditwheel",
+        "check",
+        "--interpreter",
+        "/home/ingo/Documents/ChatGPT/gr-tdigest 2/gr-tdigest-story/.venv/bin/python",
+        "--out",
+        "/home/ingo/Documents/ChatGPT/gr-tdigest 2/pr-story-20261021/artifacts"
+      ],
+      "cwd": "/home/ingo/Documents/ChatGPT/gr-tdigest 2/gr-tdigest-story/bindings/python",
+      "exit": 0,
+      "log_sha256": "5dd2b19c21b2235aa88f32d6ee543b5395fa727aa90b4fa6bbd54d9706ece6a5",
+      "name": "wheel"
+    },
+    {
+      "args": [
+        "/home/ingo/Documents/ChatGPT/gr-tdigest 2/gr-tdigest-story/.venv/bin/maturin",
+        "sdist",
+        "--out",
+        "/home/ingo/Documents/ChatGPT/gr-tdigest 2/pr-story-20261021/artifacts"
+      ],
+      "cwd": "/home/ingo/Documents/ChatGPT/gr-tdigest 2/gr-tdigest-story/bindings/python",
+      "exit": 0,
+      "log_sha256": "baa3fbbe27a4ebdc51baf6dcd6e23f0073f8147604528eef72da595099347b9d",
+      "name": "sdist"
+    },
+    {
+      "args": [
+        "git",
+        "archive",
+        "--format=tar.gz",
+        "--prefix=gr-tdigest/",
+        "--output",
+        "/home/ingo/Documents/ChatGPT/gr-tdigest 2/pr-story-20261021/artifacts/gr-tdigest-source-8367b177fe5b.tar.gz",
+        "8367b177fe5b6390bf984c5d52fef8061128307e"
+      ],
+      "cwd": "/home/ingo/Documents/ChatGPT/gr-tdigest 2/gr-tdigest-story",
+      "exit": 0,
+      "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "name": "git-archive"
+    }
+  ],
+  "created_utc": "2026-10-21T08:19:03.172583+00:00",
+  "kind": "Development review candidate; no production release",
+  "local_gates": {
+    "chapters": 32,
+    "exact_original_fixtures": "PASS; source, wrapper and oracle unchanged",
+    "final_lint_and_rustdoc": "PASS",
+    "make_build": "PASS at every chapter",
+    "make_test": "PASS at every chapter",
+    "original_source_guard": "PASS"
+  },
+  "numerical": {
+    "budget_existing_failed_profiles": 114,
+    "budget_profiles": 4140,
+    "exact_boundary_controls": 15,
+    "exceptions": 0,
+    "failed_profile_ids_equal_old_modern_1451": true,
+    "frozen_existing_accuracy_failures": 10,
+    "frozen_extended_profiles": 756,
+    "matches_previous_candidate_scores_exactly": true,
+    "new_per_metric_regressions": 0,
+    "original_comparison": "Pinned G-Research comparisons have rank/tail gains and worst-value-error losses. No universal all-metric superiority is established. Original has no CDF API."
+  },
+  "preserved_candidate": "5801881075c6e31fec746c8c62c6a25782b6c13f",
+  "qualification_limits": [
+    "Private 0.1.9/0.1.11 binary comparison remains owner-run",
+    "Actual Spark driver/executor, serializer and checkpoint qualification remains owner-run",
+    "Internal trust, artifact services, publication and deployment remain owner-run",
+    "100-plus CPU server workload is untested; this host is 16 physical/32 logical cores",
+    "Accuracy comparison metric/domain decision remains open; no gate or fixture relaxed"
+  ],
+  "qualification_receipts": {
+    "path": "checks.tar.gz",
+    "scope": "Exact wheel/JAR and combined-source checks on public/synthetic data. Failed accuracy profiles remain explicit. Private consumer, Spark and representative-server qualification remain owner-run.",
+    "sha256": "fea67a209dd1693ade44c4ba425b6bccd36f7494bf5ee36b0c5c6575bcfea2a1"
+  },
+  "review_index": "https://github.com/ingolfured/gr-tdigest/pull/50",
+  "runtime": {
+    "cross_language_and_pyarrow24": "PASS; both precisions, same TDIG bytes and queries; full-struct Arrow/Parquet roundtrips",
+    "jvm": "Same JAR: 20 JUnit cases each Java 11/17/21, plus 20 on actual CentOS7 glibc 2.17 / Java11 with network disabled",
+    "matrix": [
+      {
+        "compatibility_passed": 208,
+        "label": "py310-numpy1.26.4",
+        "modern_passed": 225,
+        "modern_python_passed": null,
+        "numpy": "1.26.4",
+        "polars": "2.0.0",
+        "python": "3.10",
+        "status": "PASS"
+      },
+      {
+        "compatibility_passed": 208,
+        "label": "py310-numpy2.2.6",
+        "modern_passed": 225,
+        "modern_python_passed": null,
+        "numpy": "2.2.6",
+        "polars": "2.0.0",
+        "python": "3.10",
+        "status": "PASS"
+      },
+      {
+        "compatibility_passed": 208,
+        "label": "py311-numpy1.26.4",
+        "modern_passed": 225,
+        "modern_python_passed": null,
+        "numpy": "1.26.4",
+        "polars": "2.0.0",
+        "python": "3.11",
+        "status": "PASS"
+      },
+      {
+        "compatibility_passed": 208,
+        "label": "py311-numpy2.3.4",
+        "modern_passed": 225,
+        "modern_python_passed": null,
+        "numpy": "2.3.4",
+        "polars": "2.0.0",
+        "python": "3.11",
+        "status": "PASS"
+      },
+      {
+        "compatibility_passed": 208,
+        "label": "py312-numpy1.26.4",
+        "modern_passed": 225,
+        "modern_python_passed": null,
+        "numpy": "1.26.4",
+        "polars": "2.0.0",
+        "python": "3.12",
+        "status": "PASS"
+      },
+      {
+        "compatibility_passed": 208,
+        "label": "py312-numpy2.3.4",
+        "modern_passed": 225,
+        "modern_python_passed": null,
+        "numpy": "2.3.4",
+        "polars": "2.0.0",
+        "python": "3.12",
+        "status": "PASS"
+      },
+      {
+        "compatibility_passed": 208,
+        "label": "py312-numpy2.5.4",
+        "modern_passed": 225,
+        "modern_python_passed": null,
+        "numpy": "2.5.4",
+        "polars": "2.0.0",
+        "python": "3.12",
+        "status": "PASS"
+      },
+      {
+        "compatibility_passed": 208,
+        "label": "py313-numpy2.3.4",
+        "modern_passed": 225,
+        "modern_python_passed": null,
+        "numpy": "2.3.4",
+        "polars": "2.0.0",
+        "python": "3.13",
+        "status": "PASS"
+      },
+      {
+        "compatibility_passed": 208,
+        "label": "py314-numpy2.5.4",
+        "modern_passed": 225,
+        "modern_python_passed": null,
+        "numpy": "2.5.4",
+        "polars": "2.0.0",
+        "python": "3.14",
+        "status": "PASS"
+      },
+      {
+        "compatibility_passed": 208,
+        "label": "py315-numpy2.5.4",
+        "modern_passed": 225,
+        "modern_python_passed": null,
+        "numpy": "2.5.4",
+        "polars": "2.0.0",
+        "python": "3.15",
+        "status": "PASS"
+      },
+      {
+        "compatibility_passed": 208,
+        "label": "py310-numpy1.26.4-no-polars",
+        "modern_passed": null,
+        "modern_python_passed": 120,
+        "numpy": "1.26.4",
+        "polars": null,
+        "python": "3.10",
+        "status": "PASS"
+      },
+      {
+        "compatibility_passed": 208,
+        "label": "py315-numpy2.5.4-no-polars",
+        "modern_passed": null,
+        "modern_python_passed": 120,
+        "numpy": "2.5.4",
+        "polars": null,
+        "python": "3.15",
+        "status": "PASS"
+      }
+    ],
+    "python_floor": "433 installed tests on actual Rocky8 glibc 2.28 with network disabled",
+    "required_glibc_symbols": {
+      "jni": {
+        "maximum_required_glibc": "2.16",
+        "sha256": "aa5de974fc148193cc552a26b29e90cf6b65da5f32e86caa00689766e6b92a2d"
+      },
+      "python": {
+        "maximum_required_glibc": "2.28",
+        "sha256": "dcc92891f18b641ca27c8184483e5f4e23fdf3bfea72133a76616cfafbd059a1"
+      }
+    },
+    "scala_kotlin": "PASS",
+    "source_rebuilds": [
+      {
+        "artifact": {
+          "distribution": "gr-tdigest",
+          "native_sha256": "dcc92891f18b641ca27c8184483e5f4e23fdf3bfea72133a76616cfafbd059a1",
+          "requires_dist": [
+            "numpy>=1.26.4,<3",
+            "polars==2.0.0 ; extra == 'polars'"
+          ],
+          "requires_python": ">=3.10, <3.16",
+          "tags": [
+            "cp310-abi3-manylinux_2_28_x86_64"
+          ],
+          "version": "0.2.5.dev2026102101",
+          "wheel": "/home/ingo/Documents/ChatGPT/gr-tdigest 2/pr-story-20261021/results/installed-matrix/source-py312/gr_tdigest-0.2.5.dev2026102101-cp310-abi3-manylinux_2_28_x86_64.whl",
+          "wheel_sha256": "34586793bd1a69450c11207ac9dcd8096c1ab5a62cb2af230f9c5e336730adbf"
+        },
+        "passed": 433,
+        "python": "3.12"
+      },
+      {
+        "artifact": {
+          "distribution": "gr-tdigest",
+          "native_sha256": "dcc92891f18b641ca27c8184483e5f4e23fdf3bfea72133a76616cfafbd059a1",
+          "requires_dist": [
+            "numpy>=1.26.4,<3",
+            "polars==2.0.0 ; extra == 'polars'"
+          ],
+          "requires_python": ">=3.10, <3.16",
+          "tags": [
+            "cp310-abi3-manylinux_2_28_x86_64"
+          ],
+          "version": "0.2.5.dev2026102101",
+          "wheel": "/home/ingo/Documents/ChatGPT/gr-tdigest 2/pr-story-20261021/results/installed-matrix/source-py314/gr_tdigest-0.2.5.dev2026102101-cp310-abi3-manylinux_2_28_x86_64.whl",
+          "wheel_sha256": "39e3c4963e49d9ef4d6823a310846d2f45b87d923c0ada14da816ee2e05a9977"
+        },
+        "passed": 433,
+        "python": "3.14"
+      },
+      {
+        "artifact": {
+          "distribution": "gr-tdigest",
+          "native_sha256": "dcc92891f18b641ca27c8184483e5f4e23fdf3bfea72133a76616cfafbd059a1",
+          "requires_dist": [
+            "numpy>=1.26.4,<3",
+            "polars==2.0.0 ; extra == 'polars'"
+          ],
+          "requires_python": ">=3.10, <3.16",
+          "tags": [
+            "cp310-abi3-manylinux_2_28_x86_64"
+          ],
+          "version": "0.2.5.dev2026102101",
+          "wheel": "/home/ingo/Documents/ChatGPT/gr-tdigest 2/pr-story-20261021/results/installed-matrix/source-py315/gr_tdigest-0.2.5.dev2026102101-cp310-abi3-manylinux_2_28_x86_64.whl",
+          "wheel_sha256": "9bbaad59db665911ac926d6b6e717068f761d51e8e14aee8b9254c93eb4d2434"
+        },
+        "passed": 433,
+        "python": "3.15"
+      }
+    ],
+    "test_executions_including_source_builds": 6285,
+    "typing_upgrade_rollback_ownership": "PASS"
+  },
+  "source_sha": "8367b177fe5b6390bf984c5d52fef8061128307e",
+  "source_tree": "821d77120f92923763e7bbc249055b81dad615ea",
+  "status": "COMPLETE_REVIEW_ARTIFACTS",
+  "version": {
+    "python": "0.2.5.dev2026102101",
+    "rust_jvm": "0.2.5-dev2026102101"
+  }
+}
