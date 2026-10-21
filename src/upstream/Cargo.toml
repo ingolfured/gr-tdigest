@@ -1,0 +1,18 @@
+[package]
+name = "tdigest_core"
+version = "0.2.0"
+edition = "2021"
+description = "The original G-Research TDigest API and numerical implementation"
+license = "Apache-2.0"
+repository = "https://github.com/G-Research/tdigest-rs"
+readme = "CORE_README.md"
+include = ["lib.rs", "core.rs", "scale.rs", "traits.rs", "LICENSE", "PROVENANCE.md", "CORE_README.md", "tests/**"]
+
+[lib]
+path = "lib.rs"
+
+[dependencies]
+anyhow = "1.0.93"
+itertools = "0.14.0"
+num = "0.4.3"
+num-traits = "0.2.19"

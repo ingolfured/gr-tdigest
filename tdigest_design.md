@@ -449,8 +449,10 @@ Adapters (`src/py.rs`, `src/jni.rs`, `src/polars_expr.rs`) should remain thin ar
 
 ## Original G-Research numerical compatibility
 
-`tdigest_rs.TDigest` uses the pinned `src/upstream` implementation through
-`src/upstream_py.rs`. Both f32 arithmetic and u32 centroid weights are retained.
+`tdigest_rs.TDigest` uses the pinned `tdigest_core` workspace package at
+`src/upstream` through `src/upstream_py.rs`. The original Rust package and Python
+wrapper share these source files; a private crate alias preserves the adapter
+path without duplicating arithmetic. Both f32 arithmetic and u32 centroid weights are retained.
 The Python wrapper is unchanged from upstream, including its cached arrays and
 default-delta reconstruction during copy/pickle. This deliberate separate path
 preserves existing application outputs; `gr_tdigest`, Polars, Java, and the CLI

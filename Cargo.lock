@@ -1085,13 +1085,10 @@ dependencies = [
  "crc32fast",
  "criterion",
  "ctor",
- "itertools 0.14.0",
  "jemalloc-ctl",
  "jemallocator",
  "jni",
  "libc",
- "num",
- "num-traits",
  "numpy",
  "ordered-float",
  "polars",
@@ -1106,6 +1103,7 @@ dependencies = [
  "rayon",
  "serde",
  "serde_json",
+ "tdigest_core",
  "tempfile",
  "testdata",
 ]
@@ -3500,6 +3498,16 @@ name = "target-lexicon"
 version = "0.13.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "df7f62577c25e07834649fc3b39fafdc597c0a3527dc1c60129201ccfcbaa50c"
+
+[[package]]
+name = "tdigest_core"
+version = "0.2.0"
+dependencies = [
+ "anyhow",
+ "itertools 0.14.0",
+ "num",
+ "num-traits",
+]
 
 [[package]]
 name = "tempfile"
