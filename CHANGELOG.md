@@ -4,6 +4,8 @@ All notable changes to this project are documented in this file.
 
 ## [Unreleased]
 
+- Preserve centroids outside the positive K2Norm scale domain.
+
 - Check supported Python runtimes and Polars-free wheel installs.
 
 - Expose the original tdigest_core Rust API unchanged and keep the workspace lockfile in Cargo canonical dependency order.

@@ -41,6 +41,7 @@ MODERN_TESTS = (
     "integration/api_coherence/test_cluster_mean_bounds.py",
     "integration/api_coherence/test_subnormal_query_coherence.py",
     "integration/api_coherence/test_transactional_weight_scaling.py",
+    "integration/api_coherence/test_k2norm_domain.py",
 )
 
 # Run by the installed cell interpreter with -I, outside the source checkout.
@@ -269,7 +270,7 @@ def main() -> None:
                 result["installed"] = json.loads(imports)
                 suites = [("compatibility", [tests, parity], 208)]
                 if cell["polars"]:
-                    suites.append(("modern", [modern], 70))
+                    suites.append(("modern", [modern], 90))
                 else:
                     suites.append(("modern_python", [modern / "test_api_python.py"], 26))
                 for suite, directories, expected in suites:
@@ -306,7 +307,7 @@ def main() -> None:
             f"runtime support failed; inspect {output}",
         )
     print(
-        f"Six full cells passed 208 compatibility + 70 modern cases each; Polars-free cell passed 208 + 26; evidence: {output}"
+        f"Six full cells passed 208 compatibility + 90 modern cases each; Polars-free cell passed 208 + 26; evidence: {output}"
     )
 
 
