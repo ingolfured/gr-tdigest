@@ -4,6 +4,8 @@ All notable changes to this project are documented in this file.
 
 ## [Unreleased]
 
+- Check supported Python runtimes and Polars-free wheel installs.
+
 - Expose the original tdigest_core Rust API unchanged and keep the workspace lockfile in Cargo canonical dependency order.
 
 - Ship clean source archives with one unambiguous Python README.
