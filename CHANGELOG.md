@@ -4,6 +4,8 @@ All notable changes to this project are documented in this file.
 
 ## [Unreleased]
 
+- Publish default-setting accuracy gains, comparable-storage scores and query-level tradeoff explanations; clarify practical accuracy acceptance without changing arithmetic or frozen gates.
+
 - Supply intranet owner-run qualification guidance, host/artifact receipts and configurable independent-digest concurrency measurements without requesting private inputs.
 
 - Add a staged-tool Spark/Scala check for separate-executor broadcast, shuffle and checkpoint restoration with exact JAR/native identity receipts.

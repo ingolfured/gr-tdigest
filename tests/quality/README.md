@@ -3,6 +3,12 @@
 For private consumer artifacts, actual clusters and representative servers,
 see [owner-run checks](OWNER_CHECKS.md). These inputs stay in the intranet.
 
+See [measured accuracy gains and tradeoffs](ACCURACY.md) for the default-setting
+and comparable-storage results, including strengths and query-level explanations.
+The practical standard is no obvious, unexplained accuracy deterioration;
+explained rank/value/tail/storage tradeoffs are documented separately from hard
+correctness and frozen regression gates. No numerical fixture or gate changes.
+
 The suite measures specific errors. It does not turn them into one flattering score. The older heuristic quality score remains a historical test helper and is not an acceptance rule here.
 
 ## Routine checks

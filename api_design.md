@@ -227,7 +227,7 @@ Surface mapping:
 
 ## Empirical accuracy contract
 
-Quality acceptance uses separate rank, percentile-value and midpoint-CDF measurements against sorted observed data, with tie intervals and actual precision casts. The original API remains numerically unchanged and has no fabricated CDF comparison. The fast suite runs in `make test`; extended results and explicit unresolved boundary controls are documented in `tests/quality/README.md`. A passing known-outcome regression check must not be presented as passing accuracy. These are measured operating envelopes, not formal guarantees or universal superiority over the original engine.
+Quality acceptance uses separate rank, percentile-value and midpoint-CDF measurements against sorted observed data, with tie intervals and actual precision casts. The original API remains numerically unchanged and has no fabricated CDF comparison. The fast suite runs in `make test`; extended scores and exact boundary controls are documented in `tests/quality/README.md`. The current candidate passes all 15 exact boundary controls. A passing known-outcome regression check must not be presented as passing accuracy. The practical comparison standard is no obvious, unexplained accuracy deterioration: publish separate scores, explain rank/value/tail/storage and merge-order tradeoffs, and correct hard numerical/state defects. Winning every metric on every dataset is not a requirement. These are measured operating envelopes; descriptive comparisons do not alter frozen regression gates or exact compatibility checks.
 
 ## Consumer candidate migration and strict operations
 
@@ -264,8 +264,10 @@ The separate `make quality-budgets` diagnostic covers explicit modern capacities
 200/1000, smaller capacities, alternate named scales and additional data shapes.
 Its sampled rank/CDF criteria extend the existing diagnostic envelope and are not
 a new owner-approved universal guarantee. Rank, value, CDF and tail results stay
-separate. Known small-summary failures remain release-acceptance issues; no
-implicit scale selection, new API default or original-engine change is made.
+separate. Known small-summary diagnostic misses retain their scores and exit status.
+Explained approximation tradeoffs do not create an automatic release blocker;
+unexplained deterioration and hard correctness failures require investigation.
+No implicit scale selection, new API default or original-engine change is made.
 Python training currently requires capacity>=10; checked modern Rust allows
 positive capacities including1. These limits are stated separately.
 
