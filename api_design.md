@@ -234,3 +234,7 @@ Quality acceptance uses separate rank, percentile-value and midpoint-CDF measure
 ## Checked modern state
 
 Modern Rust construction and precision conversion return checked results. Modern additions, merges and positive transformations prepare independent state before replacing the receiver; failures preserve its previous state. Reconstructed structs and decoded bytes validate mass, finite means, extrema and configuration, while legitimate empty states retain undefined extrema.
+
+## Modern Python object API
+
+The modern constructor accepts explicit positive weights. Copy and pickle preserve independent full state. A one-dimensional NumPy query returns an owned Float64 array even when it has one element; zero-dimensional probes return scalars, lists and tuples retain their containers, and multidimensional probes are rejected. See bindings/python/OBJECT_API.md.

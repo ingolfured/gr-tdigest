@@ -306,10 +306,19 @@ def _from_array_cls(
     scale: Any = _UNSET,
     singleton_policy: SingletonPolicy | str | None = None,
     pin_per_side: Optional[int] = None,
+    weights: Any = _UNSET,
+    precision: str | None = None,
+    f32_mode: bool | None = None,
     **kwargs: Any,
 ) -> _NativeTDigest:
     """
-    Python-facing TDigest.from_array shim.
+    Build a modern digest from finite observations, optionally with positive weights.
+
+    The default capacity is 1,000 and automatic object precision is Float64.
+    Scalar or one-dimensional training inputs are copied. Fractional weights
+    use Float64 independently of mean precision. Unknown arguments raise
+    TypeError; invalid data/configuration or unrepresentable products raise
+    ValueError. This constructs observations, not restored compressed state.
 
     Supports both:
       - new API: precision="auto" | "f32" | "f64"
@@ -338,8 +347,8 @@ def _from_array_cls(
     policy_str = {"off": "off", "use": "use", "edges": "edges"}[m]
 
     # --- precision / f32_mode reconciliation ---------------------------------
-    prec_raw = kwargs.pop("precision", None)
-    f32_mode_raw = kwargs.pop("f32_mode", None)
+    prec_raw = precision
+    f32_mode_raw = f32_mode
 
     prec_norm = _coerce_precision(prec_raw)  # "auto" | "f64" | "f32"
 
@@ -371,6 +380,9 @@ def _from_array_cls(
         extra = ", ".join(sorted(kwargs.keys()))
         raise TypeError(f"Unsupported argument(s): {extra}")
 
+    if weights is not _UNSET:
+        # Weighted observations, not compressed-state reconstruction.
+        return _native_from_means_weights(data, weights, **call_kwargs)
     out = _native_from_array(data, **call_kwargs)
     return out
 
@@ -475,7 +487,7 @@ _native_scale_values = cast(Callable[..., Any], _native_scale_values_raw)
 
 def _merge_patched(self: _NativeTDigest, other: Any, delta: Any = _UNSET, **kwargs: Any) -> _NativeTDigest:
     if delta is not _UNSET and delta is not None:
-        _validate_delta(delta)
+        raise ValueError("modern merge cannot override delta; construct compatible digests before merging")
     if kwargs:
         extra = ", ".join(sorted(kwargs.keys()))
         raise TypeError(f"Unsupported argument(s): {extra}")
