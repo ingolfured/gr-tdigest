@@ -43,7 +43,7 @@ fn repeated_unit_add_weighted_add_and_merge_retain_mass() {
     for _ in 0..1001 {
         added.add(0.0).unwrap();
         weighted.add_weighted(0.0, 1.0).unwrap();
-        merged.merge(&unit);
+        merged.merge(&unit).unwrap();
     }
     for td in [&added, &weighted, &merged] {
         assert_eq!(weights(td), vec![initial + 1001.0]);
@@ -85,6 +85,7 @@ fn compressed_large_mass_and_modest_fan_in_stay_conservative() {
         .max_size(2)
         .singleton_policy(SingletonPolicy::Off)
         .build()
+        .unwrap()
         .merge_weighted_unsorted(&values, &[1_000_000_000.0; 40])
         .unwrap();
     for _ in 0..100 {
@@ -95,7 +96,7 @@ fn compressed_large_mass_and_modest_fan_in_stay_conservative() {
     assert_eq!(td.quantile(0.0), 0.0);
     assert_eq!(td.quantile(1.0), 39.0);
     let shards: Vec<_> = (0..40).map(|_| td.clone()).collect();
-    let merged = TDigest::merge_digests(shards);
+    let merged = TDigest::merge_digests(shards).unwrap();
     assert_eq!(merged.count(), 40.0 * td.count());
     assert_eq!(weights(&merged).iter().sum::<f64>(), merged.count());
     assert!(merged
@@ -109,7 +110,7 @@ fn mean_precision_casts_preserve_weight_bits_and_scaling() {
     let source =
         TDigest::<f64>::from_weighted_unsorted(&[0.0, 1.0, 2.0], &[16_777_217.0, 0.1, 0.25], 100)
             .unwrap();
-    let compact = source.cast_precision::<f32>();
+    let compact = source.cast_precision::<f32>().unwrap();
     for (actual, expected) in compact.centroids().iter().zip(source.centroids()) {
         assert_eq!(
             actual.weight_f64().to_bits(),
@@ -117,7 +118,7 @@ fn mean_precision_casts_preserve_weight_bits_and_scaling() {
         );
     }
     assert_eq!(compact.count(), source.count());
-    let full = compact.cast_precision::<f64>();
+    let full = compact.cast_precision::<f64>().unwrap();
     assert_eq!(full.centroids(), source.centroids());
     let mut scaled = compact.clone();
     scaled.scale_weights(0.25).unwrap();
@@ -167,13 +168,13 @@ fn wide_f32_weights_are_flagged_and_old_exports_fail_explicitly() {
         let error = version.validate_digest(&wide).unwrap_err().to_string();
         assert!(error.contains("weights requiring f64 precision"));
         assert!(version
-            .validate_digest(&wide.cast_precision::<f64>())
+            .validate_digest(&wide.cast_precision::<f64>().unwrap())
             .is_ok());
     }
     let mut corrupt = bytes.clone();
     corrupt[5] &= !8; // Capability flag is covered by the CRC.
     assert!(decode_digest(&corrupt).is_err());
-    let mut invalid = wide.cast_precision::<f64>().to_bytes();
+    let mut invalid = wide.cast_precision::<f64>().unwrap().to_bytes();
     invalid[5] = (invalid[5] & !1) | 8;
     assert!(decode_digest(&invalid)
         .unwrap_err()
@@ -222,12 +223,14 @@ fn wide_weight_capability_composes_with_delta_and_pin_extensions() {
         .singleton_policy(SingletonPolicy::Off)
         .delta(17.0)
         .build()
+        .unwrap()
         .merge_weighted_unsorted(&[0.0, 10.0], &[16_777_217.0, 16_777_216.0])
         .unwrap();
     let pinned = TDigest::<f32>::builder()
         .scale(ScaleFamily::K3)
         .singleton_policy(SingletonPolicy::UseWithProtectedEdges(300))
         .build()
+        .unwrap()
         .merge_weighted_unsorted(&[0.0, 10.0], &[16_777_217.0, 16_777_216.0])
         .unwrap();
     for (td, extension_flag) in [(delta, 2), (pinned, 4)] {
@@ -293,4 +296,13 @@ fn fractional_atomic_boundary_has_no_phantom_interpolation_span() {
         assert_eq!(td.quantile(f64::from_bits(0.5_f64.to_bits() + 1)), 10.0);
         assert_eq!(td.cdf(&[5.0]), vec![0.5]);
     }
+}
+
+#[test]
+fn public_weight_getter_does_not_narrow_f32_mean_mass() {
+    let centroid =
+        gr_tdigest::tdigest::centroids::Centroid::<f32>::new_atomic_f64(1.0, 16_777_217.0);
+    let mass: f64 = centroid.weight();
+    assert_eq!(mass, 16_777_217.0);
+    assert_eq!(mass, centroid.weight_f64());
 }

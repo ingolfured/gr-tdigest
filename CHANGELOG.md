@@ -4,6 +4,10 @@ All notable changes to this project are documented in this file.
 
 ## [Unreleased]
 
+- Keep checked precision adapters and Polars sequence probes coherent with validated modern state.
+
+- Validate modern Rust construction, transformations and full state.
+
 - Test accuracy on recorded data and deterministic distributions.
 
 - Support Python 3.14 and 3.15 on the current NumPy and Polars stack.

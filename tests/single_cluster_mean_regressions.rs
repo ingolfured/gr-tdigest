@@ -33,9 +33,9 @@ fn later_duplicate_sample_coalesces_after_fractional_atomic_merge() {
         .collect();
     let mut sequential = shards[0].clone();
     for shard in &shards[1..] {
-        sequential.merge(shard);
+        sequential.merge(shard).unwrap();
     }
-    let kway = TDigest::merge_digests(shards);
+    let kway = TDigest::merge_digests(shards).unwrap();
     for td in [sequential, kway] {
         assert_eq!(
             td.centroids()

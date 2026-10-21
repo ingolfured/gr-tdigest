@@ -18,7 +18,7 @@ def two_piles():
 
 
 def as_frame(digest):
-    return pl.DataFrame({"blob": [digest.to_bytes()]}).select(d=td.from_bytes("blob"))
+    return pl.DataFrame({"blob": [digest.to_bytes()]}).select(d=td.from_bytes("blob", precision=digest.inner_kind()))
 
 
 def old_f32_weight_struct(frame):

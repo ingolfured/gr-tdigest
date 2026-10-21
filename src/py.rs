@@ -399,7 +399,10 @@ impl PyTDigest {
     pub fn cast_precision(&self, precision: &str) -> PyResult<Self> {
         let target = parse_cast_precision(precision)?;
         Ok(Self {
-            inner: self.inner.cast_precision(target),
+            inner: self
+                .inner
+                .try_cast_precision(target)
+                .map_err(map_frontend_err)?,
         })
     }
 

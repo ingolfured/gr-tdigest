@@ -8,7 +8,7 @@ import gr_tdigest as td
 
 
 def as_frame(digest):
-    return pl.DataFrame({"blob": [digest.to_bytes()]}).select(d=td.from_bytes("blob"))
+    return pl.DataFrame({"blob": [digest.to_bytes()]}).select(d=td.from_bytes("blob", precision=digest.inner_kind()))
 
 
 def legacy_schema(frame):

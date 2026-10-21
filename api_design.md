@@ -230,3 +230,7 @@ Surface mapping:
 ## Empirical accuracy contract
 
 Quality acceptance uses separate rank, percentile-value and midpoint-CDF measurements against sorted observed data, with tie intervals and actual precision casts. The original API remains numerically unchanged and has no fabricated CDF comparison. The fast suite runs in `make test`; extended results and explicit unresolved boundary controls are documented in `tests/quality/README.md`. A passing known-outcome regression check must not be presented as passing accuracy. These are measured operating envelopes, not formal guarantees or universal superiority over the original engine.
+
+## Checked modern state
+
+Modern Rust construction and precision conversion return checked results. Modern additions, merges and positive transformations prepare independent state before replacing the receiver; failures preserve its previous state. Reconstructed structs and decoded bytes validate mass, finite means, extrema and configuration, while legitimate empty states retain undefined extrema.

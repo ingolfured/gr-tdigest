@@ -189,3 +189,5 @@ Modern training and updates copy compatible aligned, native-endian contiguous on
 The modern engine usually improves percentile position and average value error on these real-data profiles; the original often has the better worst value error. Small summaries and numerical edge cases still have explicit failures. See the [readable findings](compat/quality-20261020/RESULTS.md) and [test methods](tests/quality/README.md). `make quality-regression` protects the recorded outcomes while preserving their failed accuracy status.
 
 The configured JDK also supplies the direct Java compiler/runtime subprocesses used by `make test`; an environment-selected JDK does not require a separate system Java installation.
+
+Modern Rust construction, precision conversion and full-state restoration are checked operations; failed in-place updates preserve their receiver. See `api_design.md` for the shared state contract.

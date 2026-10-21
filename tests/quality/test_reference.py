@@ -119,3 +119,18 @@ def test_corrupted_real_fixture_is_rejected_before_use(tmp_path):
     (tmp_path / "bike.csv.gz").write_bytes(b"changed fixture")
     with pytest.raises(RuntimeError, match="checksum mismatch"):
         list(quality.datasets(tmp_path, "fast"))
+
+
+def test_quality_measurement_rejects_source_or_installed_binary_changes(monkeypatch, tmp_path):
+    binary = tmp_path / "native.so"
+    binary.write_bytes(b"measured binary")
+    monkeypatch.setattr(quality, "source_hashes", lambda: {"source.rs": "a"})
+    receipt = {"source_inputs_sha256": {"source.rs": "a"}, "native_sha256": quality.sha(binary)}
+    quality.verify_inputs_unchanged(receipt, binary)
+    monkeypatch.setattr(quality, "source_hashes", lambda: {"source.rs": "changed"})
+    with pytest.raises(RuntimeError, match="changed"):
+        quality.verify_inputs_unchanged(receipt, binary)
+    monkeypatch.setattr(quality, "source_hashes", lambda: {"source.rs": "a"})
+    binary.write_bytes(b"different binary")
+    with pytest.raises(RuntimeError, match="changed"):
+        quality.verify_inputs_unchanged(receipt, binary)

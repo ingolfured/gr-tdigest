@@ -512,3 +512,7 @@ The new `scripts/quality_suite.py` uses independent sorted-data references, pinn
 Exact rational weighted controls cover probability semantics across extreme mass scales. `examples/quality_boundaries.rs` separately exposes existing tiny-capacity mass/contribution loss, cancellation, fractional median asymmetry and subnormal aggregate-mean loss. A frozen expected-outcome check detects any change; it does not fix or waive these failures. The independent original arithmetic, wrapper, oracle and91 original tests stay untouched.
 
 JVM test tool selection is shared through `bindings/java/bootstrap.py::java_environment`: Gradle and direct coherence subprocesses use the same verified JDK and child environment, including when host Java commands are unavailable.
+
+## Transactional modern operations
+
+Checked construction and compensated accumulation validate represented mass and aggregate statistics. Compression retains exact-point identity through subnormal weighted products. The Polars adapter validates every reconstructed row before queries or reductions, and chooses CDF broadcasting by input lengths. Incompatible empty contributors are checked along with populated contributors.
