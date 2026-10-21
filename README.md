@@ -112,6 +112,11 @@ make build
 make test
 ```
 
+Setup supports linked Git worktrees. If the checkout path contains spaces,
+set `CARGO_TARGET_DIR` to a build directory without spaces: the bundled
+jemalloc build rejects spaces in its installation prefix. Keep `target` as a
+symlink to that directory for the CLI and Java development tools.
+
 ## Publishing
 - Publishing and release workflows are documented in `PUBLISH.md`.
 
