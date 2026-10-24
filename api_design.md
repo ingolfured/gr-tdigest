@@ -250,3 +250,7 @@ Java additions and fluent merges mutate only the receiver after validation. Seri
 ## Scala and Kotlin consumer examples
 
 Public examples compile Scala 2.12.16 and Kotlin consumers against the shared Java JAR. The local authenticated Maven fixture exercises selected dependency resolution and prepared-cache offline use. Actual Spark driver/executor, serializer and checkpoint qualification remains a consumer-environment check.
+
+## Installed Python discovery
+
+The installed package includes native method docstrings, public type stubs and py.typed metadata. The object and Polars guides describe defaults, shapes, mutation, ownership and errors separately.
