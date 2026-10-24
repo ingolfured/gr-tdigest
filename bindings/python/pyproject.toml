@@ -6,7 +6,7 @@ build-backend = "maturin"
 name = "gr-tdigest"
 dynamic = ["version"]
 description = "Rust TDigest with Python, Polars and JNI"
-readme = "README.md"
+readme = "PYTHON_README.md"
 license = { text = "Apache-2.0" }
 requires-python = ">=3.12,<3.13"
 authors = [{ name = "Ingolfur Edvardsson", email = "ingo.edvardsson@gresearch.co.uk" }]
@@ -46,6 +46,8 @@ features = ["python"]
 bindings = "pyo3"
 module-name = "gr_tdigest._gr_tdigest"
 python-packages = ["gr_tdigest", "tdigest_rs"]
+# Unqualified exclusion patterns apply to both wheels and source distributions.
+exclude = ["**/__pycache__/**", "**/*.pyc", "**/*.pyo"]
 strip = true
 manylinux = "2_28"
 zig = true
