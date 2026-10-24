@@ -186,6 +186,8 @@ Modern training and updates copy compatible aligned, native-endian contiguous on
 
 `make test` now includes fast quality checks using recorded bike-rental and household-energy data, varied distributions and exact weighted references. `make quality-extended` measures full datasets, both precisions, several summary sizes and40-way merges. It retains failing profiles and reports percentile position, value and cumulative-probability errors separately.
 
+The recorded comparison is legacy/original G-Research versus the opt-in Modern engine at matched logical centroid-field byte budgets. It measures accuracy on these workloads; it does not establish a universal replacement for legacy, a speed ranking or equal process memory use. The figures below come from CI run 104 at `e6a14a2`, rather than a fresh measurement of the current branch.
+
 The modern engine is not universally more accurate than original G-Research:
 
 - **Bike:** Modern wins average rank, tail rank, average value and peak value error in every grouped size/merge setup tested.
@@ -198,4 +200,4 @@ See the [winner and error-ratio tables](compat/quality-20261020/RESULTS.md) for 
 
 The configured JDK also supplies the direct Java compiler/runtime subprocesses used by `make test`; an environment-selected JDK does not require a separate system Java installation.
 
-Modern Rust builders, seeded construction, merges and explicit precision conversions return checked results. Malformed reconstructed state is rejected before use.
+Modern Rust construction, precision conversion and full-state restoration are checked operations; failed in-place updates preserve their receiver. See `api_design.md` for the shared state contract.

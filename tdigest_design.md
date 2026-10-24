@@ -509,22 +509,10 @@ The release gate installs one unchanged wheel into isolated runtimes, including 
 
 The new `scripts/quality_suite.py` uses independent sorted-data references, pinned recorded observations and deterministic distribution grids. It tests real f32/f64 storage, three budgets, input reversal and40-way sequential/balanced merges. It matches original parameters by observed logical field bytes without consulting accuracy, records all search candidates and retains poor modern outcomes in comparison totals. The earlier exponential quality-score helper is not an acceptance metric.
 
-Exact rational weighted controls cover probability semantics across extreme mass scales. `examples/quality_boundaries.rs` separately exposes existing tiny-capacity mass/contribution loss, cancellation, fractional median asymmetry and subnormal aggregate-mean loss. A frozen expected-outcome check detects any change; it does not fix or waive these failures. The independent original arithmetic, wrapper, oracle and91 original tests stay untouched.
+Exact rational weighted controls cover probability semantics across extreme mass scales. `examples/quality_boundaries.rs` separately exposes existing tiny-capacity mass/contribution loss, cancellation, fractional median asymmetry and subnormal aggregate-mean loss. The boundary regression check preserves exact frozen targets, accepts unchanged known failures and genuine exact passes, and rejects changed targets, missing/duplicate/unexpected controls and new or changed numerical failures. Its regression PASS does not imply that all accuracy targets pass. The quality suite compares source and installed native-binary hashes before and after measurement and invalidates the receipt if either changed; this verifies input stability, not universal Modern accuracy superiority. The independent original arithmetic, wrapper, oracle and91 original tests stay untouched.
 
 JVM test tool selection is shared through `bindings/java/bootstrap.py::java_environment`: Gradle and direct coherence subprocesses use the same verified JDK and child environment, including when host Java commands are unavailable.
 
-## Preserve residual mass and compensated modern centroid arithmetic.
+## Transactional modern operations
 
-Modern normalization uses compensated mass and moment sums; cluster averaging uses compensation for cancellation or overflow. Equal-weight buckets retain positive residuals. Atomic quantile boundaries sum actual prefix mass. Centroid::weight returns f64 independently of mean precision. Public digest construction and update signatures are unchanged in this prerequisite.
-
-## Check modern construction, reconstruction, precision casts and merges.
-
-Builders and seeded constructors return Result and validate mass, finite ordered means, extrema, aggregate metadata and delta configuration. Merges validate all contributors, including empties, and commit only a validated independent result. Precision casts reject unrepresentable values. Rust, Python/JNI and Polars call sites propagate the checked results. Exact-point subnormal state is recognized; scaling validation follows in the next change.
-
-## Validate positive transformations before committing modern state.
-
-Weight and value scaling prepare independent candidate state, reject aggregate overflow and unsupported underflow, validate the candidate, and replace the receiver only on success. Exact atomic points retain their distribution when the rounded weighted moment is subnormal or zero and recover representable moments after later scaling or merging.
-
-## Use checked modern state and length-based CDF broadcasting in Polars.
-
-Polars training uses checked precision conversion and reconstruction validates every digest row. Missing digests error rather than becoming empty digests. CDF broadcasting follows row counts; List probes retain List output. Python sequence probes become a flat probe Series. Binary decoding requires a precision hint and empty decoding uses its schema.
+Checked construction and compensated accumulation validate represented mass and aggregate statistics. Compression retains exact-point identity through subnormal weighted products. The Polars adapter validates every reconstructed row before queries or reductions, and chooses CDF broadcasting by input lengths. Incompatible empty contributors are checked along with populated contributors.
