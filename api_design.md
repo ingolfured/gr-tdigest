@@ -108,7 +108,7 @@ pinned upstream revision did not contain a Rust test suite.
 The Python distribution supports CPython 3.10–3.15 through a py310 ABI3 wheel,
 with NumPy >=1.26.4,<3. The base installation exposes both NumPy numerical
 interfaces without requiring the Polars Python package. The optional `polars`
-extra installs the tested Polars 2.0.0 integration; this pin does not promise
+extra installs the tested Polars 1.44.2 integration; this pin does not promise
 compatibility with untested future Polars releases. Existing numerical imports
 remain lazy, while expression operations require the extra.
 
