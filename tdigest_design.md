@@ -501,3 +501,9 @@ The measured NumPy output change and its remaining inconclusive observations are
 The raw constructor calls the unchanged `FrontendDigest::from_values` inside `Python::allow_threads` once input conversion and configuration resolution are complete. The weighted constructor creates an unexposed empty digest, then releases the GIL around its unchanged `add_weighted_f64` call. Both closures work with owned vectors and Rust state only; error translation and returning the new Python object occur with the GIL held. Existing object methods and pinned original arithmetic retain their existing paths.
 
 Modern Python training uses `training_array_values` for constructors and updates. Aligned native-endian contiguous one-dimensional NumPy f32/f64 arrays are borrowed read-only while copying into an owned f64 vector; the borrow ends before the constructor releases the GIL. Other layouts/dtypes use the existing NumPy/Python conversion. Query conversion remains unchanged.
+
+## Python runtime compatibility
+
+The extension targets the CPython3.10 stable ABI and advertises standard CPython3.10–3.15. The binding stack uses PyO3 0.29.3, rust-numpy 0.29, pyo3-polars 0.28 and Polars Rust0.55 with Python Polars1.44.2. Rust1.95 is pinned because the updated Polars dependency tree requires it. PyO3 attachment/cast and Polars iterator API migrations do not change digest arithmetic. The original upstream numerical sources, wrapper and91 tests remain checksum-bound.
+
+The release gate installs one unchanged wheel into isolated runtimes, including Polars-free3.10/3.15 environments, and rebuilds the actual verified source archive under3.12/3.14/3.15. Standard CPython is the supported runtime; free-threaded and PyPy builds require separate artifacts and are not covered by these claims.

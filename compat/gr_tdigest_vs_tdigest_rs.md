@@ -48,12 +48,12 @@ previous shared-core adapter passed all 91 tests while changing outputs. The
 separate original calculation path addresses that incompatibility. These are
 Linux x86_64 regression checks, not proof across every possible platform/input.
 
-This review stack does not change the distribution's existing Python 3.12 and
-NumPy/Polars dependency requirements or publish a `tdigest-rs` release. Upstream
-release packaging and supported environments still need agreement before rollout.
-Numerical-only imports no longer load Polars, but package installation metadata
-still declares it as a dependency. The wheel gate builds an optimized Linux wheel;
-it does not establish manylinux portability or validate the published release artifact.
+Current packaging supports standard CPython3.10–3.15 and NumPy1.26/2 on the
+older runtimes, NumPy2 on3.13–3.15. Polars1.44.2 is an optional extra matched
+to the plugin ABI; numerical-only installations do not require Polars. The
+release gate installs one wheel on every advertised minor and rebuilds the
+verified source archive on3.12/3.14/3.15. This does not publish a `tdigest-rs`
+release or establish portability across untested operating systems.
 
 ## Benchmark scope
 

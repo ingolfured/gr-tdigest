@@ -412,7 +412,7 @@ fn from_bytes(inputs: &[Series]) -> PolarsResult<Series> {
         }
     } else {
         // No hint: sniff first blob from wire header.
-        let first = bin.into_no_null_iter().next().ok_or_else(|| {
+        let first = bin.no_null_iter().next().ok_or_else(|| {
             PolarsError::ComputeError("tdigest.from_bytes: empty input column".into())
         })?;
         wire_precision(first)
@@ -420,7 +420,7 @@ fn from_bytes(inputs: &[Series]) -> PolarsResult<Series> {
     };
 
     let mut digests: Vec<FrontendDigest> = Vec::with_capacity(s.len());
-    for bytes in bin.into_no_null_iter() {
+    for bytes in bin.no_null_iter() {
         let d = FrontendDigest::from_bytes_with_expected(bytes, expected_prec)
             .map_err(|e| PolarsError::ComputeError(e.to_string().into()))?;
         digests.push(d);
@@ -592,7 +592,7 @@ where
         DataType::Float64 => {
             let ca = values.f64()?;
             if ca
-                .into_iter()
+                .iter()
                 .any(|opt| opt.map(|v| !v.is_finite()).unwrap_or(false))
             {
                 return Err(PolarsError::ComputeError(
@@ -600,12 +600,12 @@ where
                 ));
             }
             let ca = values.f64()?;
-            ca.into_no_null_iter().map(F::from_f64).collect()
+            ca.no_null_iter().map(F::from_f64).collect()
         }
         DataType::Float32 => {
             let ca = values.f32()?;
             if ca
-                .into_iter()
+                .iter()
                 .any(|opt| opt.map(|v| !(v as f64).is_finite()).unwrap_or(false))
             {
                 return Err(PolarsError::ComputeError(
@@ -613,15 +613,13 @@ where
                 ));
             }
             let ca = values.f32()?;
-            ca.into_no_null_iter()
-                .map(|x| F::from_f64(x as f64))
-                .collect()
+            ca.no_null_iter().map(|x| F::from_f64(x as f64)).collect()
         }
         dt if dt.is_numeric() => {
             let casted = values.cast(&DataType::Float64)?;
             let ca = casted.f64()?;
             if ca
-                .into_iter()
+                .iter()
                 .any(|opt| opt.map(|v| !v.is_finite()).unwrap_or(false))
             {
                 return Err(PolarsError::ComputeError(
@@ -629,7 +627,7 @@ where
                 ));
             }
             let ca = casted.f64()?;
-            ca.into_no_null_iter().map(F::from_f64).collect()
+            ca.no_null_iter().map(F::from_f64).collect()
         }
         other => {
             return Err(PolarsError::ComputeError(
@@ -746,18 +744,14 @@ where
                     "tdigest.add_values: values contain nulls; nulls are not allowed");
             }
             let vals_f64: Vec<f64> = if values.dtype() == &DataType::Float64 {
-                values.f64()?.into_no_null_iter().collect()
+                values.f64()?.no_null_iter().collect()
             } else if values.dtype() == &DataType::Float32 {
-                values
-                    .f32()?
-                    .into_no_null_iter()
-                    .map(|x| x as f64)
-                    .collect()
+                values.f32()?.no_null_iter().map(|x| x as f64).collect()
             } else {
                 values
                     .cast(&DataType::Float64)?
                     .f64()?
-                    .into_no_null_iter()
+                    .no_null_iter()
                     .collect()
             };
             if vals_f64.iter().any(|v| !v.is_finite()) {
@@ -836,34 +830,26 @@ where
             }
 
             let vals_f64: Vec<f64> = if values.dtype() == &DataType::Float64 {
-                values.f64()?.into_no_null_iter().collect()
+                values.f64()?.no_null_iter().collect()
             } else if values.dtype() == &DataType::Float32 {
-                values
-                    .f32()?
-                    .into_no_null_iter()
-                    .map(|x| x as f64)
-                    .collect()
+                values.f32()?.no_null_iter().map(|x| x as f64).collect()
             } else {
                 values
                     .cast(&DataType::Float64)?
                     .f64()?
-                    .into_no_null_iter()
+                    .no_null_iter()
                     .collect()
             };
 
             let weights_f64: Vec<f64> = if weights.dtype() == &DataType::Float64 {
-                weights.f64()?.into_no_null_iter().collect()
+                weights.f64()?.no_null_iter().collect()
             } else if weights.dtype() == &DataType::Float32 {
-                weights
-                    .f32()?
-                    .into_no_null_iter()
-                    .map(|x| x as f64)
-                    .collect()
+                weights.f32()?.no_null_iter().map(|x| x as f64).collect()
             } else {
                 weights
                     .cast(&DataType::Float64)?
                     .f64()?
-                    .into_no_null_iter()
+                    .no_null_iter()
                     .collect()
             };
 
@@ -985,10 +971,10 @@ where
 #[inline]
 fn subseries_to_f64_vec(sub: &Series) -> PolarsResult<Vec<f64>> {
     if sub.dtype() == &DataType::Float64 {
-        Ok(sub.f64()?.into_no_null_iter().collect())
+        Ok(sub.f64()?.no_null_iter().collect())
     } else {
         let cast_sub = sub.cast(&DataType::Float64)?;
-        Ok(cast_sub.f64()?.into_no_null_iter().collect())
+        Ok(cast_sub.f64()?.no_null_iter().collect())
     }
 }
 
@@ -1010,18 +996,14 @@ where
 
     // Convert to f64 vec (no nulls after the check above)
     let vals_f64: Vec<f64> = if values_s.dtype() == &DataType::Float64 {
-        values_s.f64()?.into_no_null_iter().collect()
+        values_s.f64()?.no_null_iter().collect()
     } else if values_s.dtype() == &DataType::Float32 {
-        values_s
-            .f32()?
-            .into_no_null_iter()
-            .map(|x| x as f64)
-            .collect()
+        values_s.f32()?.no_null_iter().map(|x| x as f64).collect()
     } else {
         values_s
             .cast(&DataType::Float64)?
             .f64()?
-            .into_no_null_iter()
+            .no_null_iter()
             .collect()
     };
 
