@@ -257,4 +257,4 @@ The installed package includes native method docstrings, public type stubs and p
 
 ## Source-bound delivery gates
 
-Build checks reject an incompatible selected Rust/Cargo toolchain before native compilation. Installed-wheel qualification records exact runtime cells and source-archive rebuilds.
+Build checks reject an incompatible selected Rust/Cargo toolchain before native compilation. Installed-wheel qualification records exact runtime cells and source-archive rebuilds. A separate wider budget diagnostic reports accuracy failures without waiving them; benchmarks retain throughput, latency and memory separately.
