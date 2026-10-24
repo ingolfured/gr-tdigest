@@ -4,6 +4,8 @@ All notable changes to this project are documented in this file.
 
 ## [Unreleased]
 
+- Preserve original source and independent fixture LF bytes across Git checkouts; keep attribute rules focused on retained library inputs.
+
 - Preserve centroids outside the positive K2Norm scale domain.
 
 - Check supported Python runtimes and Polars-free wheel installs.
