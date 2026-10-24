@@ -339,8 +339,8 @@ impl PyTDigest {
     ) -> PyResult<Bound<'py, PyBytes>> {
         let bytes = if let Some(v) = version {
             let parsed = parse_wire_version(v)?;
-            parsed
-                .validate_delta(self.inner.config().delta)
+            self.inner
+                .validate_wire_version(parsed)
                 .map_err(|e| PyValueError::new_err(e.to_string()))?;
             self.inner.to_bytes_with_version(parsed)
         } else {

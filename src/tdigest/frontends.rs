@@ -6,7 +6,7 @@ use std::fmt::{Display, Formatter};
 
 use crate::tdigest::wire::{
     decode_digest, encode_digest, encode_digest_with_version, wire_precision, WireDecodedDigest,
-    WirePrecision, WireVersion,
+    WirePrecision, WireResult, WireVersion,
 };
 use crate::tdigest::TDigest;
 use crate::tdigest::{scale::ScaleFamily, singleton_policy::SingletonPolicy};
@@ -552,6 +552,14 @@ Rebuild or cast to a shared configuration before merge.",
         match self {
             FrontendDigest::F32(td) => encode_digest(td),
             FrontendDigest::F64(td) => encode_digest(td),
+        }
+    }
+
+    /// Validate format-specific limits before using the infallible encoder.
+    pub fn validate_wire_version(&self, version: WireVersion) -> WireResult<()> {
+        match self {
+            FrontendDigest::F32(td) => version.validate_digest(td),
+            FrontendDigest::F64(td) => version.validate_digest(td),
         }
     }
 
