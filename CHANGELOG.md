@@ -4,15 +4,11 @@ All notable changes to this project are documented in this file.
 
 ## [Unreleased]
 
+- Keep checked precision adapters and Polars sequence probes coherent with validated modern state.
+
+- Validate modern Rust construction, transformations and full state.
+
 - Document measured Modern versus G-Research accuracy winners and error ratios by dataset, summary size, precision and merge setup.
-
-- Use checked modern state and length-based CDF broadcasting in Polars.
-
-- Validate positive transformations before committing modern state.
-
-- Check modern construction, reconstruction, precision casts and merges.
-
-- Preserve residual mass and compensated modern centroid arithmetic.
 
 - Test accuracy on recorded data and deterministic distributions.
 

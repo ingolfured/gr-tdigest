@@ -198,4 +198,4 @@ See the [winner and error-ratio tables](compat/quality-20261020/RESULTS.md) for 
 
 The configured JDK also supplies the direct Java compiler/runtime subprocesses used by `make test`; an environment-selected JDK does not require a separate system Java installation.
 
-Modern Rust builders, seeded construction, merges and explicit precision conversions return checked results. Malformed reconstructed state is rejected before use.
+Modern Rust construction, precision conversion and full-state restoration are checked operations; failed in-place updates preserve their receiver. See `api_design.md` for the shared state contract.
