@@ -38,9 +38,10 @@ For current implementation internals, see `tdigest_design.md`.
 
 ### JVM build and runtime support
 
-The Java binding targets Java11 bytecode and runs on JDK11 and17, with a
-Gradle8.14.5 build that can itself run on11. Both versions have Java/JNI tests,
-JAR smoke tests and compiled-class version checks. Internal build environments
+The Java binding targets Java 11 bytecode, with Java/JNI tests, JAR smoke tests
+and compiled-class version checks on JDK 11, 17, 21 and 25. The default
+Gradle 8.14.5 build can itself run on JDK 11; JDK 25 builds select Gradle 9.1.0
+through the verified distribution override. Internal build environments
 can select verified JDK/Gradle archives and an exclusive Maven dependency
 repository through the documented `TDIGEST_*` environment settings. Offline mode
 uses pre-staged tools/dependencies and never attempts a public fallback. It
@@ -108,7 +109,7 @@ pinned upstream revision did not contain a Rust test suite.
 The Python distribution supports CPython 3.10–3.15 through a py310 ABI3 wheel,
 with NumPy >=1.26.4,<3. The base installation exposes both NumPy numerical
 interfaces without requiring the Polars Python package. The optional `polars`
-extra installs the tested Polars 2.0.0 integration; this pin does not promise
+extra installs the tested Polars 1.44.2 integration; this pin does not promise
 compatibility with untested future Polars releases. Existing numerical imports
 remain lazy, while expression operations require the extra.
 

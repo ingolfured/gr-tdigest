@@ -118,7 +118,7 @@ def inspect_wheel(wheel: Path) -> dict:
         polars_requirements = [item for item in metadata.get_all("Requires-Dist", []) if item.startswith("polars")]
         require(
             len(polars_requirements) == 1
-            and polars_requirements[0].replace(" ", "").replace("'", '"') == 'polars==2.0.0;extra=="polars"',
+            and polars_requirements[0].replace(" ", "").replace("'", '"') == 'polars==1.44.2;extra=="polars"',
             f"Polars must only be the tested optional extra, got {polars_requirements}",
         )
         native_sha = hashlib.sha256(archive.read("gr_tdigest/_gr_tdigest.abi3.so")).hexdigest()
@@ -195,7 +195,7 @@ def main() -> None:
             shutil.copyfile(root / relative, modern / Path(relative).name)
         run("python-runtimes", ["uv", "python", "install", *dict.fromkeys(row[0] for row in MATRIX)], work)
         cells = []
-        variants = [(minor, numpy, scipy, pytest, "2.0.0") for minor, numpy, scipy, pytest in MATRIX]
+        variants = [(minor, numpy, scipy, pytest, "1.44.2") for minor, numpy, scipy, pytest in MATRIX]
         variants.extend((("3.10", "1.26.4", "1.15.3", "8.4.2", None), ("3.15", "2.5.4", "1.18.1", "9.1.1", None)))
         for minor, numpy, scipy, pytest, polars in variants:
             label = f"py{minor.replace('.', '')}-numpy{numpy.split('.')[0]}" + ("-no-polars" if polars is None else "")

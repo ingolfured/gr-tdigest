@@ -13,7 +13,11 @@ All notable changes to this project are documented in this file.
 
 - Test accuracy on recorded data and deterministic distributions.
 
+- Pin the optional Polars integration and support checks to Polars 1.44.2; defer Polars 2.0 evaluation.
+
 - Support Python 3.14 and 3.15 on the current NumPy and Polars stack.
+
+- Add JDK 25 build/runtime coverage with verified Gradle 9.1.0, retaining Java 11 bytecode and older-JDK builds.
 
 - Build Java 11 bytecode with exclusive internal and offline dependencies.
 
