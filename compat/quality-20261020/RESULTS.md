@@ -1,5 +1,9 @@
 # Modern versus original G-Research: measured accuracy
 
+This report compares the preserved legacy/original G-Research engine (GR) with the opt-in Modern engine. It is evidence of workload-dependent accuracy tradeoffs at matched logical centroid-field byte budgets, not proof that Modern universally replaces legacy. It does not measure a throughput ranking or equal process memory use.
+
+These are historical measurements from CI run 104 at `e6a14a2`. Later changes to state validation or measurement checks do not remeasure these tables or establish a new accuracy winner.
+
 ### Which implementation wins?
 
 - **Bike data: Modern wins all four error measures in every size/merge group below.**
@@ -113,4 +117,4 @@ Averages across sizes 32/128/512, both precisions, both input orders and all thr
 
 Results come from [CI run 104](https://github.com/ingolfured/gr-tdigest/actions/runs/39566448129) at `e6a14a2`; the [artifact contains every case and both engines' raw errors](https://github.com/ingolfured/gr-tdigest/actions/runs/39566448129/artifacts/12332712916). Both engines receive identical inputs and are compared at matched logical centroid-field byte budgets. All 324 real-data cases and 378/432 synthetic cases qualify; constant-data cases have no eligible comparison. The grouped ratios are ratios of average errors, not counts of wins. CDF has no GR comparison because its API does not expose CDF.
 
-CI passes the regression gate, but 10 synthetic cases still exceed accuracy limits and 13/15 separate numerical boundary controls fail.
+In that recorded run, the regression gate passed, but 10 synthetic cases exceeded accuracy limits and 13/15 separate numerical boundary controls failed. A regression PASS means the results satisfy the baseline comparison rules; it does not mean every accuracy limit or exact boundary target passes. Current failure counts require a fresh report for the measured revision.

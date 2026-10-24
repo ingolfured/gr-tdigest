@@ -235,7 +235,7 @@ The modern engine is not universally more accurate than original G-Research:
 - **Energy:** Modern wins average rank, tail rank and average value error. GR wins peak value error: Modern's error is **1.81–1.86 times GR's** across the grouped setups.
 - **Synthetic distributions:** GR wins all four grouped metrics on Gaussian, exponential, lognormal, Pareto, bimodal and signed-scale data. Modern wins all four on drift, skewed two-point and zero-inflated data; rounded ties and uniform grids split by metric.
 
-These conclusions average cases within each setup; individual cases can differ.
+These conclusions average cases within each setup; individual cases can differ. They support workload-dependent engine selection, not a universal replacement of legacy by Modern. They describe the recorded `e6a14a2` run; later validation and measurement-check changes do not establish a new winner without fresh measurements.
 
 **Lower error is better.** The [setup tables](compat/quality-20261020/RESULTS.md) use **Modern error ÷ GR error** throughout: below 1 means Modern wins; above 1 means GR wins. For example, 0.25 means Modern has one quarter of GR's error; 2.00 means Modern has twice GR's error. Each cell names the winner.
 

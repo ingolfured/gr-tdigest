@@ -4,6 +4,8 @@ All notable changes to this project are documented in this file.
 
 ## [Unreleased]
 
+- Clarify legacy versus Modern accuracy tradeoffs, historical benchmark scope, and the distinction between regression checks and accuracy passes.
+
 - Keep checked precision adapters and Polars sequence probes coherent with validated modern state.
 
 - Validate modern Rust construction, transformations and full state.
