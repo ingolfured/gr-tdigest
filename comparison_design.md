@@ -225,6 +225,20 @@ wrapper so existing applications keep their API and numbers. The modern
 The retained implementation and exact regression fixtures have explicit
 provenance; upstream quirks are preserved on this interface.
 
-## Recorded-data comparison (20 October 2026)
+## Modern versus original GR: measured accuracy (CI, 21 October 2026)
 
 The quality suite compares the modern K2/Use engine and the preserved original on two pinned UCI datasets, deterministic distributions, both mean precisions and repeated merge paths. Parameters are matched by observed logical field-byte budget, with count-only selection for the original. This is distinct from retained memory, wire size and RSS. Rank, value, CDF and tail errors are reported separately; the original has no CDF API. All comparison losses and quality-limit failures remain visible in the recorded results.
+
+The modern engine is not universally more accurate than original G-Research:
+
+- **Bike:** Modern wins average rank, tail rank, average value and peak value error in every grouped size/merge setup tested.
+- **Energy:** Modern wins average rank, tail rank and average value error. GR wins peak value error: Modern's error is **1.81–1.86 times GR's** across the grouped setups.
+- **Synthetic distributions:** GR wins all four grouped metrics on Gaussian, exponential, lognormal, Pareto, bimodal and signed-scale data. Modern wins all four on drift, skewed two-point and zero-inflated data; rounded ties and uniform grids split by metric.
+
+These conclusions average cases within each setup; individual cases can differ.
+
+**Lower error is better.** The [setup tables](compat/quality-20261020/RESULTS.md) use **Modern error ÷ GR error** throughout: below 1 means Modern wins; above 1 means GR wins. For example, 0.25 means Modern has one quarter of GR's error; 2.00 means Modern has twice GR's error. Each cell names the winner.
+
+The recorded run covers 756 cases, including 324 real-data cases. Comparisons qualify at 90–100% of Modern's observed logical centroid-field byte budget; all 324 real-data and 378 synthetic cases qualify. These budgets exclude allocation overhead and RSS. Modern uses K2/Use, f32/f64, sizes 32/128/512, natural/reversed input and single-build/sequential-40/balanced-40 paths. The tables report ratios of average errors, including averages of per-case maxima for peak value error. This is an empirical comparison on these fixtures, not a universal accuracy guarantee or a throughput claim.
+
+[CI run 104](https://github.com/ingolfured/gr-tdigest/actions/runs/39566448129) measured commit `e6a14a28237a77aca4df88955f3257b99a518d2d`. Its regression gate passed while 10 synthetic accuracy-limit cases and 13/15 separate numerical boundary controls still failed. Full results and precision breakdowns are in the [recorded comparison](compat/quality-20261020/RESULTS.md).
