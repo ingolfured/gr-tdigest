@@ -8,6 +8,8 @@ All notable changes to this project are documented in this file.
 
 - Support Python 3.14 and 3.15 on the current NumPy and Polars stack.
 
+- Add JDK 25 build/runtime coverage with verified Gradle 9.1.0, retaining Java 11 bytecode and older-JDK builds.
+
 - Build Java 11 bytecode with exclusive internal and offline dependencies.
 
 - Stage verified JDK and Gradle archives from configured sources.
