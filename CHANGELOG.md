@@ -4,6 +4,8 @@ All notable changes to this project are documented in this file.
 
 ## [Unreleased]
 
+- Keep compact original storage and make Polars imports optional.
+
 - Restore the original tdigest_rs Python engine and API.
 
 - Preserve tiny-mass queries and reject invalid scaling atomically.
