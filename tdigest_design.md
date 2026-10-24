@@ -1,5 +1,22 @@
 # tdigest_design.md
 
+## JVM toolchain delivery
+
+Java classes and tests compile with `--release 11`; a Gradle task checks class
+major version55. Gradle 8.14.5 permits the build itself to run on JDK 11. The CI matrix covers
+JDK 11, 17, 21 and 25; its JDK 25 entry selects checksum-verified Gradle 9.1.0
+through `TDIGEST_GRADLE_URL`/`TDIGEST_GRADLE_SHA256`, keeping the Java 11 target
+and older-JDK wrapper unchanged. Optional
+`bindings/java/bootstrap.py` is standard-library-only and runs before JVM lookup
+when tool-source/offline environment settings are present. It verifies archive
+SHA256, validates extraction paths/links, and installs into a digest-keyed cache
+by atomic rename. Configured-source failure has no fallback. Offline mode refuses
+network downloads and adds `--offline` to Gradle/Cargo. Gradle's internal Maven
+repository replaces MavenCentral exclusively. Native JAR resources follow the
+actual `CARGO_TARGET_DIR`. No digest arithmetic or original compatibility source
+changes are involved.
+
+
 This document is the **current-state implementation design** for the Rust TDigest core.
 
 - Scope: internals in `src/tdigest/*` and how frontends use them.
