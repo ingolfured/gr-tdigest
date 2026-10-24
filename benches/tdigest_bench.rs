@@ -32,6 +32,7 @@ fn build_digest_unsorted(vals: Vec<f64>) -> TDigest<f64> {
         .max_size(1_000)
         .scale(ScaleFamily::K2)
         .build()
+        .unwrap()
         .merge_unsorted(vals)
         .expect("finite benchmark data")
 }

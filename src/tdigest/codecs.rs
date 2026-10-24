@@ -21,7 +21,7 @@
 //! use gr_tdigest::tdigest::TDigest;
 //!
 //! // build a digest (details elided) and round-trip via a Series:
-//! let td: TDigest<f64> = TDigest::builder().max_size(256).build();
+//! let td: TDigest<f64> = TDigest::builder().max_size(256).build().unwrap();
 //! let series: Series = td.to_series("td")?;
 //! let round_tripped: Vec<TDigest<f64>> = TDigest::<f64>::from_series(&series)?;
 //!
@@ -323,6 +323,11 @@ where
     F: FloatLike + FloatCore,
     N: PlFloat,
 {
+    if input.null_count() != 0 {
+        return Err(CodecError::InvalidConfiguration(
+            "missing digest rows are not allowed",
+        ));
+    }
     let s = input.struct_().map_err(|_| CodecError::NotAStruct {
         series_name: input.name().to_string(),
     })?;
@@ -370,7 +375,10 @@ where
             field: F_MAX_SIZE,
             row: i,
         })?;
-        let max_size = max_size_i64 as usize;
+        let max_size = usize::try_from(max_size_i64)
+            .ok()
+            .filter(|value| *value > 0)
+            .ok_or(CodecError::InvalidField(F_MAX_SIZE))?;
 
         let data_min = read_scalar::<N>(&min, F_MIN, i)?;
         let data_max = read_scalar::<N>(&max, F_MAX, i)?;
@@ -412,19 +420,23 @@ where
                 builder = builder.delta(delta);
             }
         }
-        out.push(
-            builder
-                .with_centroids_and_stats(
-                    cents,
-                    DigestStats {
-                        data_sum,
-                        total_weight,
-                        data_min,
-                        data_max,
-                    },
+        let digest = builder
+            .with_centroids_and_stats(
+                cents,
+                DigestStats {
+                    data_sum,
+                    total_weight,
+                    data_min,
+                    data_max,
+                },
+            )
+            .build()
+            .map_err(|_| {
+                CodecError::InvalidConfiguration(
+                    "invalid digest state: mass, extrema or aggregate metadata",
                 )
-                .build(),
-        );
+            })?;
+        out.push(digest);
     }
 
     Ok(out)
