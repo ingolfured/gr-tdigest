@@ -141,7 +141,7 @@ The following are meaningful potential gaps or expansion points compared with th
 - Gap vs KLL/REQ-style explicit probabilistic rank-error guarantees.
 
 2. Published benchmark/accuracy dashboards.
-- Internals and tests are strong, but there is no public benchmark matrix equivalent to large cross-sketch studies.
+- Public source-bound recorded-data and distribution-shape scores are now available in `tests/quality/ACCURACY.md`, including default-setting and comparable-storage results. Broader cross-sketch and representative-server studies remain separate work.
 
 3. Richer deployment-specific implementations.
 - No direct equivalents of Elastic `SortingDigest`/`HybridDigest` modes for workload-adaptive behavior.
@@ -228,3 +228,25 @@ provenance; upstream quirks are preserved on this interface.
 ## Recorded-data comparison (20 October 2026)
 
 The quality suite compares the modern K2/Use engine and the preserved original on two pinned UCI datasets, deterministic distributions, both mean precisions and repeated merge paths. Parameters are matched by observed logical field-byte budget, with count-only selection for the original. This is distinct from retained memory, wire size and RSS. Rank, value, CDF and tail errors are reported separately; the original has no CDF API. All comparison losses and quality-limit failures remain visible in the recorded results.
+
+## Default settings and practical accuracy (21 October 2026)
+
+The original default is delta 300; modern defaults to capacity 1,000. Earlier
+modern capacity 200 does not define the migration comparison. With the same
+observations and controlled mean precision, the 396-profile default comparison
+reduces average rank error by 98.7%, or 99.6% on its 108 recorded-data profiles.
+These are descriptive averages over related profiles, with different storage.
+
+At comparable logical field storage, modern capacity 1,000 improves average
+rank error in 213 of 234 eligible established-data profiles and tail rank error
+in 223, with 11 tail ties and no losses. Both comparisons retain numerical
+value-error losses, and the query-level reconstruction explains observed-point
+versus type-7 interpolation differences and local merge/compression tradeoffs.
+
+The practical standard is no obvious, unexplained accuracy deterioration, with
+separate scores and explanations. It is not a requirement to dominate every
+measure on every input. Hard correctness, exact original compatibility and
+frozen regression gates remain unchanged. Public claims should show the measured
+gains prominently alongside their configuration, storage and domain.
+See [the accuracy report](tests/quality/ACCURACY.md) and
+[its source-bound evidence](compat/accuracy-20261021/).
