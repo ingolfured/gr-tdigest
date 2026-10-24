@@ -63,17 +63,23 @@ Notes:
 - Any null value (where representable) is an error.
 - Adding an empty vector/list is a no-op success.
 
-### 4.1.1 Shipped legacy Python interface
+### 4.1.1 Existing Python interface
 
 `tdigest_rs.TDigest` preserves the original public API and numerical behavior,
 not merely approximate accuracy or passing upstream tolerances. It uses the
 pinned original Rust arithmetic and unmodified Python wrapper. Existing calls,
 dtype inference, uint32 weights, immutable merge/update, dictionary state, and
 copy/pickle reconstruction retain their upstream behavior, including quirks.
-Do not apply modern numerical fixes or validation to this interface. The modern
-engine is explicitly selected through `gr_tdigest`; matching delta alone does
-not make its answers identical. The original interface has no new delta
+The current review baseline keeps those calculations unchanged. Small numerical
+changes can be considered when they have a concrete benefit and measured impact;
+report absolute/relative differences and rank error on the affected workloads,
+including tails and repeated merges. There is no universal absolute tolerance:
+`1e-6` has different meaning for data near zero and data near a billion. Keep the
+independent upstream oracle and document deliberate differences rather than
+regenerating fixtures to hide them. The modern engine is explicitly selected
+through `gr_tdigest`; matching delta alone does not make its answers identical. The original interface has no new delta
 property, cdf method, or wire-state format. Focused regression tests cover immutable merge/update, dtype, copy/pickle, and the original dictionary state.
+The unchanged 91-case upstream suite, 70 exact original-output cases, and pinned-source checksums are required by `make test` and installed-wheel CI.
 
 ### 4.2 Queries
 
@@ -126,7 +132,10 @@ Canonical empty for `merge_all([])`:
 - `to_bytes` supports explicit version selection (`1|2|3`) where surfaced.
 - Wire precision (`f32`/`f64`) and delta must round-trip in default TDIG v3.
 - Delta-mode digests require v3; wrappers reject explicit v1/v2 export rather than losing configuration.
-- V3 uses flag bit1 and an 8-byte header extension for delta; older readers reject the unknown flag.
+- V3 uses flag bit1 and an 8-byte header extension for delta, and flag bit2 for full-width edge pins above 255. Extensions follow flag order and are checksum-covered; older readers reject unknown flags.
+- Large edge pins require v3; explicit v1/v2 exports fail instead of truncating configuration.
+- V1 requires positive integer centroid weights and a total within u64 range; fractional export fails rather than rounding away mass. V1's historical centroid-kind inference remains lossy for some weighted data; default v3 preserves kind.
+- Invalid encoded weights return decode errors instead of panicking in centroid constructors.
 - Polars structs retain centroid atomic/mixed kind, scale, singleton policy, pins, and delta.
   Older structs remain readable with their historical default configuration and kind inference.
 - Python pickle/deepcopy use TDIG bytes.

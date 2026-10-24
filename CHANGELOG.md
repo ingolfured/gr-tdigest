@@ -4,6 +4,10 @@ All notable changes to this project are documented in this file.
 
 ## [Unreleased]
 
+- Verify original outputs against independent exact fixtures.
+
+- Run the unchanged upstream Python compatibility suite.
+
 - Keep compact original storage and make Polars imports optional.
 
 - Restore the original tdigest_rs Python engine and API.

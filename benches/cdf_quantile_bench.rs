@@ -15,7 +15,7 @@ fn build_digest(
     max_size: usize,
     scale: ScaleFamily,
     seed: u64,
-) -> TDigest {
+) -> TDigest<f64> {
     let mut data = gen_dataset(kind, n, seed);
     data.sort_by(|a, b| a.total_cmp(b));
     TDigest::builder()
@@ -23,6 +23,7 @@ fn build_digest(
         .scale(scale)
         .build()
         .merge_sorted(data)
+        .expect("finite benchmark data")
 }
 
 /// Allocate inside `f`, keep the object alive until after reading jemalloc counters.

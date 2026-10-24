@@ -81,3 +81,6 @@ tmp/
 # Local agent context (not for commit)
 # =========================
 typical_usecase.md
+
+# Local Claude Code agent state (not for commit)
+.claude/

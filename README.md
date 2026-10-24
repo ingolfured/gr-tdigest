@@ -134,6 +134,8 @@ arithmetic, uint32 weights, and the original copy/pickle behavior. The new engin
 is opt-in through `from gr_tdigest import TDigest`; using `delta` there does not
 promise the same numbers. See [source provenance](src/upstream/PROVENANCE.md).
 
+The unchanged upstream Python suite runs in `make test` and Linux CI, including against a clean installed wheel. See [legacy compatibility](compat/gr_tdigest_vs_tdigest_rs.md).
+
 ## Changelog
 - See `CHANGELOG.md`.
 
