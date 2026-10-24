@@ -4,6 +4,8 @@ All notable changes to this project are documented in this file.
 
 ## [Unreleased]
 
+- Load and identify native payloads outside the build checkout.
+
 - Keep runtime payload identity with the following standalone-loader change.
 
 - Expose fluent JVM operations, safe serialization and native failures.
