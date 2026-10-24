@@ -1,14 +1,12 @@
-# tdigest-rs
+# gr-tdigest
 
-Java builds support JDK11 and17, including an optional checksum-verified JDK and
-Gradle bootstrap from internal URLs or local archives. Configure
-`TDIGEST_JDK_URL`, `TDIGEST_GRADLE_URL` and an exclusive
-`TDIGEST_MAVEN_REPOSITORY_URL`; use `TDIGEST_OFFLINE=1` with prepared caches.
-See [Java setup and offline builds](bindings/java/README.md) for all environment
-settings and actual Java11 bytecode/runtime checks.
+Fast, mergeable distribution summaries for **Python/NumPy, Polars and the JVM**,
+powered by one Rust core. Estimate percentiles, medians and cumulative
+probabilities without retaining every observation. Weighted data, streaming
+updates and shared saved state work across the modern interfaces.
 
-T-Digest provides a mergeable summary of a distribution, enabling approximate quantiles and CDF with strong tail accuracy.
-`gr-tdigest` ships one Rust core with Rust, Python, Polars, and Java surfaces.
+The separate original-compatible `tdigest_rs` interface keeps the upstream API
+and calculations unchanged.
 
 ## ✨ Features
 - 🦀 Single Rust core shared across Rust, Polars, Python, and Java.
@@ -25,6 +23,22 @@ T-Digest provides a mergeable summary of a distribution, enabling approximate qu
 - 🖥️ Rust CLI subcommands (`build`, `quantile`, `cdf`, `median`) with `text|csv|json|ndjson` ingestion.
 - 🎚️ Scale families: `Quad`, `K1`, `K2`, `K3`.
 - 🔩 Singleton handling policy: edge-precision (`keep N`), respect singletons, or uniform merge.
+
+## Measured accuracy
+
+**98.7% lower average percentile-position error at the default settings** across
+396 recorded-data and deterministic profiles; **99.6% lower on recorded bike-rental
+and household-energy data**. Modern also improved the worst tested position
+error in 378 profiles, tied in 18, and lost in none.
+
+![Measured default accuracy](compat/accuracy-20261021/default-accuracy.svg)
+
+These measurements compare original `delta=300` with modern capacity `1000`,
+using the same observations and precision. Summary sizes differ. In the separate
+comparable-storage comparison, modern improved average position error in
+**213 of 234 profiles** and tail position error in **223**, with 11 tail ties
+and no tail losses. Numerical value errors have different tradeoffs.
+See [all scores, storage costs and explanations](tests/quality/ACCURACY.md).
 
 ## Examples
 
@@ -181,11 +195,21 @@ Modern `TDigest.from_array` and `TDigest.from_means_weights` release the Python 
 
 Modern training and updates copy compatible aligned, native-endian contiguous one-dimensional NumPy Float32/Float64 buffers directly into owned Rust vectors. Read-only arrays are supported; strided, unaligned, byte-swapped, scalar and other-dtype inputs retain their generic conversion path. Input storage is neither retained nor mutated.
 
-## Accuracy on recorded data
+## Quality checks and build support
 
-`make test` now includes fast quality checks using recorded bike-rental and household-energy data, varied distributions and exact weighted references. `make quality-extended` measures full datasets, both precisions, several summary sizes and40-way merges. It retains failing profiles and reports percentile position, value and cumulative-probability errors separately.
+`make test` includes fast recorded-data, weighted and exact-state checks.
+Extended suites cover full datasets, both precisions, repeated merges and small
+summary stress cases. [The quality guide](tests/quality/README.md) separates hard
+correctness, frozen regression checks and descriptive approximation scores.
+An explained rank/value/storage tradeoff does not require every metric to win
+on every dataset; unexpected accuracy loss and broken state still need fixing.
 
-The modern engine usually improves percentile position and average value error on these real-data profiles; the original often has the better worst value error. Small summaries and numerical edge cases still have explicit failures. See the [readable findings](https://github.com/ingolfured/gr-tdigest/blob/5801881075c6e31fec746c8c62c6a25782b6c13f/compat/quality-20261020/RESULTS.md) and [test methods](tests/quality/README.md). `make quality-regression` protects the recorded outcomes while preserving their failed accuracy status.
+Java builds support JDK 11 and 17, including checksum-verified JDK/Gradle
+bootstrap from internal URLs or local archives. Configure `TDIGEST_JDK_URL`,
+`TDIGEST_GRADLE_URL` and an exclusive `TDIGEST_MAVEN_REPOSITORY_URL`; use
+`TDIGEST_OFFLINE=1` with prepared caches. See the
+[Java setup guide](bindings/java/README.md) for environment settings and runtime
+checks. The same prebuilt candidate JAR has Java 11/17/21 checks.
 
 The configured JDK also supplies the direct Java compiler/runtime subprocesses used by `make test`; an environment-selected JDK does not require a separate system Java installation.
 
@@ -206,8 +230,8 @@ The upcoming release is `0.2.5-rc.1` (`0.2.5rc1` for Python). Use the guides abo
 `make quality-budgets` separately measures4140capacity/scale/data/merge profiles,
 including explicit200/1000sizes and additional deterministic shapes. It is a
 slower diagnostic and returns failure for the observed accuracy failures. Small
-summaries remain a numerical acceptance issue; changing the scale does not
-universally fix them. The default remainsK2/1000 and the original engine is
+summary limits remain documented approximation tradeoffs; changing the scale
+moves accuracy between regions rather than universally improving every score. The default remainsK2/1000 and the original engine is
 unchanged. See the [accuracy investigation and recommendation](https://github.com/ingolfured/gr-tdigest/blob/5801881075c6e31fec746c8c62c6a25782b6c13f/compat/consumer-20261020/accuracy-investigation/REPORT.md).
 
 JVM builds accept a selected native file with any basename through
