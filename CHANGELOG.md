@@ -4,6 +4,10 @@ All notable changes to this project are documented in this file.
 
 ## [Unreleased]
 
+- Expose weighted modern Python operations and independent state copies.
+
+- Expose weighted modern Python operations and independent state copies.
+
 - Keep checked precision adapters and Polars sequence probes coherent with validated modern state.
 
 - Validate modern Rust construction, transformations and full state.
