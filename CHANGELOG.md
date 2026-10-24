@@ -4,6 +4,8 @@ All notable changes to this project are documented in this file.
 
 ## [Unreleased]
 
+- Copy compatible NumPy training buffers and allow independent constructors.
+
 - Reject inconsistent delta settings in Polars digest structs.
 
 - Copy NumPy query outputs without changing ownership or results.

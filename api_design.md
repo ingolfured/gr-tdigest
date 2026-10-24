@@ -106,6 +106,12 @@ versions and both NumPy lines, and also tests a genuinely Polars-free baseline.
 The bounded Python metadata is narrower than upstream's open-ended >=3.10
 declaration. The development tool environment remains Python 3.12.
 
+Modern NumPy training inputs are copied into owned Rust vectors. Compatible aligned/native-endian/contiguous Float32/Float64 arrays use a bulk copy; other layouts/dtypes retain their generic conversion and validation behavior. Constructors and updates neither retain nor mutate input storage.
+
+### 4.1.4 Modern Python constructor concurrency
+
+`gr_tdigest.TDigest.from_array` and `from_means_weights` convert their Python inputs to owned Rust vectors before releasing the GIL for native construction. Each call builds a private digest and retains existing validation and numerical order. Independent calls may overlap in a caller-managed pool; input conversion remains serialized by the GIL. This does not add a shared-object mutation guarantee or change the original `tdigest_rs` interface.
+
 ### 4.2 Queries
 
 Quantile:
