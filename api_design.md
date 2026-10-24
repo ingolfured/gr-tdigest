@@ -91,6 +91,23 @@ including permissive probes and inherited malformed-input behavior. The modern
 same independently generated original-output fixture as the Python gate; the
 pinned upstream revision did not contain a Rust test suite.
 
+### 4.1.3 Python runtime and installation
+
+The Python distribution supports standard GIL builds of CPython 3.10–3.15 through a py310
+ABI3 wheel, with NumPy >=1.26.4,<3 on 3.10–3.12, >=2.3.4,<3 on
+3.13–3.14, and >=2.5.4,<3 on 3.15. The base installation exposes both NumPy numerical
+interfaces without requiring the Polars Python package. The optional `polars`
+extra installs the tested Polars 1.34.0 integration; this pin does not promise
+compatibility with untested future Polars releases. Existing numerical imports
+remain lazy, while expression operations require the extra.
+
+The installed-artifact gate reuses one real wheel across all six Python
+versions, both NumPy lines where available, and a genuinely Polars-free
+installation on every runtime. The 3.15 cell uses SciPy >=1.18.1 and pytest
+>=9.1.1 for compatibility validation; these are test dependencies.
+The bounded Python metadata is narrower than upstream's open-ended >=3.10
+declaration. The development tool environment remains Python 3.12.
+
 ### 4.2 Queries
 
 Quantile:

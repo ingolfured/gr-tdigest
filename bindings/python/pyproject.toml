@@ -8,12 +8,17 @@ dynamic = ["version"]
 description = "Rust TDigest with Python, Polars and JNI"
 readme = "PYTHON_README.md"
 license = { text = "Apache-2.0" }
-requires-python = ">=3.12,<3.13"
+requires-python = ">=3.10,<3.16"
 authors = [{ name = "Ingolfur Edvardsson", email = "ingo.edvardsson@gresearch.co.uk" }]
 classifiers = [
   "Programming Language :: Python :: 3",
+  "Programming Language :: Python :: 3.10",
+  "Programming Language :: Python :: 3.11",
+  "Programming Language :: Python :: 3.12",
+  "Programming Language :: Python :: 3.13",
+  "Programming Language :: Python :: 3.14",
+  "Programming Language :: Python :: 3.15",
   "Programming Language :: Python :: Implementation :: CPython",
-  "Programming Language :: Python :: Implementation :: PyPy",
   "Programming Language :: Rust",
   "License :: OSI Approved :: Apache Software License",
   "Operating System :: OS Independent",
@@ -21,19 +26,29 @@ classifiers = [
 
 # Runtime dependencies
 dependencies = [
-  "polars>=1.34.0",
-  "numpy>=2.3.3",
+  "numpy>=1.26.4,<3; python_version < '3.13'",
+  "numpy>=2.3.4,<3; python_version >= '3.13' and python_version < '3.15'",
+  "numpy>=2.5.4,<3; python_version >= '3.15'",
 ]
+
+[project.optional-dependencies]
+polars = ["polars==1.34.0"]
 
 # Dev groups (PEP 735). uv understands these and can install with --group/--all-groups.
 [dependency-groups]
 dev = [
-  "pytest>=8.4.2",
+  "polars==1.34.0",
+  "tomli>=2; python_version < '3.11'",
+  "pytest>=8.4.2; python_version < '3.15'",
+  "pytest>=9.1.1; python_version >= '3.15'",
   "ruff>=0.13.3",
   "pre-commit>=4.3.0",
-  "maturin[patchelf,zig]>=1.9.5",
-  "numpy>=2.3.3",
-  "scipy>=1.16.0",
+  "maturin[patchelf,zig]>=1.9.5,<2.0",
+  "numpy>=1.26.4,<3; python_version < '3.13'",
+  "numpy>=2.3.4,<3; python_version >= '3.13' and python_version < '3.15'",
+  "numpy>=2.5.4,<3; python_version >= '3.15'",
+  "scipy>=1.15.3; python_version < '3.15'",
+  "scipy>=1.18.1; python_version >= '3.15'",
   "mypy>=1.18.2",
 ]
 
@@ -57,7 +72,7 @@ zig = true
 # ------------------------------------------------------------
 [tool.ruff]
 line-length = 120
-target-version = "py312"
+target-version = "py310"
 # Keep the byte-for-byte upstream wrapper out of automatic formatting.
 extend-exclude = ["tdigest_rs/lib.py","target","dist","build",".venv",".maturin",".pytest_cache",".ruff_cache"]
 
@@ -73,7 +88,7 @@ pythonpath = ["."]
 # Mypy
 # ------------------------------------------------------------
 [tool.mypy]
-python_version = "3.12"
+python_version = "3.10"
 exclude = "(^target/|^build/|^dist/|^\\.venv/|^out/)"
 ignore_missing_imports = true
 warn_unused_ignores = true

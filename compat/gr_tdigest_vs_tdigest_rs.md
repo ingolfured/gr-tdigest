@@ -48,11 +48,12 @@ previous shared-core adapter passed all 91 tests while changing outputs. The
 separate original calculation path addresses that incompatibility. These are
 Linux x86_64 regression checks, not proof across every possible platform/input.
 
-This review stack does not change the distribution's existing Python 3.12 and
-NumPy/Polars dependency requirements or publish a `tdigest-rs` release. Upstream
-release packaging and supported environments still need agreement before rollout.
-Numerical-only imports no longer load Polars, but package installation metadata
-still declares it as a dependency. The wheel gate builds an optimized Linux wheel;
+The distribution supports standard GIL builds of CPython 3.10–3.15; development
+tools default to 3.12. `make python-support-test` checks one wheel on all six
+runtimes with the dependency combinations in `scripts/test_python_support.py`,
+including Polars-free installations on every runtime. Polars 1.34.0 is an
+optional extra. This does not publish a `tdigest-rs` release.
+The wheel gate builds an optimized Linux wheel;
 it does not establish manylinux portability or validate the published release artifact.
 
 ## Benchmark scope
