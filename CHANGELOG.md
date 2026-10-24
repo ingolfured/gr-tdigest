@@ -6,6 +6,8 @@ All notable changes to this project are documented in this file.
 
 - Document measured Modern versus G-Research accuracy winners and error ratios by dataset, summary size, precision and merge setup.
 
+- Validate positive transformations before committing modern state.
+
 - Check modern construction, reconstruction, precision casts and merges.
 
 - Preserve residual mass and compensated modern centroid arithmetic.

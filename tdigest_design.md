@@ -520,3 +520,7 @@ Modern normalization uses compensated mass and moment sums; cluster averaging us
 ## Check modern construction, reconstruction, precision casts and merges.
 
 Builders and seeded constructors return Result and validate mass, finite ordered means, extrema, aggregate metadata and delta configuration. Merges validate all contributors, including empties, and commit only a validated independent result. Precision casts reject unrepresentable values. Rust, Python/JNI and Polars call sites propagate the checked results. Exact-point subnormal state is recognized; scaling validation follows in the next change.
+
+## Validate positive transformations before committing modern state.
+
+Weight and value scaling prepare independent candidate state, reject aggregate overflow and unsupported underflow, validate the candidate, and replace the receiver only on success. Exact atomic points retain their distribution when the rounded weighted moment is subnormal or zero and recover representable moments after later scaling or merging.
