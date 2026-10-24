@@ -1,4 +1,4 @@
-"""Check one release wheel on CPython3.10-3.15 and Polars-free baselines.
+"""Check one release wheel on CPython3.10-3.15, Polars1/2 and Polars-free baselines.
 
 Linux gate. --wheel reuses a real release artifact without rebuilding it.
 The matrix intentionally pins tested dependency combinations; the project lock
@@ -39,7 +39,9 @@ MATRIX = (
     ("3.14", "2.5.4", "1.18.1", "9.1.1"),
     ("3.15", "2.5.4", "1.18.1", "9.1.1"),
 )
+POLARS_VERSIONS = ("1.44.2", "2.0.0")
 MODERN_TESTS = (
+    "bindings/python/tests/test_consumer_contracts.py",
     "bindings/python/tests/test_api_python.py",
     "bindings/python/tests/test_api_polars.py",
     "bindings/python/tests/test_day_numpy_input.py",
@@ -118,7 +120,7 @@ def inspect_wheel(wheel: Path) -> dict:
         polars_requirements = [item for item in metadata.get_all("Requires-Dist", []) if item.startswith("polars")]
         require(
             len(polars_requirements) == 1
-            and polars_requirements[0].replace(" ", "").replace("'", '"') == 'polars==2.0.0;extra=="polars"',
+            and polars_requirements[0].replace(" ", "").replace("'", '"') == 'polars>=1.44.2,<3;extra=="polars"',
             f"Polars must only be the tested optional extra, got {polars_requirements}",
         )
         native_sha = hashlib.sha256(archive.read("gr_tdigest/_gr_tdigest.abi3.so")).hexdigest()
@@ -195,10 +197,12 @@ def main() -> None:
             shutil.copyfile(root / relative, modern / Path(relative).name)
         run("python-runtimes", ["uv", "python", "install", *dict.fromkeys(row[0] for row in MATRIX)], work)
         cells = []
-        variants = [(minor, numpy, scipy, pytest, "2.0.0") for minor, numpy, scipy, pytest in MATRIX]
+        variants = [(*row, polars) for row in MATRIX for polars in POLARS_VERSIONS]
         variants.extend((("3.10", "1.26.4", "1.15.3", "8.4.2", None), ("3.15", "2.5.4", "1.18.1", "9.1.1", None)))
         for minor, numpy, scipy, pytest, polars in variants:
-            label = f"py{minor.replace('.', '')}-numpy{numpy.split('.')[0]}" + ("-no-polars" if polars is None else "")
+            label = f"py{minor.replace('.', '')}-numpy{numpy.split('.')[0]}" + (
+                "-no-polars" if polars is None else f"-polars{polars}"
+            )
             venv = work / label
             run(label + "-venv", ["uv", "venv", "--python", minor, str(venv)], work)
             python = str(venv / "bin/python")
@@ -277,7 +281,7 @@ def main() -> None:
                 result["installed"] = json.loads(imports)
                 suites = [("compatibility", [tests, parity], 208)]
                 if cell["polars"]:
-                    suites.append(("modern", [modern], 184))
+                    suites.append(("modern", [modern], 233))
                 else:
                     suites.append(
                         (
@@ -413,12 +417,13 @@ def main() -> None:
                     ],
                     work,
                 )
-                passed = check_results(xml, 392)
+                passed = check_results(xml, 441)
                 source_results.append({"python": minor, "artifact": built, "installed": installed, "passed": passed})
                 (output / "source-builds.json").write_text(json.dumps(source_results, indent=2) + "\n")
             require(len(source_results) == 3, "incomplete source-build matrix")
     print(
-        f"Nine full cells passed 208 compatibility + 184 modern cases each; two Polars-free cells passed 208 + 120; evidence: {output}"
+        f"{len(MATRIX) * len(POLARS_VERSIONS)} full cells passed on Polars {POLARS_VERSIONS}; "
+        f"two Polars-free cells passed; evidence: {output}"
     )
     print(
         "Source rebuilds: " + ("3.12, 3.14 and 3.15 passed" if sdist else "not requested: no source archive supplied")

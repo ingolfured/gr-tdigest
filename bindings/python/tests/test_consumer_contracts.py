@@ -142,8 +142,12 @@ def test_binary_reduction_planner_matches_execution(precision, rows):
     actual = lazy.collect()
     assert actual.schema == lazy.collect_schema()
     assert actual.height == 1
-    assert actual["d"].struct.field("count").item() == 2 * rows
-    assert actual["d"].struct.field("min").dtype == (pl.Float32 if precision == "f32" else pl.Float64)
+    # Use expressions: Polars 1.44.2 Series namespace dispatch has empty
+    # methods on CPython 3.15, even for plain structs without this plugin.
+    assert actual.select(pl.col("d").struct.field("count")).item() == 2 * rows
+    assert actual.select(pl.col("d").struct.field("min")).to_series().dtype == (
+        pl.Float32 if precision == "f32" else pl.Float64
+    )
     with pytest.raises(ValueError, match="explicit precision"):
         gr.from_bytes("blob")
 
@@ -193,3 +197,45 @@ def test_f32_training_never_silently_loses_nonzero_values(value):
     for expression in (gr.add_values("d", value), gr.add_weighted_values("d", value, 1.0)):
         with pytest.raises(pl.exceptions.ComputeError, match="precision"):
             frame.select(expression)
+
+
+@pytest.mark.parametrize("precision,dtype", [("f32", pl.Float32), ("f64", pl.Float64)])
+@pytest.mark.parametrize("engine", ["auto", "streaming"])
+def test_polars_grouped_wire_roundtrip_across_execution_engines(precision, dtype, engine):
+    # Preserve chunks to exercise plugin inputs beyond one contiguous Series.
+    frame = pl.concat(
+        [
+            pl.DataFrame({"g": ["a", "b"], "x": pl.Series([0.0, 100.0], dtype=dtype)}),
+            pl.DataFrame({"g": ["a", "b"], "x": pl.Series([10.0, 200.0], dtype=dtype)}),
+        ],
+        rechunk=False,
+    )
+    assert frame["x"].n_chunks() == 2
+    encoded = frame.lazy().group_by("g").agg(gr.to_bytes(gr.tdigest("x", max_size=200)).alias("blob"))
+    restored = encoded.group_by("g").agg(gr.from_bytes("blob", precision=precision).alias("d"))
+    result = restored.select(
+        "g",
+        gr.median("d").over("g").alias("median"),
+        gr.cdf("d", pl.lit(5.0, dtype=dtype)).alias("p"),
+    ).sort("g")
+    actual = result.collect(engine=engine)
+    assert actual.schema == result.collect_schema()
+    assert actual["g"].to_list() == ["a", "b"]
+    assert actual["median"].to_list() == [5.0, 150.0]
+    assert actual["p"].to_list() == [0.5, 0.0]
+    assert actual.schema["p"] == dtype
+
+
+@pytest.mark.parametrize("invalid", ["null", "malformed", "wrong_precision", "mixed_precision"])
+def test_polars_binary_decode_rejects_invalid_states(invalid):
+    blob = digest([0.0, 10.0], precision="f64").to_bytes()
+    other = digest([0.0, 10.0], precision="f32").to_bytes()
+    blobs = {
+        "null": [blob, None],
+        "malformed": [blob, b"not a TDIG state"],
+        "wrong_precision": [other],
+        "mixed_precision": [blob, other],
+    }[invalid]
+    frame = pl.DataFrame({"blob": pl.Series(blobs, dtype=pl.Binary)})
+    with pytest.raises(pl.exceptions.ComputeError):
+        frame.lazy().select(gr.from_bytes("blob", precision="f64")).collect()

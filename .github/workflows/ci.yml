@@ -142,7 +142,7 @@ jobs:
       - name: Test
         run: make test
 
-      - name: Runtime matrix and Polars-free install against one wheel
+      - name: Python runtime matrix, Polars 1.x/2.x and Polars-free installs against one wheel
         run: make python-support-test
 
       - name: Extended quality regression gate (known accuracy limits remain explicit)
@@ -154,4 +154,12 @@ jobs:
         with:
           name: quality-results
           path: build/quality/
+          if-no-files-found: ignore
+
+      - name: Preserve Python and Polars compatibility evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: python-polars-support-results
+          path: build/python-support/
           if-no-files-found: ignore

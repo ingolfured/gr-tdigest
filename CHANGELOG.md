@@ -4,6 +4,8 @@ All notable changes to this project are documented in this file.
 
 ## [Unreleased]
 
+- Support both Polars 1.x (development pin 1.44.2) and 2.x (tested 2.0.0), with the same installed wheel tested on both across supported Python versions, including consumer and streaming regressions.
+
 - Keep runtime payload identity with the following standalone-loader change.
 
 - Expose fluent JVM operations, safe serialization and native failures.

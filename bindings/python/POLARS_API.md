@@ -1,8 +1,24 @@
 # Modern Polars API: consumer candidate
 
-The modern candidate targets the explicitly pinned Polars 2.0.0 stack. Moving
-from 1.38.1 is an approved dependency migration, not a claim that the same plugin
-binary works on both. Original `tdigest_rs` objects are a separate API.
+The modern integration supports Polars 1.x and 2.x. The tested releases are
+1.44.2 (latest 1.x) and 2.0.0. The optional `polars` extra accepts
+`polars>=1.44.2,<3`; development stays pinned to 1.44.2. Install an exact release
+with `pip install 'gr-tdigest[polars]' 'polars==2.0.0'` when selecting 2.x.
+Original `tdigest_rs` objects are a separate API.
+
+`make python-support-test` installs the same compiled wheel in isolated cells
+for both Polars releases across CPython 3.10–3.15. It checks installed dependency
+versions and native library hashes, then runs the public API and consumer
+regressions, including grouped lazy joins, chunked inputs, streaming execution,
+empty/missing states, list schemas and binary precision. Polars-free baseline
+installs remain covered. Future releases must pass this gate before updating
+the tested pins; the dependency range alone is not compatibility evidence.
+
+On CPython 3.15, Polars 1.44.2 has an upstream Series namespace dispatch
+limitation: `series.struct.field(...)` can return `None` even for ordinary
+structs. Use `frame.select(pl.col("d").struct.field("count"))` for field
+extraction on that combination. The expression API and plugin are exercised
+by the compatibility gate; this package does not patch Polars namespace methods.
 
 ```python
 import polars as pl

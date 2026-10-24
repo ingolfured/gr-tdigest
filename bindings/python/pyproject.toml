@@ -30,12 +30,12 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
-polars = ["polars==2.0.0"]
+polars = ["polars>=1.44.2,<3"]
 
 # Dev groups (PEP 735). uv understands these and can install with --group/--all-groups.
 [dependency-groups]
 dev = [
-  "polars==2.0.0",
+  "polars==1.44.2",
   "tomli>=2; python_version < '3.11'",
   "pytest>=8.4.2",
   "ruff>=0.13.3",
