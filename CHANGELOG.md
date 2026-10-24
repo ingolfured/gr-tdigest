@@ -4,6 +4,8 @@ All notable changes to this project are documented in this file.
 
 ## [Unreleased]
 
+- Merge master into the K2Norm review branch, preserving both branches' unreleased notes.
+
 - Preserve original source and independent fixture LF bytes across Git checkouts; keep attribute rules focused on retained library inputs.
 
 - Preserve centroids outside the positive K2Norm scale domain.
