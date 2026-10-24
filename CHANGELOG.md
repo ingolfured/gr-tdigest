@@ -4,6 +4,8 @@ All notable changes to this project are documented in this file.
 
 ## [Unreleased]
 
+- Compile Scala and Kotlin consumers through authenticated Maven fixtures.
+
 - Load and identify native payloads outside the build checkout.
 
 - Keep runtime payload identity with the following standalone-loader change.
