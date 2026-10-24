@@ -274,7 +274,8 @@ impl FrontendDigest {
                 .max_size(1000)
                 .scale(ScaleFamily::K2)
                 .singleton_policy(SingletonPolicy::Use)
-                .build(),
+                .build()
+                .unwrap(),
         )
     }
 
@@ -284,11 +285,19 @@ impl FrontendDigest {
         precision: DigestPrecision,
     ) -> Result<Self, FrontendError> {
         ensure_finite_training_values(&values).map_err(FrontendError::from)?;
+        if config.max_size == 0 {
+            return Err(FrontendError::InvalidTrainingData(
+                "capacity must be positive".to_string(),
+            ));
+        }
         validate_delta_config(config)?;
 
         match precision {
             DigestPrecision::F32 => {
-                let xs: Vec<f32> = values.into_iter().map(|v| v as f32).collect();
+                let xs: Vec<f32> = values
+                    .into_iter()
+                    .map(<f32 as crate::tdigest::precision::FloatLike>::try_from_f64)
+                    .collect::<TdResult<_>>()?;
                 let mut builder = TDigest::<f32>::builder()
                     .max_size(config.max_size)
                     .scale(config.scale)
@@ -297,7 +306,7 @@ impl FrontendDigest {
                     builder = builder.delta(delta);
                 }
                 let td = builder
-                    .build()
+                    .build()?
                     .merge_unsorted(xs)
                     .map_err(FrontendError::from)?;
                 Ok(FrontendDigest::F32(td))
@@ -311,7 +320,7 @@ impl FrontendDigest {
                     builder = builder.delta(delta);
                 }
                 let td = builder
-                    .build()
+                    .build()?
                     .merge_unsorted(values)
                     .map_err(FrontendError::from)?;
                 Ok(FrontendDigest::F64(td))
@@ -346,17 +355,20 @@ impl FrontendDigest {
     }
 
     #[inline]
-    pub fn cast_precision(&self, target: DigestPrecision) -> Self {
+    pub fn cast_precision(&self, target: DigestPrecision) -> Result<Self, FrontendError> {
+        self.try_cast_precision(target)
+    }
+
+    pub fn try_cast_precision(&self, target: DigestPrecision) -> Result<Self, FrontendError> {
         match (self, target) {
-            (FrontendDigest::F32(td), DigestPrecision::F32) => FrontendDigest::F32(td.clone()),
-            (FrontendDigest::F64(td), DigestPrecision::F64) => FrontendDigest::F64(td.clone()),
-            (FrontendDigest::F32(td), DigestPrecision::F64) => {
-                FrontendDigest::F64(td.cast_precision::<f64>())
-            }
-            (FrontendDigest::F64(td), DigestPrecision::F32) => {
-                FrontendDigest::F32(td.cast_precision::<f32>())
+            (Self::F32(td), DigestPrecision::F64) => td.try_cast_precision::<f64>().map(Self::F64),
+            (Self::F64(td), DigestPrecision::F32) => td.try_cast_precision::<f32>().map(Self::F32),
+            _ => {
+                self.validate_state()?;
+                return Ok(self.clone());
             }
         }
+        .map_err(FrontendError::from)
     }
 
     #[inline]
@@ -372,7 +384,10 @@ impl FrontendDigest {
 
         match self {
             FrontendDigest::F32(td) => {
-                let xs: Vec<f32> = values.into_iter().map(|v| v as f32).collect();
+                let xs: Vec<f32> = values
+                    .into_iter()
+                    .map(<f32 as crate::tdigest::precision::FloatLike>::try_from_f64)
+                    .collect::<TdResult<_>>()?;
                 td.add_many(xs).map_err(FrontendError::from)?;
             }
             FrontendDigest::F64(td) => {
@@ -389,7 +404,10 @@ impl FrontendDigest {
     ) -> Result<(), FrontendError> {
         match self {
             FrontendDigest::F32(td) => {
-                let xs: Vec<f32> = values.into_iter().map(|v| v as f32).collect();
+                let xs: Vec<f32> = values
+                    .into_iter()
+                    .map(<f32 as crate::tdigest::precision::FloatLike>::try_from_f64)
+                    .collect::<TdResult<_>>()?;
                 td.add_weighted_many(&xs, &weights)
                     .map_err(FrontendError::from)?;
             }
@@ -439,15 +457,6 @@ Cast explicitly before merge (e.g. cast_precision('f64')).",
             )));
         }
 
-        // Empty digest merge is always safe for same precision.
-        if self.is_effectively_empty() && !other.is_effectively_empty() {
-            *self = other.clone();
-            return Ok(());
-        }
-        if other.is_effectively_empty() {
-            return Ok(());
-        }
-
         let lhs_cfg = self.config();
         let rhs_cfg = other.config();
         if lhs_cfg != rhs_cfg {
@@ -465,16 +474,58 @@ Rebuild or cast to a shared configuration before merge.",
             )));
         }
 
-        match (self, other) {
-            (FrontendDigest::F32(a), FrontendDigest::F32(b)) => {
-                *a = TDigest::<f32>::merge_digests(vec![a.clone(), b.clone()]);
-            }
-            (FrontendDigest::F64(a), FrontendDigest::F64(b)) => {
-                *a = TDigest::<f64>::merge_digests(vec![a.clone(), b.clone()]);
-            }
-            _ => unreachable!("precision mismatch checked above"),
+        self.validate_state()?;
+        other.validate_state()?;
+        if !(self.count() + other.count()).is_finite() || !(self.sum() + other.sum()).is_finite() {
+            return Err(FrontendError::InvalidTrainingData(
+                "merge aggregate overflow".to_string(),
+            ));
         }
+        // Empty digest merge is always safe for same precision.
+        if self.is_effectively_empty() && !other.is_effectively_empty() {
+            *self = other.clone();
+            return Ok(());
+        }
+        if other.is_effectively_empty() {
+            return Ok(());
+        }
+
+        let candidate = match (&*self, other) {
+            (FrontendDigest::F32(a), FrontendDigest::F32(b)) => FrontendDigest::F32(
+                TDigest::<f32>::merge_digests(vec![a.clone(), b.clone()])
+                    .map_err(FrontendError::from)?,
+            ),
+            (FrontendDigest::F64(a), FrontendDigest::F64(b)) => FrontendDigest::F64(
+                TDigest::<f64>::merge_digests(vec![a.clone(), b.clone()])
+                    .map_err(FrontendError::from)?,
+            ),
+            _ => unreachable!("precision mismatch checked above"),
+        };
+        candidate.validate_state()?;
+        *self = candidate;
         Ok(())
+    }
+
+    pub fn validate_state(&self) -> Result<(), FrontendError> {
+        match self {
+            Self::F32(td) => td.validate_state(),
+            Self::F64(td) => td.validate_state(),
+        }
+        .map_err(FrontendError::from)
+    }
+
+    pub fn count(&self) -> f64 {
+        match self {
+            Self::F32(td) => td.count(),
+            Self::F64(td) => td.count(),
+        }
+    }
+
+    pub fn sum(&self) -> f64 {
+        match self {
+            Self::F32(td) => td.sum(),
+            Self::F64(td) => td.sum(),
+        }
     }
 
     pub fn merge_all(digests: Vec<Self>) -> Result<Self, FrontendError> {
@@ -737,8 +788,8 @@ mod tests {
         )
         .expect("build");
 
-        let d32 = d.cast_precision(DigestPrecision::F32);
-        let d64 = d32.cast_precision(DigestPrecision::F64);
+        let d32 = d.cast_precision(DigestPrecision::F32).unwrap();
+        let d64 = d32.cast_precision(DigestPrecision::F64).unwrap();
 
         assert_eq!(d32.inner_kind(), "f32");
         assert_eq!(d64.inner_kind(), "f64");

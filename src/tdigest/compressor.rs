@@ -698,7 +698,8 @@ mod tests {
             .max_size(100)
             .scale(ScaleFamily::K2)
             .singleton_policy(SingletonPolicy::Off)
-            .build();
+            .build()
+            .unwrap();
 
         let input = vec![
             c::<Fp>(1.0, 1.0, true),
@@ -725,7 +726,8 @@ mod tests {
         let mut td = TDigest::<Fp>::builder()
             .max_size(10)
             .singleton_policy(SingletonPolicy::Off)
-            .build();
+            .build()
+            .unwrap();
         // `normalize_stream` should panic if means are decreasing.
         let input = vec![c::<Fp>(1.0, 1.0, true), c::<Fp>(0.9, 1.0, true)];
         let _ = super::compress_into(&mut td, 10, input);
@@ -880,7 +882,8 @@ mod tests {
             .scale(ScaleFamily::K2Norm)
             .singleton_policy(SingletonPolicy::Off)
             .delta(20.0)
-            .build();
+            .build()
+            .unwrap();
 
         let input = vec![
             c::<Fp>(0.0, 100.0, true),
@@ -929,7 +932,8 @@ mod tests {
         let mut td = TDigest::<Fp>::builder()
             .max_size(10)
             .singleton_policy(SingletonPolicy::Off)
-            .build();
+            .build()
+            .unwrap();
 
         let input = vec![
             c::<Fp>(0.0, 1.0, true),
@@ -949,7 +953,8 @@ mod tests {
         let mut td = TDigest::<Fp>::builder()
             .max_size(3)
             .singleton_policy(SingletonPolicy::Off)
-            .build();
+            .build()
+            .unwrap();
 
         let input: Vec<_> = (0..10).map(|i| c::<Fp>(i as f64, 1.0, true)).collect();
         let out = super::compress_into(&mut td, 3, input);
@@ -967,7 +972,8 @@ mod tests {
         let mut td = TDigest::<Fp>::builder()
             .max_size(3) // total cap in this policy (edges included)
             .singleton_policy(SingletonPolicy::Use)
-            .build();
+            .build()
+            .unwrap();
 
         let input: Vec<_> = (0..8).map(|i| c::<Fp>(i as f64, 1.0, true)).collect();
         let out = super::compress_into(&mut td, 3, input);
@@ -995,7 +1001,8 @@ mod tests {
         let mut td = TDigest::<Fp>::builder()
             .max_size(2) // core capacity only
             .singleton_policy(SingletonPolicy::UseWithProtectedEdges(2))
-            .build();
+            .build()
+            .unwrap();
 
         let mut input: Vec<_> = (0..12).map(|i| c::<Fp>(i as f64, 1.0, true)).collect();
         input[5] = c::<Fp>(5.0, 2.0, false);
@@ -1023,7 +1030,8 @@ mod tests {
         let mut td = TDigest::<Fp>::builder()
             .max_size(10)
             .singleton_policy(SingletonPolicy::Off)
-            .build();
+            .build()
+            .unwrap();
 
         let input = vec![
             c::<Fp>(-3.0, 1.0, true),

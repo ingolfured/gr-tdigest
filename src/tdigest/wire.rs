@@ -1037,8 +1037,8 @@ fn decode_payload_into_digest(
                 .scale(scale)
                 .singleton_policy(policy)
                 .with_centroids_and_stats(cents, stats)
-                .build();
-
+                .build()
+                .map_err(|_| WireError::InvalidPayload("invalid digest state"))?;
             Ok(WireDecodedDigest::F32(td))
         }
         WireFloatWidth::F64 => {
@@ -1091,8 +1091,8 @@ fn decode_payload_into_digest(
                 .scale(scale)
                 .singleton_policy(policy)
                 .with_centroids_and_stats(cents, stats)
-                .build();
-
+                .build()
+                .map_err(|_| WireError::InvalidPayload("invalid digest state"))?;
             Ok(WireDecodedDigest::F64(td))
         }
     }
@@ -1109,6 +1109,7 @@ mod tests {
             .singleton_policy(SingletonPolicy::Off)
             .delta(17.0)
             .build()
+            .unwrap()
             .merge_unsorted(vec![0.0, 10.0])
             .unwrap();
         let blob = encode_digest(&td);
@@ -1146,7 +1147,8 @@ mod tests {
             .max_size(128)
             .scale(ScaleFamily::K3)
             .singleton_policy(SingletonPolicy::UseWithProtectedEdges(2))
-            .build();
+            .build()
+            .unwrap();
         td.add_many(vec![-3.0, -1.0, 0.0, 0.25, 10.0, 11.0])
             .expect("seed");
         td.add_weighted_many(&[1.5, 2.5], &[2.0, 3.0])

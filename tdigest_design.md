@@ -516,3 +516,7 @@ JVM test tool selection is shared through `bindings/java/bootstrap.py::java_envi
 ## Preserve residual mass and compensated modern centroid arithmetic.
 
 Modern normalization uses compensated mass and moment sums; cluster averaging uses compensation for cancellation or overflow. Equal-weight buckets retain positive residuals. Atomic quantile boundaries sum actual prefix mass. Centroid::weight returns f64 independently of mean precision. Public digest construction and update signatures are unchanged in this prerequisite.
+
+## Check modern construction, reconstruction, precision casts and merges.
+
+Builders and seeded constructors return Result and validate mass, finite ordered means, extrema, aggregate metadata and delta configuration. Merges validate all contributors, including empties, and commit only a validated independent result. Precision casts reject unrepresentable values. Rust, Python/JNI and Polars call sites propagate the checked results. Exact-point subnormal state is recognized; scaling validation follows in the next change.

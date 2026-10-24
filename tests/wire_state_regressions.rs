@@ -67,6 +67,7 @@ fn full_width_edge_pins_roundtrip_and_extensions_are_checked() {
         .scale(ScaleFamily::K3)
         .singleton_policy(SingletonPolicy::UseWithProtectedEdges(300))
         .build()
+        .unwrap()
         .merge_unsorted((0..400).map(|i| i as f64).collect())
         .unwrap();
     assert_eq!(td.centroids().len(), 400);
@@ -105,7 +106,8 @@ fn delta_headers_reject_incompatible_scale_and_policy_before_use() {
         .scale(ScaleFamily::K2Norm)
         .singleton_policy(SingletonPolicy::Off)
         .delta(17.0)
-        .build();
+        .build()
+        .unwrap();
     let valid = td.to_bytes();
     assert!(decode_digest(&valid).is_ok());
 
@@ -133,20 +135,23 @@ fn delta_headers_reject_incompatible_scale_and_policy_before_use() {
 }
 
 #[test]
-fn invalid_rust_builder_delta_config_is_not_a_valid_wire_state() {
-    let default_config = TDigest::<f64>::builder().delta(17.0).build();
-    assert!(WireVersion::V3.validate_digest(&default_config).is_err());
+fn rust_builder_defaults_delta_and_rejects_explicit_incompatible_configuration() {
+    let default_config = TDigest::<f64>::builder().delta(17.0).build().unwrap();
+    assert_eq!(default_config.scale(), ScaleFamily::K2Norm);
+    assert_eq!(default_config.singleton_policy(), SingletonPolicy::Off);
+    assert!(WireVersion::V3.validate_digest(&default_config).is_ok());
     let wrong_policy = TDigest::<f64>::builder()
         .scale(ScaleFamily::K2Norm)
         .singleton_policy(SingletonPolicy::UseWithProtectedEdges(300))
         .delta(17.0)
         .build();
-    assert!(WireVersion::V3.validate_digest(&wrong_policy).is_err());
+    assert!(wrong_policy.is_err());
     let valid = TDigest::<f64>::builder()
         .scale(ScaleFamily::K2Norm)
         .singleton_policy(SingletonPolicy::Off)
         .delta(17.0)
-        .build();
+        .build()
+        .unwrap();
     assert!(WireVersion::V3.validate_digest(&valid).is_ok());
     assert!(decode_digest(&valid.to_bytes()).is_ok());
 }

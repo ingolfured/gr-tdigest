@@ -30,6 +30,7 @@ fn synth_digest(centroids: usize, shift: f64) -> TDigest<f64> {
             cs, sum, count, /*max:*/ max, /*min:*/ min, /*override:*/ MAX_SIZE,
         )
         .build()
+        .unwrap()
 }
 
 fn codec_bench(c: &mut Criterion) {
@@ -47,7 +48,10 @@ fn codec_bench(c: &mut Criterion) {
         .map(|r| synth_digest(CENTROIDS, r as f64 * 0.123))
         .collect();
 
-    let compact: Vec<TDigest<f32>> = digests.iter().map(TDigest::cast_precision).collect();
+    let compact: Vec<TDigest<f32>> = digests
+        .iter()
+        .map(|d| d.cast_precision().unwrap())
+        .collect();
 
     let ser_f64 = {
         let mut acc = digests[0].to_series("td").expect("to_series f64");

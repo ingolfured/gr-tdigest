@@ -28,6 +28,7 @@ fn mixed_edges() -> TDigest<f64> {
             },
         )
         .build()
+        .unwrap()
 }
 
 #[test]
@@ -70,6 +71,7 @@ fn compressed_extrema_survive_updates<F: FloatLike + FloatCore>() {
         .singleton_policy(SingletonPolicy::Off)
         .delta(1.0)
         .build()
+        .unwrap()
         .merge_unsorted(values)
         .unwrap();
     assert!(base.centroids()[0].mean_f64() > base.min());
@@ -78,8 +80,8 @@ fn compressed_extrema_survive_updates<F: FloatLike + FloatCore>() {
     added.add(F::from_f64(50.0)).unwrap();
     let mut weighted = base.clone();
     weighted.add_weighted(F::from_f64(50.0), 0.25).unwrap();
-    let merged = TDigest::merge_digests(vec![base.clone(), base.clone()]);
-    let single = TDigest::merge_digests(vec![base.clone()]);
+    let merged = TDigest::merge_digests(vec![base.clone(), base.clone()]).unwrap();
+    let single = TDigest::merge_digests(vec![base.clone()]).unwrap();
     for td in [&base, &added, &weighted, &merged, &single] {
         assert_eq!(td.min(), 0.0);
         assert_eq!(td.max(), 99.0);
@@ -110,10 +112,11 @@ fn compressed_extrema_survive_updates<F: FloatLike + FloatCore>() {
                 data_max: 100.0,
             },
         )
-        .build();
+        .build()
+        .unwrap();
     let mut updated = mixed.clone();
     updated.add(F::from_f64(50.0)).unwrap();
-    let merged = TDigest::merge_digests(vec![mixed.clone(), mixed]);
+    let merged = TDigest::merge_digests(vec![mixed.clone(), mixed]).unwrap();
     for td in [&updated, &merged] {
         assert_eq!(td.min(), 0.0);
         assert_eq!(td.max(), 100.0);
@@ -144,7 +147,8 @@ fn one_mixed_centroid_retains_both_tails() {
                 data_max: 100.0,
             },
         )
-        .build();
+        .build()
+        .unwrap();
     for factor in [0.001, 1.0, 1000.0] {
         let mut td = base.clone();
         td.scale_weights(factor).unwrap();
@@ -177,7 +181,8 @@ fn finite_extreme_centroid_ranges_do_not_overflow_interpolation() {
                 data_max: 1.1e308,
             },
         )
-        .build();
+        .build()
+        .unwrap();
     assert_eq!(td.quantile(0.0), -1e308);
     assert_eq!(td.quantile(0.25), 0.0);
     assert_eq!(td.quantile(0.5), 1e308);
@@ -188,7 +193,11 @@ fn finite_extreme_centroid_ranges_do_not_overflow_interpolation() {
         close(td.cdf(&[value])[0], q);
     }
 
-    let middle = TDigest::<f64>::from_unsorted(&[1e308, 1.1e308], 10).unwrap();
+    // These finite observations have an unrepresentable f64 data sum. The
+    // modern state contract rejects aggregate overflow instead of storing inf.
+    assert!(TDigest::<f64>::from_unsorted(&[1e308, 1.1e308], 10).is_err());
+    let middle =
+        TDigest::<f64>::from_weighted_unsorted(&[1e308, 1.1e308], &[0.5, 0.5], 10).unwrap();
     assert!(middle.median().is_finite());
     assert!((1e308..=1.1e308).contains(&middle.median()));
 }
@@ -202,6 +211,7 @@ fn touching_or_overlapping_protected_edges_keep_all_mass() {
                 .max_size(1000)
                 .singleton_policy(SingletonPolicy::UseWithProtectedEdges(pin))
                 .build()
+                .unwrap()
                 .merge_unsorted(values.clone())
                 .unwrap();
             assert_eq!(td.count(), n as f64);

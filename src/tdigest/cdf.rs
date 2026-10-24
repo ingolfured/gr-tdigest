@@ -255,6 +255,7 @@ mod tests {
             .max_size(10)
             .scale(ScaleFamily::Quad)
             .build()
+            .unwrap()
             .merge_sorted(values.clone())
             .expect("no NaNs");
         let approx = td.cdf(&values);
@@ -307,6 +308,7 @@ mod tests {
         let approx = TDigestBuilder::new()
             .max_size(N + 1)
             .build()
+            .unwrap()
             .merge_sorted(vals.clone())
             .expect("no NaNs")
             .cdf(&vals);
@@ -326,6 +328,7 @@ mod tests {
         let td = TDigestBuilder::new()
             .max_size(1000)
             .build()
+            .unwrap()
             .merge_sorted(vals.clone())
             .expect("no NaNs");
 
@@ -355,6 +358,7 @@ mod tests {
             .max_size(64)
             .scale(ScaleFamily::K2)
             .build()
+            .unwrap()
             .merge_sorted(values)
             .expect("no NaNs");
 

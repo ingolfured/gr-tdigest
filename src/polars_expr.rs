@@ -244,11 +244,15 @@ fn cast_precision(inputs: &[Series]) -> PolarsResult<Series> {
             td.to_series(digest_s.name())
         } else {
             let td = parse_and_merge::<f64>(std::slice::from_ref(digest_s))?;
-            td.cast_precision::<f32>().to_series(digest_s.name())
+            td.try_cast_precision::<f32>()
+                .map_err(|e| PolarsError::ComputeError(e.to_string().into()))?
+                .to_series(digest_s.name())
         }
     } else if is_compact_digest_dtype(digest_s.dtype()) {
         let td = parse_and_merge::<f32>(std::slice::from_ref(digest_s))?;
-        td.cast_precision::<f64>().to_series(digest_s.name())
+        td.try_cast_precision::<f64>()
+            .map_err(|e| PolarsError::ComputeError(e.to_string().into()))?
+            .to_series(digest_s.name())
     } else {
         let td = parse_and_merge::<f64>(std::slice::from_ref(digest_s))?;
         td.to_series(digest_s.name())
@@ -297,6 +301,7 @@ where
             },
         )
         .build()
+        .expect("valid upcast state")
 }
 
 #[polars_expr(output_type = Binary)]
@@ -385,7 +390,7 @@ fn from_bytes(inputs: &[Series]) -> PolarsResult<Series> {
     let s = &inputs[0];
 
     if s.len() == 0 {
-        let td = TDigest::<f64>::builder().build();
+        let td = TDigest::<f64>::builder().build().unwrap();
         return td.to_series("tdigest");
     }
 
@@ -642,7 +647,7 @@ where
         .scale(scale)
         .singleton_policy(policy)
         .build()
-        .merge_unsorted(vf)
+        .and_then(|digest| digest.merge_unsorted(vf))
         .map_err(|e| PolarsError::ComputeError(e.to_string().into()))
 }
 
@@ -655,7 +660,8 @@ where
     if parsed.len() == 1 {
         return Ok(parsed.pop().unwrap());
     }
-    Ok(TDigest::<F>::merge_digests(parsed))
+    TDigest::<F>::merge_digests(parsed)
+        .map_err(|e| PolarsError::ComputeError(e.to_string().into()))
 }
 
 fn add_values_generic<F>(digest_s: &Series, values_s: &Series) -> PolarsResult<Series>
