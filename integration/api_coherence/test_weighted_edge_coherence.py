@@ -30,7 +30,7 @@ def test_fractional_cdf_tail_preserves_shape_in_python_and_polars(precision):
     assert all(0.0 <= value <= 1.0 for value in actual)
     assert actual == sorted(actual)
     assert actual[1] == 0.0
-    frame = pl.DataFrame({"blob": [digest.to_bytes()]}).select(d=td.from_bytes("blob"))
+    frame = pl.DataFrame({"blob": [digest.to_bytes()]}).select(d=td.from_bytes("blob", precision=precision))
     polars_cdf = frame.select(
         *[
             td.cdf("d", pl.lit(value).alias(f"probe_{i}"))
@@ -45,7 +45,7 @@ def test_fractional_cdf_tail_preserves_shape_in_python_and_polars(precision):
 def test_compressed_extrema_survive_python_and_polars_add(precision):
     original = compressed_tail(precision)
     frame = pl.DataFrame({"blob": [original.to_bytes()]}).select(
-        d=td.from_bytes("blob")
+        d=td.from_bytes("blob", precision=precision)
     )
     original.add(50.0)
     updated = frame.select(d=td.add_values("d", pl.lit(50.0)))
@@ -114,7 +114,7 @@ def test_fractional_point_mass_stays_at_the_original_mean(precision):
     )
     np.testing.assert_array_equal(digest.means, [-4.0, -3.0, -2.0])
     assert digest.cdf([-3.0])[0] == pytest.approx(0.5, abs=1e-14)
-    frame = pl.DataFrame({"blob": [digest.to_bytes()]}).select(d=td.from_bytes("blob"))
+    frame = pl.DataFrame({"blob": [digest.to_bytes()]}).select(d=td.from_bytes("blob", precision=precision))
     assert frame.select(td.cdf("d", pl.lit(-3.0))).item() == pytest.approx(
         0.5, abs=1e-14
     )

@@ -524,3 +524,7 @@ Builders and seeded constructors return Result and validate mass, finite ordered
 ## Validate positive transformations before committing modern state.
 
 Weight and value scaling prepare independent candidate state, reject aggregate overflow and unsupported underflow, validate the candidate, and replace the receiver only on success. Exact atomic points retain their distribution when the rounded weighted moment is subnormal or zero and recover representable moments after later scaling or merging.
+
+## Use checked modern state and length-based CDF broadcasting in Polars.
+
+Polars training uses checked precision conversion and reconstruction validates every digest row. Missing digests error rather than becoming empty digests. CDF broadcasting follows row counts; List probes retain List output. Python sequence probes become a flat probe Series. Binary decoding requires a precision hint and empty decoding uses its schema.

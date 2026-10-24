@@ -38,11 +38,11 @@ def test_polars_keeps_high_delta_when_mutating_serialized_state(precision, route
 
     direct = make([0.0, 0.0, 100.0])
     if route == "update":
-        frame = pl.DataFrame({"blob": [make([0.0]).to_bytes()]}).select(d=td.from_bytes("blob"))
+        frame = pl.DataFrame({"blob": [make([0.0]).to_bytes()]}).select(d=td.from_bytes("blob", precision=precision))
         result = frame.select(d=td.add_values("d", pl.lit([0.0, 100.0])))
     else:
         frame = pl.DataFrame({"blob": [make([0.0, 0.0]).to_bytes(), make([100.0]).to_bytes()]}).select(
-            d=td.from_bytes("blob")
+            d=td.from_bytes("blob", precision=precision)
         )
         result = frame.select(d=td.merge_tdigests("d"))
     blob = result.select(td.to_bytes("d")).item()
