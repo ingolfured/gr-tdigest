@@ -4,6 +4,8 @@ All notable changes to this project are documented in this file.
 
 ## [Unreleased]
 
+- Document measured Modern versus G-Research accuracy winners and error ratios by dataset, summary size, precision and merge setup.
+
 - Test accuracy on recorded data and deterministic distributions.
 
 - Support Python 3.14 and 3.15 on the current NumPy and Polars stack.
