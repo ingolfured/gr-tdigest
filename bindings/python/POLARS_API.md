@@ -1,18 +1,27 @@
 # Modern Polars API: consumer candidate
 
-The modern integration supports Polars 1.x and 2.x. The tested releases are
-1.44.2 (latest 1.x) and 2.0.0. The optional `polars` extra accepts
-`polars>=1.44.2,<3`; development stays pinned to 1.44.2. Install an exact release
-with `pip install 'gr-tdigest[polars]' 'polars==2.0.0'` when selecting 2.x.
-Original `tdigest_rs` objects are a separate API.
+Install `gr-tdigest` normally when Polars is already installed. Its expressions
+use that existing Polars runtime. The optional `gr-tdigest[polars]` extra installs
+Polars if needed and requires only `polars>=1.0.0`, without an upper cap; it also
+retains an existing compatible version. There is no need to pick a separate
+package or native build for Polars 1.x versus 2.x. Development stays pinned to
+1.44.2. Original `tdigest_rs` objects remain a separate API.
 
 `make python-support-test` installs the same compiled wheel in isolated cells
-for both Polars releases across CPython 3.10–3.15. It checks installed dependency
-versions and native library hashes, then runs the public API and consumer
-regressions, including grouped lazy joins, chunked inputs, streaming execution,
-empty/missing states, list schemas and binary precision. Polars-free baseline
-installs remain covered. Future releases must pass this gate before updating
-the tested pins; the dependency range alone is not compatibility evidence.
+for Polars 1.0.0, 1.20.0, 1.38.1, 1.44.2 and 2.0.0 across CPython 3.10–3.15.
+Every cell starts with Polars installed, installs the base package and then the
+extra with normal dependency resolution, and verifies both preserve its version
+and the native library hash. The public API and consumer regressions cover
+grouped lazy joins, chunked inputs, streaming execution, empty/missing states,
+list schemas and binary precision. Polars-free baseline installs remain covered.
+The open dependency range permits newer Polars releases without a package
+metadata change; unreleased versions still need verification before compatibility
+can be guaranteed.
+
+Use the collection API of the installed Polars release (`streaming=True` on
+early 1.x, `engine="streaming"` on newer releases). In grouped queries, train a
+digest first, then encode it in a subsequent expression: early 1.x planners
+reject nested reductions such as `to_bytes(tdigest("x"))` inside one `agg`.
 
 On CPython 3.15, Polars 1.44.2 has an upstream Series namespace dispatch
 limitation: `series.struct.field(...)` can return `None` even for ordinary

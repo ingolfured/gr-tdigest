@@ -30,7 +30,7 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
-polars = ["polars>=1.44.2,<3"]
+polars = ["polars>=1.0.0"]
 
 # Dev groups (PEP 735). uv understands these and can install with --group/--all-groups.
 [dependency-groups]

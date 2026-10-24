@@ -108,15 +108,18 @@ pinned upstream revision did not contain a Rust test suite.
 The Python distribution supports CPython 3.10–3.15 through a py310 ABI3 wheel,
 with NumPy >=1.26.4,<3. The base installation exposes both NumPy numerical
 interfaces without requiring the Polars Python package. The optional `polars`
-extra accepts Polars >=1.44.2,<3, supporting both the 1.x and 2.x lines.
+extra accepts Polars >=1.0.0 without an upper cap. Installing either the base
+package or its extra preserves an already installed compatible Polars version.
 Development remains pinned to 1.44.2. The installed-artifact gate exercises
-the same compiled wheel against 1.44.2 and 2.0.0 across all supported Python
-versions, including consumer cardinality/schema and streaming regressions.
-Future dependency releases require requalification. Existing numerical imports
-remain lazy, while expression operations require the extra.
+the same compiled wheel against 1.0.0, 1.20.0, 1.38.1, 1.44.2 and 2.0.0 across
+all supported Python versions, including consumer cardinality/schema and streaming regressions.
+The open dependency range permits newer releases; compatibility with unreleased
+versions cannot be guaranteed before testing. Existing numerical imports
+remain lazy, while expression operations require Polars to be installed.
 
-The installed-artifact gate reuses one real wheel across both Polars versions
-and all six Python versions, using both NumPy lines on3.10–3.12 and NumPy2 on3.13–3.15. It also
+The installed-artifact gate reuses one real wheel across the tested Polars
+versions and all six Python versions, using both NumPy lines on 3.10–3.12 and
+NumPy 2 on 3.13–3.15. It also
 tests genuinely Polars-free3.10/3.15 installations and rebuilds the verified
 source archive under3.12/3.14/3.15. Standard CPython is covered; free-threaded
 runtimes and PyPy need separate qualification.

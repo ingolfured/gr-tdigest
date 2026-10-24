@@ -1,6 +1,7 @@
 """Public consumer regressions; original tdigest_rs semantics stay separate."""
 
 import copy
+import inspect
 import math
 import pickle
 import struct
@@ -94,7 +95,7 @@ def test_polars_missing_digest_is_rejected_for_queries_and_merges():
     missing = healthy.with_columns(pl.lit(None, dtype=healthy.schema["d"]).alias("d"))
     frame = pl.concat([healthy, missing])
     for expression in (gr.cdf("d", 5.0), gr.merge_tdigests("d")):
-        with pytest.raises(pl.exceptions.ComputeError, match="missing digest"):
+        with pytest.raises(pl.exceptions.ComputeError, match="missing digest|null in scalar field"):
             frame.select(expression)
 
 
@@ -211,14 +212,21 @@ def test_polars_grouped_wire_roundtrip_across_execution_engines(precision, dtype
         rechunk=False,
     )
     assert frame["x"].n_chunks() == 2
-    encoded = frame.lazy().group_by("g").agg(gr.to_bytes(gr.tdigest("x", max_size=200)).alias("blob"))
+    grouped = frame.lazy().group_by("g").agg(gr.tdigest("x", max_size=200).alias("d"))
+    encoded = grouped.with_columns(gr.to_bytes("d").over("g").alias("blob")).select("g", "blob")
     restored = encoded.group_by("g").agg(gr.from_bytes("blob", precision=precision).alias("d"))
     result = restored.select(
         "g",
         gr.median("d").over("g").alias("median"),
         gr.cdf("d", pl.lit(5.0, dtype=dtype)).alias("p"),
     ).sort("g")
-    actual = result.collect(engine=engine)
+    # The host Polars version owns the collect API; early 1.x uses streaming=.
+    collect_options = (
+        {"streaming": engine == "streaming"}
+        if "streaming" in inspect.signature(pl.LazyFrame.collect).parameters
+        else {"engine": engine}
+    )
+    actual = result.collect(**collect_options)
     assert actual.schema == result.collect_schema()
     assert actual["g"].to_list() == ["a", "b"]
     assert actual["median"].to_list() == [5.0, 150.0]

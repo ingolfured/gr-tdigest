@@ -39,7 +39,7 @@ MATRIX = (
     ("3.14", "2.5.4", "1.18.1", "9.1.1"),
     ("3.15", "2.5.4", "1.18.1", "9.1.1"),
 )
-POLARS_VERSIONS = ("1.44.2", "2.0.0")
+POLARS_VERSIONS = ("1.0.0", "1.20.0", "1.38.1", "1.44.2", "2.0.0")
 MODERN_TESTS = (
     "bindings/python/tests/test_consumer_contracts.py",
     "bindings/python/tests/test_api_python.py",
@@ -120,7 +120,7 @@ def inspect_wheel(wheel: Path) -> dict:
         polars_requirements = [item for item in metadata.get_all("Requires-Dist", []) if item.startswith("polars")]
         require(
             len(polars_requirements) == 1
-            and polars_requirements[0].replace(" ", "").replace("'", '"') == 'polars>=1.44.2,<3;extra=="polars"',
+            and polars_requirements[0].replace(" ", "").replace("'", '"') == 'polars>=1.0.0;extra=="polars"',
             f"Polars must only be the tested optional extra, got {polars_requirements}",
         )
         native_sha = hashlib.sha256(archive.read("gr_tdigest/_gr_tdigest.abi3.so")).hexdigest()
@@ -188,7 +188,11 @@ def main() -> None:
         require(result.returncode == 0, f"{label} failed; see {output / (label + '.log')}")
         return result.stdout
 
-    with tempfile.TemporaryDirectory(prefix="tdigest-support-cells-") as temporary:
+    # Large dependency matrices can exhaust a tmpfs-backed /tmp. Keep cells
+    # beside build outputs so uv can also hardlink from its disk-backed cache.
+    scratch = root / "build"
+    scratch.mkdir(exist_ok=True)
+    with tempfile.TemporaryDirectory(prefix="tdigest-support-cells-", dir=scratch) as temporary:
         work = Path(temporary)
         tests, parity = stage_compatibility_tests(root, work)
         modern = work / "modern"
@@ -271,13 +275,24 @@ def main() -> None:
             result = {**cell, "status": "RUNNING"}
             results.append(result)
             try:
-                # Dependencies are already present. Keep normal pip dependency
-                # checking enabled: the base cell must not request Polars, and
-                # the extra cells must resolve the advertised Polars extra.
-                requirement = str(wheel) + ("[polars]" if cell["polars"] else "")
-                run(label + "-install", [python, "-I", "-m", "pip", "install", "--no-index", requirement], work)
-                run(label + "-pip-check", [python, "-I", "-m", "pip", "check"], work)
-                imports = run(label + "-imports", [python, "-I", "-c", INSPECT, json.dumps({**artifact, **cell})], work)
+                # Start with the user's existing Polars. Neither an ordinary
+                # install nor opting into the extra may replace that version.
+                run(label + "-base-install", [python, "-I", "-m", "pip", "install", "--no-index", str(wheel)], work)
+                run(label + "-base-pip-check", [python, "-I", "-m", "pip", "check"], work)
+                imports = run(
+                    label + "-base-imports", [python, "-I", "-c", INSPECT, json.dumps({**artifact, **cell})], work
+                )
+                result["base_installed"] = json.loads(imports)
+                if cell["polars"]:
+                    run(
+                        label + "-extra-install",
+                        [python, "-I", "-m", "pip", "install", "--no-index", str(wheel) + "[polars]"],
+                        work,
+                    )
+                    run(label + "-extra-pip-check", [python, "-I", "-m", "pip", "check"], work)
+                    imports = run(
+                        label + "-extra-imports", [python, "-I", "-c", INSPECT, json.dumps({**artifact, **cell})], work
+                    )
                 result["installed"] = json.loads(imports)
                 suites = [("compatibility", [tests, parity], 208)]
                 if cell["polars"]:
