@@ -4,6 +4,9 @@ All notable changes to this project are documented in this file.
 
 ## [Unreleased]
 
+- Align public guides for the 0.2.5 release candidate.
+- Use version `0.2.5-rc.1` (`0.2.5rc1` for Python) and simplify public release guidance.
+
 - Verify toolchain selection, source archives and installed artifacts.
 
 - Verify toolchain selection, source archives and installed artifacts.
