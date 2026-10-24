@@ -6,6 +6,8 @@ All notable changes to this project are documented in this file.
 
 - Verify toolchain selection, source archives and installed artifacts.
 
+- Preserve the independent original Rust oracle, pinned lockfile and recorded evidence.
+
 - Ship installed Python API documentation and typing metadata.
 
 - Compile Scala and Kotlin consumers through authenticated Maven fixtures.
