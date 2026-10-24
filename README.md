@@ -90,6 +90,10 @@ public class Example {
 }
 ```
 
+Query and transformation internals are described in [tdigest_design.md](tdigest_design.md).
+CDF and quantile share a read-only query view; tiny-mass normalization leaves
+the stored digest unchanged.
+
 ## Project layout
 ```text
 ├── src/                                  # Rust core, CLI, algorithm modules

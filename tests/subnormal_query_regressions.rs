@@ -213,8 +213,8 @@ fn different_subnormal_header<F: FloatLike + FloatCore>() {
     let tiny = f64::from_bits(1);
     let correct = seeded::<F>(&[tiny, tiny], &[true, true], -2.0, 6.0);
     // Directly seeded state can supply an inconsistent count. Once the rare
-    // branch is entered, both queries must use the actual centroid mass and
-    // the temporary normal count must prevent recursive normalization.
+    // branch is entered, both queries must use the actual centroid mass for
+    // the normalized view rather than the inconsistent header count.
     let td = with_count(&correct, tiny * 3.0);
     let before = td.to_bytes();
     assert_eq!(td.count(), tiny * 3.0);
@@ -308,4 +308,45 @@ fn tiny_positive_quantiles_retain_large_finite_mixed_tail_values() {
         );
     }
     assert_eq!(tiny.to_bytes(), before);
+}
+
+fn multi_centroid_query_batches<F: FloatLike + FloatCore>() {
+    let reference = TDigest::<F>::builder()
+        .with_centroids_and_stats(
+            vec![
+                Centroid::new_mixed_f64(-8.0, 1.0),
+                Centroid::new_atomic_f64(-2.0, 3.0),
+                Centroid::new_mixed_f64(4.0, 5.0),
+                Centroid::new_atomic_f64(12.0, 7.0),
+            ],
+            DigestStats {
+                data_sum: 90.0,
+                total_weight: 16.0,
+                data_min: -12.0,
+                data_max: 12.0,
+            },
+        )
+        .build();
+    // Include enough probes to exercise CDF's Rayon path while a temporary
+    // normalized centroid slice is alive, plus every exact centroid mean.
+    let mut probes: Vec<f64> = (0..33_000).map(|i| -14.0 + i as f64 / 1000.0).collect();
+    probes.extend([f64::NEG_INFINITY, -8.0, -2.0, 4.0, 12.0, f64::INFINITY]);
+    let expected_cdf = reference.cdf(&probes);
+    for factor in [f64::from_bits(1), f64::MIN_POSITIVE / 32.0, 1.0] {
+        let mut digest = reference.clone();
+        digest.scale_weights(factor).unwrap();
+        let before = digest.to_bytes();
+        assert_eq!(digest.cdf(&probes), expected_cdf);
+        for i in 0..=1024 {
+            let q = i as f64 / 1024.0;
+            assert_eq!(digest.quantile(q), reference.quantile(q), "q={q}");
+        }
+        assert_eq!(digest.to_bytes(), before);
+    }
+}
+
+#[test]
+fn mixed_multi_centroid_queries_preserve_shape_and_state_for_parallel_batches() {
+    multi_centroid_query_batches::<f32>();
+    multi_centroid_query_batches::<f64>();
 }

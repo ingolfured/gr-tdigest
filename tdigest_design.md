@@ -24,6 +24,8 @@ Out of scope for this file:
 ### 2.1 Main modules
 
 - `src/tdigest/tdigest.rs`: digest type, builders, add/merge entry points, bytes entry points.
+- `src/tdigest/transformations.rs`: precision casts and value/weight scaling, as a private child module of the digest so its fields remain private.
+- `src/tdigest/query.rs`: shared read-only query view with borrowed centroids for ordinary queries and an owned normalized slice for subnormal mass.
 - `src/tdigest/merges.rs`: stream-merging helpers + stage-1 normalization.
   - Includes a heap-based streaming k-way centroid merge used by digest-to-digest merge.
 - `src/tdigest/compressor.rs`: staged compressor (`compress_into`) and policy logic.
@@ -341,8 +343,8 @@ These semantics are asserted by focused tests in:
 ### 5.5 Positive subnormal total mass
 
 Half-weight arithmetic and `q * total` can underflow when the entire stored
-centroid mass is positive and subnormal. These queries use a temporary digest
-view whose weights first multiply by `2^1022` (`1 / f64::MIN_POSITIVE`). A
+centroid mass is positive and subnormal. These queries use a shared read-only
+query view whose weights first multiply by `2^1022` (`1 / f64::MIN_POSITIVE`). A
 second exact power-of-two scale, derived from that normal total's exponent,
 places the total in `[1, 2)`. The two factors stay separate because their
 combined reciprocal could overflow. Every positive weight becomes normal, and
@@ -352,12 +354,15 @@ mutate the stored digest.
 
 CDF uses the actual centroid total already computed for its prefix array.
 Quantile first checks its stored total, then computes actual mass only in the
-subnormal branch. The temporary count is the scaled actual mass, so recursion
-terminates after one copy even if a directly seeded subnormal header differs
-from its subnormal centroid total. Empty/NaN handling, quantile endpoints, and
-weight-independent single-centroid quantiles retain their existing branches.
+subnormal branch. The view total is the scaled actual mass even if a directly
+seeded subnormal header differs from its subnormal centroid total. Both kernels evaluate the
+view directly, without recursive query calls. The view borrows ordinary
+centroids and owns only a normalized centroid slice on the rare path; it
+never copies or scales the raw sum or digest configuration. Empty/NaN handling,
+quantile endpoints, and weight-independent single-centroid quantiles retain their existing branches.
 Normal-total queries keep the previous summation order, kernels, and allocation
-behavior, with only an extra condition. The rare fallback allocates a query copy.
+behavior, with only an extra condition. The rare fallback allocates a normalized
+centroid slice. CDF reuses its prefix allocation when rebuilding cumulative mass from that slice.
 
 This evaluates the stored centroid distribution; it cannot recover mean or sum
 information already lost during compression. A normal total with a

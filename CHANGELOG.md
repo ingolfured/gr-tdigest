@@ -4,6 +4,8 @@ All notable changes to this project are documented in this file.
 
 ## [Unreleased]
 
+- Separate digest transformations and share a read-only query view; tiny-mass queries normalize only centroids without cloning or recursively querying the digest.
+
 - Restore the original tdigest_rs Python engine and API.
 
 - Preserve tiny-mass queries and reject invalid scaling atomically.

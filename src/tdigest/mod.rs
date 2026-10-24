@@ -15,6 +15,7 @@ pub mod frontends;
 pub mod merges;
 pub mod precision;
 pub mod quantile;
+mod query;
 pub mod scale;
 pub mod singleton_policy;
 pub mod tdigest;
