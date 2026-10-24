@@ -4,6 +4,8 @@ All notable changes to this project are documented in this file.
 
 ## [Unreleased]
 
+- Add regression tests for tiny-capacity mass retention, residual tail contributions, cancellation, intermediate overflow and fractional atomic quantile boundaries.
+
 - Document measured Modern versus G-Research accuracy winners and error ratios by dataset, summary size, precision and merge setup.
 
 - Preserve residual mass and compensated modern centroid arithmetic.

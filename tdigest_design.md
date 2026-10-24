@@ -516,3 +516,5 @@ JVM test tool selection is shared through `bindings/java/bootstrap.py::java_envi
 ## Preserve residual mass and compensated modern centroid arithmetic.
 
 Modern normalization uses compensated mass and moment sums; cluster averaging uses compensation for cancellation or overflow. Equal-weight buckets retain positive residuals. Atomic quantile boundaries sum actual prefix mass. Centroid::weight returns f64 independently of mean precision. Public digest construction and update signatures are unchanged in this prerequisite.
+
+Regression coverage in `tests/numerical_foundation.rs` checks both mean precisions for tiny Use capacities, rounded-away tail mass with a nonzero moment, cancellation at compressed and uncompressed capacities, and fractional symmetric atomic boundaries with probes on both sides. Compressor unit coverage checks recovery from intermediate moment overflow and accumulator reuse after clearing.
