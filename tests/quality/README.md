@@ -1,5 +1,8 @@
 # Quality checks
 
+For private consumer artifacts, actual clusters and representative servers,
+see [owner-run checks](OWNER_CHECKS.md). These inputs stay in the intranet.
+
 The suite measures specific errors. It does not turn them into one flattering score. The older heuristic quality score remains a historical test helper and is not an acceptance rule here.
 
 ## Routine checks

@@ -1,0 +1,209 @@
+{
+  "commands": [
+    {
+      "command": [
+        "/home/ingo/Documents/ChatGPT/gr-tdigest 2/followup-20261020/toolchains/jdk-3808d1d15e3ec6bd5b84057fb5d84c33d8a1536a258146bcea2e603fc726e08e/jdk-17.0.20.1+1/bin/java",
+        "-Xmx1g",
+        "-XX:ActiveProcessorCount=4",
+        "-Dsbt.task.cpus=2",
+        "-Dsbt.supershell=false",
+        "-Dsbt.override.build.repos=true",
+        "-Dsbt.repository.config=/home/ingo/Documents/ChatGPT/gr-tdigest 2/candidate-20261020/sbt-repositories",
+        "-Dsbt.boot.credentials=/home/ingo/Documents/ChatGPT/gr-tdigest 2/candidate-20261020/sbt-fixture.credentials",
+        "-Dsbt.boot.directory=/home/ingo/Documents/ChatGPT/gr-tdigest 2/candidate-20261020/sbt-boot",
+        "-Dtdigest.version=0.2.5-dev2026102102",
+        "-jar",
+        "/home/ingo/Documents/ChatGPT/gr-tdigest 2/candidate-20261020/sbt-launch-1.12.11.jar",
+        "clean",
+        "run",
+        "show Compile / dependencyClasspath"
+      ],
+      "cwd": "/home/ingo/Documents/ChatGPT/gr-tdigest 2/gr-tdigest-story/bindings/java/examples/scala",
+      "exit_code": 0,
+      "log_sha256": "27628cbc253144ee6ad630cfd3a935aa96b0f98890106c9be9f7bc296d760fc9",
+      "name": "scala-authenticated",
+      "resolved_jar_path": "/home/ingo/.cache/coursier/v1/http/127.0.0.1%3A39147/maven/gr/tdigest/gr-tdigest/0.2.5-dev2026102102/gr-tdigest-0.2.5-dev2026102102.jar",
+      "resolved_jar_sha256": "6ec33b14d0add563fa6d11569d5585383d0d8a8a4f543bf7edb7cf59bba863cc",
+      "runtime_jar_path": "sbt temporary background-job copy; removed after execution"
+    },
+    {
+      "command": [
+        "/home/ingo/Documents/ChatGPT/gr-tdigest 2/gr-tdigest-story/bindings/java/gradlew",
+        "--no-daemon",
+        "--console=plain",
+        "--init-script",
+        "/home/ingo/Documents/ChatGPT/gr-tdigest 2/candidate-20261020/kotlin-runtime.init.gradle",
+        "-p",
+        "/home/ingo/Documents/ChatGPT/gr-tdigest 2/gr-tdigest-story/bindings/java/examples/kotlin",
+        "-PtdigestVersion=0.2.5-dev2026102102",
+        "clean",
+        "run"
+      ],
+      "cwd": "/home/ingo/Documents/ChatGPT/gr-tdigest 2/gr-tdigest-story",
+      "exit_code": 0,
+      "log_sha256": "0f8d4910c6e20cbf112b6e727e7e12b96a0787f37f4b509cd71154b5fe68a587",
+      "name": "kotlin-authenticated",
+      "resolved_jar_path": "/home/ingo/Documents/ChatGPT/gr-tdigest 2/gr-tdigest-quality/.gradle-user-home/caches/modules-2/files-2.1/gr.tdigest/gr-tdigest/0.2.5-dev2026102102/25d9dee718075fdc72ab6bcd79b33182fb20c297/gr-tdigest-0.2.5-dev2026102102.jar",
+      "resolved_jar_sha256": "6ec33b14d0add563fa6d11569d5585383d0d8a8a4f543bf7edb7cf59bba863cc"
+    },
+    {
+      "command": [
+        "/home/ingo/Documents/ChatGPT/gr-tdigest 2/gr-tdigest-story/bindings/java/gradlew",
+        "--no-daemon",
+        "--console=plain",
+        "--init-script",
+        "/home/ingo/Documents/ChatGPT/gr-tdigest 2/candidate-20261020/kotlin-runtime.init.gradle",
+        "-p",
+        "/home/ingo/Documents/ChatGPT/gr-tdigest 2/gr-tdigest-story/bindings/java/examples/kotlin",
+        "-PtdigestVersion=0.2.5-dev2026102102",
+        "run"
+      ],
+      "cwd": "/home/ingo/Documents/ChatGPT/gr-tdigest 2/gr-tdigest-story",
+      "exit_code": 1,
+      "log_sha256": "dc6e42d50c0b13ea94462bea59c9c14266d077870561e9f0793820eb0ba6b4ae",
+      "name": "maven-bad-credentials"
+    },
+    {
+      "command": [
+        "/home/ingo/Documents/ChatGPT/gr-tdigest 2/followup-20261020/toolchains/jdk-3808d1d15e3ec6bd5b84057fb5d84c33d8a1536a258146bcea2e603fc726e08e/jdk-17.0.20.1+1/bin/java",
+        "-Xmx1g",
+        "-XX:ActiveProcessorCount=4",
+        "-Dsbt.task.cpus=2",
+        "-Dsbt.supershell=false",
+        "-Dsbt.override.build.repos=true",
+        "-Dsbt.repository.config=/home/ingo/Documents/ChatGPT/gr-tdigest 2/candidate-20261020/sbt-repositories",
+        "-Dsbt.boot.credentials=/home/ingo/Documents/ChatGPT/gr-tdigest 2/candidate-20261020/sbt-fixture.credentials",
+        "-Dsbt.boot.directory=/home/ingo/Documents/ChatGPT/gr-tdigest 2/candidate-20261020/sbt-boot",
+        "-Dtdigest.version=0.2.5-dev2026102102",
+        "-jar",
+        "/home/ingo/Documents/ChatGPT/gr-tdigest 2/candidate-20261020/sbt-launch-1.12.11.jar",
+        "set offline := true",
+        "clean",
+        "run",
+        "show Compile / dependencyClasspath"
+      ],
+      "cwd": "/home/ingo/Documents/ChatGPT/gr-tdigest 2/gr-tdigest-story/bindings/java/examples/scala",
+      "exit_code": 0,
+      "log_sha256": "309f95ee40aeff8afc112fde2129e3ef5d890ceb55b2c94e5a94ca16b9001cc7",
+      "name": "scala-offline",
+      "resolved_jar_path": "/home/ingo/.cache/coursier/v1/http/127.0.0.1%3A39147/maven/gr/tdigest/gr-tdigest/0.2.5-dev2026102102/gr-tdigest-0.2.5-dev2026102102.jar",
+      "resolved_jar_sha256": "6ec33b14d0add563fa6d11569d5585383d0d8a8a4f543bf7edb7cf59bba863cc",
+      "runtime_jar_path": "sbt temporary background-job copy; removed after execution"
+    },
+    {
+      "command": [
+        "/home/ingo/Documents/ChatGPT/gr-tdigest 2/gr-tdigest-story/bindings/java/gradlew",
+        "--no-daemon",
+        "--console=plain",
+        "--init-script",
+        "/home/ingo/Documents/ChatGPT/gr-tdigest 2/candidate-20261020/kotlin-runtime.init.gradle",
+        "-p",
+        "/home/ingo/Documents/ChatGPT/gr-tdigest 2/gr-tdigest-story/bindings/java/examples/kotlin",
+        "-PtdigestVersion=0.2.5-dev2026102102",
+        "--offline",
+        "clean",
+        "run"
+      ],
+      "cwd": "/home/ingo/Documents/ChatGPT/gr-tdigest 2/gr-tdigest-story",
+      "exit_code": 0,
+      "log_sha256": "487529cfaf41a965995a36b86aa4feaa54fa4cbb7e7c0ca03cd2866695b58a64",
+      "name": "kotlin-offline",
+      "resolved_jar_path": "/home/ingo/Documents/ChatGPT/gr-tdigest 2/gr-tdigest-quality/.gradle-user-home/caches/modules-2/files-2.1/gr.tdigest/gr-tdigest/0.2.5-dev2026102102/25d9dee718075fdc72ab6bcd79b33182fb20c297/gr-tdigest-0.2.5-dev2026102102.jar",
+      "resolved_jar_sha256": "6ec33b14d0add563fa6d11569d5585383d0d8a8a4f543bf7edb7cf59bba863cc"
+    }
+  ],
+  "jar_sha256": "6ec33b14d0add563fa6d11569d5585383d0d8a8a4f543bf7edb7cf59bba863cc",
+  "kind": "bounded standalone Scala/Kotlin; no Spark or private repository qualification",
+  "negative_credentials": "fresh Gradle cache rejected with HTTP401; configured repository has no fallback",
+  "offline_repository_stopped": true,
+  "repository": "http://127.0.0.1:39147/maven",
+  "repository_inputs": "controlled fixture credentials; staged public dependencies and exact candidate JAR only; no external proxy/fallback",
+  "requests": [
+    {
+      "path": "/maven/gr/tdigest/gr-tdigest/0.2.5-dev2026102102/gr-tdigest-0.2.5-dev2026102102.pom",
+      "status": 401
+    },
+    {
+      "path": "/maven/gr/tdigest/gr-tdigest/0.2.5-dev2026102102/gr-tdigest-0.2.5-dev2026102102.pom",
+      "status": 401
+    },
+    {
+      "bytes": 156,
+      "path": "/maven/gr/tdigest/gr-tdigest/0.2.5-dev2026102102/gr-tdigest-0.2.5-dev2026102102.pom",
+      "sha256": "6946fa0480fe7db589dc3e6e6643b719ede7e88427ba175b63789fe4b9905dc6",
+      "status": 200
+    },
+    {
+      "path": "/maven/gr/tdigest/gr-tdigest/0.2.5-dev2026102102/gr-tdigest-0.2.5-dev2026102102.pom.sha1",
+      "status": 401
+    },
+    {
+      "path": "/maven/gr/tdigest/gr-tdigest/0.2.5-dev2026102102/gr-tdigest-0.2.5-dev2026102102.pom.sha1",
+      "status": 401
+    },
+    {
+      "path": "/maven/gr/tdigest/gr-tdigest/0.2.5-dev2026102102/gr-tdigest-0.2.5-dev2026102102.pom.sha1",
+      "status": 404
+    },
+    {
+      "path": "/maven/gr/tdigest/gr-tdigest/0.2.5-dev2026102102/gr-tdigest-0.2.5-dev2026102102.jar",
+      "status": 401
+    },
+    {
+      "path": "/maven/gr/tdigest/gr-tdigest/0.2.5-dev2026102102/gr-tdigest-0.2.5-dev2026102102.jar",
+      "status": 401
+    },
+    {
+      "bytes": 1895904,
+      "path": "/maven/gr/tdigest/gr-tdigest/0.2.5-dev2026102102/gr-tdigest-0.2.5-dev2026102102.jar",
+      "sha256": "6ec33b14d0add563fa6d11569d5585383d0d8a8a4f543bf7edb7cf59bba863cc",
+      "status": 200
+    },
+    {
+      "path": "/maven/gr/tdigest/gr-tdigest/0.2.5-dev2026102102/gr-tdigest-0.2.5-dev2026102102.jar.sha1",
+      "status": 401
+    },
+    {
+      "path": "/maven/gr/tdigest/gr-tdigest/0.2.5-dev2026102102/gr-tdigest-0.2.5-dev2026102102.jar.sha1",
+      "status": 401
+    },
+    {
+      "path": "/maven/gr/tdigest/gr-tdigest/0.2.5-dev2026102102/gr-tdigest-0.2.5-dev2026102102.jar.sha1",
+      "status": 404
+    },
+    {
+      "path": "/maven/gr/tdigest/gr-tdigest/0.2.5-dev2026102102/gr-tdigest-0.2.5-dev2026102102.pom",
+      "status": 401
+    },
+    {
+      "bytes": 156,
+      "path": "/maven/gr/tdigest/gr-tdigest/0.2.5-dev2026102102/gr-tdigest-0.2.5-dev2026102102.pom",
+      "sha256": "6946fa0480fe7db589dc3e6e6643b719ede7e88427ba175b63789fe4b9905dc6",
+      "status": 200
+    },
+    {
+      "bytes": 1895904,
+      "path": "/maven/gr/tdigest/gr-tdigest/0.2.5-dev2026102102/gr-tdigest-0.2.5-dev2026102102.jar",
+      "sha256": "6ec33b14d0add563fa6d11569d5585383d0d8a8a4f543bf7edb7cf59bba863cc",
+      "status": 200
+    },
+    {
+      "path": "/maven/org/jetbrains/kotlin/kotlin-stdlib/2.4.21/kotlin-stdlib-2.4.21.pom",
+      "status": 401
+    },
+    {
+      "path": "/maven/gr/tdigest/gr-tdigest/0.2.5-dev2026102102/gr-tdigest-0.2.5-dev2026102102.pom",
+      "status": 401
+    },
+    {
+      "path": "/maven/org/jetbrains/kotlin/kotlin-stdlib/2.4.21/kotlin-stdlib-2.4.21.pom",
+      "status": 401
+    },
+    {
+      "path": "/maven/gr/tdigest/gr-tdigest/0.2.5-dev2026102102/gr-tdigest-0.2.5-dev2026102102.pom",
+      "status": 401
+    }
+  ],
+  "source_sha": "aaf7ab3956fed4269c1eaeef915a6faee78fa305",
+  "status": "PASS"
+}

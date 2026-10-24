@@ -1,0 +1,136 @@
+{
+  "k1_same_input_original_comparison": {
+    "budget_warning": "capacity held fixed; actual logical storage may differ; attribution only, not a newly matched-budget superiority claim",
+    "pairs": 468,
+    "rank_max/new_loss": 88,
+    "rank_max/newly_lost": 17,
+    "rank_max/old_loss": 90,
+    "rank_max/removed_loss": 19,
+    "rank_mean/new_loss": 98,
+    "rank_mean/newly_lost": 10,
+    "rank_mean/old_loss": 98,
+    "rank_mean/removed_loss": 10,
+    "tail_rank_max/new_loss": 143,
+    "tail_rank_max/newly_lost": 141,
+    "tail_rank_max/old_loss": 2,
+    "tail_rank_max/removed_loss": 0,
+    "value_iqr_max/new_loss": 366,
+    "value_iqr_max/newly_lost": 19,
+    "value_iqr_max/old_loss": 356,
+    "value_iqr_max/removed_loss": 9
+  },
+  "kind": "fresh analysis of existing measurements; not new timing or data trials",
+  "quad_same_input_original_comparison": {
+    "budget_warning": "capacity held fixed; actual logical storage may differ; attribution only, not a newly matched-budget superiority claim",
+    "pairs": 468,
+    "rank_max/new_loss": 16,
+    "rank_max/newly_lost": 1,
+    "rank_max/old_loss": 90,
+    "rank_max/removed_loss": 75,
+    "rank_mean/new_loss": 16,
+    "rank_mean/newly_lost": 0,
+    "rank_mean/old_loss": 98,
+    "rank_mean/removed_loss": 82,
+    "tail_rank_max/new_loss": 49,
+    "tail_rank_max/newly_lost": 47,
+    "tail_rank_max/old_loss": 2,
+    "tail_rank_max/removed_loss": 0,
+    "value_iqr_max/new_loss": 349,
+    "value_iqr_max/newly_lost": 4,
+    "value_iqr_max/old_loss": 356,
+    "value_iqr_max/removed_loss": 11
+  },
+  "scales": {
+    "k1/1000": {
+      "centroid_range": [
+        1,
+        715
+      ],
+      "failed": 0,
+      "profiles": 252,
+      "worst_cdf": 0.002931995494775186,
+      "worst_rank": 0.0029296875
+    },
+    "k1/200": {
+      "centroid_range": [
+        1,
+        147
+      ],
+      "failed": 0,
+      "profiles": 252,
+      "worst_cdf": 0.015349307636003173,
+      "worst_rank": 0.0166015625
+    },
+    "k1/32": {
+      "centroid_range": [
+        1,
+        27
+      ],
+      "failed": 4,
+      "profiles": 252,
+      "worst_cdf": 0.10914117794114275,
+      "worst_rank": 0.109130859375
+    },
+    "k2/1000": {
+      "centroid_range": [
+        1,
+        1000
+      ],
+      "failed": 0,
+      "profiles": 396,
+      "worst_cdf": 0.002779800509082997,
+      "worst_rank": 0.0028076171875
+    },
+    "k2/200": {
+      "centroid_range": [
+        1,
+        200
+      ],
+      "failed": 0,
+      "profiles": 396,
+      "worst_cdf": 0.040502619598211,
+      "worst_rank": 0.04052734375
+    },
+    "k2/32": {
+      "centroid_range": [
+        1,
+        32
+      ],
+      "failed": 58,
+      "profiles": 396,
+      "worst_cdf": 0.3630621402156909,
+      "worst_rank": 0.361328125
+    },
+    "quad/1000": {
+      "centroid_range": [
+        1,
+        1000
+      ],
+      "failed": 0,
+      "profiles": 396,
+      "worst_cdf": 0.0019267028860338042,
+      "worst_rank": 0.001953125
+    },
+    "quad/200": {
+      "centroid_range": [
+        1,
+        200
+      ],
+      "failed": 0,
+      "profiles": 396,
+      "worst_cdf": 0.01706886585572953,
+      "worst_rank": 0.019287109375
+    },
+    "quad/32": {
+      "centroid_range": [
+        1,
+        32
+      ],
+      "failed": 12,
+      "profiles": 396,
+      "worst_cdf": 0.2370220528906442,
+      "worst_rank": 0.2357177734375
+    }
+  },
+  "source": "8367b177fe5b6390bf984c5d52fef8061128307e"
+}

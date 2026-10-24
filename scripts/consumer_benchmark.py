@@ -48,7 +48,7 @@ def frame(groups, observations, columns, shift=0):
     )
 
 
-def worker(scenario):
+def worker(scenario, workers_to_test=(1, 2, 4, 8, 16), tasks_per_batch=64):
     if scenario.startswith("columns"):
         columns, groups, observations = int(scenario.removeprefix("columns")), 2048, 32
         source = frame(groups, observations, columns)
@@ -137,8 +137,8 @@ def worker(scenario):
     if scenario == "concurrency":
         values = (np.arange(32768, dtype=np.float64) * 17) % 1009
         rows = []
-        for workers in [1, 2, 4, 8, 16]:
-            elapsed, latency = [], []
+        for workers in workers_to_test:
+            elapsed, latency, cpu_seconds = [], [], []
             for _ in range(3):
                 with ThreadPoolExecutor(max_workers=workers) as pool:
 
@@ -147,15 +147,19 @@ def worker(scenario):
                         return time.perf_counter() - submitted, result.median()
 
                     start = time.perf_counter()
-                    futures = [pool.submit(construct, time.perf_counter()) for _ in range(64)]
+                    cpu_start = time.process_time()
+                    futures = [pool.submit(construct, time.perf_counter()) for _ in range(tasks_per_batch)]
                     latency.extend(future.result()[0] for future in futures)
                     elapsed.append(time.perf_counter() - start)
+                    cpu_seconds.append(time.process_time() - cpu_start)
             rows.append(
                 {
                     "workers": workers,
-                    "tasks_per_batch": 64,
+                    "tasks_per_batch": tasks_per_batch,
                     "batch_seconds": elapsed,
-                    "values_per_second": 64 * len(values) / float(np.median(elapsed)),
+                    "process_cpu_seconds": cpu_seconds,
+                    "average_cpu_cores_used": [cpu / wall for cpu, wall in zip(cpu_seconds, elapsed)],
+                    "values_per_second": tasks_per_batch * len(values) / float(np.median(elapsed)),
                     "submission_to_completion_p95_seconds": float(np.quantile(latency, 0.95)),
                     "submission_to_completion_p99_seconds": float(np.quantile(latency, 0.99)),
                     "latency_samples": len(latency),
@@ -169,15 +173,26 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--output", type=Path, required=True)
     parser.add_argument("--source-sha", required=True)
-    parser.add_argument("--worker")
+    parser.add_argument(
+        "--worker", choices=["columns16", "columns64", "columns128", "fanin40", "stream", "bridge", "concurrency"]
+    )
+    parser.add_argument("--workers", type=int, nargs="+", default=[1, 2, 4, 8, 16])
+    parser.add_argument("--tasks-per-batch", type=int, default=64)
     args = parser.parse_args()
+    if len(set(args.workers)) != len(args.workers) or min(args.workers) < 1:
+        parser.error("worker counts must be distinct positive integers")
+    if args.tasks_per_batch < max(args.workers):
+        parser.error("tasks per batch must be at least the largest worker count")
+    if args.output.exists():
+        parser.error("output exists; select a new receipt path")
     args.output.parent.mkdir(parents=True, exist_ok=True)
     if args.worker:
-        result = worker(args.worker)
+        result = worker(args.worker, args.workers, args.tasks_per_batch)
         native = Path(importlib.import_module("gr_tdigest._gr_tdigest").__file__)
         result.update(
             scenario=args.worker,
             source_sha=args.source_sha,
+            benchmark_sha256=hashlib.sha256(Path(__file__).read_bytes()).hexdigest(),
             version=gr.__version__,
             native_sha256=hashlib.sha256(native.read_bytes()).hexdigest(),
             python=sys.version,
@@ -205,6 +220,10 @@ def main():
                 str(output),
                 "--worker",
                 scenario,
+                "--tasks-per-batch",
+                str(args.tasks_per_batch),
+                "--workers",
+                *map(str, args.workers),
             ],
             check=True,
         )
