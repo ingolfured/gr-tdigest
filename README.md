@@ -1,7 +1,9 @@
 # tdigest-rs
 
-Java builds support JDK11 and17, including an optional checksum-verified JDK and
-Gradle bootstrap from internal URLs or local archives. Configure
+Java builds cover JDK 11, 17, 21 and 25 while targeting Java 11 bytecode.
+JDK 25 uses Gradle 9.1; the default Gradle 8.14.5 retains JDK 11 build support.
+An optional checksum-verified JDK and
+Gradle bootstrap supports internal URLs or local archives. Configure
 `TDIGEST_JDK_URL`, `TDIGEST_GRADLE_URL` and an exclusive
 `TDIGEST_MAVEN_REPOSITORY_URL`; use `TDIGEST_OFFLINE=1` with prepared caches.
 See [Java setup and offline builds](bindings/java/README.md) for all environment

@@ -38,9 +38,10 @@ For current implementation internals, see `tdigest_design.md`.
 
 ### JVM build and runtime support
 
-The Java binding targets Java11 bytecode and runs on JDK11 and17, with a
-Gradle8.14.5 build that can itself run on11. Both versions have Java/JNI tests,
-JAR smoke tests and compiled-class version checks. Internal build environments
+The Java binding targets Java 11 bytecode, with Java/JNI tests, JAR smoke tests
+and compiled-class version checks on JDK 11, 17, 21 and 25. The default
+Gradle 8.14.5 build can itself run on JDK 11; JDK 25 builds select Gradle 9.1.0
+through the verified distribution override. Internal build environments
 can select verified JDK/Gradle archives and an exclusive Maven dependency
 repository through the documented `TDIGEST_*` environment settings. Offline mode
 uses pre-staged tools/dependencies and never attempts a public fallback. It
