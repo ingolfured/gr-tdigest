@@ -512,3 +512,7 @@ The new `scripts/quality_suite.py` uses independent sorted-data references, pinn
 Exact rational weighted controls cover probability semantics across extreme mass scales. `examples/quality_boundaries.rs` separately exposes existing tiny-capacity mass/contribution loss, cancellation, fractional median asymmetry and subnormal aggregate-mean loss. A frozen expected-outcome check detects any change; it does not fix or waive these failures. The independent original arithmetic, wrapper, oracle and91 original tests stay untouched.
 
 JVM test tool selection is shared through `bindings/java/bootstrap.py::java_environment`: Gradle and direct coherence subprocesses use the same verified JDK and child environment, including when host Java commands are unavailable.
+
+## Preserve residual mass and compensated modern centroid arithmetic.
+
+Modern normalization uses compensated mass and moment sums; cluster averaging uses compensation for cancellation or overflow. Equal-weight buckets retain positive residuals. Atomic quantile boundaries sum actual prefix mass. Centroid::weight returns f64 independently of mean precision. Public digest construction and update signatures are unchanged in this prerequisite.

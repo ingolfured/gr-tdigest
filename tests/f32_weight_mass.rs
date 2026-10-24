@@ -294,3 +294,12 @@ fn fractional_atomic_boundary_has_no_phantom_interpolation_span() {
         assert_eq!(td.cdf(&[5.0]), vec![0.5]);
     }
 }
+
+#[test]
+fn public_weight_getter_does_not_narrow_f32_mean_mass() {
+    let centroid =
+        gr_tdigest::tdigest::centroids::Centroid::<f32>::new_atomic_f64(1.0, 16_777_217.0);
+    let mass: f64 = centroid.weight();
+    assert_eq!(mass, 16_777_217.0);
+    assert_eq!(mass, centroid.weight_f64());
+}
