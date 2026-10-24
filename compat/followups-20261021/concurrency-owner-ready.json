@@ -1,0 +1,192 @@
+{
+  "available_logical_cpus": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    10,
+    11,
+    12,
+    13,
+    14,
+    15,
+    16,
+    17,
+    18,
+    19,
+    20,
+    21,
+    22,
+    23,
+    24,
+    25,
+    26,
+    27,
+    28,
+    29,
+    30,
+    31
+  ],
+  "benchmark_sha256": "9a4c9ebabc3a5fd368229b547e685c0229984449ab5e5fe1345fc0d85e34b763",
+  "independent_digests": true,
+  "native_sha256": "1eaaf244db7004a0b8d2aca2edc6ff027a0d3a8871c2b8c450fdf94f19701d76",
+  "numpy": "2.5.4",
+  "peak_process_rss_kib": 220132,
+  "polars": "2.0.0",
+  "pools": {
+    "OMP_NUM_THREADS": "1",
+    "OPENBLAS_NUM_THREADS": "1",
+    "POLARS_MAX_THREADS": "1",
+    "RAYON_NUM_THREADS": "1"
+  },
+  "python": "3.12.15 (main, Oct 14 2026, 01:05:27) [Clang 23.1.3 ]",
+  "rows": [
+    {
+      "average_cpu_cores_used": [
+        1.0087723014859802,
+        1.012323691426133,
+        1.0074291321401103
+      ],
+      "batch_seconds": [
+        0.09262666100403294,
+        0.0792262619943358,
+        0.07818827001028694
+      ],
+      "latency_samples": 384,
+      "process_cpu_seconds": [
+        0.09343921,
+        0.08020262199999997,
+        0.07876914099999999
+      ],
+      "submission_to_completion_p95_seconds": 0.07998705783975309,
+      "submission_to_completion_p99_seconds": 0.08925587459816599,
+      "tasks_per_batch": 128,
+      "values_per_second": 52940829.14450599,
+      "workers": 1
+    },
+    {
+      "average_cpu_cores_used": [
+        1.995609770598663,
+        2.009653142135058,
+        2.002782821290625
+      ],
+      "batch_seconds": [
+        0.04045916901668534,
+        0.04000148200429976,
+        0.04035366198513657
+      ],
+      "latency_samples": 384,
+      "process_cpu_seconds": [
+        0.08074071299999996,
+        0.08038910399999999,
+        0.08081962100000006
+      ],
+      "submission_to_completion_p95_seconds": 0.037941568903625,
+      "submission_to_completion_p99_seconds": 0.039452047289232725,
+      "tasks_per_batch": 128,
+      "values_per_second": 103938621.51952615,
+      "workers": 2
+    },
+    {
+      "average_cpu_cores_used": [
+        3.9084625599924614,
+        3.944970173164679,
+        3.8007268794536353
+      ],
+      "batch_seconds": [
+        0.02100281702587381,
+        0.02089754000189714,
+        0.021771085012005642
+      ],
+      "latency_samples": 384,
+      "process_cpu_seconds": [
+        0.082088724,
+        0.08244017199999998,
+        0.08274594800000001
+      ],
+      "submission_to_completion_p95_seconds": 0.019381189586420076,
+      "submission_to_completion_p99_seconds": 0.020350701297575144,
+      "tasks_per_batch": 128,
+      "values_per_second": 199701973.0654678,
+      "workers": 4
+    },
+    {
+      "average_cpu_cores_used": [
+        7.10434350879824,
+        7.388792818767546,
+        7.434379211085758
+      ],
+      "batch_seconds": [
+        0.01216645899694413,
+        0.011543824017280713,
+        0.011266796005656943
+      ],
+      "latency_samples": 384,
+      "process_cpu_seconds": [
+        0.08643470399999997,
+        0.08529492400000005,
+        0.08376163400000003
+      ],
+      "submission_to_completion_p95_seconds": 0.009798161190701649,
+      "submission_to_completion_p99_seconds": 0.010297244296234567,
+      "tasks_per_batch": 128,
+      "values_per_second": 363337486.23690635,
+      "workers": 8
+    },
+    {
+      "average_cpu_cores_used": [
+        11.652400720056574,
+        12.877541887411276,
+        12.668854784432604
+      ],
+      "batch_seconds": [
+        0.008478959003696218,
+        0.00805453400244005,
+        0.007005691004451364
+      ],
+      "latency_samples": 384,
+      "process_cpu_seconds": [
+        0.09880022799999999,
+        0.10372259900000014,
+        0.08875408200000012
+      ],
+      "submission_to_completion_p95_seconds": 0.005505312862806021,
+      "submission_to_completion_p99_seconds": 0.005824714528280311,
+      "tasks_per_batch": 128,
+      "values_per_second": 520738257.32554764,
+      "workers": 16
+    },
+    {
+      "average_cpu_cores_used": [
+        11.92037629870291,
+        13.83359538368857,
+        7.776763042646225
+      ],
+      "batch_seconds": [
+        0.00932421101606451,
+        0.007711542013566941,
+        0.016561244992772117
+      ],
+      "latency_samples": 384,
+      "process_cpu_seconds": [
+        0.11114810399999997,
+        0.10667835200000009,
+        0.12879287800000006
+      ],
+      "submission_to_completion_p95_seconds": 0.003146278047643136,
+      "submission_to_completion_p99_seconds": 0.009527190332883038,
+      "tasks_per_batch": 128,
+      "values_per_second": 449829373.5280885,
+      "workers": 32
+    }
+  ],
+  "scenario": "concurrency",
+  "source_sha": "aaf7ab3956fed4269c1eaeef915a6faee78fa305",
+  "version": "0.2.5.dev2026102102"
+}

@@ -4,6 +4,8 @@ All notable changes to this project are documented in this file.
 
 ## [Unreleased]
 
+- Supply intranet owner-run qualification guidance, host/artifact receipts and configurable independent-digest concurrency measurements without requesting private inputs.
+
 - Add a staged-tool Spark/Scala check for separate-executor broadcast, shuffle and checkpoint restoration with exact JAR/native identity receipts.
 
 - Count capacity-search trial clusters without allocating or averaging discarded centroids; retain the full final compression path and existing numerical decisions.

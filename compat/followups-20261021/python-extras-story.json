@@ -1,0 +1,255 @@
+{
+  "baseline_scope": "public source-built 0.2.4 comparison wheel, not private consumer 0.1.9/0.1.11 binaries",
+  "baseline_wheel_sha256": "e98b9df15feeadbe6b2017316c8d1e7fab7df341e7a609b716aeda396db60b47",
+  "canonical_wheel_sha256": "31bbc39f962dfbcd572cfbc296cf767cf4a01f7001591bb5936742b1dee162f9",
+  "commands": [
+    {
+      "command": [
+        "/home/ingo/Documents/ChatGPT/gr-tdigest 2/gr-tdigest-story/.venv/bin/mypy",
+        "--no-incremental",
+        "--follow-imports=silent",
+        "--python-executable",
+        "/home/ingo/Documents/ChatGPT/gr-tdigest 2/followups-20261021/artifact-qa-story/bin/python",
+        "/home/ingo/Documents/ChatGPT/gr-tdigest 2/followups-20261021/typing_consumer_v3.py"
+      ],
+      "cwd": "/home/ingo/Documents/ChatGPT/gr-tdigest 2/followups-20261021",
+      "exit_code": 0,
+      "log_sha256": "5d4b6d285b77932e3d08212c3b4974d0a803f98ec60408ac6ccf6a063fa6c19e",
+      "name": "installed-typing"
+    },
+    {
+      "command": [
+        "uv",
+        "venv",
+        "--offline",
+        "--python",
+        "3.12",
+        "/home/ingo/Documents/ChatGPT/gr-tdigest 2/followups-20261021/ownership-python-story-verified"
+      ],
+      "cwd": "/home/ingo/Documents/ChatGPT/gr-tdigest 2/followups-20261021",
+      "exit_code": 0,
+      "log_sha256": "450ab844f6b350b5e327970d0561466551c41e7fb10b3aea4fa76cb9c7f909a3",
+      "name": "ownership-env"
+    },
+    {
+      "command": [
+        "uv",
+        "pip",
+        "install",
+        "--offline",
+        "--python",
+        "/home/ingo/Documents/ChatGPT/gr-tdigest 2/followups-20261021/ownership-python-story-verified/bin/python",
+        "numpy==2.5.4",
+        "polars==2.0.0"
+      ],
+      "cwd": "/home/ingo/Documents/ChatGPT/gr-tdigest 2/followups-20261021",
+      "exit_code": 0,
+      "log_sha256": "71604dfd85ef857cf3d813c716358b38b873be8b418eae4e7038a2e177b73ffd",
+      "name": "ownership-deps"
+    },
+    {
+      "command": [
+        "uv",
+        "pip",
+        "install",
+        "--offline",
+        "--python",
+        "/home/ingo/Documents/ChatGPT/gr-tdigest 2/followups-20261021/ownership-python-story-verified/bin/python",
+        "--no-deps",
+        "--reinstall",
+        "/home/ingo/Documents/ChatGPT/gr-tdigest 2/candidate-20261020/comparison-baseline-artifact/gr_tdigest-0.2.4-cp310-abi3-manylinux_2_28_x86_64.whl"
+      ],
+      "cwd": "/home/ingo/Documents/ChatGPT/gr-tdigest 2/followups-20261021",
+      "exit_code": 0,
+      "log_sha256": "e74f7806d3b270e1b9910a54cec80e71fb9ce7183523ab0a2447cb7491259239",
+      "name": "ownership-baseline"
+    },
+    {
+      "command": [
+        "/home/ingo/Documents/ChatGPT/gr-tdigest 2/followups-20261021/ownership-python-story-verified/bin/python",
+        "-I",
+        "-c",
+        "import hashlib,importlib.metadata as md,json\nimport gr_tdigest,gr_tdigest._gr_tdigest as native,tdigest_rs\nassert gr_tdigest.TDigest.from_array([0.,1.,2.]).median()==1.\nassert tdigest_rs.TDigest.__module__=='tdigest_rs.lib'\nowners={name:md.packages_distributions().get(name,[]) for name in ('gr_tdigest','tdigest_rs')}\nassert all(v==['gr-tdigest'] for v in owners.values()),owners\nprint(json.dumps({'version':md.version('gr-tdigest'),'native_sha256':hashlib.sha256(open(native.__file__,'rb').read()).hexdigest(),'owners':owners,'original_class':tdigest_rs.TDigest.__module__}))\n"
+      ],
+      "cwd": "/home/ingo/Documents/ChatGPT/gr-tdigest 2/followups-20261021",
+      "exit_code": 0,
+      "log_sha256": "e4b2049130eff2cf3035a47fe9a8a58ce5e1a53047c8175963cd4d7f2adde675",
+      "name": "ownership-baseline-probe"
+    },
+    {
+      "command": [
+        "uv",
+        "pip",
+        "install",
+        "--offline",
+        "--python",
+        "/home/ingo/Documents/ChatGPT/gr-tdigest 2/followups-20261021/ownership-python-story-verified/bin/python",
+        "--no-deps",
+        "--reinstall",
+        "/home/ingo/Documents/ChatGPT/gr-tdigest 2/followups-20261021/artifacts/gr_tdigest-0.2.5.dev2026102102-cp310-abi3-manylinux_2_28_x86_64.whl"
+      ],
+      "cwd": "/home/ingo/Documents/ChatGPT/gr-tdigest 2/followups-20261021",
+      "exit_code": 0,
+      "log_sha256": "46033e23bda920dbf69cd4702bf5de08011dd4f9873ea5eda03c09866cc98ed9",
+      "name": "ownership-upgrade"
+    },
+    {
+      "command": [
+        "/home/ingo/Documents/ChatGPT/gr-tdigest 2/followups-20261021/ownership-python-story-verified/bin/python",
+        "-I",
+        "-c",
+        "import hashlib,importlib.metadata as md,json\nimport gr_tdigest,gr_tdigest._gr_tdigest as native,tdigest_rs\nassert gr_tdigest.TDigest.from_array([0.,1.,2.]).median()==1.\nassert tdigest_rs.TDigest.__module__=='tdigest_rs.lib'\nowners={name:md.packages_distributions().get(name,[]) for name in ('gr_tdigest','tdigest_rs')}\nassert all(v==['gr-tdigest'] for v in owners.values()),owners\nprint(json.dumps({'version':md.version('gr-tdigest'),'native_sha256':hashlib.sha256(open(native.__file__,'rb').read()).hexdigest(),'owners':owners,'original_class':tdigest_rs.TDigest.__module__}))\n"
+      ],
+      "cwd": "/home/ingo/Documents/ChatGPT/gr-tdigest 2/followups-20261021",
+      "exit_code": 0,
+      "log_sha256": "8e53ebc3f842a0f5b1f97d1dcf19b25a5f5cd7d08e866bed2bba8cad6563cc8d",
+      "name": "ownership-upgrade-probe"
+    },
+    {
+      "command": [
+        "uv",
+        "pip",
+        "install",
+        "--offline",
+        "--python",
+        "/home/ingo/Documents/ChatGPT/gr-tdigest 2/followups-20261021/ownership-python-story-verified/bin/python",
+        "--no-deps",
+        "--reinstall",
+        "/home/ingo/Documents/ChatGPT/gr-tdigest 2/candidate-20261020/comparison-baseline-artifact/gr_tdigest-0.2.4-cp310-abi3-manylinux_2_28_x86_64.whl"
+      ],
+      "cwd": "/home/ingo/Documents/ChatGPT/gr-tdigest 2/followups-20261021",
+      "exit_code": 0,
+      "log_sha256": "c6bc24a31f71a17c56bd37fd3a5309d26a58f09365338add178bc0f9a2338706",
+      "name": "ownership-rollback"
+    },
+    {
+      "command": [
+        "/home/ingo/Documents/ChatGPT/gr-tdigest 2/followups-20261021/ownership-python-story-verified/bin/python",
+        "-I",
+        "-c",
+        "import hashlib,importlib.metadata as md,json\nimport gr_tdigest,gr_tdigest._gr_tdigest as native,tdigest_rs\nassert gr_tdigest.TDigest.from_array([0.,1.,2.]).median()==1.\nassert tdigest_rs.TDigest.__module__=='tdigest_rs.lib'\nowners={name:md.packages_distributions().get(name,[]) for name in ('gr_tdigest','tdigest_rs')}\nassert all(v==['gr-tdigest'] for v in owners.values()),owners\nprint(json.dumps({'version':md.version('gr-tdigest'),'native_sha256':hashlib.sha256(open(native.__file__,'rb').read()).hexdigest(),'owners':owners,'original_class':tdigest_rs.TDigest.__module__}))\n"
+      ],
+      "cwd": "/home/ingo/Documents/ChatGPT/gr-tdigest 2/followups-20261021",
+      "exit_code": 0,
+      "log_sha256": "e4b2049130eff2cf3035a47fe9a8a58ce5e1a53047c8175963cd4d7f2adde675",
+      "name": "ownership-rollback-probe"
+    },
+    {
+      "command": [
+        "uv",
+        "pip",
+        "install",
+        "--offline",
+        "--python",
+        "/home/ingo/Documents/ChatGPT/gr-tdigest 2/followups-20261021/ownership-python-story-verified/bin/python",
+        "--no-deps",
+        "--reinstall",
+        "/home/ingo/Documents/ChatGPT/gr-tdigest 2/followups-20261021/artifacts/gr_tdigest-0.2.5.dev2026102102-cp310-abi3-manylinux_2_28_x86_64.whl"
+      ],
+      "cwd": "/home/ingo/Documents/ChatGPT/gr-tdigest 2/followups-20261021",
+      "exit_code": 0,
+      "log_sha256": "0ade74c8fa9b53b132bc50e5502662b17a9b2216a0011b8cb82f90848c2c61a1",
+      "name": "ownership-candidate-reinstall"
+    },
+    {
+      "command": [
+        "/home/ingo/Documents/ChatGPT/gr-tdigest 2/followups-20261021/ownership-python-story-verified/bin/python",
+        "-I",
+        "-c",
+        "import hashlib,importlib.metadata as md,json\nimport gr_tdigest,gr_tdigest._gr_tdigest as native,tdigest_rs\nassert gr_tdigest.TDigest.from_array([0.,1.,2.]).median()==1.\nassert tdigest_rs.TDigest.__module__=='tdigest_rs.lib'\nowners={name:md.packages_distributions().get(name,[]) for name in ('gr_tdigest','tdigest_rs')}\nassert all(v==['gr-tdigest'] for v in owners.values()),owners\nprint(json.dumps({'version':md.version('gr-tdigest'),'native_sha256':hashlib.sha256(open(native.__file__,'rb').read()).hexdigest(),'owners':owners,'original_class':tdigest_rs.TDigest.__module__}))\n"
+      ],
+      "cwd": "/home/ingo/Documents/ChatGPT/gr-tdigest 2/followups-20261021",
+      "exit_code": 0,
+      "log_sha256": "8e53ebc3f842a0f5b1f97d1dcf19b25a5f5cd7d08e866bed2bba8cad6563cc8d",
+      "name": "ownership-candidate-reinstall-probe"
+    },
+    {
+      "command": [
+        "uv",
+        "pip",
+        "uninstall",
+        "--python",
+        "/home/ingo/Documents/ChatGPT/gr-tdigest 2/followups-20261021/ownership-python-story-verified/bin/python",
+        "gr-tdigest"
+      ],
+      "cwd": "/home/ingo/Documents/ChatGPT/gr-tdigest 2/followups-20261021",
+      "exit_code": 0,
+      "log_sha256": "27d835543ad645f7fdfc2b300f59c435e3f08510d883b19a3339eb3e0b94669a",
+      "name": "ownership-uninstall"
+    },
+    {
+      "command": [
+        "/home/ingo/Documents/ChatGPT/gr-tdigest 2/followups-20261021/ownership-python-story-verified/bin/python",
+        "-I",
+        "-c",
+        "import importlib.util;assert importlib.util.find_spec('gr_tdigest') is None;assert importlib.util.find_spec('tdigest_rs') is None"
+      ],
+      "cwd": "/home/ingo/Documents/ChatGPT/gr-tdigest 2/followups-20261021",
+      "exit_code": 0,
+      "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "name": "ownership-uninstall-probe"
+    }
+  ],
+  "dependencies": "NumPy2.5.4/Polars2.0.0 from staged uv cache; package swaps --no-deps; this probes ownership/import migration, not private binary compatibility",
+  "source_sha": "aaf7ab3956fed4269c1eaeef915a6faee78fa305",
+  "status": "PASS",
+  "steps": [
+    {
+      "name": "baseline",
+      "native_sha256": "118113333f955dae4f5c388856039f5db4945579b2d701c8f6154cfc01be5bed",
+      "original_class": "tdigest_rs.lib",
+      "owners": {
+        "gr_tdigest": [
+          "gr-tdigest"
+        ],
+        "tdigest_rs": [
+          "gr-tdigest"
+        ]
+      },
+      "version": "0.2.4"
+    },
+    {
+      "name": "upgrade",
+      "native_sha256": "1eaaf244db7004a0b8d2aca2edc6ff027a0d3a8871c2b8c450fdf94f19701d76",
+      "original_class": "tdigest_rs.lib",
+      "owners": {
+        "gr_tdigest": [
+          "gr-tdigest"
+        ],
+        "tdigest_rs": [
+          "gr-tdigest"
+        ]
+      },
+      "version": "0.2.5.dev2026102102"
+    },
+    {
+      "name": "rollback",
+      "native_sha256": "118113333f955dae4f5c388856039f5db4945579b2d701c8f6154cfc01be5bed",
+      "original_class": "tdigest_rs.lib",
+      "owners": {
+        "gr_tdigest": [
+          "gr-tdigest"
+        ],
+        "tdigest_rs": [
+          "gr-tdigest"
+        ]
+      },
+      "version": "0.2.4"
+    },
+    {
+      "name": "candidate-reinstall",
+      "native_sha256": "1eaaf244db7004a0b8d2aca2edc6ff027a0d3a8871c2b8c450fdf94f19701d76",
+      "original_class": "tdigest_rs.lib",
+      "owners": {
+        "gr_tdigest": [
+          "gr-tdigest"
+        ],
+        "tdigest_rs": [
+          "gr-tdigest"
+        ]
+      },
+      "version": "0.2.5.dev2026102102"
+    }
+  ],
+  "uninstall_removes_both_imports": true
+}

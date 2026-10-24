@@ -1,0 +1,443 @@
+{
+  "artifacts": {
+    "gr-tdigest-0.2.5-dev2026102102.jar": {
+      "bytes": 1895904,
+      "sha256": "6ec33b14d0add563fa6d11569d5585383d0d8a8a4f543bf7edb7cf59bba863cc"
+    },
+    "gr-tdigest-source-aaf7ab3956fe.tar.gz": {
+      "bytes": 968632,
+      "sha256": "513a554170b5139407091000d07282af3e6ea5fc7fdbd8b7f160b62c8677dca6"
+    },
+    "gr_tdigest-0.2.5.dev2026102102-cp310-abi3-manylinux_2_28_x86_64.whl": {
+      "bytes": 5261554,
+      "sha256": "31bbc39f962dfbcd572cfbc296cf767cf4a01f7001591bb5936742b1dee162f9"
+    },
+    "gr_tdigest-0.2.5.dev2026102102.tar.gz": {
+      "bytes": 977180,
+      "sha256": "6ff2d538c59e24d09b8cfecbf859d1a6f312a7dbe71eb2f295fb6d31f7ef29e9"
+    },
+    "libgr_tdigest-jni-glibc217.so": {
+      "bytes": 7394856,
+      "sha256": "f254f1ff7b619e62fcb9879ad1a31593d74dcd01ea89361e0e3f1d5581484fc2"
+    },
+    "libgr_tdigest-python-glibc228.so": {
+      "bytes": 19378448,
+      "sha256": "1eaaf244db7004a0b8d2aca2edc6ff027a0d3a8871c2b8c450fdf94f19701d76"
+    },
+    "manifest.json": {
+      "bytes": 1910,
+      "sha256": "c6c33b3d4ad8091ff981888cc43c33e134ca5772ee9d3eb01d1e4915bc598c21"
+    }
+  },
+  "commands": [
+    {
+      "command": [
+        "uv",
+        "venv",
+        "--python",
+        "3.12",
+        "/home/ingo/Documents/ChatGPT/gr-tdigest 2/followups-20261021/artifact-qa-story"
+      ],
+      "cwd": "/home/ingo/Documents/ChatGPT/gr-tdigest 2/followups-20261021",
+      "exit_code": 0,
+      "log_sha256": "ef612776d80addd4ed60fccd7e7980d5b89defe0b173ace696263140929abe62",
+      "name": "qa-env"
+    },
+    {
+      "command": [
+        "uv",
+        "pip",
+        "install",
+        "--python",
+        "/home/ingo/Documents/ChatGPT/gr-tdigest 2/followups-20261021/artifact-qa-story/bin/python",
+        "--only-binary",
+        ":all:",
+        "numpy==2.5.4",
+        "scipy==1.18.1",
+        "pytest==9.1.1",
+        "polars==2.0.0",
+        "pyarrow==24.0.0",
+        "/home/ingo/Documents/ChatGPT/gr-tdigest 2/followups-20261021/artifacts/gr_tdigest-0.2.5.dev2026102102-cp310-abi3-manylinux_2_28_x86_64.whl"
+      ],
+      "cwd": "/home/ingo/Documents/ChatGPT/gr-tdigest 2/followups-20261021",
+      "exit_code": 0,
+      "log_sha256": "c227dd5ee476fdf1c8cf6d26dd85a06536a1155a203d97b03c04ea29fb680684",
+      "name": "qa-install"
+    },
+    {
+      "command": [
+        "/home/ingo/Documents/ChatGPT/gr-tdigest 2/followups-20261021/artifact-qa-story/bin/python",
+        "-I",
+        "/home/ingo/Documents/ChatGPT/gr-tdigest 2/gr-tdigest-story/scripts/quality_suite.py",
+        "--mode",
+        "extended",
+        "--baseline",
+        "/home/ingo/Documents/ChatGPT/gr-tdigest 2/gr-tdigest-story/tests/quality/baseline-extended.json.gz",
+        "--known-failures",
+        "/home/ingo/Documents/ChatGPT/gr-tdigest 2/gr-tdigest-story/tests/quality/known-limits.json",
+        "--output",
+        "/home/ingo/Documents/ChatGPT/gr-tdigest 2/followups-20261021/results/installed-quality-story"
+      ],
+      "cwd": "/home/ingo/Documents/ChatGPT/gr-tdigest 2/followups-20261021",
+      "exit_code": 0,
+      "log_sha256": "c22f23c75bf7a541d915d6bc7eb9603b8d4355d51b7e2df0d7641487a396fabe",
+      "name": "installed-quality"
+    },
+    {
+      "command": [
+        "/home/ingo/Documents/ChatGPT/gr-tdigest 2/followups-20261021/artifact-qa-story/bin/python",
+        "-I",
+        "/home/ingo/Documents/ChatGPT/gr-tdigest 2/gr-tdigest-story/scripts/quality_budgets.py",
+        "--output",
+        "/home/ingo/Documents/ChatGPT/gr-tdigest 2/followups-20261021/results/installed-budgets-story.json"
+      ],
+      "cwd": "/home/ingo/Documents/ChatGPT/gr-tdigest 2/followups-20261021",
+      "exit_code": 1,
+      "log_sha256": "291d8a7fbf246d5a0df496dbbd8276016bf4d730e87a3f05061930e127ce18ff",
+      "name": "installed-budgets"
+    },
+    {
+      "command": [
+        "/home/ingo/Documents/ChatGPT/gr-tdigest 2/gr-tdigest-candidate/.venv/bin/cargo-zigbuild",
+        "zigbuild",
+        "--release",
+        "--locked",
+        "--offline",
+        "--features",
+        "java",
+        "--lib",
+        "--target",
+        "x86_64-unknown-linux-gnu.2.17"
+      ],
+      "cwd": "/home/ingo/Documents/ChatGPT/gr-tdigest 2/gr-tdigest-story",
+      "exit_code": 0,
+      "log_sha256": "0026dbdddf7aba1f548cabf67fe0e77f2fb91f9df5a16d93dbcb81f3534924e3",
+      "name": "jni-build"
+    },
+    {
+      "command": [
+        "/home/ingo/Documents/ChatGPT/gr-tdigest 2/gr-tdigest-story/bindings/java/gradlew",
+        "--no-daemon",
+        "--console=plain",
+        "--offline",
+        "-p",
+        "/home/ingo/Documents/ChatGPT/gr-tdigest 2/gr-tdigest-story/bindings/java",
+        "clean",
+        "jar",
+        "verifyJava11Bytecode"
+      ],
+      "cwd": "/home/ingo/Documents/ChatGPT/gr-tdigest 2/gr-tdigest-story",
+      "exit_code": 0,
+      "log_sha256": "31593ec0a3c82eefd72d14ee226b0b2f635c81bbafba02efc7e1a10035847f50",
+      "name": "jar-build"
+    },
+    {
+      "command": [
+        "/home/ingo/Documents/ChatGPT/gr-tdigest 2/followup-20261020/toolchains/jdk-3808d1d15e3ec6bd5b84057fb5d84c33d8a1536a258146bcea2e603fc726e08e/jdk-17.0.20.1+1/bin/javac",
+        "--release",
+        "11",
+        "-cp",
+        "/home/ingo/Documents/ChatGPT/gr-tdigest 2/followups-20261021/artifacts/gr-tdigest-0.2.5-dev2026102102.jar:/home/ingo/Documents/ChatGPT/gr-tdigest 2/followups-20261021/junit-platform-console-standalone-1.11.4.jar",
+        "-d",
+        "/home/ingo/Documents/ChatGPT/gr-tdigest 2/followups-20261021/jvm-test-classes-story",
+        "/home/ingo/Documents/ChatGPT/gr-tdigest 2/gr-tdigest-story/bindings/java/src/test/java/gr/TDigestConsumerTest.java",
+        "/home/ingo/Documents/ChatGPT/gr-tdigest 2/gr-tdigest-story/bindings/java/src/test/java/gr/TDigestMergeTest.java",
+        "/home/ingo/Documents/ChatGPT/gr-tdigest 2/gr-tdigest-story/bindings/java/src/test/java/gr/TDigestSerializationTest.java"
+      ],
+      "cwd": "/home/ingo/Documents/ChatGPT/gr-tdigest 2/followups-20261021",
+      "exit_code": 0,
+      "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "name": "junit-compile"
+    },
+    {
+      "command": [
+        "/home/ingo/Documents/ChatGPT/gr-tdigest 2/followup-20261020/toolchains/jdk-5c3f68887c325d36d852ba534303e1f5f1f5cae7d6cc1e951d73e0d8e98a058d/jdk-11.0.32.1+1/bin/java",
+        "-Xmx256m",
+        "-XX:ActiveProcessorCount=4",
+        "-jar",
+        "/home/ingo/Documents/ChatGPT/gr-tdigest 2/followups-20261021/junit-platform-console-standalone-1.11.4.jar",
+        "execute",
+        "--disable-ansi-colors",
+        "--class-path",
+        "/home/ingo/Documents/ChatGPT/gr-tdigest 2/followups-20261021/artifacts/gr-tdigest-0.2.5-dev2026102102.jar:/home/ingo/Documents/ChatGPT/gr-tdigest 2/followups-20261021/jvm-test-classes-story",
+        "--scan-classpath",
+        "--fail-if-no-tests",
+        "--details",
+        "summary"
+      ],
+      "cwd": "/home/ingo/Documents/ChatGPT/gr-tdigest 2/followups-20261021",
+      "exit_code": 0,
+      "log_sha256": "0bd6fe7e5c1132397fac86f042f242494ceed7323c8754cce104346e2652d3f1",
+      "name": "java11"
+    },
+    {
+      "command": [
+        "/home/ingo/Documents/ChatGPT/gr-tdigest 2/followup-20261020/toolchains/jdk-3808d1d15e3ec6bd5b84057fb5d84c33d8a1536a258146bcea2e603fc726e08e/jdk-17.0.20.1+1/bin/java",
+        "-Xmx256m",
+        "-XX:ActiveProcessorCount=4",
+        "-jar",
+        "/home/ingo/Documents/ChatGPT/gr-tdigest 2/followups-20261021/junit-platform-console-standalone-1.11.4.jar",
+        "execute",
+        "--disable-ansi-colors",
+        "--class-path",
+        "/home/ingo/Documents/ChatGPT/gr-tdigest 2/followups-20261021/artifacts/gr-tdigest-0.2.5-dev2026102102.jar:/home/ingo/Documents/ChatGPT/gr-tdigest 2/followups-20261021/jvm-test-classes-story",
+        "--scan-classpath",
+        "--fail-if-no-tests",
+        "--details",
+        "summary"
+      ],
+      "cwd": "/home/ingo/Documents/ChatGPT/gr-tdigest 2/followups-20261021",
+      "exit_code": 0,
+      "log_sha256": "6ec7666076308c86a3ddc88b6e853b03e157b247414b533fc3d2a86ad7894607",
+      "name": "java17"
+    },
+    {
+      "command": [
+        "/usr/lib/jvm/java-21-openjdk/bin/java",
+        "-Xmx256m",
+        "-XX:ActiveProcessorCount=4",
+        "-jar",
+        "/home/ingo/Documents/ChatGPT/gr-tdigest 2/followups-20261021/junit-platform-console-standalone-1.11.4.jar",
+        "execute",
+        "--disable-ansi-colors",
+        "--class-path",
+        "/home/ingo/Documents/ChatGPT/gr-tdigest 2/followups-20261021/artifacts/gr-tdigest-0.2.5-dev2026102102.jar:/home/ingo/Documents/ChatGPT/gr-tdigest 2/followups-20261021/jvm-test-classes-story",
+        "--scan-classpath",
+        "--fail-if-no-tests",
+        "--details",
+        "summary"
+      ],
+      "cwd": "/home/ingo/Documents/ChatGPT/gr-tdigest 2/followups-20261021",
+      "exit_code": 0,
+      "log_sha256": "a6ad3227700793589dff0dd7d7668bdd0f145acbfc0d4b1f3dbf96fce1a7e6cb",
+      "name": "java21"
+    },
+    {
+      "command": [
+        "readelf",
+        "--version-info",
+        "/home/ingo/Documents/ChatGPT/gr-tdigest 2/followups-20261021/artifacts/libgr_tdigest-python-glibc228.so"
+      ],
+      "cwd": "/home/ingo/Documents/ChatGPT/gr-tdigest 2/followups-20261021",
+      "exit_code": 0,
+      "log_sha256": "9412bdb51ef64b3151162608f72bfd344ab4b5cabd5a3091dbbf07b72a0c5825",
+      "name": "python-symbols"
+    },
+    {
+      "command": [
+        "readelf",
+        "--version-info",
+        "/home/ingo/Documents/ChatGPT/gr-tdigest 2/followups-20261021/artifacts/libgr_tdigest-jni-glibc217.so"
+      ],
+      "cwd": "/home/ingo/Documents/ChatGPT/gr-tdigest 2/followups-20261021",
+      "exit_code": 0,
+      "log_sha256": "d415794994fe9753558825b4bd1d419eada1ed765c2d05abf4f0d4691190c5c2",
+      "name": "jni-symbols"
+    },
+    {
+      "command": [
+        "podman",
+        "--root",
+        "/home/ingo/.cache/gr-tdigest-20261020/containers",
+        "--runroot",
+        "/tmp/gr-tdigest-containers-run",
+        "--storage-driver",
+        "vfs",
+        "--storage-opt",
+        "ignore_chown_errors=true",
+        "image",
+        "inspect",
+        "f63d8d2889fdbb0b12bde4a7879e843b13c1d61f93562d8a41729244536214d9"
+      ],
+      "cwd": "/home/ingo/Documents/ChatGPT/gr-tdigest 2/followups-20261021",
+      "exit_code": 0,
+      "log_sha256": "17005b866be812711281b5d5a4c2bbad0b246ef2234af98abeed6e390b141433",
+      "name": "python-image"
+    },
+    {
+      "command": [
+        "podman",
+        "--root",
+        "/home/ingo/.cache/gr-tdigest-20261020/containers",
+        "--runroot",
+        "/tmp/gr-tdigest-containers-run",
+        "--storage-driver",
+        "vfs",
+        "--storage-opt",
+        "ignore_chown_errors=true",
+        "run",
+        "--rm",
+        "--pull",
+        "never",
+        "--network",
+        "none",
+        "f63d8d2889fdbb0b12bde4a7879e843b13c1d61f93562d8a41729244536214d9",
+        "getconf",
+        "GNU_LIBC_VERSION"
+      ],
+      "cwd": "/home/ingo/Documents/ChatGPT/gr-tdigest 2/followups-20261021",
+      "exit_code": 0,
+      "log_sha256": "b4b2cd20d644ba5f859713132586a1bc9380e86d7c88b8401593022084b936f7",
+      "name": "python-actual-libc"
+    },
+    {
+      "command": [
+        "podman",
+        "--root",
+        "/home/ingo/.cache/gr-tdigest-20261020/containers",
+        "--runroot",
+        "/tmp/gr-tdigest-containers-run",
+        "--storage-driver",
+        "vfs",
+        "--storage-opt",
+        "ignore_chown_errors=true",
+        "image",
+        "inspect",
+        "8652b9f0cb4c0599575e5a003f5906876e10c1ceb2ab9fe1786712dac14a50cf"
+      ],
+      "cwd": "/home/ingo/Documents/ChatGPT/gr-tdigest 2/followups-20261021",
+      "exit_code": 0,
+      "log_sha256": "9bc25560ab815112f309c84017d036eaeac1e5a84d48f6d7b18f867bd64833a1",
+      "name": "jni-image"
+    },
+    {
+      "command": [
+        "podman",
+        "--root",
+        "/home/ingo/.cache/gr-tdigest-20261020/containers",
+        "--runroot",
+        "/tmp/gr-tdigest-containers-run",
+        "--storage-driver",
+        "vfs",
+        "--storage-opt",
+        "ignore_chown_errors=true",
+        "run",
+        "--rm",
+        "--pull",
+        "never",
+        "--network",
+        "none",
+        "8652b9f0cb4c0599575e5a003f5906876e10c1ceb2ab9fe1786712dac14a50cf",
+        "getconf",
+        "GNU_LIBC_VERSION"
+      ],
+      "cwd": "/home/ingo/Documents/ChatGPT/gr-tdigest 2/followups-20261021",
+      "exit_code": 0,
+      "log_sha256": "55c7f9bb5aa612a83df5c0b79b833a1e9f82f7d8c07f8b9c8fc66b665db97d44",
+      "name": "jni-actual-libc"
+    },
+    {
+      "command": [
+        "podman",
+        "--root",
+        "/home/ingo/.cache/gr-tdigest-20261020/containers",
+        "--runroot",
+        "/tmp/gr-tdigest-containers-run",
+        "--storage-driver",
+        "vfs",
+        "--storage-opt",
+        "ignore_chown_errors=true",
+        "run",
+        "--rm",
+        "--pull",
+        "never",
+        "--network",
+        "none",
+        "-v",
+        "/home/ingo/Documents/ChatGPT/gr-tdigest 2/followups-20261021:/home/ingo/Documents/ChatGPT/gr-tdigest 2/followups-20261021:ro",
+        "-w",
+        "/tmp",
+        "-v",
+        "/home/ingo/.local/share/uv/python:/home/ingo/.local/share/uv/python:ro",
+        "-e",
+        "PYTEST_DISABLE_PLUGIN_AUTOLOAD=1",
+        "-e",
+        "POLARS_MAX_THREADS=4",
+        "-e",
+        "RAYON_NUM_THREADS=4",
+        "-e",
+        "OMP_NUM_THREADS=1",
+        "-e",
+        "OPENBLAS_NUM_THREADS=1",
+        "f63d8d2889fdbb0b12bde4a7879e843b13c1d61f93562d8a41729244536214d9",
+        "/home/ingo/Documents/ChatGPT/gr-tdigest 2/followups-20261021/artifact-qa-story/bin/python",
+        "-I",
+        "-m",
+        "pytest",
+        "-q",
+        "-c",
+        "/dev/null",
+        "-p",
+        "no:cacheprovider",
+        "-o",
+        "xfail_strict=true",
+        "/home/ingo/Documents/ChatGPT/gr-tdigest 2/followups-20261021/floor-tests-story"
+      ],
+      "cwd": "/home/ingo/Documents/ChatGPT/gr-tdigest 2/followups-20261021",
+      "exit_code": 0,
+      "log_sha256": "ea9ba515f5d0dc33e27317f0e9d14c6ac244059c8c55887ff53972126f767cc3",
+      "name": "python-glibc228"
+    },
+    {
+      "command": [
+        "podman",
+        "--root",
+        "/home/ingo/.cache/gr-tdigest-20261020/containers",
+        "--runroot",
+        "/tmp/gr-tdigest-containers-run",
+        "--storage-driver",
+        "vfs",
+        "--storage-opt",
+        "ignore_chown_errors=true",
+        "run",
+        "--rm",
+        "--pull",
+        "never",
+        "--network",
+        "none",
+        "-v",
+        "/home/ingo/Documents/ChatGPT/gr-tdigest 2/followups-20261021:/home/ingo/Documents/ChatGPT/gr-tdigest 2/followups-20261021:ro",
+        "-w",
+        "/tmp",
+        "-v",
+        "/home/ingo/Documents/ChatGPT/gr-tdigest 2/followup-20261020/toolchains/jdk-5c3f68887c325d36d852ba534303e1f5f1f5cae7d6cc1e951d73e0d8e98a058d/jdk-11.0.32.1+1:/jdk:ro",
+        "8652b9f0cb4c0599575e5a003f5906876e10c1ceb2ab9fe1786712dac14a50cf",
+        "/jdk/bin/java",
+        "-Xmx256m",
+        "-XX:ActiveProcessorCount=4",
+        "-jar",
+        "/home/ingo/Documents/ChatGPT/gr-tdigest 2/followups-20261021/junit-platform-console-standalone-1.11.4.jar",
+        "execute",
+        "--disable-ansi-colors",
+        "--class-path",
+        "/home/ingo/Documents/ChatGPT/gr-tdigest 2/followups-20261021/artifacts/gr-tdigest-0.2.5-dev2026102102.jar:/home/ingo/Documents/ChatGPT/gr-tdigest 2/followups-20261021/jvm-test-classes-story",
+        "--scan-classpath",
+        "--fail-if-no-tests",
+        "--details",
+        "summary"
+      ],
+      "cwd": "/home/ingo/Documents/ChatGPT/gr-tdigest 2/followups-20261021",
+      "exit_code": 0,
+      "log_sha256": "8f2999e5fb9d607b960b571d017865cfcec6fb9f28d96bb61f91bd7a8756bb1f",
+      "name": "java11-glibc217"
+    }
+  ],
+  "images": {
+    "jni": "8652b9f0cb4c0599575e5a003f5906876e10c1ceb2ab9fe1786712dac14a50cf",
+    "python": "f63d8d2889fdbb0b12bde4a7879e843b13c1d61f93562d8a41729244536214d9"
+  },
+  "jar_manifest": "Manifest-Version: 1.0\r\nMain-Class: gr.SmokeMain\r\nImplementation-Title: gr-tdigest\r\nImplementation-Version: 0.2.5-dev2026102102\r\nTDigest-Source-SHA: aaf7ab3956fed4269c1eaeef915a6faee78fa305\r\nTDigest-Native-Allocator: system\r\nTDigest-Native-SHA256: f254f1ff7b619e62fcb9879ad1a31593d74dcd01ea89361e0\r\n e3f1d5581484fc2\r\n\r\n",
+  "kind": "bounded review-artifact qualification; numerical acceptance remains FAIL",
+  "source_sha": "aaf7ab3956fed4269c1eaeef915a6faee78fa305",
+  "status": "PASS_BOUNDED_CHECKS_NUMERICAL_ACCEPTANCE_STILL_FAIL",
+  "symbols": {
+    "jni": {
+      "maximum_required_glibc": "2.16",
+      "sha256": "f254f1ff7b619e62fcb9879ad1a31593d74dcd01ea89361e0e3f1d5581484fc2"
+    },
+    "python": {
+      "maximum_required_glibc": "2.28",
+      "sha256": "1eaaf244db7004a0b8d2aca2edc6ff027a0d3a8871c2b8c450fdf94f19701d76"
+    }
+  }
+}
