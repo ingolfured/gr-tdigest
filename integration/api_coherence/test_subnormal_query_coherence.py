@@ -38,7 +38,7 @@ def test_subnormal_total_query_shape_and_state_across_surfaces(precision, shape)
         tiny.quantile(qs), expected_quantiles, rtol=0, atol=2e-14
     )
 
-    frame = pl.DataFrame({"blob": [before]}).select(d=td.from_bytes("blob"))
+    frame = pl.DataFrame({"blob": [before]}).select(d=td.from_bytes("blob", precision=precision))
     polars_cdf = frame.select(
         *[
             td.cdf("d", pl.lit(value, dtype=pl.Float64).alias(f"probe_{i}"))

@@ -17,7 +17,7 @@ def test_fractional_v1_export_errors_across_python_and_polars(precision, weights
         digest.to_bytes(version=1)
     blob = digest.to_bytes()
     assert td.TDigest.from_bytes(blob).to_bytes() == blob
-    frame = pl.DataFrame({"blob": [blob]}).select(d=td.from_bytes("blob"))
+    frame = pl.DataFrame({"blob": [blob]}).select(d=td.from_bytes("blob", precision=precision))
     with pytest.raises(
         pl.exceptions.ComputeError, match="TDIG v1 requires positive integer"
     ):
@@ -40,7 +40,7 @@ def test_full_width_edge_pins_remain_mergeable_across_python_and_polars(precisio
     assert restored.to_bytes() == blob
     restored.merge(digest)
     assert restored.weights.sum() == 800
-    frame = pl.DataFrame({"blob": [blob]}).select(d=td.from_bytes("blob"))
+    frame = pl.DataFrame({"blob": [blob]}).select(d=td.from_bytes("blob", precision=precision))
     assert frame.select(pl.col("d").struct.field("pin_per_side")).item() == 300
     assert frame.select(td.to_bytes("d")).item() == blob
     for version in [1, 2]:

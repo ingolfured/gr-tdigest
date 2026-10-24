@@ -236,3 +236,5 @@ Quality acceptance uses separate rank, percentile-value and midpoint-CDF measure
 Modern builders, reconstruction and precision conversions return checked results. Merges validate matching configuration even for empty contributors and replace the receiver only after validating the prepared result.
 
 Positive transformations prepare and validate independent state before commit; failures preserve the receiver. Exact atomic points may retain a rounded zero moment without losing their known location or mass.
+
+Polars rejects missing digest rows, checks training representability, and requires a binary precision hint. CDF broadcasting follows input lengths; per-row List expressions retain List output, while Python sequences provide a flat probe vector.

@@ -6,6 +6,8 @@ All notable changes to this project are documented in this file.
 
 - Document measured Modern versus G-Research accuracy winners and error ratios by dataset, summary size, precision and merge setup.
 
+- Use checked modern state and length-based CDF broadcasting in Polars.
+
 - Validate positive transformations before committing modern state.
 
 - Check modern construction, reconstruction, precision casts and merges.
