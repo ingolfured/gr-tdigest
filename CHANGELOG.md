@@ -4,6 +4,8 @@ All notable changes to this project are documented in this file.
 
 ## [Unreleased]
 
+- Preserve weighted query results and restored digest state.
+
 - Resolve development paths from the active checkout, quote environment paths and install hooks through Git worktree paths.
 
 ### Changed

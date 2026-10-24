@@ -136,12 +136,22 @@ fn quantile(inputs: &[Series], kwargs: QuantileKwargs) -> PolarsResult<Series> {
 
 #[polars_expr(output_type = Float64)]
 fn median(inputs: &[Series]) -> PolarsResult<Series> {
-    let td = parse_and_merge::<f64>(inputs)?;
-    if td.is_empty() {
-        Ok(Series::new("".into(), [None::<f64>]))
+    let value = if is_compact_digest_dtype(inputs[0].dtype()) {
+        let td = parse_and_merge::<f32>(inputs)?;
+        if td.is_empty() {
+            None
+        } else {
+            Some(td.median())
+        }
     } else {
-        Ok(Series::new("".into(), [Some(td.median())]))
-    }
+        let td = parse_and_merge::<f64>(inputs)?;
+        if td.is_empty() {
+            None
+        } else {
+            Some(td.median())
+        }
+    };
+    Ok(Series::new("".into(), [value]))
 }
 
 #[polars_expr(output_type_func = merge_output_dtype)]
@@ -328,9 +338,15 @@ fn to_bytes_versioned(inputs: &[Series], kwargs: ToBytesKwargs) -> PolarsResult<
 
     let td_bytes: Vec<u8> = if is_compact_digest_dtype(s.dtype()) {
         let td = parse_and_merge::<f32>(inputs)?;
+        version
+            .validate_delta(td.delta())
+            .map_err(|e| PolarsError::ComputeError(e.to_string().into()))?;
         encode_digest_with_version(&td, version)
     } else {
         let td = parse_and_merge::<f64>(inputs)?;
+        version
+            .validate_delta(td.delta())
+            .map_err(|e| PolarsError::ComputeError(e.to_string().into()))?;
         encode_digest_with_version(&td, version)
     };
 
@@ -679,7 +695,10 @@ where
     F: Copy + 'static + FloatCore + FloatLike + WireOf,
 {
     let s = &inputs[0];
-    let parsed = parse_digest_column_lenient::<F>(s)?;
+    let mut parsed = parse_digest_column_lenient::<F>(s)?;
+    if parsed.len() == 1 {
+        return Ok(parsed.pop().unwrap());
+    }
     Ok(TDigest::<F>::merge_digests(parsed))
 }
 
