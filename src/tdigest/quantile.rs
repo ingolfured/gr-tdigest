@@ -180,6 +180,21 @@ impl<F: FloatLike + FloatCore> TDigest<F> {
         let (m_left, m_right) = (left.mean_f64(), right.mean_f64());
         let right_center_cum_w = cum_w_at_left_center + center_span_weight;
 
+        if left.is_atomic() && right.is_atomic() {
+            // Atomic neighbors share one boundary, with no interpolated mass.
+            // Deriving that boundary independently from both centers can leave
+            // a rounding-sized positive span (even for equal weights like 0.1),
+            // incorrectly moving the boundary quantile to one of the means.
+            let boundary = cum_w_at_left_center + w_left / 2.0;
+            return if target_index < boundary {
+                m_left
+            } else if target_index > boundary {
+                m_right
+            } else {
+                interpolate_value(m_left, m_right, 0.5)
+            };
+        }
+
         // Inside a multi-weight singleton "pile" → return exact mean.
         if left.is_singleton()
             && Self::inside_pile_strict(target_index, cum_w_at_left_center, w_left)

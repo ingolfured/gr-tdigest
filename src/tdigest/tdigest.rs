@@ -12,7 +12,8 @@ use crate::tdigest::wire::{self, WireDecodedDigest, WireError, WireVersion};
 
 /// TDigest orchestration + public API, generic over centroid float storage `F` (`f32` or `f64`).
 ///
-/// - Centroids (means/weights) and `min/max` are stored in `F` to control **in-memory size**.
+/// - Centroid means and `min/max` are stored in `F` to control **in-memory size**.
+/// - Centroid weights stay in `f64` so f32 means do not discard small mass updates.
 /// - `sum` and `count` remain `f64` for **stable accumulation** and to match the on-wire schema.
 /// - The compressor/merges do their internal math in `f64` and convert at the boundaries.
 #[derive(Debug, PartialEq, Clone)]
@@ -122,7 +123,7 @@ fn rescaled_centroid<F: FloatLike + FloatCore>(
     let weight = c.weight_f64() * weight_scale;
 
     if c.is_atomic_unit() {
-        if (weight - 1.0).abs() <= f64::EPSILON {
+        if weight == 1.0 {
             Centroid::<F>::new_atomic_unit_f64(mean)
         } else {
             Centroid::<F>::new_atomic_f64(mean, weight)
@@ -376,10 +377,10 @@ impl<F: FloatLike + FloatCore> TDigest<F> {
         Precision::of_type::<F>()
     }
 
-    /// Cast this digest to a different centroid-storage precision.
+    /// Cast this digest to a different mean-storage precision.
     ///
-    /// This preserves configuration and digest-level stats while converting
-    /// centroid means/weights to the target float type.
+    /// This preserves configuration, f64 centroid weights and digest-level stats
+    /// while converting centroid means and extrema to the target float type.
     pub fn cast_precision<T>(&self) -> TDigest<T>
     where
         T: FloatLike + FloatCore,
@@ -521,7 +522,7 @@ impl<F: FloatLike + FloatCore> TDigest<F> {
         let mut total_weight = 0.0_f64;
         for (v, w) in &pairs {
             let mean = <F as FloatLike>::to_f64(*v);
-            if (*w - 1.0).abs() <= f64::EPSILON {
+            if *w == 1.0 {
                 cents.push(Centroid::<F>::new_atomic_unit_f64(mean));
             } else {
                 cents.push(Centroid::<F>::new_atomic_f64(mean, *w));

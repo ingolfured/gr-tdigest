@@ -4,6 +4,8 @@ All notable changes to this project are documented in this file.
 
 ## [Unreleased]
 
+- Keep observation weights in Float64 for both mean precisions.
+
 - Preserve weighted tails, protected edges and wire settings.
 
 - Preserve weighted query results and restored digest state.
