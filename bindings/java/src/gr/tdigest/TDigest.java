@@ -34,7 +34,7 @@ public final class TDigest implements AutoCloseable, Serializable {
   /* ======================= Type-safe enums for builder ======================= */
 
   public enum Scale {
-    QUAD, K1, K2, K3;
+    QUAD, K1, K2, K2NORM, K3;
     String asWire() { return name().toLowerCase(Locale.ROOT); }
   }
 
@@ -69,6 +69,7 @@ public final class TDigest implements AutoCloseable, Serializable {
       case "quad":
       case "k1":
       case "k2":
+      case "k2norm":
       case "k3":
         return v;
       default:
@@ -129,11 +130,21 @@ public final class TDigest implements AutoCloseable, Serializable {
   private transient Cleaner.Cleanable cleanable;
 
   private TDigest(long handle) {
+    initializeHandle(handle);
+  }
+
+  private void initializeHandle(long handle) {
     if (handle == 0) {
       throw new IllegalStateException("Failed to create TDigest (null native handle)");
     }
     this.state = new State(handle);
-    this.cleanable = CLEANER.register(this, state);
+    try {
+      this.cleanable = CLEANER.register(this, state);
+    } catch (RuntimeException | Error error) {
+      state.run();
+      state = null;
+      throw error;
+    }
   }
 
   /* ======================= Builder (fluent) ======================= */
@@ -143,6 +154,9 @@ public final class TDigest implements AutoCloseable, Serializable {
     private Scale scale = Scale.K2;
     private SingletonPolicy policy = SingletonPolicy.USE;
     private int edgesPerSide = 3;
+    private Double delta;
+    private boolean explicitScale;
+    private boolean explicitPolicy;
     private Precision precision = Precision.F64; // keep default as-is to avoid surprises
 
     public Builder maxSize(int n) {
@@ -153,11 +167,22 @@ public final class TDigest implements AutoCloseable, Serializable {
 
     public Builder scale(Scale s) {
       this.scale = Objects.requireNonNull(s, "scale");
+      this.explicitScale = true;
       return this;
     }
 
     public Builder singletonPolicy(SingletonPolicy p) {
       this.policy = Objects.requireNonNull(p, "policy");
+      this.explicitPolicy = true;
+      return this;
+    }
+
+    /** Modern K2Norm/Off delta mode. It does not select the original engine. */
+    public Builder delta(double value) {
+      if (!Double.isFinite(value) || value <= 0.0) throw new IllegalArgumentException("delta must be finite and > 0");
+      this.delta = value;
+      if (!explicitScale) this.scale = Scale.K2NORM;
+      if (!explicitPolicy) this.policy = SingletonPolicy.OFF;
       return this;
     }
 
@@ -177,8 +202,21 @@ public final class TDigest implements AutoCloseable, Serializable {
           false;
       final int edges = (policy == SingletonPolicy.USE_WITH_PROTECTED_EDGES) ? edgesPerSide : 0;
       long h = TDigestNative.fromArray(
-          values, maxSize, scale.asWire(), policy.toNativeCode(), edges, f32);
+          values, maxSize, scale.asWire(), policy.toNativeCode(), edges, f32, delta == null ? 0.0 : delta);
       return new TDigest(h);
+    }
+
+    /** Construct weighted observations; failed construction releases the handle. */
+    public TDigest buildWeighted(double[] values, double[] weights) {
+      TDigest result = build(new double[] {});
+      try { return result.addWeighted(values, weights); }
+      catch (RuntimeException error) { result.close(); throw error; }
+    }
+
+    public TDigest buildWeighted(float[] values, double[] weights) {
+      TDigest result = build(new float[] {});
+      try { return result.addWeighted(values, weights); }
+      catch (RuntimeException error) { result.close(); throw error; }
     }
 
     public TDigest build(float[] values) {
@@ -189,7 +227,7 @@ public final class TDigest implements AutoCloseable, Serializable {
           false;
       final int edges = (policy == SingletonPolicy.USE_WITH_PROTECTED_EDGES) ? edgesPerSide : 0;
       long h = TDigestNative.fromArray(
-          values, maxSize, scale.asWire(), policy.toNativeCode(), edges, f32);
+          values, maxSize, scale.asWire(), policy.toNativeCode(), edges, f32, delta == null ? 0.0 : delta);
       return new TDigest(h);
     }
   }
@@ -208,7 +246,7 @@ public final class TDigest implements AutoCloseable, Serializable {
     final int policyCode = parsePolicyCode(singleton_policy);
     final int keep = coalesceEdges(edges);
     final boolean f32 = (f32_mode != null) && f32_mode;
-    long h = TDigestNative.fromArray(values, maxSize, sc, policyCode, keep, f32);
+    long h = TDigestNative.fromArray(values, maxSize, sc, policyCode, keep, f32, 0.0);
     return new TDigest(h);
   }
 
@@ -222,7 +260,7 @@ public final class TDigest implements AutoCloseable, Serializable {
     final int policyCode = parsePolicyCode(singleton_policy);
     final int keep = coalesceEdges(edges);
     final boolean f32 = (f32_mode != null) && f32_mode;
-    long h = TDigestNative.fromArray(values, maxSize, sc, policyCode, keep, f32);
+    long h = TDigestNative.fromArray(values, maxSize, sc, policyCode, keep, f32, 0.0);
     return new TDigest(h);
   }
 
@@ -352,6 +390,12 @@ public final class TDigest implements AutoCloseable, Serializable {
     return new TDigest(h);
   }
 
+  /** Merge an array into independent state; inputs remain unchanged. */
+  public static TDigest mergeAll(TDigest[] digests) {
+    Objects.requireNonNull(digests, "digests");
+    return mergeAll(Arrays.asList(digests));
+  }
+
   public static TDigest mergeAll(TDigest first, TDigest second, TDigest... rest) {
     Objects.requireNonNull(first, "first");
     Objects.requireNonNull(second, "second");
@@ -416,6 +460,10 @@ public final class TDigest implements AutoCloseable, Serializable {
   }
 
   public static TDigest readFrom(InputStream in) throws IOException {
+    return fromBytes(readStateBytes(in));
+  }
+
+  private static byte[] readStateBytes(InputStream in) throws IOException {
     Objects.requireNonNull(in, "in");
     DataInputStream din = (in instanceof DataInputStream)
         ? (DataInputStream) in
@@ -431,7 +479,7 @@ public final class TDigest implements AutoCloseable, Serializable {
     }
     byte[] bytes = new byte[n];
     din.readFully(bytes);
-    return fromBytes(bytes);
+    return bytes;
   }
 
   private void writeObject(ObjectOutputStream out) throws IOException {
@@ -442,11 +490,13 @@ public final class TDigest implements AutoCloseable, Serializable {
   }
 
   private void readObject(ObjectInputStream in) throws IOException, ClassNotFoundException {
-    TDigest restored = readFrom(in);
-    this.state = restored.state;
-    this.cleanable = restored.cleanable;
-    restored.state = null;
-    restored.cleanable = null;
+    // Register this object as the Cleaner referent. Transferring a temporary
+    // object's Cleanable lets collection of that temporary free a live handle.
+    try {
+      initializeHandle(TDigestNative.fromBytes(readStateBytes(in)));
+    } catch (IllegalArgumentException error) {
+      throw new IOException("tdigest: invalid serialized state", error);
+    }
   }
 
   private void readObjectNoData() throws IOException {
