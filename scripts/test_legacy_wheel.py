@@ -1,4 +1,4 @@
-"""Run the unchanged upstream suite using an installed release Linux wheel."""
+"""Check the original API and published pickle migration in a release Linux wheel."""
 
 from __future__ import annotations
 
@@ -89,19 +89,23 @@ def main() -> None:
             tests,
             ignore=shutil.ignore_patterns("__pycache__", ".pytest_cache"),
         )
-        # Run exact original-output cases and API regressions from the wheel too.
+        # Run exact outputs, API regressions, and genuine published pickles from the wheel.
         parity = temporary / "parity"
         (parity / "data").mkdir(parents=True)
         for name in (
             "test_original_numerics.py",
             "test_legacy_compatibility.py",
             "test_optional_polars_import.py",
+            "test_published_pickle_migration.py",
         ):
             shutil.copyfile(root / "bindings/python/tests" / name, parity / name)
-        shutil.copyfile(
-            root / "bindings/python/tests/data/upstream_numerical_golden.json",
-            parity / "data/upstream_numerical_golden.json",
-        )
+        for name in (
+            "upstream_numerical_golden.json",
+            "published_0_1_0_pickle_golden.json",
+        ):
+            shutil.copyfile(
+                root / "bindings/python/tests/data" / name, parity / "data" / name
+            )
         # Source checkout must not satisfy these imports.
         run(
             python,
