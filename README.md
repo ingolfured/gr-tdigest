@@ -149,7 +149,6 @@ The unchanged upstream Python suite runs in `make test` and Linux CI. `make pyth
 - See `CHANGELOG.md`.
 
 ## Future improvements
-- Allow scaling of weights and guard against centroid weight overflow.
 - Auto suggest a scaling function based on distribution.
 
 ## Community
@@ -172,9 +171,9 @@ The repository root remains the separate modern `gr-tdigest` package. Registry
 publication requires publishing the matching `tdigest_core` version first; this
 workspace layout does not itself publish either package.
 
-When a query returns an ndarray, it is an independent writable Float64 snapshot with ordinary NumPy ownership and resizing behavior. Centroid means and weights are also independent Float64 snapshots. Scalar results, including the existing one-element NumPy query fast path, retain their current behavior.
+When a query returns an ndarray, it is an independent writable Float64 snapshot with ordinary NumPy ownership and resizing behavior. Centroid means and weights are also independent Float64 snapshots. One-dimensional NumPy probes retain an array result, including one element; zero-dimensional probes return scalars. Multidimensional probes are rejected.
 
-The NumPy output conversion measurements and their scope are recorded in [the validation note](compat/performance/numpy-output-20261015/README.md).
+The NumPy output conversion measurements and their scope are recorded in [the validation note](https://github.com/ingolfured/gr-tdigest/blob/5801881075c6e31fec746c8c62c6a25782b6c13f/compat/performance/numpy-output-20261015/README.md).
 
 Polars digest structs with delta require K2Norm scale and singleton policy Off, as binary digests do. Incompatible structs return a configuration error when read for queries or serialization.
 
@@ -186,8 +185,28 @@ Modern training and updates copy compatible aligned, native-endian contiguous on
 
 `make test` now includes fast quality checks using recorded bike-rental and household-energy data, varied distributions and exact weighted references. `make quality-extended` measures full datasets, both precisions, several summary sizes and40-way merges. It retains failing profiles and reports percentile position, value and cumulative-probability errors separately.
 
-The modern engine usually improves percentile position and average value error on these real-data profiles; the original often has the better worst value error. Small summaries and numerical edge cases still have explicit failures. See the [readable findings](compat/quality-20261020/RESULTS.md) and [test methods](tests/quality/README.md). `make quality-regression` protects the recorded outcomes while preserving their failed accuracy status.
+The modern engine usually improves percentile position and average value error on these real-data profiles; the original often has the better worst value error. Small summaries and numerical edge cases still have explicit failures. See the [readable findings](https://github.com/ingolfured/gr-tdigest/blob/5801881075c6e31fec746c8c62c6a25782b6c13f/compat/quality-20261020/RESULTS.md) and [test methods](tests/quality/README.md). `make quality-regression` protects the recorded outcomes while preserving their failed accuracy status.
 
 The configured JDK also supplies the direct Java compiler/runtime subprocesses used by `make test`; an environment-selected JDK does not require a separate system Java installation.
 
-Modern Rust construction, precision conversion and full-state restoration are checked operations; failed in-place updates preserve their receiver. See `api_design.md` for the shared state contract.
+## Consumer APIs and delivery
+
+Use the [Python/NumPy guide](bindings/python/OBJECT_API.md), [Polars guide](bindings/python/POLARS_API.md), and [Java build and runtime guide](bindings/java/README.md). Scala/sbt and Kotlin/Gradle consumers are in [the JVM examples](bindings/java/examples/README.md).
+
+Modern Rust construction returns a checked result, for example `TDigest::<f64>::builder().max_size(1000).build()?`. Modern defaults use capacity 1,000; the separate original `tdigest_rs` and `tdigest_core` interfaces retain their pinned API and calculations.
+
+The upcoming release is `0.2.5-rc.1` (`0.2.5rc1` for Python). Use the guides above for installation and API examples.
+
+## Measured summary-size tradeoffs
+
+`make quality-budgets` separately measures4140capacity/scale/data/merge profiles,
+including explicit200/1000sizes and additional deterministic shapes. It is a
+slower diagnostic and returns failure for the observed accuracy failures. Small
+summaries remain a numerical acceptance issue; changing the scale does not
+universally fix them. The default remainsK2/1000 and the original engine is
+unchanged. See the [accuracy investigation and recommendation](https://github.com/ingolfured/gr-tdigest/blob/5801881075c6e31fec746c8c62c6a25782b6c13f/compat/consumer-20261020/accuracy-investigation/REPORT.md).
+
+JVM builds accept a selected native file with any basename through
+`TDIGEST_NATIVE_FILE`. Packaging renames it to the native loader's canonical
+resource path, removes stale generated payloads and verifies the finished JAR.
+CI exercises a renamed override and runs that JAR outside the checkout.
