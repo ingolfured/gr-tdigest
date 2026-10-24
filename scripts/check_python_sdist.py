@@ -72,6 +72,24 @@ def verify_sdist_contents(sdist: Path, root: Path) -> None:
             "bindings/python/tdigest_rs/tdigest_rs.py",
             "src/tdigest/tdigest.rs",
             "src/upstream_py.rs",
+            "scripts/check_build_tools.py",
+            "bindings/python/OBJECT_API.md",
+            "bindings/python/POLARS_API.md",
+            "bindings/python/gr_tdigest/__init__.pyi",
+            "bindings/python/gr_tdigest/_gr_tdigest.pyi",
+            "bindings/python/gr_tdigest/py.typed",
+            "bindings/java/gradlew",
+            "bindings/java/gradlew.bat",
+            "bindings/java/gradle/wrapper/gradle-wrapper.jar",
+            "bindings/java/gradle/wrapper/gradle-wrapper.properties",
+            "bindings/java/examples/README.md",
+            "bindings/java/examples/scala/build.sbt",
+            "bindings/java/examples/scala/project/build.properties",
+            "bindings/java/examples/scala/src/main/scala/Example.scala",
+            "bindings/java/examples/kotlin/build.gradle",
+            "bindings/java/examples/kotlin/settings.gradle",
+            "bindings/java/examples/kotlin/src/main/kotlin/Example.kt",
+            "bindings/python/tests/test_consumer_contracts.py",
         ):
             require_same(relative, relative)
         # make test now includes the offline recorded-data gate. A source
@@ -100,6 +118,9 @@ def verify_sdist_contents(sdist: Path, root: Path) -> None:
             raise RuntimeError("sdist has an unexpected active Python source directory")
         for relative in (
             "gr_tdigest/__init__.py",
+            "gr_tdigest/__init__.pyi",
+            "gr_tdigest/_gr_tdigest.pyi",
+            "gr_tdigest/py.typed",
             "tdigest_rs/__init__.py",
             "tdigest_rs/lib.py",
             "tdigest_rs/tdigest_rs.py",
