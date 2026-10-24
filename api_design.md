@@ -244,6 +244,11 @@ Modern missing digests and mixed capacities are rejected. Empty contributors als
 
 The JVM candidate exposes array merge-all, weighted builder construction and modern delta/K2Norm configuration. Java object restoration registers the restored object itself with Cleaner; temporary referents never own restored handles. JNI catches catchable Rust panics, uses the system allocator, and reports controlled native loading paths and payload identity. Independent handles are supported; shared mutable handles are not thread-safe. Actual external and internal qualification is recorded in the candidate manifest/coverage report.
 
+The public Spark consumer check uses explicit byte-state serialization for Kryo,
+or Java object serialization, across separate executor processes. It verifies
+broadcast, shuffle and checkpoint restoration. Local separate-executor checks
+do not qualify a consuming cluster's image, filesystem or configuration.
+
 Polars requires explicit binary-column precision (`f32` or `f64`) so planning matches execution. This is a consistency check, not conversion. `from_bytes` remains a group reduction, including one empty state for empty input, rather than silently becoming row-wise. Scalar/list literal CDF probes and List-valued columns now have consistent planned/runtime types for zero, one and many rows.
 
 Modern Float32 training rejects values that overflow or round a nonzero input to
