@@ -51,8 +51,7 @@ mod compact_storage;
 #[cfg(feature = "python")]
 mod py;
 #[cfg(feature = "python")]
-#[path = "upstream/lib.rs"]
-mod upstream;
+use tdigest_core as upstream;
 #[cfg(feature = "python")]
 mod upstream_py;
 #[cfg(feature = "python")]
