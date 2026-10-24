@@ -135,6 +135,25 @@ impl<F: FloatLike + FloatCore> Centroid<F> {
         self.kind
     }
 
+    // Preserve kind while rescaling; callers validate products when necessary.
+    #[inline]
+    pub(super) fn rescaled(&self, mean_scale: f64, weight_scale: f64) -> Centroid<F> {
+        let mean = self.mean_f64() * mean_scale;
+        let weight = self.weight_f64() * weight_scale;
+
+        if self.is_atomic_unit() {
+            if weight == 1.0 {
+                Centroid::<F>::new_atomic_unit_f64(mean)
+            } else {
+                Centroid::<F>::new_atomic_f64(mean, weight)
+            }
+        } else if self.is_atomic() {
+            Centroid::<F>::new_atomic_f64(mean, weight)
+        } else {
+            Centroid::<F>::new_mixed_f64(mean, weight)
+        }
+    }
+
     /* ---------------------------------------------------------------------
      * Kind helpers (preferred in new code)
      * ------------------------------------------------------------------ */

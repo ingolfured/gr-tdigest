@@ -24,6 +24,8 @@ Out of scope for this file:
 ### 2.1 Main modules
 
 - `src/tdigest/tdigest.rs`: digest type, builders, add/merge entry points, bytes entry points.
+- `src/tdigest/transformations.rs`: precision casts and value/weight scaling, as a private child module of the digest so its fields remain private.
+- `src/tdigest/query.rs`: shared read-only query view with borrowed centroids for ordinary queries and an owned normalized slice for subnormal mass.
 - `src/tdigest/merges.rs`: stream-merging helpers + stage-1 normalization.
   - Includes a heap-based streaming k-way centroid merge used by digest-to-digest merge.
 - `src/tdigest/compressor.rs`: staged compressor (`compress_into`) and policy logic.
@@ -84,6 +86,17 @@ Weighted add path:
   - finite, strictly positive weights
 - Weighted values are converted to atomic centroids, then merged through the same digest merge/compression path.
 - Frontend surfaces route weighted add through `FrontendDigest::add_weighted_f64(...)`, so Python/JNI/Polars share the same validation and merge semantics.
+
+Weight scaling is transactional. `scale_weights` validates the positive finite
+factor, prepares centroid products locally, and rejects any nonpositive or
+nonfinite product before calling checked constructors. It also rejects a
+nonfinite accumulated product total or nonpositive/nonfinite scaled stored
+count. Only then does it replace centroids and scale count/sum. Errors use the
+existing `InvalidWeight` variant and preserve the original digest bytes. Empty
+digests remain no-ops after factor validation; valid positive subnormal products
+remain supported. Successful count and sum arithmetic retains its prior order.
+This validation is limited to weight scaling: aggregate input/merge validation,
+weighted-value product overflow, and the raw-sum overflow policy are separate.
 
 ### 3.2 Raw-value ingest (`merge_unsorted` / `merge_sorted`)
 
@@ -327,6 +340,37 @@ These semantics are asserted by focused tests in:
 - `src/tdigest/cdf.rs`
 - `src/tdigest/quantile.rs`
 
+### 5.5 Positive subnormal total mass
+
+Half-weight arithmetic and `q * total` can underflow when the entire stored
+centroid mass is positive and subnormal. These queries use a shared read-only
+query view whose weights first multiply by `2^1022` (`1 / f64::MIN_POSITIVE`). A
+second exact power-of-two scale, derived from that normal total's exponent,
+places the total in `[1, 2)`. The two factors stay separate because their
+combined reciprocal could overflow. Every positive weight becomes normal, and
+the total no longer makes a tiny positive `q` smaller before tail interpolation.
+Means, kinds, extrema, and configuration stay unchanged, and queries never
+mutate the stored digest.
+
+CDF uses the actual centroid total already computed for its prefix array.
+Quantile first checks its stored total, then computes actual mass only in the
+subnormal branch. The view total is the scaled actual mass even if a directly
+seeded subnormal header differs from its subnormal centroid total. Both kernels evaluate the
+view directly, without recursive query calls. The view borrows ordinary
+centroids and owns only a normalized centroid slice on the rare path; it
+never copies or scales the raw sum or digest configuration. Empty/NaN handling,
+quantile endpoints, and weight-independent single-centroid quantiles retain their existing branches.
+Normal-total queries keep the previous summation order, kernels, and allocation
+behavior, with only an extra condition. The rare fallback allocates a normalized
+centroid slice. CDF reuses its prefix allocation when rebuilding cumulative mass from that slice.
+
+This evaluates the stored centroid distribution; it cannot recover mean or sum
+information already lost during compression. A normal total with a
+minimum-subnormal component remains on the ordinary path and may still lose
+that component's tiny half-weight or rank boundary. Malformed normal header
+counts hiding subnormal actual mass are not repaired by the quantile prefilter.
+Aggregate overflow and malformed-state validation remain separate concerns.
+
 ## 6. TDIG wire format
 
 Implemented in `src/tdigest/wire.rs`.
@@ -407,3 +451,14 @@ Adapters (`src/py.rs`, `src/jni.rs`, `src/polars_expr.rs`) should remain thin ar
 
 3. Doc split discipline.
 - Keep target behavior only in `api_design.md` and current internals only here.
+
+## Original G-Research numerical compatibility
+
+`tdigest_rs.TDigest` uses the pinned `src/upstream` implementation through
+`src/upstream_py.rs`. Both f32 arithmetic and u32 centroid weights are retained.
+The Python wrapper is unchanged from upstream, including its cached arrays and
+default-delta reconstruction during copy/pickle. This deliberate separate path
+preserves existing application outputs; `gr_tdigest`, Polars, Java, and the CLI
+continue using the modern shared core. Numerical fixes there must not silently
+change the original interface. See the vendored source provenance and exact
+output regression tests.

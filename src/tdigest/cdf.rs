@@ -31,6 +31,7 @@
 
 use crate::tdigest::centroids::Centroid;
 use crate::tdigest::precision::FloatLike;
+use crate::tdigest::query::QueryView;
 use crate::tdigest::TDigest;
 use ordered_float::FloatCore;
 use rayon::iter::IndexedParallelIterator;
@@ -76,7 +77,21 @@ impl<F: FloatLike + FloatCore> TDigest<F> {
             prefix.push(run);
             run += c.weight_f64();
         }
-        let count_f64 = run;
+        let mut count_f64 = run;
+        let mut view = QueryView::new(self, count_f64);
+        if count_f64 > 0.0 && count_f64 < f64::MIN_POSITIVE {
+            view = view.normalize_subnormal_mass(count_f64);
+            // Match the ordinary CDF kernel's summation order on normalized
+            // weights, reusing the prefix allocation made above.
+            prefix.clear();
+            run = 0.0;
+            for c in view.centroids() {
+                prefix.push(run);
+                run += c.weight_f64();
+            }
+            count_f64 = run;
+        }
+        let cents = view.centroids();
 
         let min_v = self.min();
         let max_v = self.max();

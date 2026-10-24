@@ -90,6 +90,10 @@ public class Example {
 }
 ```
 
+Query and transformation internals are described in [tdigest_design.md](tdigest_design.md).
+CDF and quantile share a read-only query view; tiny-mass normalization leaves
+the stored digest unchanged.
+
 ## Project layout
 ```text
 ├── src/                                  # Rust core, CLI, algorithm modules
@@ -126,6 +130,13 @@ symlink to that directory for the CLI and Java development tools.
 - Rust: stable (edition 2021)
 - Python: CPython 3.12 (built with maturin)
 - Polars: 1.x line (Python)
+
+Existing G-Research applications keep `from tdigest_rs import TDigest` and
+`TDigest.from_array(values, delta=300)`. This interface uses the unmodified
+original numerical implementation and Python wrapper, including float32
+arithmetic, uint32 weights, and the original copy/pickle behavior. The new engine
+is opt-in through `from gr_tdigest import TDigest`; using `delta` there does not
+promise the same numbers. See [source provenance](src/upstream/PROVENANCE.md).
 
 ## Changelog
 - See `CHANGELOG.md`.

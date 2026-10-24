@@ -29,6 +29,7 @@
 //! quantile implementation via the same center/half-weight rules.
 
 use crate::tdigest::precision::FloatLike;
+use crate::tdigest::query::QueryView;
 use crate::tdigest::TDigest;
 use ordered_float::FloatCore;
 
@@ -66,7 +67,7 @@ impl<F: FloatLike + FloatCore> TDigest<F> {
         }
         // Only clamp after guarding NaN
         let q = q.clamp(0.0, 1.0);
-        let (target_index, total_weight) = self.quantile_to_weight_index(q);
+        let total_weight = self.count();
 
         if q == 0.0 {
             return self.min();
@@ -89,6 +90,83 @@ impl<F: FloatLike + FloatCore> TDigest<F> {
                 interpolate_value(mean, self.max(), 2.0 * q - 1.0)
             };
         }
+        let mut view = QueryView::new(self, total_weight);
+        // Keep the ordinary path free of an extra centroid scan. A malformed
+        // normal header hiding subnormal stored mass is outside this fallback.
+        if total_weight > 0.0 && total_weight < f64::MIN_POSITIVE {
+            let stored_mass: f64 = self.centroids().iter().map(|c| c.weight_f64()).sum();
+            if stored_mass > 0.0 && stored_mass < f64::MIN_POSITIVE {
+                view = view.normalize_subnormal_mass(stored_mass);
+            }
+        }
+        view.quantile(q)
+    }
+
+    /// Estimate the median using the same weighted interpolation as `quantile(0.5)`.
+    /// Empty digests return `NaN`; centroid weights may be fractional.
+    pub fn median(&self) -> f64 {
+        self.quantile(0.5)
+    }
+
+    /// Approximate trimmed mean over quantile bounds `[lower, upper]`.
+    ///
+    /// Invalid bounds and empty digests return `NaN`.
+    pub fn trimmed_mean(&self, lower: f64, upper: f64) -> f64 {
+        if crate::tdigest::frontends::validate_trimmed_mean_bounds(lower, upper).is_err() {
+            return f64::NAN;
+        }
+
+        let total = self.count();
+        if total <= 0.0 || self.centroids().is_empty() {
+            return f64::NAN;
+        }
+
+        let min_w = lower * total;
+        let max_w = upper * total;
+        if max_w <= min_w {
+            return f64::NAN;
+        }
+
+        let mut cur = 0.0_f64;
+        let mut acc_sum = 0.0_f64;
+        let mut acc_w = 0.0_f64;
+
+        for c in self.centroids() {
+            let w = c.weight_f64();
+            if w <= 0.0 {
+                continue;
+            }
+            let next = cur + w;
+            if next <= min_w {
+                cur = next;
+                continue;
+            }
+            if cur >= max_w {
+                break;
+            }
+
+            let take_start = min_w.max(cur);
+            let take_end = max_w.min(next);
+            let take = (take_end - take_start).max(0.0);
+            if take > 0.0 {
+                acc_sum += c.mean_f64() * take;
+                acc_w += take;
+            }
+            cur = next;
+        }
+
+        if acc_w > 0.0 {
+            acc_sum / acc_w
+        } else {
+            f64::NAN
+        }
+    }
+}
+
+impl<F: FloatLike + FloatCore> QueryView<'_, F> {
+    fn quantile(&self, q: f64) -> f64 {
+        let (target_index, total_weight) = self.quantile_to_weight_index(q);
+        let first = &self.centroids()[0];
         let last = self.centroids().last().unwrap();
         let first_center = first.weight_f64() / 2.0;
         let last_half = last.weight_f64() / 2.0;
@@ -230,66 +308,6 @@ impl<F: FloatLike + FloatCore> TDigest<F> {
         // Atomic point masses may have any positive, including fractional, weight.
         let half = pile_weight / 2.0;
         (center_cum_w - half) < target_index && target_index < (center_cum_w + half)
-    }
-
-    /// Estimate the median using the same weighted interpolation as `quantile(0.5)`.
-    /// Empty digests return `NaN`; centroid weights may be fractional.
-    pub fn median(&self) -> f64 {
-        self.quantile(0.5)
-    }
-
-    /// Approximate trimmed mean over quantile bounds `[lower, upper]`.
-    ///
-    /// Invalid bounds and empty digests return `NaN`.
-    pub fn trimmed_mean(&self, lower: f64, upper: f64) -> f64 {
-        if crate::tdigest::frontends::validate_trimmed_mean_bounds(lower, upper).is_err() {
-            return f64::NAN;
-        }
-
-        let total = self.count();
-        if total <= 0.0 || self.centroids().is_empty() {
-            return f64::NAN;
-        }
-
-        let min_w = lower * total;
-        let max_w = upper * total;
-        if max_w <= min_w {
-            return f64::NAN;
-        }
-
-        let mut cur = 0.0_f64;
-        let mut acc_sum = 0.0_f64;
-        let mut acc_w = 0.0_f64;
-
-        for c in self.centroids() {
-            let w = c.weight_f64();
-            if w <= 0.0 {
-                continue;
-            }
-            let next = cur + w;
-            if next <= min_w {
-                cur = next;
-                continue;
-            }
-            if cur >= max_w {
-                break;
-            }
-
-            let take_start = min_w.max(cur);
-            let take_end = max_w.min(next);
-            let take = (take_end - take_start).max(0.0);
-            if take > 0.0 {
-                acc_sum += c.mean_f64() * take;
-                acc_w += take;
-            }
-            cur = next;
-        }
-
-        if acc_w > 0.0 {
-            acc_sum / acc_w
-        } else {
-            f64::NAN
-        }
     }
 }
 
