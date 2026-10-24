@@ -26,6 +26,12 @@ T-Digest provides a mergeable summary of a distribution, enabling approximate qu
 - 🎚️ Scale families: `Quad`, `K1`, `K2`, `K3`.
 - 🔩 Singleton handling policy: edge-precision (`keep N`), respect singletons, or uniform merge.
 
+## Why choose Modern over legacy GR?
+
+**Modern is our recommended engine for new applications.** At matched logical centroid-field byte budgets, it wins average rank error in **279/324** recorded real-data cases, tail rank error in **295/324**, and average value error in **260/324**. It also provides CDF queries, fractional weights, portable TDIG state and a shared Rust/Python/Polars/Java core.
+
+For a Bike single build at size 128, Modern has about **0.017 times GR's average rank error** and **0.035 times its average value error**. Energy also favors Modern on average accuracy, while GR has lower peak value error. See [why choose Modern](comparison_design.md) for the recommendation and [setup tables](compat/quality-20261020/RESULTS.md) for the full comparison, including cases GR wins.
+
 ## Examples
 
 **Python**
@@ -186,7 +192,7 @@ Modern training and updates copy compatible aligned, native-endian contiguous on
 
 `make test` now includes fast quality checks using recorded bike-rental and household-energy data, varied distributions and exact weighted references. `make quality-extended` measures full datasets, both precisions, several summary sizes and40-way merges. It retains failing profiles and reports percentile position, value and cumulative-probability errors separately.
 
-The modern engine is not universally more accurate than original G-Research:
+The recorded comparison supports choosing Modern for better average accuracy on these real-data workloads:
 
 - **Bike:** Modern wins average rank, tail rank, average value and peak value error in every grouped size/merge setup tested.
 - **Energy:** Modern wins average rank, tail rank and average value error. GR wins peak value error: Modern's error is **1.81–1.86 times GR's** across the grouped setups.

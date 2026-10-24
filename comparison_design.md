@@ -1,244 +1,98 @@
-# comparison_design.md
+# Why choose modern gr-tdigest over legacy G-Research?
 
-This document compares `gr-tdigest` with relevant papers and production implementations, and records the design tradeoffs behind this repository.
+For new applications, **Modern is our recommended engine**. It combines substantially better accuracy on the recorded real-data workloads with a shared Rust/Python/Polars/Java API, CDF queries, fractional weights and portable digest state. The original G-Research implementation remains available for applications that need its exact existing results.
 
-- `api_design.md` defines target cross-surface behavior.
-- `tdigest_design.md` defines current implementation internals.
-- This file defines external comparison and product-positioning decisions.
+The strongest reason to move is measurable: **Modern wins average rank error in 279 of 324 real-data cases, tail rank error in 295, and average value error in 260**, at matched logical centroid-field byte budgets. These are the results of the recorded comparison, including cases Modern loses.
 
-## 1. Scope and evaluation criteria
+This document explains that recommendation. [Full setup tables](compat/quality-20261020/RESULTS.md) show the winners, error ratios and precision breakdowns.
 
-Compared targets:
-- tdunning reference implementation and papers.
-- Appian `polars-tdigest` plugin.
-- Elasticsearch t-digest fork.
-- Apache DataSketches quantile family (KLL/REQ/t-digest).
-- Representative ecosystem ports (PostgreSQL extension, Python ports).
+## 1. Better measured accuracy on recorded workloads
 
-Evaluation criteria:
-- Tail accuracy behavior and interpolation quality.
-- Formal error guarantees vs empirical behavior.
-- Mergeability in distributed pipelines.
-- Multi-language interoperability and wire stability.
-- Validation strictness and predictable error model.
-- API coverage (`quantile`, `cdf`, `median`, merge, serialization).
-- Operational concerns (memory control, production integration).
+The suite uses every row of two public datasets: Bike Sharing and household Energy. It tests nine measured columns, f32/f64, sizes 32/128/512, natural/reversed input and three construction paths: single build, 40 sequential merges and a balanced 40-way merge.
 
-## 2. What this project optimizes for
+Across the averages for all nine size/merge groups in each dataset:
 
-`gr-tdigest` is intentionally optimized for:
-- One Rust source of truth for behavior across Rust/Python/Polars/Java.
-- Strict cross-surface contracts (probe/training validation, merge compatibility, null rules).
-- Explicit precision handling (`f32`/`f64`) and strict mixed-precision rejection in strict frontends.
-- Canonical TDIG wire interoperability across surfaces.
-- Tail-aware behavior with explicit singleton policy controls.
+| Workload | Average rank error | Tail rank error | Average value error | Peak value error |
+| --- | --- | --- | --- | --- |
+| Bike | **Modern wins** | **Modern wins** | **Modern wins** | **Modern wins** |
+| Energy | **Modern wins** | **Modern wins** | **Modern wins** | GR wins |
 
-It is intentionally *not* optimized first for:
-- The strongest known formal rank-error guarantees.
-- Single-runtime-only minimalism.
-- Highly specialized off-heap allocators or engine-specific resource accounting.
+The benefit is substantial at practical summary sizes. For a single build with Modern size 128:
 
-## 3. Comparison summary (high-level)
+| Dataset | Modern average rank error / GR | Modern average value error / GR | Modern peak value error / GR |
+| --- | ---: | ---: | ---: |
+| Bike | **0.017** | **0.035** | **0.35** |
+| Energy | **0.043** | **0.40** | 1.84 |
 
-### 3.1 `gr-tdigest` vs tdunning reference (`tdunning/t-digest`)
+**Lower error is better. Every ratio is Modern error divided by GR error: below 1 favors Modern; above 1 favors GR.** For Bike in this setup, Modern has about 1.7% of GR's average rank error and 3.5% of its average value error. For Energy, it has about 4.3% of GR's average rank error and 40% of its average value error.
 
-Where we align:
-- Same family of t-digest goals: compact, mergeable quantile sketch with strong tail behavior.
-- Scale-function-centric compression behavior.
-- Heavy emphasis on singleton handling and interpolation quality.
+The advantage continues through repeated merges. At size 128, Modern's grouped average rank error is about **0.021 times GR's on Bike** and **0.009 times GR's on Energy** for both sequential and balanced 40-way construction.
 
-Where we differ by design:
-- `gr-tdigest` makes cross-surface behavior itself a first-class contract.
-- `gr-tdigest` enforces strict frontend merge compatibility checks (precision + config) before merge.
-- `gr-tdigest` bakes explicit precision semantics and strict decode behavior into shared frontend helpers.
-- `gr-tdigest` has explicit API-level singleton policy controls (`Off`, `Use`, `UseWithProtectedEdges(k)`) as surfaced product behavior across faces.
+These are ratios of average per-case errors, averaged across each dataset's columns, both precisions and both orders. Value errors are normalized by each column's IQR, with the suite's fallback for zero IQR. Peak value error averages each case's maximum value error. Grouped wins do not imply every individual case wins.
 
-Practical consequence:
-- tdunning is still the canonical reference line for algorithm evolution.
-- `gr-tdigest` is more opinionated for predictable multi-language product behavior.
+## 2. A broader engine for new applications
 
-### 3.2 `gr-tdigest` vs Appian `polars-tdigest`
+Accuracy is one reason to choose Modern. Its API and state model also address work that otherwise belongs in application code.
 
-Appian package positioning (from published package metadata):
-- Polars plugin wrapper around a Rust t-digest implementation.
-- Emphasizes estimated quantile plus digest creation/merge for distributed workflows.
+| Need | What Modern provides |
+| --- | --- |
+| Percentiles and distribution queries | Quantile, median and CDF through the shared core; the preserved original GR API has no CDF method |
+| Fractional observations and accumulated mass | Positive fractional weights, with f64 centroid weights in both mean precisions; legacy GR retains u32 centroid weights |
+| One implementation across a stack | Rust, Python, Polars and Java surfaces with shared validation and cross-language coherence tests |
+| Portable stored summaries | Versioned TDIG serialization, precision/configuration metadata and cross-language round-trip checks |
+| Explicit control over precision and compression | f32/f64 means, precision casts, scale functions and singleton policies |
+| Predictable frontend behavior | Explicit validation and rejection of incompatible merges instead of application-specific assumptions |
+| Independent Python construction | Native construction releases the GIL after copying inputs into owned Rust storage |
 
-Where `gr-tdigest` is broader:
-- Multi-surface support (Rust/Python/Polars/Java), not Polars-only.
-- Explicit `cdf`, merge-policy strictness, wire-interop contract, and precision-aware decode rules.
-- Coherence/integration tests that enforce behavior parity across faces.
+Together, these make Modern our preferred foundation for new distribution-summary pipelines. The recommendation combines measured real-data accuracy with capabilities and integration; it is not a claim that every query is faster or every error metric is smaller.
 
-Important documentation caveat:
-- Latest PyPI release metadata (`0.1.11`, October 2, 2025) shows no project description, so public feature claims are less explicit than earlier `0.1.10` metadata.
+## 3. Where legacy GR still does better
 
-### 3.3 `gr-tdigest` vs Elasticsearch t-digest fork
+The main measured tradeoff on real data is **Energy peak value error**. Modern's grouped peak value error is **1.81–1.86 times GR's** across the tested sizes and merge paths, even while Modern wins average rank, tail rank and average value error in those groups. Applications driven by the largest value-space error should examine this result directly.
 
-Elasticsearch fork strengths:
-- Deep production integration for Elasticsearch percentile workloads.
-- Fork explicitly calls out fixes around AVL/merging behavior and substantial performance gains.
-- Includes runtime-specific implementation options (`MergingDigest`, `HybridDigest`, `SortingDigest`) and resource-accounting integration.
+Synthetic grids also identify places to improve. Averaged across tested sizes, precisions, orders and construction paths, GR wins all four reported metrics on Gaussian, exponential, lognormal, Pareto, bimodal and signed-scale distributions. Modern wins all four on drift, skewed two-point and zero-inflated data; rounded ties and uniform grids split by metric. The [distribution tables](compat/quality-20261020/RESULTS.md#synthetic-data-winner-by-distribution) quantify these differences.
 
-`gr-tdigest` strengths relative to Elastic fork:
-- Cleaner standalone multi-language API contract outside one host engine.
-- Explicit cross-language wire-format coherence tests as core project contract.
-- User-facing strict error semantics aligned across Rust/Python/Polars/Java.
+We retain these results because they make the recommendation useful: developers can check the error measure and data shape that matter to their application. They also give further accuracy work a concrete target.
 
-Tradeoff:
-- Elastic is stronger for Elasticsearch-native operational integration.
-- `gr-tdigest` is stronger as a standalone cross-language library contract.
+## 4. Upgrade deliberately; preserve existing applications
 
-### 3.4 `gr-tdigest` vs Apache DataSketches (KLL/REQ/t-digest)
+Choose Modern explicitly:
 
-DataSketches strengths:
-- Broader quantile-sketch portfolio:
-  - KLL with strong compactness and proven rank-error behavior.
-  - REQ with relative-rank accuracy focus at chosen tail.
-  - t-digest as empirical option.
-- Strong theoretical framing and error-bound tooling for KLL/REQ.
+```python
+from gr_tdigest import TDigest
+```
 
-`gr-tdigest` strengths relative to DataSketches stack:
-- Focused t-digest specialization with explicit cross-surface behavioral contracts.
-- Multi-surface API coherence and strict validation semantics in one Rust-first codebase.
+Keep legacy GR when reproducing existing numerical behavior is the requirement:
 
-Key algorithmic difference in philosophy:
-- DataSketches emphasizes guaranteed-rank-error families (KLL/REQ) when guarantees are required.
-- `gr-tdigest` emphasizes t-digest tail quality + practical interoperability contracts.
+```python
+from tdigest_rs import TDigest
+```
 
-### 3.5 G-Research `tdigest-rs` compatibility
+The legacy interface uses pinned original calculations and the original Python wrapper. Its f32 arithmetic, u32 weights, immutable merge/update and copy/pickle behavior remain preserved. The original Rust interface is available through `tdigest_core`. The 91 unchanged upstream tests, independent exact-output fixtures and source checksums protect that compatibility.
 
-`tdigest_rs.TDigest` retains the pinned original calculations and Python wrapper.
-Existing applications keep their import, API, dtype, weights, and numerical
-behavior; the modern `gr_tdigest` engine requires an explicit choice. The 91
-unchanged upstream tests and 70 exact-output cases run on Linux, including from
-an installed wheel. Source hashes protect the original numerical implementation.
-See [compatibility](compat/gr_tdigest_vs_tdigest_rs.md) for scope and provenance.
+Modern is a separate numerical engine, so matching compression parameters does not promise identical answers. See the [compatibility guide](compat/gr_tdigest_vs_tdigest_rs.md) for migration scope and [source provenance](src/upstream/PROVENANCE.md) for the retained implementation.
 
-## 4. Which is best? (scenario-based)
+## 5. How the comparison earns its conclusions
 
-There is no single globally best sketch/library. Best choice is workload-driven:
+Results come from [CI run 104](https://github.com/ingolfured/gr-tdigest/actions/runs/39566448129), which measured commit `e6a14a28237a77aca4df88955f3257b99a518d2d`. Modern uses K2/Use. Both engines receive identical observations after the same precision cast.
 
-1. Best for strict, provable rank-error contracts:
-- DataSketches KLL/REQ.
+GR's compression parameter is selected by observed summary size, without consulting accuracy. Eligible comparisons fill 90–100% of Modern's logical centroid-field byte budget. All 324 real-data cases and 378 of 432 synthetic cases qualify. This budget counts centroid fields and excludes allocation overhead, capacity, RSS and wire size.
 
-2. Best for canonical t-digest reference behavior and ongoing algorithm lineage:
-- tdunning/t-digest.
+Independent sorted-data references measure rank, tail rank and percentile-value errors separately. CDF is checked against the empirical midpoint reference for Modern; there is no invented GR CDF comparison. The [test methods](tests/quality/README.md) define the references and gates.
 
-3. Best for Elasticsearch-native production percentile integration:
-- Elasticsearch fork (`org.elasticsearch.tdigest` / `TDigestState`).
+The recorded regression gate passes with known limits: 10 synthetic cases exceed accuracy limits, and 13 of 15 separate numerical boundary controls fail. These remain visible in the results. The public fixtures establish behavior on these workloads; they are not independent held-out trials, a formal error guarantee or a throughput benchmark.
 
-4. Best for Polars-only plugin adoption with minimal surface area:
-- Appian `polars-tdigest`.
+## 6. Design context beyond legacy GR
 
-5. Best for cross-language API coherence with strict validation and wire interoperability in one project:
-- `gr-tdigest`.
+The direct measured comparison in this document is Modern versus original GR. Other projects inform individual design choices:
 
-## 5. Feature-gap assessment for `gr-tdigest`
+- [tdunning/t-digest](https://github.com/tdunning/t-digest) and the [t-digest paper](https://arxiv.org/abs/1902.04023) provide algorithmic context for scale functions and interpolation.
+- [Apache DataSketches](https://datasketches.apache.org/docs/QuantilesAll/QuantilesOverview.html) provides context for formal rank guarantees and other quantile-sketch families.
+- [Appian polars-tdigest](https://github.com/appian/polars-tdigest) provides Polars integration context.
+- [Elasticsearch's t-digest implementation](https://artifacts.elastic.co/javadoc/org/elasticsearch/elasticsearch-tdigest/8.17.9/org.elasticsearch.tdigest/org/elasticsearch/tdigest/package-summary.html) provides host-engine integration context.
 
-The following are meaningful potential gaps or expansion points compared with the broader ecosystem.
-
-1. Formal error guarantees and bound APIs.
-- Current approach is empirical quality + contract tests.
-- Gap vs KLL/REQ-style explicit probabilistic rank-error guarantees.
-
-2. Published benchmark/accuracy dashboards.
-- Internals and tests are strong, but there is no public benchmark matrix equivalent to large cross-sketch studies.
-
-3. Richer deployment-specific implementations.
-- No direct equivalents of Elastic `SortingDigest`/`HybridDigest` modes for workload-adaptive behavior.
-
-4. Fractional-weight wire fidelity.
-- Core wire now defaults to TDIG v3 and still supports v1/v2 decode.
-- Versioned encode controls (`to_bytes(version=...)`) are exposed across Python/Java/Polars for mixed data-lake migration.
-- Remaining gap is mostly operational guidance/benchmarking for large mixed-version estates.
-
-5. Explicit cast API completion across all surfaces.
-- Explicit cast APIs are now exposed across Rust/Python/Java/Polars surfaces.
-- Remaining gap is mostly ergonomic polish and additional migration docs/examples.
-
-6. Resource-accounting and off-heap integrations.
-- No engine-specific memory-accounting model comparable to Elastic BigArrays integration.
-
-7. More explicit stability/performance SLOs by configuration.
-- Could document practical operating envelopes by `max_size`, scale family, singleton policy, and data-shape regimes.
-
-## 6. Design choices this comparison validates
-
-This comparison supports keeping the following choices in `gr-tdigest`:
-- Rust-first single semantic layer (`frontends.rs`) with thin adapters.
-- Strict input/probe/merge/decode behavior as product contract, not ad-hoc binding behavior.
-- Explicit precision policy and strict mixed-precision handling.
-- Contract-level coherence tests across all exposed surfaces.
-
-And it highlights where optional roadmap items should be considered:
-- Optional guarantee-oriented companion sketch(s) or bound reporting.
-- Stronger benchmark publication and reproducible perf/accuracy studies.
-- Optional alternate digest modes for workloads prioritizing exactness-over-memory or vice versa.
-
-## 7. Source index
-
-Primary references used for this comparison:
-
-1. tdunning reference library
-- https://github.com/tdunning/t-digest
-
-2. Original t-digest paper (arXiv)
-- https://arxiv.org/abs/1902.04023
-
-3. Software Impacts paper (2021)
-- https://doi.org/10.1016/j.simpa.2020.100049
-- https://www.sciencedirect.com/science/article/pii/S2665963820300403
-
-4. Appian / polars-tdigest package pages
-- https://pypi.org/project/polars-tdigest/
-- https://github.com/appian/polars-tdigest
-
-5. Elasticsearch t-digest package overview
-- https://artifacts.elastic.co/javadoc/org/elasticsearch/elasticsearch-tdigest/8.17.9/org.elasticsearch.tdigest/org/elasticsearch/tdigest/package-summary.html
-
-6. Apache DataSketches quantiles overview
-- https://datasketches.apache.org/docs/QuantilesAll/QuantilesOverview.html
-
-7. Apache DataSketches KLL docs
-- https://datasketches.apache.org/docs/KLL/KLLSketch.html
-
-8. Apache DataSketches t-digest overview
-- https://datasketches.apache.org/docs/tdigest/tdigest.html
-
-9. KLL theory paper
-- https://arxiv.org/abs/1603.05346
-
-10. Apache DataSketches REQ docs
-- https://datasketches.apache.org/docs/REQ/ReqSketch.html
-
-11. Representative ecosystem implementations
-- https://github.com/tvondra/tdigest
-- https://github.com/CamDavidsonPilon/tdigest
-- https://github.com/protivinsky/pytdigest
-- https://github.com/RedisBloom/t-digest-c
-
-## G-Research numerical compatibility
-
-`tdigest_rs.TDigest` retains the pinned original Rust calculations and Python
-wrapper so existing applications keep their API and numbers. The modern
-`gr_tdigest` engine is opt-in. Matching compression parameters or passing the
-91 approximate upstream tests does not establish exact output equivalence.
-The retained implementation and exact regression fixtures have explicit
-provenance; upstream quirks are preserved on this interface.
+These references are design background, not a benchmark ranking. The case for adopting Modern rests on the measured GR comparison and the capabilities shipped here.
 
 ## Modern versus original GR: measured accuracy (CI, 21 October 2026)
 
-The quality suite compares the modern K2/Use engine and the preserved original on two pinned UCI datasets, deterministic distributions, both mean precisions and repeated merge paths. Parameters are matched by observed logical field-byte budget, with count-only selection for the original. This is distinct from retained memory, wire size and RSS. Rank, value, CDF and tail errors are reported separately; the original has no CDF API. All comparison losses and quality-limit failures remain visible in the recorded results.
-
-The modern engine is not universally more accurate than original G-Research:
-
-- **Bike:** Modern wins average rank, tail rank, average value and peak value error in every grouped size/merge setup tested.
-- **Energy:** Modern wins average rank, tail rank and average value error. GR wins peak value error: Modern's error is **1.81–1.86 times GR's** across the grouped setups.
-- **Synthetic distributions:** GR wins all four grouped metrics on Gaussian, exponential, lognormal, Pareto, bimodal and signed-scale data. Modern wins all four on drift, skewed two-point and zero-inflated data; rounded ties and uniform grids split by metric.
-
-These conclusions average cases within each setup; individual cases can differ.
-
-**Lower error is better.** The [setup tables](compat/quality-20261020/RESULTS.md) use **Modern error ÷ GR error** throughout: below 1 means Modern wins; above 1 means GR wins. For example, 0.25 means Modern has one quarter of GR's error; 2.00 means Modern has twice GR's error. Each cell names the winner.
-
-The recorded run covers 756 cases, including 324 real-data cases. Comparisons qualify at 90–100% of Modern's observed logical centroid-field byte budget; all 324 real-data and 378 synthetic cases qualify. These budgets exclude allocation overhead and RSS. Modern uses K2/Use, f32/f64, sizes 32/128/512, natural/reversed input and single-build/sequential-40/balanced-40 paths. The tables report ratios of average errors, including averages of per-case maxima for peak value error. This is an empirical comparison on these fixtures, not a universal accuracy guarantee or a throughput claim.
-
-[CI run 104](https://github.com/ingolfured/gr-tdigest/actions/runs/39566448129) measured commit `e6a14a28237a77aca4df88955f3257b99a518d2d`. Its regression gate passed while 10 synthetic accuracy-limit cases and 13/15 separate numerical boundary controls still failed. Full results and precision breakdowns are in the [recorded comparison](compat/quality-20261020/RESULTS.md).
+For the complete size/merge/precision breakdown, see [recorded results](compat/quality-20261020/RESULTS.md). Every cell names the winner and uses the same Modern/GR error ratio. The [API contract](api_design.md) and [implementation design](tdigest_design.md) document the behavior behind those results.
