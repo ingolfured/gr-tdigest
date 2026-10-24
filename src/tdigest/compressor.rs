@@ -317,6 +317,17 @@ fn klimit_merge<F: FloatLike + FloatCore>(
     // current merge pass; for non-K2Norm families this argument is ignored.
     let n = items.len() as f64;
 
+    // K2Norm increases with q only when its normalizer is positive. At a
+    // sufficiently large delta relative to the normalized input count, a
+    // nonpositive normalizer would reverse the scale and accept every merge.
+    // There is ample capacity in this regime: retain the existing means,
+    // weights and Atomic/Mixed kinds rather than discard information.
+    // Positive infinity is deliberately NOT caught: a tiny positive delta
+    // can overflow n/d and keeps its existing aggressive-compression path.
+    if family == ScaleFamily::K2Norm && (n / d).ln().mul_add(4.0, 24.0) <= 0.0 {
+        return items.to_vec();
+    }
+
     // C = mass of completed clusters already emitted.
     let mut c_acc = 0.0_f64; // running capacity accumulator
 
@@ -552,6 +563,24 @@ fn weighted_collapse<F: FloatLike + FloatCore>(slice: &[Centroid<F>]) -> Centroi
 mod tests {
     use super::*;
     use crate::tdigest::{singleton_policy::SingletonPolicy, ScaleFamily, TDigest};
+
+    #[test]
+    fn nonpositive_k2norm_domain_retains_existing_centroid_kinds_and_bits() {
+        macro_rules! assert_retained {
+            ($float:ty) => {{
+                let items = [
+                    Centroid::<$float>::new_mixed_f64(0.125, 0.25),
+                    Centroid::<$float>::new_atomic_f64(100.0, 0.5),
+                ];
+                assert_eq!(
+                    klimit_merge(&items, 1200.0, ScaleFamily::K2Norm, 0.0),
+                    items.to_vec()
+                );
+            }};
+        }
+        assert_retained!(f32);
+        assert_retained!(f64);
+    }
 
     #[test]
     fn finite_cluster_average_stays_inside_its_input_mean_interval() {
