@@ -73,6 +73,7 @@ def verify_sdist_contents(sdist: Path, root: Path) -> None:
             "src/tdigest/tdigest.rs",
             "src/upstream_py.rs",
             "scripts/check_build_tools.py",
+            "scripts/consumer_contract_probe.py",
             "bindings/python/OBJECT_API.md",
             "bindings/python/POLARS_API.md",
             "bindings/python/gr_tdigest/__init__.pyi",

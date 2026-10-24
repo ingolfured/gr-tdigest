@@ -8,6 +8,8 @@ All notable changes to this project are documented in this file.
 
 - Preserve the independent original Rust oracle, pinned lockfile and recorded evidence.
 
+- Add consumer contract probes, benchmarks and wider accuracy diagnostics.
+
 - Ship installed Python API documentation and typing metadata.
 
 - Compile Scala and Kotlin consumers through authenticated Maven fixtures.
