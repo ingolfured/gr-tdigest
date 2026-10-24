@@ -1,4 +1,4 @@
-"""Run the unchanged upstream suite using only an installed production wheel."""
+"""Run the unchanged upstream suite using an installed release Linux wheel."""
 
 from __future__ import annotations
 
@@ -11,9 +11,12 @@ import subprocess
 import sys
 import tempfile
 
+from check_upstream_sources import verify_sources
+
 
 def main() -> None:
     root = Path(__file__).resolve().parents[1]
+    verify_sources(root)
     project = root / "bindings/python"
     upstream = root / "compat/tdigest-rs-upstream"
     checksums = re.findall(
@@ -44,6 +47,7 @@ def main() -> None:
             "--no-sync",
             "maturin",
             "build",
+            "--release",
             "-F",
             "python",
             "--compatibility",
@@ -85,7 +89,20 @@ def main() -> None:
             tests,
             ignore=shutil.ignore_patterns("__pycache__", ".pytest_cache"),
         )
-        # Source checkout and compatibility shim must not satisfy these imports.
+        # Run exact original-output cases and API regressions from the wheel too.
+        parity = temporary / "parity"
+        (parity / "data").mkdir(parents=True)
+        for name in (
+            "test_original_numerics.py",
+            "test_legacy_compatibility.py",
+            "test_optional_polars_import.py",
+        ):
+            shutil.copyfile(root / "bindings/python/tests" / name, parity / name)
+        shutil.copyfile(
+            root / "bindings/python/tests/data/upstream_numerical_golden.json",
+            parity / "data/upstream_numerical_golden.json",
+        )
+        # Source checkout must not satisfy these imports.
         run(
             python,
             "-I",
@@ -98,7 +115,7 @@ def main() -> None:
             "print('Installed Rust extension:', native.__file__)",
             cwd=temporary,
         )
-        run(python, "-I", "-m", "pytest", "-q", str(tests), cwd=temporary)
+        run(python, "-I", "-m", "pytest", "-q", str(tests), str(parity), cwd=temporary)
 
 
 if __name__ == "__main__":
