@@ -4,6 +4,8 @@ All notable changes to this project are documented in this file.
 
 ## [Unreleased]
 
+- Count capacity-search trial clusters without allocating or averaging discarded centroids; retain the full final compression path and existing numerical decisions.
+
 - Align public guides for the 0.2.5 release candidate.
 - Use version `0.2.5-rc.1` (`0.2.5rc1` for Python) and simplify public release guidance.
 
