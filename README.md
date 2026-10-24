@@ -195,7 +195,7 @@ Use the [Python/NumPy guide](bindings/python/OBJECT_API.md), [Polars guide](bind
 
 Modern Rust construction returns a checked result, for example `TDigest::<f64>::builder().max_size(1000).build()?`. Modern defaults use capacity 1,000; the separate original `tdigest_rs` and `tdigest_core` interfaces retain their pinned API and calculations.
 
-This review source has a unique development version. Earlier artifacts and measurements remain bound to their recorded source hashes; the [historical candidate evidence](https://github.com/ingolfured/gr-tdigest/blob/5801881075c6e31fec746c8c62c6a25782b6c13f/compat/consumer-20261020/accuracy-investigation/ARTIFACTS.md) is not qualification of newly rebuilt bytes.
+The upcoming release is `0.2.5-rc.1` (`0.2.5rc1` for Python). Use the guides above for installation and API examples.
 
 ## Measured summary-size tradeoffs
 
