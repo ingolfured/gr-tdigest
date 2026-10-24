@@ -163,8 +163,9 @@ def wrapper_defaults() -> dict[str, str]:
     }
 
 
-def main(arguments: list[str]) -> int:
-    env = os.environ.copy()
+def java_environment(environment: dict[str, str]) -> dict[str, str]:
+    """Select the same verified JDK for Gradle and direct Java subprocesses."""
+    env = environment.copy()
     offline = enabled(env.get("TDIGEST_OFFLINE", ""))
     cache = Path(env.get("TDIGEST_TOOLCHAIN_CACHE", str(Path.home() / ".cache/gr-tdigest/toolchains"))).expanduser()
     if env.get("TDIGEST_JDK_URL"):
@@ -175,8 +176,17 @@ def main(arguments: list[str]) -> int:
     )
     if java is not None and not java.is_file():
         raise BootstrapError("JAVA_HOME does not contain bin/java")
-    if java is None and not shutil.which("java"):
+    if java is None and not shutil.which("java", path=env.get("PATH", os.defpath)):
         raise BootstrapError("Set JAVA_HOME or TDIGEST_JDK_URL with TDIGEST_JDK_SHA256")
+    if java is not None:
+        env["PATH"] = str(java.parent) + os.pathsep + env.get("PATH", os.defpath)
+    return env
+
+
+def main(arguments: list[str]) -> int:
+    env = java_environment(os.environ.copy())
+    offline = enabled(env.get("TDIGEST_OFFLINE", ""))
+    cache = Path(env.get("TDIGEST_TOOLCHAIN_CACHE", str(Path.home() / ".cache/gr-tdigest/toolchains"))).expanduser()
     if env.get("TDIGEST_GRADLE_HOME"):
         gradle_home = Path(env["TDIGEST_GRADLE_HOME"])
     else:

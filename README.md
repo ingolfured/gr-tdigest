@@ -28,6 +28,12 @@ T-Digest provides a mergeable summary of a distribution, enabling approximate qu
 - 🎚️ Scale families: `Quad`, `K1`, `K2`, `K3`.
 - 🔩 Singleton handling policy: edge-precision (`keep N`), respect singletons, or uniform merge.
 
+## Why choose Modern over legacy GR?
+
+**Modern is our recommended engine for new applications.** At matched logical centroid-field byte budgets, it wins average rank error in **279/324** recorded real-data cases, tail rank error in **295/324**, and average value error in **260/324**. It also provides CDF queries, fractional weights, portable TDIG state and a shared Rust/Python/Polars/Java core.
+
+For a Bike single build at size 128, Modern has about **0.017 times GR's average rank error** and **0.035 times its average value error**. Energy also favors Modern on average accuracy, while GR has lower peak value error. See [why choose Modern](comparison_design.md) for the recommendation and [setup tables](compat/quality-20261020/RESULTS.md) for the full comparison, including cases GR wins.
+
 ## Examples
 
 **Python**
@@ -183,3 +189,19 @@ Polars digest structs with delta require K2Norm scale and singleton policy Off, 
 Modern `TDigest.from_array` and `TDigest.from_means_weights` release the Python GIL during Rust construction after copying input into owned vectors. Independent constructors can therefore run in a caller-managed thread pool. Python input conversion still holds the GIL, and the library does not create a separate constructor pool. This change applies to the opt-in `gr_tdigest` interface.
 
 Modern training and updates copy compatible aligned, native-endian contiguous one-dimensional NumPy Float32/Float64 buffers directly into owned Rust vectors. Read-only arrays are supported; strided, unaligned, byte-swapped, scalar and other-dtype inputs retain their generic conversion path. Input storage is neither retained nor mutated.
+
+## Accuracy on recorded data
+
+`make test` now includes fast quality checks using recorded bike-rental and household-energy data, varied distributions and exact weighted references. `make quality-extended` measures full datasets, both precisions, several summary sizes and40-way merges. It retains failing profiles and reports percentile position, value and cumulative-probability errors separately.
+
+The recorded comparison supports choosing Modern for better average accuracy on these real-data workloads:
+
+- **Bike:** Modern wins average rank, tail rank, average value and peak value error in every grouped size/merge setup tested.
+- **Energy:** Modern wins average rank, tail rank and average value error. GR wins peak value error: Modern's error is **1.81–1.86 times GR's** across the grouped setups.
+- **Synthetic distributions:** GR wins all four grouped metrics on Gaussian, exponential, lognormal, Pareto, bimodal and signed-scale data. Modern wins all four on drift, skewed two-point and zero-inflated data; rounded ties and uniform grids split by metric.
+
+These conclusions average cases within each setup; individual cases can differ.
+
+See the [winner and error-ratio tables](compat/quality-20261020/RESULTS.md) for each summary size and merge setup. Every ratio is **Modern error ÷ GR error**: below 1 favors Modern; above 1 favors GR. The [comparison document](comparison_design.md#modern-versus-original-gr-measured-accuracy-ci-21-october-2026) records the positioning and limits; the [test methods](tests/quality/README.md) define the metrics. `make quality-regression` protects recorded outcomes while preserving known accuracy failures.
+
+The configured JDK also supplies the direct Java compiler/runtime subprocesses used by `make test`; an environment-selected JDK does not require a separate system Java installation.

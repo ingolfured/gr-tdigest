@@ -4,6 +4,15 @@ All notable changes to this project are documented in this file.
 
 ## [Unreleased]
 
+- Add regression tests for tiny-capacity mass retention, residual tail contributions, cancellation, intermediate overflow and fractional atomic quantile boundaries.
+- Focus the comparison guide on choosing Modern over legacy G-Research, with measured accuracy advantages, practical capabilities and explicit tradeoffs.
+
+- Document measured Modern versus G-Research accuracy winners and error ratios by dataset, summary size, precision and merge setup.
+
+- Preserve residual mass and compensated modern centroid arithmetic.
+
+- Test accuracy on recorded data and deterministic distributions.
+
 - Pin the optional Polars integration and support checks to Polars 1.44.2; defer Polars 2.0 evaluation.
 
 - Support Python 3.14 and 3.15 on the current NumPy and Polars stack.

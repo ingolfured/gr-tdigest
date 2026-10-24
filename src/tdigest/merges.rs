@@ -239,6 +239,8 @@ where
 
     let mut total_w = 0.0_f64;
     let mut total_mw = 0.0_f64;
+    let mut moment = crate::tdigest::summation::Sum::default();
+    let mut mass = crate::tdigest::summation::Sum::default();
 
     let first = match it.next() {
         Some(c) => c,
@@ -278,8 +280,8 @@ where
             } else {
                 Centroid::<F>::new_mixed_f64(cur_mean, cur_w)
             });
-            total_w += cur_w;
-            total_mw += cur_mean * cur_w;
+            mass.add(cur_w);
+            moment.add(cur_mean * cur_w);
 
             // Start new run
             cur_mean = m;
@@ -298,8 +300,10 @@ where
     } else {
         Centroid::<F>::new_mixed_f64(cur_mean, cur_w)
     });
-    total_w += cur_w;
-    total_mw += cur_mean * cur_w;
+    mass.add(cur_w);
+    moment.add(cur_mean * cur_w);
+    total_w = mass.total();
+    total_mw = moment.total();
 
     Normalized {
         out,
