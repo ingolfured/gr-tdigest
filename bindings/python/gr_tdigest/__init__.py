@@ -828,28 +828,24 @@ def to_bytes(digest: "IntoExpr", *, version: int | None = None) -> pl.Expr:
 
 
 def from_bytes(blob: "IntoExpr", *, precision: str = "auto") -> pl.Expr:
-    """
-    Deserialize a TDigest from a binary blob produced by td.to_bytes().
+    """Decode and merge one logical group of binary states.
 
-    precision:
-      - "auto": let the Rust plugin sniff the wire; schema defaults to compact f32
-        when no hint is provided.
-      - "f64": Polars schema uses Float64-backed struct
-      - "f32": Polars schema uses the compact Float32-backed struct
+    precision='f32' or 'f64' is required for a deterministic planned schema.
+    The hint checks the encoded precision; it never casts state. Inspect eager
+    bytes with wire_precision/infer_column_precision before constructing a lazy
+    expression when their precision is not already known. Empty input reduces
+    to one empty digest in the specified precision. Null/malformed blobs error.
     """
     pl = _require_polars()
     b_expr = _into_expr(blob)
     prec_norm = _coerce_precision(precision)  # "auto" | "f64" | "f32"
 
     if prec_norm == "auto":
-        # No hint: Rust side infers from wire; planner defaults to compact f32.
-        args = [b_expr]
-    else:
-        if prec_norm == "f32":
-            hint = pl.lit(0.0, dtype=pl.Float32)
-        else:  # "f64"
-            hint = pl.lit(0.0, dtype=pl.Float64)
-        args = [b_expr, hint]
+        raise ValueError(
+            "Polars from_bytes requires explicit precision='f32' or 'f64' so the planned schema matches runtime; inspect eager bytes with wire_precision or infer_column_precision first"
+        )
+    hint = pl.lit(0.0, dtype=pl.Float32 if prec_norm == "f32" else pl.Float64)
+    args = [b_expr, hint]
 
     return _register_plugin_function(
         plugin_path=str(lib),

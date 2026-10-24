@@ -108,12 +108,18 @@ pinned upstream revision did not contain a Rust test suite.
 The Python distribution supports CPython 3.10–3.15 through a py310 ABI3 wheel,
 with NumPy >=1.26.4,<3. The base installation exposes both NumPy numerical
 interfaces without requiring the Polars Python package. The optional `polars`
-extra installs the tested Polars 2.0.0 integration; this pin does not promise
-compatibility with untested future Polars releases. Existing numerical imports
-remain lazy, while expression operations require the extra.
+extra accepts Polars >=1.0.0 without an upper cap. Installing either the base
+package or its extra preserves an already installed compatible Polars version.
+Development remains pinned to 1.44.2. The installed-artifact gate exercises
+the same compiled wheel against 1.0.0, 1.20.0, 1.38.1, 1.44.2 and 2.0.0 across
+all supported Python versions, including consumer cardinality/schema and streaming regressions.
+The open dependency range permits newer releases; compatibility with unreleased
+versions cannot be guaranteed before testing. Existing numerical imports
+remain lazy, while expression operations require Polars to be installed.
 
-The installed-artifact gate reuses one real wheel across all six Python
-versions, using both NumPy lines on3.10–3.12 and NumPy2 on3.13–3.15. It also
+The installed-artifact gate reuses one real wheel across the tested Polars
+versions and all six Python versions, using both NumPy lines on 3.10–3.12 and
+NumPy 2 on 3.13–3.15. It also
 tests genuinely Polars-free3.10/3.15 installations and rebuilds the verified
 source archive under3.12/3.14/3.15. Standard CPython is covered; free-threaded
 runtimes and PyPy need separate qualification.
@@ -238,3 +244,11 @@ Modern Rust construction and precision conversion return checked results. Modern
 ## Modern Python object API
 
 The modern constructor accepts explicit positive weights. Copy and pickle preserve independent full state. A one-dimensional NumPy query returns an owned Float64 array even when it has one element; zero-dimensional probes return scalars, lists and tuples retain their containers, and multidimensional probes are rejected. See bindings/python/OBJECT_API.md.
+
+## Polars expression cardinality
+
+CDF chooses aligned rows or one-digest broadcasting from input shape. Missing states and incompatible contributors are errors. Column-based from_bytes requires explicit f32/f64 precision and reduces each logical group, including empty groups. Planned schema must equal the runtime schema. See bindings/python/POLARS_API.md.
+
+## Modern Java ownership and serialization
+
+Java additions and fluent merges mutate only the receiver after validation. Serialized Java state contains TDIG bytes, never a process-local native handle; restoration owns a fresh handle. Closed handles fail predictably. Catchable native failures become Java exceptions. JNI selects the system allocator; independent digests may be used concurrently, but shared-handle mutation requires caller coordination.

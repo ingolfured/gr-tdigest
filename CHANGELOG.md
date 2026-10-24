@@ -4,6 +4,16 @@ All notable changes to this project are documented in this file.
 
 ## [Unreleased]
 
+- Preserve preinstalled Polars 1.x/2.x for ordinary and extra installs: require only Polars >=1.0.0, remove the upper cap, and test the 1.0 floor plus representative 1.x releases against the same native wheel.
+
+- Support both Polars 1.x (development pin 1.44.2) and 2.x (tested 2.0.0), with the same installed wheel tested on both across supported Python versions, including consumer and streaming regressions.
+
+- Keep runtime payload identity with the following standalone-loader change.
+
+- Expose fluent JVM operations, safe serialization and native failures.
+
+- Make Polars cardinality, validation and binary schemas explicit.
+
 - Expose weighted modern Python operations and independent state copies.
 
 - Expose weighted modern Python operations and independent state copies.
