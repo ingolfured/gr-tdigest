@@ -4,6 +4,8 @@ All notable changes to this project are documented in this file.
 
 ## [Unreleased]
 
+- Speed up Python CI by compiling one release wheel from the verified source archive and checking it across all runtime cells, removing three repeated optimized builds.
+
 - Keep stacked CI and source-archive checks aligned with pytest accuracy profiles.
 
 - Run accuracy profiles as parametrized pytest cases, with opt-in extended checks and retained baseline reports.

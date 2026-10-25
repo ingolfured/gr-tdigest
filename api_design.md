@@ -103,7 +103,10 @@ remain lazy, while expression operations require the extra.
 
 The installed-artifact gate reuses one real wheel across all six Python
 versions, both NumPy lines where available, and a genuinely Polars-free
-installation on every runtime. The 3.15 cell uses SciPy >=1.18.1 and pytest
+installation on every runtime. The default gate builds that wheel once from the
+verified source archive with Python 3.10, reusing Cargo dependency artifacts.
+It validates newer Python versions by installing that same ABI3 wheel rather
+than recompiling it with each interpreter. The 3.15 cell uses SciPy >=1.18.1 and pytest
 >=9.1.1 for compatibility validation; these are test dependencies.
 The bounded Python metadata is narrower than upstream's open-ended >=3.10
 declaration. The development tool environment remains Python 3.12.
