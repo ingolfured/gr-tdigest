@@ -13,6 +13,7 @@ macro_rules! precision_controls {
                         .max_size(cap)
                         .singleton_policy(SingletonPolicy::Use)
                         .build()
+                        .unwrap()
                         .merge_unsorted(vec![0., 1., 2., 100.])
                         .unwrap();
                     assert!(d.centroids_ref().len() <= cap);
@@ -38,6 +39,7 @@ macro_rules! precision_controls {
                     .max_size(2)
                     .singleton_policy(SingletonPolicy::Off)
                     .build()
+                    .unwrap()
                     .merge_weighted_unsorted(
                         &[0., 1., 2f64.powi(60) as $float],
                         &[0.5, 0.5, 2f64.powi(-60)],
@@ -60,6 +62,7 @@ macro_rules! precision_controls {
                         .max_size(cap)
                         .singleton_policy(SingletonPolicy::Off)
                         .build()
+                        .unwrap()
                         .merge_unsorted(vec![-1e16 as $float, 1., 1e16 as $float])
                         .unwrap();
                     assert_eq!(d.sum(), 1.);
@@ -83,6 +86,7 @@ macro_rules! precision_controls {
                         .max_size(128)
                         .singleton_policy(SingletonPolicy::Off)
                         .build()
+                        .unwrap()
                         .merge_weighted_unsorted(&[0., 1., 2., 3., 4., 5.], &weights)
                         .unwrap();
                     assert_eq!(d.median(), 2.5, "weights={weights:?}");
