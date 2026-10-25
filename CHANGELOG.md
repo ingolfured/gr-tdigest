@@ -4,14 +4,11 @@ All notable changes to this project are documented in this file.
 
 ## [Unreleased]
 
-- Reuse the dev build for numerical boundary controls, removing an extra optimized dependency build from the quality gate; show compiler progress and retain audit timing.
+- Check that source packages contain the accuracy tests, saved results and offline data.
 
 - Run Python packaging checks alongside core CI, avoid redundant package builds, reuse Cargo dependencies for source-archive rebuilds, and retain live build logs and timings.
 
 - Speed up Python CI by compiling one release wheel from the verified source archive and checking it across all runtime cells, removing three repeated optimized builds.
-
-
-- Keep stacked CI and source-archive checks aligned with pytest accuracy profiles.
 
 - Run accuracy profiles as parametrized pytest cases, with opt-in extended checks and retained baseline reports.
 
@@ -36,8 +33,6 @@ All notable changes to this project are documented in this file.
 - Add regression tests for tiny-capacity mass retention, residual tail contributions, cancellation, intermediate overflow and fractional atomic quantile boundaries.
 
 - Test accuracy on recorded data and deterministic distributions.
-
-- Update boundary regression expectations for the 12 verified numerical improvements from #55; retain the unresolved subnormal-mean failure.
 
 - Cite the published K2 normalizer and explain its constants beside the scale-domain guard.
 
