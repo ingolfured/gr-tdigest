@@ -8,7 +8,7 @@ The suite measures specific errors. It does not turn them into one flattering sc
 
 The weighted controls use exact rational arithmetic for the input masses. They cover all three singleton policies, actual f32/f64 storage, decimal/binary fractions, large piles, subnormal through very large weights, serialization and query ordering.
 
-`make quality-extended` reads every row of both real datasets and runs756 profiles:21 data columns/distributions ×2 precisions ×3 sizes ×2 orders ×3 construction/merge paths. The paths are a single build,40 sequential merges and a balanced40-way merge. It currently returns **failure** for ten size32 synthetic merge profiles. See [recorded findings](https://github.com/ingolfured/gr-tdigest/blob/5801881075c6e31fec746c8c62c6a25782b6c13f/compat/quality-20261020/RESULTS.md).
+`make quality-extended` reads every row of both real datasets and runs756 profiles:21 data columns/distributions ×2 precisions ×3 sizes ×2 orders ×3 construction/merge paths. The paths are a single build,40 sequential merges and a balanced40-way merge. The recorded CI run 104 at `e6a14a2` returned **failure** for ten size32 synthetic merge profiles; this historical count is not a fresh measurement of the current branch. See [recorded findings](../../compat/quality-20261020/RESULTS.md).
 
 `make quality-boundaries` runs15 hand-checkable Rust controls. Current integration
 work passes all15 without changing the expected values; the historical baseline

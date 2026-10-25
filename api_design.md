@@ -38,9 +38,10 @@ For current implementation internals, see `tdigest_design.md`.
 
 ### JVM build and runtime support
 
-The Java binding targets Java11 bytecode and runs on JDK11 and17, with a
-Gradle8.14.5 build that can itself run on11. Both versions have Java/JNI tests,
-JAR smoke tests and compiled-class version checks. Internal build environments
+The Java binding targets Java 11 bytecode, with Java/JNI tests, JAR smoke tests
+and compiled-class version checks on JDK 11, 17, 21 and 25. The default
+Gradle 8.14.5 build can itself run on JDK 11; JDK 25 builds select Gradle 9.1.0
+through the verified distribution override. Internal build environments
 can select verified JDK/Gradle archives and an exclusive Maven dependency
 repository through the documented `TDIGEST_*` environment settings. Offline mode
 uses pre-staged tools/dependencies and never attempts a public fallback. It
@@ -103,16 +104,23 @@ pinned upstream revision did not contain a Rust test suite.
 
 ### 4.1.3 Python runtime and installation
 
-The Python distribution supports CPython 3.10–3.15 through a py310 ABI3 wheel,
-with NumPy >=1.26.4,<3. The base installation exposes both NumPy numerical
+The Python distribution supports standard GIL builds of CPython 3.10–3.15 through a py310
+ABI3 wheel, with NumPy >=1.26.4,<3 on 3.10–3.12, >=2.3.4,<3 on
+3.13–3.14, and >=2.5.4,<3 on 3.15. The base installation exposes both NumPy numerical
 interfaces without requiring the Polars Python package. The optional `polars`
-extra installs the tested Polars 2.0.0 integration; this pin does not promise
-compatibility with untested future Polars releases. Existing numerical imports
-remain lazy, while expression operations require the extra.
+extra accepts Polars >=1.0.0 without an upper cap. Installing either the base
+package or its extra preserves an already installed compatible Polars version.
+Development remains pinned to 1.44.2. The installed-artifact gate exercises
+the same compiled wheel against 1.0.0, 1.20.0, 1.38.1, 1.44.2 and 2.0.0 across
+all supported Python versions, including consumer cardinality/schema and streaming regressions.
+The open dependency range permits newer releases; compatibility with unreleased
+versions cannot be guaranteed before testing. Existing numerical imports
+remain lazy, while expression operations require Polars to be installed.
 
-The installed-artifact gate reuses one real wheel across all six Python
-versions, using both NumPy lines on3.10–3.12 and NumPy2 on3.13–3.15. It also
-tests genuinely Polars-free3.10/3.15 installations and rebuilds the verified
+The installed-artifact gate reuses one real wheel across the tested Polars
+versions and all six Python versions, using both NumPy lines on 3.10–3.12 and
+NumPy 2 on 3.13–3.15. It also
+tests genuinely Polars-free installations on every runtime and rebuilds the verified
 source archive under3.12/3.14/3.15. Standard CPython is covered; free-threaded
 runtimes and PyPy need separate qualification.
 The bounded Python metadata is narrower than upstream's open-ended >=3.10
