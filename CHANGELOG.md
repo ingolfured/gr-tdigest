@@ -4,6 +4,10 @@ All notable changes to this project are documented in this file.
 
 ## [Unreleased]
 
+- Keep stacked CI and source-archive checks aligned with pytest accuracy profiles.
+
+- Run accuracy profiles as parametrized pytest cases, with opt-in extended checks and retained baseline reports.
+
 - Stage verified JDK and Gradle archives from configured sources.
 
 - Build Java 11 bytecode with exclusive internal and offline dependencies.
