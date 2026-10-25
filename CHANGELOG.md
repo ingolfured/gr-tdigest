@@ -6,10 +6,7 @@ All notable changes to this project are documented in this file.
 
 - Count capacity-search trial clusters without allocating or averaging discarded centroids; retain the full final compression path and existing numerical decisions.
 
-- Align public guides for the 0.2.5 release candidate.
-- Use version `0.2.5-rc.1` (`0.2.5rc1` for Python) and simplify public release guidance.
-
-- Align public guides for the 0.3.0 release.
+- Align the 0.3.0 public guides, publishing prerequisites, Polars installation advice and JVM runtime coverage.
 - Use version `0.3.0` for Rust, Python and the JVM and simplify public release guidance.
 
 - Verify toolchain selection, source archives and installed artifacts.

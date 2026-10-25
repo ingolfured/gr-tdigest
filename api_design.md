@@ -121,7 +121,7 @@ The installed-artifact gate reuses one real wheel across the tested Polars
 versions and all six Python versions, using both NumPy lines on 3.10–3.12 and
 NumPy 2 on 3.13–3.15. It also
 tests genuinely Polars-free installations on every runtime and rebuilds the verified
-source archive under3.12/3.14/3.15. Standard CPython is covered; free-threaded
+source archive under 3.12/3.14/3.15. Standard CPython is covered; free-threaded
 runtimes and PyPy need separate qualification.
 The bounded Python metadata is narrower than upstream's open-ended >=3.10
 declaration. The development tool environment remains Python 3.12.
@@ -246,7 +246,7 @@ queried. Builder delta mode defaults to K2Norm/Off unless settings were explicit
 provided; explicit incompatible settings fail. Private transient compression and
 precision-conversion streams are checked before becoming public state.
 
-Modern callers migrate to the new API and dependency defaults, while the original `tdigest_rs` implementation remains identical to its pinned oracle. The new modern default stays1,000; historical modern callers migrate explicitly. New NumPy query outputs are Float64 one-dimensional arrays (including one element); zero-dimensional probes return scalars, list/tuple preserve containers, and multidimensional input is explicitly rejected. Native docstrings, `py.typed` and stubs ship in the actual wheel.
+Modern callers migrate to the new API and dependency defaults, while the original `tdigest_rs` implementation remains identical to its pinned oracle. The new modern default stays 1,000; historical modern callers migrate explicitly. New NumPy query outputs are Float64 one-dimensional arrays (including one element); zero-dimensional probes return scalars, list/tuple preserve containers, and multidimensional input is explicitly rejected. Native docstrings, `py.typed` and stubs ship in the actual wheel.
 
 Modern missing digests and mixed capacities are rejected. Empty contributors also undergo configuration validation. Polars broadcasts by shape, supports a scalar probe across digest rows, and never substitutes healthy state for aligned empties. Missing and valid empty state are distinct. Python iterable merge prepares private state before committing; add/scale overflow and unsupported product underflow cannot corrupt the receiver.
 
@@ -269,8 +269,8 @@ Its sampled rank/CDF criteria extend the existing diagnostic envelope and are no
 a new owner-approved universal guarantee. Rank, value, CDF and tail results stay
 separate. Known small-summary failures remain release-acceptance issues; no
 implicit scale selection, new API default or original-engine change is made.
-Python training currently requires capacity>=10; checked modern Rust allows
-positive capacities including1. These limits are stated separately.
+Python training currently requires capacity >= 10; checked modern Rust allows
+positive capacities including 1. These limits are stated separately.
 
 A build-time `TDIGEST_NATIVE_FILE` override may have an arbitrary basename; the
 finished JAR must contain exactly one platform-native payload under the canonical

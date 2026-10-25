@@ -1,8 +1,9 @@
 # Standalone JVM consumers
 
 These examples resolve the same prebuilt `gr.tdigest:gr-tdigest` JAR used by Java.
-They need no Rust compiler or Python at runtime. Use `0.3.0` for this release. A successful local example is not Spark cluster
-qualification.
+They need no Rust compiler or Python at runtime. Use version `0.3.0` once the
+artifact is published to the configured repository. A successful local example
+is not Spark cluster qualification.
 
 ## Kotlin and Gradle
 
@@ -12,7 +13,7 @@ Use the repository's complete Gradle wrapper or its configured Gradle bootstrap:
 
 ```sh
 bindings/java/gradlew -p bindings/java/examples/kotlin \
-  -PtdigestVersion=VERSION run
+  -PtdigestVersion=0.3.0 run
 ```
 
 Set `TDIGEST_MAVEN_REPOSITORY_URL` for an exclusive internal dependency source.
@@ -29,7 +30,7 @@ the compiled example targets Java 11. Install or stage sbt separately, then run:
 
 ```sh
 cd bindings/java/examples/scala
-sbt -Dtdigest.version=VERSION run
+sbt -Dtdigest.version=0.3.0 run
 ```
 
 `TDIGEST_MAVEN_REPOSITORY_URL` selects the sole project dependency repository.
@@ -42,7 +43,7 @@ does not configure the launcher. Keep credentials and trust stores outside the
 source checkout.
 
 After staging the launcher, compiler and application dependencies, run
-`sbt -Dtdigest.version=VERSION 'set offline := true' run` with the configured
+`sbt -Dtdigest.version=0.3.0 'set offline := true' run` with the configured
 repository unavailable. `TDIGEST_RUNTIME_JAVA_HOME` selects the forked example's
 runtime independently of the build JDK. Test that runtime explicitly.
 

@@ -213,15 +213,17 @@ Use the [Python/NumPy guide](bindings/python/OBJECT_API.md), [Polars guide](bind
 
 Modern Rust construction returns a checked result, for example `TDigest::<f64>::builder().max_size(1000).build()?`. Modern defaults use capacity 1,000; the separate original `tdigest_rs` and `tdigest_core` interfaces retain their pinned API and calculations.
 
-The upcoming release is `0.3.0` for Rust, Python and the JVM. Use the guides above for installation and API examples.
+The upcoming release is `0.3.0` for Rust, Python and the JVM. Python and Gradle derive their package versions from the root `Cargo.toml`. The separate original `tdigest_core` crate retains version `0.2.0`. See the [publishing guide](PUBLISH.md) for release prerequisites.
+
+When migrating modern callers, handle checked Rust construction and conversion results, use the documented NumPy query shapes, and account for the updated Polars struct schema. The [Python/NumPy guide](bindings/python/OBJECT_API.md) and [Polars migration guide](bindings/python/POLARS_API.md) describe these changes; the original `tdigest_rs` interface retains its pinned behavior.
 
 ## Measured summary-size tradeoffs
 
-`make quality-budgets` separately measures4140capacity/scale/data/merge profiles,
-including explicit200/1000sizes and additional deterministic shapes. It is a
+`make quality-budgets` separately measures 4,140 capacity/scale/data/merge profiles,
+including explicit 200/1,000 sizes and additional deterministic shapes. It is a
 slower diagnostic and returns failure for the observed accuracy failures. Small
 summaries remain a numerical acceptance issue; changing the scale does not
-universally fix them. The default remainsK2/1000 and the original engine is
+universally fix them. The default remains K2/1,000 and the original engine is
 unchanged. See the [accuracy investigation and recommendation](https://github.com/ingolfured/gr-tdigest/blob/5801881075c6e31fec746c8c62c6a25782b6c13f/compat/consumer-20261020/accuracy-investigation/REPORT.md).
 
 JVM builds accept a selected native file with any basename through
