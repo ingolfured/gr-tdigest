@@ -264,46 +264,6 @@ fn tdigest(inputs: &[Series], kwargs: TDigestKwargs) -> PolarsResult<Series> {
     tdigest_from_array_helper(inputs, &kwargs)
 }
 
-// --- plain helper (no macro attribute), can live anywhere NOT immediately after a #[polars_expr] ---
-fn upcast_tdigest<From, To>(src: &TDigest<From>) -> TDigest<To>
-where
-    From: Copy + 'static + FloatCore + FloatLike,
-    To: Copy + 'static + FloatCore + FloatLike,
-{
-    use crate::tdigest::centroids::Centroid;
-    use crate::tdigest::tdigest::DigestStats;
-
-    let cents_to: Vec<Centroid<To>> = src
-        .centroids()
-        .iter()
-        .map(|c| {
-            if c.is_atomic_unit() {
-                Centroid::<To>::new_atomic_unit_f64(c.mean_f64())
-            } else if c.is_atomic() {
-                Centroid::<To>::new_atomic_f64(c.mean_f64(), c.weight_f64())
-            } else {
-                Centroid::<To>::new_mixed_f64(c.mean_f64(), c.weight_f64())
-            }
-        })
-        .collect();
-
-    TDigest::<To>::builder()
-        .max_size(src.max_size())
-        .scale(src.scale())
-        .singleton_policy(src.singleton_policy())
-        .with_centroids_and_stats(
-            cents_to,
-            DigestStats {
-                data_sum: src.sum(),
-                total_weight: src.count(),
-                data_min: src.min(),
-                data_max: src.max(),
-            },
-        )
-        .build()
-        .expect("valid upcast state")
-}
-
 #[polars_expr(output_type = Binary)]
 fn to_bytes(inputs: &[Series]) -> PolarsResult<Series> {
     polars_ensure!(
@@ -361,16 +321,15 @@ fn to_bytes_versioned(inputs: &[Series], kwargs: ToBytesKwargs) -> PolarsResult<
     Ok(builder.finish().into_series())
 }
 
-// New: from_bytes output type — uses a precision *hint* column when present.
-// Default with no hint: compact f32 schema (matches python_f32→polars_f32 tests).
+// Binary columns require an explicit precision hint at planning and execution.
 fn from_bytes_output_dtype(inputs: &[Field]) -> PolarsResult<Field> {
     // inputs[0]: blob (Binary)
-    // inputs[1]: optional precision hint (Float32 or Float64)
-    let hint_dt = inputs
-        .get(1)
-        .map(|f| f.dtype())
-        // default to Float32 (compact) when no hint is provided
-        .unwrap_or(&DataType::Float32);
+    // inputs[1]: required precision hint (Float32 or Float64)
+    polars_ensure!(
+        inputs.len() == 2,
+        ComputeError: "`from_bytes` expects a binary column and explicit precision hint"
+    );
+    let hint_dt = inputs[1].dtype();
 
     let dt = if matches!(hint_dt, DataType::Float32) {
         TDigest::<f32>::polars_dtype()
@@ -384,14 +343,23 @@ fn from_bytes_output_dtype(inputs: &[Field]) -> PolarsResult<Field> {
 #[polars_expr(output_type_func = from_bytes_output_dtype)]
 fn from_bytes(inputs: &[Series]) -> PolarsResult<Series> {
     polars_ensure!(
-        inputs.len() >= 1,
-        ComputeError: "`from_bytes` expects a binary column"
+        inputs.len() == 2,
+        ComputeError: "`from_bytes` expects a binary column and explicit precision hint"
     );
     let s = &inputs[0];
 
     if s.len() == 0 {
-        let td = TDigest::<f64>::builder().build().unwrap();
-        return td.to_series("tdigest");
+        return if inputs[1].dtype() == &DataType::Float32 {
+            TDigest::<f32>::builder()
+                .build()
+                .unwrap()
+                .to_series("tdigest")
+        } else {
+            TDigest::<f64>::builder()
+                .build()
+                .unwrap()
+                .to_series("tdigest")
+        };
     }
 
     // Null blobs are strict errors by design.
@@ -443,7 +411,9 @@ fn from_bytes(inputs: &[Series]) -> PolarsResult<Series> {
 fn tdigest_summary(inputs: &[Series]) -> PolarsResult<Series> {
     // Always summarize in f64 for stable formatting (upcast if needed)
     let td = if is_compact_digest_dtype(inputs[0].dtype()) {
-        upcast_tdigest::<f32, f64>(&parse_and_merge::<f32>(inputs)?)
+        parse_and_merge::<f32>(inputs)?
+            .cast_precision::<f64>()
+            .map_err(|e| PolarsError::ComputeError(e.to_string().into()))?
     } else {
         parse_and_merge::<f64>(inputs)?
     };
@@ -574,6 +544,18 @@ fn tdigest_from_array_helper(inputs: &[Series], kwargs: &TDigestKwargs) -> Polar
     }
 }
 
+// Training conversions share the same representability rule as Python/JNI.
+fn checked_training_values<F: FloatLike>(
+    values: impl IntoIterator<Item = f64>,
+) -> PolarsResult<Vec<F>> {
+    values
+        .into_iter()
+        .map(|value| {
+            F::try_from_f64(value).map_err(|e| PolarsError::ComputeError(e.to_string().into()))
+        })
+        .collect()
+}
+
 fn build_from_values<F>(
     values: &Series,
     max_size: usize,
@@ -605,7 +587,7 @@ where
                 ));
             }
             let ca = values.f64()?;
-            ca.no_null_iter().map(F::from_f64).collect()
+            checked_training_values(ca.no_null_iter())?
         }
         DataType::Float32 => {
             let ca = values.f32()?;
@@ -618,7 +600,7 @@ where
                 ));
             }
             let ca = values.f32()?;
-            ca.no_null_iter().map(|x| F::from_f64(x as f64)).collect()
+            checked_training_values(ca.no_null_iter().map(|x| x as f64))?
         }
         dt if dt.is_numeric() => {
             let casted = values.cast(&DataType::Float64)?;
@@ -632,7 +614,7 @@ where
                 ));
             }
             let ca = casted.f64()?;
-            ca.no_null_iter().map(F::from_f64).collect()
+            checked_training_values(ca.no_null_iter())?
         }
         other => {
             return Err(PolarsError::ComputeError(
@@ -656,11 +638,11 @@ where
     F: Copy + 'static + FloatCore + FloatLike + WireOf,
 {
     let s = &inputs[0];
-    let mut parsed = parse_digest_column_lenient::<F>(s)?;
+    let mut parsed = parse_digest_column_strict::<F>(s)?;
     if parsed.len() == 1 {
         return Ok(parsed.pop().unwrap());
     }
-    TDigest::<F>::merge_digests(parsed)
+    TDigest::<F>::try_merge_digests(parsed)
         .map_err(|e| PolarsError::ComputeError(e.to_string().into()))
 }
 
@@ -740,7 +722,7 @@ where
                     polars_bail!(ComputeError:
                         "tdigest.add_values: values contain non-finite values (NaN or ±inf)");
                 }
-                out.extend(vals_f64.into_iter().map(F::from_f64));
+                out.extend(checked_training_values::<F>(vals_f64)?);
             }
             Ok(out)
         }
@@ -764,7 +746,7 @@ where
                 polars_bail!(ComputeError:
                     "tdigest.add_values: values contain non-finite values (NaN or ±inf)");
             }
-            Ok(vals_f64.into_iter().map(F::from_f64).collect())
+            checked_training_values(vals_f64)
         }
         other => polars_bail!(ComputeError:
             "tdigest.add_values: unsupported values dtype {other:?}; expected numeric or list"),
@@ -823,7 +805,7 @@ where
                         "tdigest.add_weighted_values: weights must be finite and > 0");
                 }
 
-                out_v.extend(vals_f64.into_iter().map(F::from_f64));
+                out_v.extend(checked_training_values::<F>(vals_f64)?);
                 out_w.extend(weights_f64);
             }
 
@@ -872,7 +854,7 @@ where
                     "tdigest.add_weighted_values: weights must be finite and > 0");
             }
 
-            Ok((vals_f64.into_iter().map(F::from_f64).collect(), weights_f64))
+            Ok((checked_training_values(vals_f64)?, weights_f64))
         }
         _ => polars_bail!(ComputeError:
             "tdigest.add_weighted_values: values and weights must both be numeric or both be list"),
@@ -912,7 +894,7 @@ fn cdf_generic<F>(digest_s: &Series, values_s: &Series) -> PolarsResult<Series>
 where
     F: Copy + 'static + FloatCore + FloatLike + WireOf,
 {
-    let digests: Vec<TDigest<F>> = parse_digest_column_lenient::<F>(digest_s)?;
+    let digests: Vec<TDigest<F>> = parse_digest_column_strict::<F>(digest_s)?;
     let digest_len = digest_s.len();
 
     // Detect broadcast: exactly one non-empty digest across all rows
@@ -947,7 +929,7 @@ where
     }
 }
 
-fn parse_digest_column_lenient<F>(s: &Series) -> PolarsResult<Vec<TDigest<F>>>
+fn parse_digest_column_strict<F>(s: &Series) -> PolarsResult<Vec<TDigest<F>>>
 where
     F: Copy + 'static + FloatCore + FloatLike + WireOf,
 {
@@ -955,23 +937,9 @@ where
         return Ok(Vec::new());
     }
 
-    if s.null_count() == 0 {
-        return TDigest::<F>::from_series(s)
-            .map_err(|e| PolarsError::ComputeError(format!("tdigest parse error: {e}").into()));
-    }
-
-    let mut out: Vec<TDigest<F>> = Vec::with_capacity(s.len());
-    for i in 0..s.len() {
-        let one = s.slice(i as i64, 1);
-        if one.null_count() > 0 {
-            out.push(TDigest::<F>::default());
-            continue;
-        }
-        let mut parsed = TDigest::<F>::from_series(&one)
-            .map_err(|e| PolarsError::ComputeError(format!("tdigest parse error: {e}").into()))?;
-        out.push(parsed.pop().unwrap_or_default());
-    }
-    Ok(out)
+    polars_ensure!(s.null_count() == 0, ComputeError: "tdigest: missing digest rows are not allowed");
+    TDigest::<F>::from_series(s)
+        .map_err(|e| PolarsError::ComputeError(format!("tdigest parse error: {e}").into()))
 }
 
 #[inline]

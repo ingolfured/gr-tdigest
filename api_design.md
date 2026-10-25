@@ -253,6 +253,9 @@ Legacy TDIG v1 export rejects mixed unit-weight summaries when its historical ki
 
 Positive transformations prepare and validate independent state before commit; failures preserve the receiver. Exact atomic points may retain a rounded zero moment without losing their known location or mass.
 
+## Checked Polars state
+
+Polars rejects missing digest rows, checks training representability, and requires a binary precision hint. Empty binary decoding uses the hinted schema.
 
 ## Overflow behavior across interfaces
 

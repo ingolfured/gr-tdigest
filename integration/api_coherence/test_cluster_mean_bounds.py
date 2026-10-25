@@ -59,7 +59,7 @@ def test_adjacent_compressed_clusters_remain_ordered_across_surfaces(
             "values": pl.Series([values.tolist()], dtype=pl.List(pl_dtype)),
             "weights": pl.Series([weights.tolist()], dtype=pl.List(pl.Float64)),
         }
-    ).with_columns(d=td.from_bytes("blob"))
+    ).with_columns(d=td.from_bytes("blob", precision=precision))
     result = frame.select(d=td.add_weighted_values("d", "values", "weights"))
     blob = result.select(td.to_bytes("d")).item()
     restored = td.TDigest.from_bytes(blob)

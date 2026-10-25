@@ -538,6 +538,9 @@ V1 export additionally rejects all-unit-weight payloads whose historical atomic-
 
 Weight and value scaling prepare independent candidate state, reject aggregate overflow and unsupported underflow, validate the candidate, and replace the receiver only on success. Exact atomic points retain their distribution when the rounded weighted moment is subnormal or zero and recover representable moments after later scaling or merging.
 
+## Checked Polars state and binary precision
+
+Polars training uses checked precision conversion and reconstruction validates every digest row. Missing digests error rather than becoming empty digests. Binary decoding requires a precision hint and empty decoding uses its schema.
 
 ## Complete overflow boundaries
 
