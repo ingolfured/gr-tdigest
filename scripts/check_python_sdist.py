@@ -92,19 +92,19 @@ def verify_sdist_contents(sdist: Path, root: Path) -> None:
             "bindings/python/tests/test_consumer_contracts.py",
         ):
             require_same(relative, relative)
-        # make test now includes the offline recorded-data gate. A source
-        # distribution must carry the actual runners, controls and fixtures.
+        # Include everything needed to run the accuracy tests offline.
         for relative in (
-            "scripts/quality_suite.py",
-            "scripts/audit_quality_boundaries.py",
+            "pytest.ini",
+            "tests/quality/__init__.py",
+            "tests/quality/conftest.py",
+            "tests/quality/measurements.py",
+            "tests/quality/test_accuracy.py",
             "scripts/fetch_quality_data.py",
-            "examples/quality_boundaries.rs",
             "tests/quality/test_reference.py",
             "tests/quality/test_weighted_quality.py",
             "tests/quality/baseline-fast.json.gz",
             "tests/quality/baseline-extended.json.gz",
             "tests/quality/known-limits.json",
-            "tests/quality/known-boundaries.json",
             "tests/quality/data/manifest.json",
             "tests/quality/data/bike.csv.gz",
             "tests/quality/data/energy.csv.gz",

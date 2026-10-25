@@ -122,9 +122,12 @@ remain lazy, while expression operations require Polars to be installed.
 The installed-artifact gate reuses one real wheel across the tested Polars
 versions and all six Python versions, using both NumPy lines on 3.10–3.12 and
 NumPy 2 on 3.13–3.15. It also
-tests genuinely Polars-free installations on every runtime and rebuilds the verified
-source archive under3.12/3.14/3.15. Standard CPython is covered; free-threaded
-runtimes and PyPy need separate qualification.
+tests genuinely Polars-free installations on every runtime. The default gate
+builds that ABI3 wheel once from the verified source archive with Python 3.10,
+reusing Cargo dependency artifacts, then installs it on every supported runtime.
+The 3.15 cell uses SciPy >=1.18.1 and pytest >=9.1.1 for compatibility validation;
+these are test dependencies. Standard CPython is covered; free-threaded runtimes
+and PyPy need separate qualification.
 The bounded Python metadata is narrower than upstream's open-ended >=3.10
 declaration. The development tool environment remains Python 3.12.
 
@@ -241,7 +244,17 @@ Quality acceptance uses separate rank, percentile-value and midpoint-CDF measure
 
 ## Checked modern state
 
-Modern Rust construction and precision conversion return checked results. Modern additions, merges and positive transformations prepare independent state before replacing the receiver; failures preserve its previous state. Reconstructed structs and decoded bytes validate mass, finite means, extrema and configuration, while legitimate empty states retain undefined extrema.
+Modern builders, reconstruction and precision conversions return checked results. Merges validate matching configuration even for empty contributors and replace the receiver only after validating the prepared result.
+
+State validation checks centroid mass, ordering, finite statistics, aggregate-moment consistency and configuration. Fully atomic state must have extrema matching its observed points; protected-edge counts must be positive. Empty additions/merges and single-item frontend merges still validate existing state. Export validation uses the same contract. Struct reconstruction distinguishes a missing centroid list from an empty list and accepts either complete modern configuration or the legacy schema with no configuration fields. Binary reconstruction rejects trailing payload on empty digests and integer fields outside the platform range.
+
+The raw Float64 sum remains authoritative across compression and precision conversion. Moment checks compare normalized quantities, with a rounding envelope that allows prior Float32 storage even after upcasting, plus subnormal quantization. These checks reject detectable contradictions; they cannot authenticate the original observations or prove statistical accuracy from a compressed summary.
+
+Legacy TDIG v1 export rejects mixed unit-weight summaries when its historical kind heuristic would reconstruct atomic centroids inconsistent with the stored extrema; v2/v3 preserve the centroid kinds.
+
+Positive transformations prepare and validate independent state before commit; failures preserve the receiver. Exact atomic points may retain a rounded zero moment without losing their known location or mass.
+
+Polars rejects missing digest rows, checks training representability, and requires a binary precision hint. CDF broadcasting follows input lengths; per-row List expressions retain List output, while Python sequences provide a flat probe vector.
 
 ## Modern Python object API
 
@@ -259,10 +272,12 @@ Java additions and fluent merges mutate only the receiver after validation. Seri
 
 Public examples compile Scala 2.12.16 and Kotlin consumers against the shared Java JAR. The local authenticated Maven fixture exercises selected dependency resolution and prepared-cache offline use. Actual Spark driver/executor, serializer and checkpoint qualification remains a consumer-environment check.
 
+Kotlin example compilation tracks its source and application classpath so incremental builds recompile after either changes.
+
 ## Installed Python discovery
 
 The installed package includes native method docstrings, public type stubs and py.typed metadata. The object and Polars guides describe defaults, shapes, mutation, ownership and errors separately.
 
 ## Source-bound delivery gates
 
-Build checks reject an incompatible selected Rust/Cargo toolchain before native compilation. Installed-wheel qualification records exact runtime cells and source-archive rebuilds.
+Build checks reject an incompatible selected Rust/Cargo toolchain before native compilation. Installed-wheel qualification records exact runtime cells and the source-archive build.
