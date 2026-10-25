@@ -146,7 +146,8 @@ The unchanged upstream Python suite runs in `make test` and Linux CI. `make pyth
 
 CI installs development dependencies before `make build` compiles the package.
 Installed-wheel and source-archive compatibility run in a separate job alongside
-the main build, unit tests and accuracy checks.
+the main build, unit tests and accuracy checks. The package tests also check
+that source archives contain the accuracy tests, saved results and offline data.
 The source-archive build reuses the checkout's Cargo target directory (or an
 explicit `CARGO_TARGET_DIR`). One genuine ABI3 wheel is built from the extracted
 source archive and checked on every supported runtime. `make python-support-test`

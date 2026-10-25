@@ -43,3 +43,24 @@ This writes candidate `baseline-fast.json.gz` and `baseline-extended.json.gz`
 without replacing the checked-in files or bypassing assertions. Review the
 measurement changes and provenance before replacing a baseline. The recorded
 input fixtures and their hashes are unchanged; tests never download data.
+
+
+## Reading the results
+
+Rank error measures how far an answer falls from the requested position in the
+sorted data, allowing for repeated values. Value error measures distance from a
+sample percentile. CDF error compares the reported fraction below a value with
+an exact count at selected points.
+
+Both engines receive the same values and precision. Comparisons use a similar
+amount of storage for centroid fields; this does not measure total memory use.
+These datasets provide regression coverage, not a guarantee for every input.
+
+The Rust tests in `tests/numerical_foundation.rs` cover small capacities, lost
+weight, cancellation and fractional-weight medians as part of `make test`.
+A known limitation remains: the mean of the smallest positive f64 value with
+weight 0.1 rounds to zero.
+
+The existing package tests check that source archives include these Python
+tests, their saved reference results and the compressed input data. Tests use
+the included data and never download it.
