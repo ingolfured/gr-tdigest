@@ -24,7 +24,7 @@ All notable changes to this project are documented in this file.
 
 - Add regression tests for tiny-capacity mass retention, residual tail contributions, cancellation, intermediate overflow and fractional atomic quantile boundaries.
 
-- Test accuracy on recorded data.
+- Test accuracy on recorded data and deterministic distributions.
 
 - Merge master into the K2Norm review branch, preserving both branches' unreleased notes.
 
