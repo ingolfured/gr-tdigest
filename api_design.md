@@ -274,6 +274,8 @@ Java additions and fluent merges mutate only the receiver after validation. Seri
 
 Public examples compile Scala 2.12.16 and Kotlin consumers against the shared Java JAR. The local authenticated Maven fixture exercises selected dependency resolution and prepared-cache offline use. Actual Spark driver/executor, serializer and checkpoint qualification remains a consumer-environment check.
 
+The loopback Maven fixture serves only paths contained within its configured repository, rejecting absolute paths and symlinks that resolve outside it.
+
 Kotlin example compilation tracks its source and application classpath so incremental builds recompile after either changes.
 
 ## Installed Python discovery
