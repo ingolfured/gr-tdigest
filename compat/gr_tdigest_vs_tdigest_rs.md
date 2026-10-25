@@ -49,11 +49,15 @@ separate original calculation path addresses that incompatibility. These are
 Linux x86_64 regression checks, not proof across every possible platform/input.
 
 Current packaging supports standard CPython3.10–3.15 and NumPy1.26/2 on the
-older runtimes, NumPy2 on3.13–3.15. Polars2.0.0 is an optional extra matched
+older runtimes, NumPy2 on3.13–3.15. Polars1.44.2 is an optional extra matched
 to the plugin ABI; numerical-only installations do not require Polars. The
 release gate installs one wheel on every advertised minor and rebuilds the
 verified source archive on3.12/3.14/3.15. This does not publish a `tdigest-rs`
 release or establish portability across untested operating systems.
+
+## Accuracy comparison
+
+Modern is not uniformly more accurate than this preserved implementation. On the recorded grouped results, Modern wins all four metrics on Bike data; on Energy data, Modern wins average rank, tail rank and average value error, while GR wins peak value error. Several synthetic distributions favor GR. See the [winner and error-ratio tables](quality-20261020/RESULTS.md) and [comparison conclusions](../comparison_design.md#modern-versus-original-gr-measured-accuracy-ci-21-october-2026). All table ratios use Modern error divided by GR error: below 1 favors Modern; above 1 favors GR.
 
 ## Benchmark scope
 

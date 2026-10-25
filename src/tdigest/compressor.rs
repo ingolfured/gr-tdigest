@@ -1061,6 +1061,22 @@ mod tests {
         assert!(core_count <= 2, "core must respect max_size");
     }
 
+    #[test]
+    fn cluster_mean_recovers_after_intermediate_moment_overflow() {
+        let mut stats = super::WeightedStats::default();
+        // Each product is finite; only the partial sum overflows.
+        for mean in [-f64::MAX, -f64::MAX, 1.0, f64::MAX, f64::MAX] {
+            stats.add(&Centroid::<f64>::new_atomic_f64(mean, 1.0));
+        }
+        assert_eq!(stats.mean(), 0.2);
+        assert_eq!(stats.centroid::<f64>().weight(), 5.0);
+        // Reusing the accumulator must discard its old compensation and scale.
+        stats.clear();
+        stats.add(&Centroid::<f64>::new_atomic_f64(6.0, 2.0));
+        stats.add(&Centroid::<f64>::new_atomic_f64(12.0, 1.0));
+        assert_eq!(stats.mean(), 8.0);
+    }
+
     // ---------- metadata on result ----------
 
     #[test]
