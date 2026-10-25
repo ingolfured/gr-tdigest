@@ -6,7 +6,7 @@ description = "The original G-Research TDigest API and numerical implementation"
 license = "Apache-2.0"
 repository = "https://github.com/G-Research/tdigest-rs"
 readme = "CORE_README.md"
-include = ["lib.rs", "core.rs", "scale.rs", "traits.rs", "LICENSE", "PROVENANCE.md", "CORE_README.md", "tests/**"]
+include = ["lib.rs", "core.rs", "checked.rs", "scale.rs", "traits.rs", "LICENSE", "PROVENANCE.md", "CORE_README.md", "tests/**"]
 
 [lib]
 path = "lib.rs"
