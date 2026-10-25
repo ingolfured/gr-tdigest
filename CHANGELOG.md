@@ -4,6 +4,8 @@ All notable changes to this project are documented in this file.
 
 ## [Unreleased]
 
+- Apply the lint-required formatting to the quality fixture and modern Python consumer regressions.
+
 - Resolve the modern Python chapter against the updated quality base, preserving checked-state validation and the Python object API contracts.
 
 - Expose weighted modern Python operations and independent state copies.

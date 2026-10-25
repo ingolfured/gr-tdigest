@@ -100,7 +100,12 @@ def load_run(mode):
         "input_status": "NOT_VERIFIED",
     }
     return dict(
-        baseline=baseline, cases=cases, known_findings=known_findings, receipt=receipt, native=native, start=time.perf_counter()
+        baseline=baseline,
+        cases=cases,
+        known_findings=known_findings,
+        receipt=receipt,
+        native=native,
+        start=time.perf_counter(),
     )
 
 

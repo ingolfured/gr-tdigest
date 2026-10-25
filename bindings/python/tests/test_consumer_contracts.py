@@ -1,10 +1,6 @@
 """Public consumer regressions; original tdigest_rs semantics stay separate."""
 
-
 import copy
-
-
-import math
 
 
 import pickle
@@ -14,9 +10,6 @@ import struct
 
 
 import numpy as np
-
-
-import polars as pl
 
 
 import pytest
