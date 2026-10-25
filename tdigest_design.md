@@ -382,8 +382,8 @@ mutate the stored digest.
 CDF uses the actual centroid total already computed for its prefix array.
 Quantile first checks its stored total, then computes actual mass only in the
 subnormal branch. The temporary count is the scaled actual mass, so recursion
-terminates after one copy even if a directly seeded subnormal header differs
-from its subnormal centroid total. Empty/NaN handling, quantile endpoints, and
+terminates after one copy. Public reconstruction rejects a seeded header whose
+count differs from its centroid mass beyond summation roundoff. Empty/NaN handling, quantile endpoints, and
 weight-independent single-centroid quantiles retain their existing branches.
 Normal-total queries keep the previous summation order, kernels, and allocation
 behavior, with only an extra condition. The rare fallback allocates a query copy.
@@ -474,7 +474,7 @@ Adapters (`src/py.rs`, `src/jni.rs`, `src/polars_expr.rs`) should remain thin ar
 - Default re-encoding writes v3; old formats cannot store delta mode.
 
 2. Strict merge location.
-- Strict compatibility checks are frontend-layer behavior, not core merge behavior.
+- Both the checked core merge and frontend merge validate configuration, including empty contributors.
 
 3. Doc split discipline.
 - Keep target behavior only in `api_design.md` and current internals only here.
@@ -506,11 +506,13 @@ Modern Python training uses `training_array_values` for constructors and updates
 
 The extension targets the CPython3.10 stable ABI and advertises standard CPython3.10–3.15. The binding stack uses PyO3 0.29.3, rust-numpy 0.29, pyo3-polars 0.28 and Polars Rust0.55 with Python Polars1.44.2. Rust1.95 is pinned because the updated Polars dependency tree requires it. PyO3 attachment/cast and Polars iterator API migrations do not change digest arithmetic. The original upstream numerical sources, wrapper and91 tests remain checksum-bound.
 
-The release gate installs one unchanged wheel into isolated runtimes, including Polars-free3.10/3.15 environments, and rebuilds the actual verified source archive under3.12/3.14/3.15. Standard CPython is the supported runtime; free-threaded and PyPy builds require separate artifacts and are not covered by these claims.
+The release gate builds the verified source archive once with Python 3.10, then installs that unchanged ABI3 wheel into isolated Python 3.10–3.15 runtimes, including a Polars-free installation on every version. It reuses Cargo dependency artifacts and runs alongside the main build and unit tests in CI. Standard CPython is the supported runtime; free-threaded and PyPy builds require separate artifacts and are not covered by these claims.
 
 ## Quality measurement and failure visibility
 
-The new `scripts/quality_suite.py` uses independent sorted-data references, pinned recorded observations and deterministic distribution grids. It tests real f32/f64 storage, three budgets, input reversal and40-way sequential/balanced merges. It matches original parameters by observed logical field bytes without consulting accuracy, records all search candidates and retains poor modern outcomes in comparison totals. The earlier exponential quality-score helper is not an acceptance metric.
+The parametrized tests in `tests/quality/test_accuracy.py` use shared independent sorted-data references, pinned recorded observations and deterministic distribution grids. They test real f32/f64 storage, three budgets, input reversal and40-way sequential/balanced merges. They match original parameters by observed logical field bytes without consulting accuracy, record all search candidates and retain poor modern outcomes in comparison totals. The earlier exponential quality-score helper is not an acceptance metric.
+
+Fast profiles run in normal pytest discovery and `make test`; the extended matrix is marked slow and collected with `--quality-extended`. Known accuracy-limit cases become expected failures only after invariants, frozen-metric tolerances and the exact finding inventory have been checked. New regressions fail normally. Optional pytest reports retain all measured outcomes, and candidate baseline generation requires a complete matrix and an explicit output directory without replacing the checked-in baselines.
 
 Exact rational weighted controls cover probability semantics across extreme mass scales. `examples/quality_boundaries.rs` separately exposes existing tiny-capacity mass/contribution loss, cancellation, fractional median asymmetry and subnormal aggregate-mean loss. A frozen expected-outcome check detects any change; it does not fix or waive these failures. The independent original arithmetic, wrapper, oracle and91 original tests stay untouched.
 
@@ -524,7 +526,13 @@ Regression coverage in `tests/numerical_foundation.rs` checks both mean precisio
 
 ## Check modern construction, reconstruction, precision casts and merges.
 
-Builders and seeded constructors return Result and validate mass, finite ordered means, extrema, aggregate metadata and delta configuration. Merges validate all contributors, including empties, and commit only a validated independent result. Precision casts reject unrepresentable values. Rust, Python/JNI and Polars call sites propagate the checked results. Exact-point subnormal state is recognized; scaling validation follows in the next change.
+Builders and seeded constructors return Result and validate mass, finite ordered means, extrema, aggregate metadata and delta configuration. Merges validate all contributors, including empties, and commit only a validated independent result. Precision casts reject unrepresentable values. Rust, Python/JNI and Polars call sites propagate the checked results. Exact-point subnormal state is recognized; positive scaling validates candidate state before commit.
+
+The shared validator additionally compares the stored aggregate mean with a compensated normalized centroid moment. Dividing means by the largest absolute observed bound and weights by total mass avoids intermediate weighted-product overflow. The comparison allows 32 Float32 epsilons of the observed magnitude, Float64 accumulation roundoff, and absolute subnormal mean/moment quantization. Float32 rounding remains allowed after a Float64 upcast because no rounding-history field is retained. The original sum is never replaced with the lossy centroid moment. Fully atomic summaries require their first/last means to match the extrema. These are numerical consistency checks, not reconstruction of the discarded observations.
+
+Checked export and no-op update/merge paths use this validator too. Struct codecs reject missing centroid lists and partial modern configuration while retaining the six-field legacy schema. Polars integer export errors instead of narrowing configuration; binary decoders check platform-sized integers and reject nonempty payloads for empty legacy digests.
+
+V1 export additionally rejects all-unit-weight payloads whose historical atomic-kind inference would contradict mixed-cluster bounds. V2/V3 retain kinds and can represent those valid summaries.
 
 ## Validate positive transformations before committing modern state.
 
