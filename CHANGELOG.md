@@ -4,6 +4,8 @@ All notable changes to this project are documented in this file.
 
 ## [Unreleased]
 
+- Extract the Polars adapter without changing expression behavior, public signatures or the pinned dependency.
+
 - Separate previously merged JVM consumers, Python typing, delivery gates and original-oracle work from Polars compatibility review.
 
 - Reject absolute paths and symlink escapes in the local Maven fixture so requests cannot read outside its repository.

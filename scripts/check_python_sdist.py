@@ -67,6 +67,8 @@ def verify_sdist_contents(sdist: Path, root: Path) -> None:
             "README.md",
             "bindings/python/PYTHON_README.md",
             "bindings/python/gr_tdigest/__init__.py",
+            "bindings/python/gr_tdigest/_polars.py",
+            "bindings/python/gr_tdigest/_shared.py",
             "bindings/python/tdigest_rs/__init__.py",
             "bindings/python/tdigest_rs/lib.py",
             "bindings/python/tdigest_rs/tdigest_rs.py",
@@ -117,6 +119,8 @@ def verify_sdist_contents(sdist: Path, root: Path) -> None:
             raise RuntimeError("sdist has an unexpected active Python source directory")
         for relative in (
             "gr_tdigest/__init__.py",
+            "gr_tdigest/_polars.py",
+            "gr_tdigest/_shared.py",
             "gr_tdigest/__init__.pyi",
             "gr_tdigest/_gr_tdigest.pyi",
             "gr_tdigest/py.typed",
