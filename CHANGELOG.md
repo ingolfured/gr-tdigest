@@ -14,6 +14,10 @@ All notable changes to this project are documented in this file.
 
 - Pin the optional Polars integration and support checks to Polars 1.44.2; defer Polars 2.0 evaluation.
 
+- Copy compatible NumPy training buffers and allow independent constructors.
+
+- Copy NumPy query outputs without changing ownership or results.
+
 - Merge master into the K2Norm review branch, preserving both branches' unreleased notes.
 
 - Preserve original source and independent fixture LF bytes across Git checkouts; keep attribute rules focused on retained library inputs.
