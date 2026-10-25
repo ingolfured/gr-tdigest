@@ -128,6 +128,13 @@ make build
 make test
 ```
 
+Accuracy checks run as individual pytest cases in `make test`. Use
+`make quality-extended` for the slow precision/order/merge matrix. Known accuracy
+limits appear as expected failures only after their frozen regression checks
+pass. `make quality-fast` and `make quality-extended` retain JSON measurements
+under `build/quality/`, including failures. See [quality tests](tests/quality/README.md)
+for rerunning one profile and generating candidate baselines for review.
+
 Setup supports linked Git worktrees. If the checkout path contains spaces,
 set `CARGO_TARGET_DIR` to a build directory without spaces: the bundled
 jemalloc build rejects spaces in its installation prefix. The CLI tests and Java

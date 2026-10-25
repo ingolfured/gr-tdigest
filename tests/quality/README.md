@@ -1,24 +1,55 @@
-# Quality checks
+# Accuracy tests
 
-The suite measures specific errors. It does not turn them into one flattering score. The older heuristic quality score remains a historical test helper and is not an acceptance rule here.
+`make test` includes the fast accuracy profiles, independent-reference controls,
+and weighted tests. `make quality-fast` runs just these tests and retains a
+measurement report. `make quality-extended` adds the slow matrix across storage
+budgets, input orders and merge paths, and retains its report. `make quality-regression`
+is the CI entry point for the extended tests and the source-bound Rust boundary audit.
 
-## Routine checks
+The measurements compare the modern and preserved original engines against sorted
+input after precision casting. Rank, tail, value and CDF errors stay separate;
+the original engine is matched by logical centroid field bytes without selecting
+for accuracy. This is a comparison budget, not a heap-memory claim. Every metric
+is checked against the existing frozen baseline with the same tolerances.
 
-`make test` includes `make quality-fast`:90 small reference/weighted tests and42 comparison profiles. The real-data part samples512 evenly spaced observations per column. The distributions cover constant values, ties, zero-heavy data, separated groups, drifting values, ordinary bell-shaped data and long tails. They are deterministic grids, not claims about the quality of a random-number generator.
+Ten extended profiles exceed the absolute accuracy envelope. They appear as
+pytest expected failures only after invariants and baseline regression assertions
+pass and the observed limits match `known-limits.json`. New failures, worse
+baseline metrics and changed inventories fail normally; reports retain the
+accuracy status as `FAIL` for known limits.
 
-The weighted controls use exact rational arithmetic for the input masses. They cover all three singleton policies, actual f32/f64 storage, decimal/binary fractions, large piles, subnormal through very large weights, serialization and query ordering.
+Run one profile through pytest's usual selection options, for example:
 
-`make quality-extended` reads every row of both real datasets and runs756 profiles:21 data columns/distributions ×2 precisions ×3 sizes ×2 orders ×3 construction/merge paths. The paths are a single build,40 sequential merges and a balanced40-way merge. It currently returns **failure** for ten size32 synthetic merge profiles. See [recorded findings](../../compat/quality-20261020/RESULTS.md).
+```bash
+.venv/bin/python -m pytest tests/quality \
+  -k 'accuracy and fast and bimodal and f64'
+```
+
+Add `--quality-extended -m slow` to collect and select the extended matrix.
+`--quality-report build/quality` writes `<mode>/results.json`, including source
+hashes, comparison summaries and failed cases. A filtered or interrupted run is
+reported as `INCOMPLETE` and cannot generate a candidate baseline.
+
+To generate candidate frozen measurements deliberately, run the complete matrix
+with a new output directory:
+
+```bash
+.venv/bin/python -m pytest tests/quality \
+  --quality-extended --quality-report build/quality \
+  --quality-baseline-output build/quality-candidates
+```
+
+This writes candidate `baseline-fast.json.gz` and `baseline-extended.json.gz`
+without replacing the checked-in files or bypassing assertions. Review the
+measurement changes and provenance before replacing a baseline. The recorded
+input fixtures and their hashes are unchanged; tests never download data.
+
+## Numerical boundary controls
 
 `make quality-boundaries` runs 15 hand-checkable Rust controls. After the numerical fixes in #55, 14 pass; subnormal aggregate-mean loss remains the one **failure**. The tiny-capacity mass, residual tail, cancellation and fractional-weight median controls now pass in both precisions. These are numerical measurements, not skipped tests.
 
 The boundary inventory was updated from [CI run 153](https://github.com/ingolfured/gr-tdigest/actions/runs/40185398411) after checking that its native source hashes match the reviewed source and that the 12 changed controls all improved from FAIL to PASS without changing their expected values. The unresolved subnormal failure remains explicit.
 
-## Regression checks with known limits
-
-`make quality-regression` runs the complete comparison and boundary audit against frozen measurements and an explicit known-failure inventory. It may pass the **regression** check while reporting `accuracy_status=FAIL` and `status=KNOWN_LIMITS`. It does not turn an unresolved defect into a passing accuracy result. CI stores the reports even when a check fails. Added, removed or changed known findings require review; improvements should update the inventory after being examined.
-
-The frozen per-profile gate permits no relative error deterioration. Rank metrics allow one observation of resolution; other normalized errors allow2e-6 for f32 or1e-12 for f64. Each metric is checked independently. Dataset/protocol hashes, duplicate/missing cases and unexpected exceptions are also checked. Changing a baseline requires reviewed fresh evidence, not regeneration to hide a failure.
 
 ## What each measurement means
 

@@ -510,7 +510,9 @@ The release gate installs one unchanged wheel into isolated runtimes, including 
 
 ## Quality measurement and failure visibility
 
-The new `scripts/quality_suite.py` uses independent sorted-data references, pinned recorded observations and deterministic distribution grids. It tests real f32/f64 storage, three budgets, input reversal and40-way sequential/balanced merges. It matches original parameters by observed logical field bytes without consulting accuracy, records all search candidates and retains poor modern outcomes in comparison totals. The earlier exponential quality-score helper is not an acceptance metric.
+The parametrized tests in `tests/quality/test_accuracy.py` use shared independent sorted-data references, pinned recorded observations and deterministic distribution grids. They test real f32/f64 storage, three budgets, input reversal and40-way sequential/balanced merges. They match original parameters by observed logical field bytes without consulting accuracy, record all search candidates and retain poor modern outcomes in comparison totals. The earlier exponential quality-score helper is not an acceptance metric.
+
+Fast profiles run in normal pytest discovery and `make test`; the extended matrix is marked slow and collected with `--quality-extended`. Known accuracy-limit cases become expected failures only after invariants, frozen-metric tolerances and the exact finding inventory have been checked. New regressions fail normally. Optional pytest reports retain all measured outcomes, and candidate baseline generation requires a complete matrix and an explicit output directory without replacing the checked-in baselines.
 
 Exact rational weighted controls cover probability semantics across extreme mass scales. `examples/quality_boundaries.rs` separately exposes existing tiny-capacity mass/contribution loss, cancellation, fractional median asymmetry and subnormal aggregate-mean loss. A frozen expected-outcome check detects any change; it does not fix or waive these failures. The independent original arithmetic, wrapper, oracle and91 original tests stay untouched.
 

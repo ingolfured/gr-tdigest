@@ -4,6 +4,12 @@ All notable changes to this project are documented in this file.
 
 ## [Unreleased]
 
+- Document pytest profile selection, expected accuracy failures and candidate-baseline review.
+
+- Keep stacked CI and source-archive checks aligned with pytest accuracy profiles.
+
+- Run accuracy profiles as parametrized pytest cases, with opt-in extended checks and retained baseline reports.
+
 - Update boundary regression expectations for the 12 verified numerical improvements from #55; retain the unresolved subnormal-mean failure.
 
 - Add regression tests for tiny-capacity mass retention, residual tail contributions, cancellation, intermediate overflow and fractional atomic quantile boundaries.

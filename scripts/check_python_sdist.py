@@ -75,9 +75,13 @@ def verify_sdist_contents(sdist: Path, root: Path) -> None:
         ):
             require_same(relative, relative)
         # make test now includes the offline recorded-data gate. A source
-        # distribution must carry the actual runners, controls and fixtures.
+        # distribution must carry the pytest configuration, controls and fixtures.
         for relative in (
-            "scripts/quality_suite.py",
+            "pytest.ini",
+            "tests/quality/__init__.py",
+            "tests/quality/conftest.py",
+            "tests/quality/measurements.py",
+            "tests/quality/test_accuracy.py",
             "scripts/audit_quality_boundaries.py",
             "scripts/fetch_quality_data.py",
             "examples/quality_boundaries.rs",
