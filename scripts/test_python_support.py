@@ -1,4 +1,4 @@
-"""Check one release wheel on six full runtimes and a Polars-free baseline.
+"""Check one release wheel on supported runtimes with and without Polars.
 
 Linux gate. --wheel reuses a real release artifact without rebuilding it.
 The matrix intentionally pins tested dependency combinations; the project lock
@@ -34,6 +34,9 @@ MATRIX = (
     ("3.11", "2.3.4", "1.17.1"),
     ("3.12", "1.26.4", "1.17.1"),
     ("3.12", "2.3.4", "1.17.1"),
+    ("3.13", "2.3.4", "1.17.1"),
+    ("3.14", "2.3.4", "1.17.1"),
+    ("3.15", "2.5.4", "1.18.1"),
 )
 MODERN_TESTS = (
     "bindings/python/tests/test_api_python.py",
@@ -62,7 +65,7 @@ native_hash = hashlib.sha256(paths['gr_tdigest._gr_tdigest'].read_bytes()).hexdi
 assert native_hash == expected['native_sha256'], native_hash
 dist = metadata.distribution(expected['distribution'])
 assert dist.version == expected['version'], dist.version
-assert sorted(part.strip() for part in dist.metadata['Requires-Python'].split(',')) == ['<3.13', '>=3.10'], dist.metadata['Requires-Python']
+assert dist.metadata['Requires-Python'] == expected['requires_python'], dist.metadata['Requires-Python']
 versions = {name: metadata.version(name) for name in ('numpy', 'scipy', 'pytest', 'pip')}
 if expected['polars'] is None:
     assert importlib.util.find_spec('polars') is None
@@ -104,7 +107,7 @@ def inspect_wheel(wheel: Path) -> dict:
             f"expected a genuine cp310 ABI3 wheel, got {tags}",
         )
         require(
-            sorted(part.strip() for part in metadata["Requires-Python"].split(",")) == ["<3.13", ">=3.10"],
+            sorted(part.strip() for part in metadata["Requires-Python"].split(",")) == ["<3.16", ">=3.10"],
             "unexpected Python support metadata",
         )
         require("polars" in metadata.get_all("Provides-Extra", []), "wheel omits the Polars extra")
@@ -186,17 +189,24 @@ def main() -> None:
         modern.mkdir()
         for relative in MODERN_TESTS:
             shutil.copyfile(root / relative, modern / Path(relative).name)
-        run("python-runtimes", ["uv", "python", "install", "3.10", "3.11", "3.12"], work)
+        runtimes = sorted({minor for minor, _, _ in MATRIX})
+        run("python-runtimes", ["uv", "python", "install", *runtimes], work)
         cells = []
         variants = [(minor, numpy, scipy, "1.34.0") for minor, numpy, scipy in MATRIX]
-        variants.append(("3.10", "1.26.4", "1.15.3", None))
+        # Exercise the base installation on every runtime, including the oldest
+        # NumPy baseline and the newer runtimes that require NumPy 2.x.
+        baselines = {}
+        for minor, numpy, scipy in MATRIX:
+            baselines.setdefault(minor, (minor, numpy, scipy, None))
+        variants.extend(baselines.values())
         for minor, numpy, scipy, polars in variants:
             label = f"py{minor.replace('.', '')}-numpy{numpy.split('.')[0]}" + ("-no-polars" if polars is None else "")
             venv = work / label
             run(label + "-venv", ["uv", "venv", "--python", minor, str(venv)], work)
             python = str(venv / "bin/python")
             run(label + "-pip", [python, "-I", "-m", "ensurepip", "--upgrade"], work)
-            requirements = [f"numpy=={numpy}", f"scipy=={scipy}", "pytest==8.4.2"]
+            pytest = "9.1.1" if minor == "3.15" else "8.4.2"
+            requirements = [f"numpy=={numpy}", f"scipy=={scipy}", f"pytest=={pytest}"]
             if polars:
                 requirements.append(f"polars=={polars}")
             run(
@@ -212,7 +222,7 @@ def main() -> None:
                     "numpy": numpy,
                     "scipy": scipy,
                     "polars": polars,
-                    "pytest": "8.4.2",
+                    "pytest": pytest,
                 }
             )
         if args.wheel:
@@ -303,11 +313,12 @@ def main() -> None:
             (output / "matrix.json").write_text(json.dumps(results, indent=2) + "\n")
         require(hashlib.sha256(wheel.read_bytes()).hexdigest() == artifact["wheel_sha256"], "wheel changed during gate")
         require(
-            len(results) == 7 and all(result["status"] == "PASS" for result in results),
+            len(results) == len(variants) and all(result["status"] == "PASS" for result in results),
             f"runtime support failed; inspect {output}",
         )
     print(
-        f"Six full cells passed 208 compatibility + 90 modern cases each; Polars-free cell passed 208 + 26; evidence: {output}"
+        f"{len(MATRIX)} full cells passed compatibility and modern checks; "
+        f"{len(baselines)} Polars-free cells passed 208 + 26 each; evidence: {output}"
     )
 
 

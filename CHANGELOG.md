@@ -10,6 +10,8 @@ All notable changes to this project are documented in this file.
 
 - Preserve centroids outside the positive K2Norm scale domain.
 
+- Support CPython 3.10–3.15 with one ABI3 wheel, runtime-specific dependency combinations, and Polars-free install checks on every version.
+
 - Check supported Python runtimes and Polars-free wheel installs.
 
 - Expose the original tdigest_core Rust API unchanged and keep the workspace lockfile in Cargo canonical dependency order.
