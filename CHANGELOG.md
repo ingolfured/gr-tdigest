@@ -11,6 +11,9 @@ All notable changes to this project are documented in this file.
 - Align public guides for the 0.2.5 release candidate.
 - Use version `0.2.5-rc.1` (`0.2.5rc1` for Python) and simplify public release guidance.
 
+- Align public guides for the 0.3.0 release.
+- Use version `0.3.0` for Rust, Python and the JVM and simplify public release guidance.
+
 - Verify toolchain selection, source archives and installed artifacts.
 
 - Preserve the independent original Rust oracle, pinned lockfile and recorded evidence.
@@ -42,6 +45,8 @@ All notable changes to this project are documented in this file.
 - Keep checked precision adapters and Polars sequence probes coherent with validated modern state.
 
 - Validate modern Rust construction, transformations and full state.
+
+- Adapt numerical-foundation regressions to checked modern construction after stacking the validation API migration.
 
 - Add regression tests for tiny-capacity mass retention, residual tail contributions, cancellation, intermediate overflow and fractional atomic quantile boundaries.
 - Focus the comparison guide on choosing Modern over legacy G-Research, with measured accuracy advantages, practical capabilities and explicit tradeoffs.
