@@ -41,6 +41,28 @@ def test_polars_roundtrip_preserves_modern_configuration(scale, policy, pin):
 
 
 @pytest.mark.parametrize("precision", ["f32", "f64"])
+@pytest.mark.parametrize("bad_config", ["scale", "use", "edges"])
+def test_polars_rejects_incompatible_delta_struct_before_query_or_export(precision, bad_config):
+    original = td.TDigest.from_array([0.0, 1.0, 2.0], delta=17, precision=precision)
+    frame = pl.DataFrame({"blob": [original.to_bytes()]}).select(d=td.from_bytes("blob"))
+    replacements = {
+        "scale": [pl.lit(2, dtype=pl.Int64).alias("scale")],
+        "use": [pl.lit(1, dtype=pl.Int64).alias("policy")],
+        "edges": [
+            pl.lit(2, dtype=pl.Int64).alias("policy"),
+            pl.lit(3, dtype=pl.Int64).alias("pin_per_side"),
+        ],
+    }
+    broken = frame.select(d=pl.col("d").struct.with_fields(*replacements[bad_config]))
+    for expression in [td.median("d"), td.to_bytes("d"), td.to_bytes("d", version=3)]:
+        with pytest.raises(
+            pl.exceptions.ComputeError,
+            match="delta mode requires K2Norm scale and singleton policy Off",
+        ):
+            broken.select(expression)
+
+
+@pytest.mark.parametrize("precision", ["f32", "f64"])
 def test_old_polars_structs_remain_readable(precision):
     original = td.TDigest.from_array([0.0, 1.0, 2.0], precision=precision)
     frame = pl.DataFrame({"blob": [original.to_bytes()]}).select(

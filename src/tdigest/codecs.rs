@@ -40,7 +40,7 @@ use crate::tdigest::centroids::Centroid;
 use crate::tdigest::precision::FloatLike;
 use crate::tdigest::singleton_policy::SingletonPolicy;
 use crate::tdigest::wire::{code_to_scale, scale_to_code};
-use crate::tdigest::{DigestStats, TDigest};
+use crate::tdigest::{DigestStats, ScaleFamily, TDigest};
 
 /* --------------------- field names (public) -------------------------------- */
 
@@ -68,6 +68,7 @@ pub enum CodecError {
     },
     MissingField(&'static str),
     InvalidField(&'static str),
+    InvalidConfiguration(&'static str),
     WrongDtype {
         field: &'static str,
         found: Box<DataType>,
@@ -99,6 +100,7 @@ impl fmt::Display for CodecError {
             }
             MissingField(field) => write!(f, "missing field '{field}'"),
             InvalidField(field) => write!(f, "invalid field '{field}'"),
+            InvalidConfiguration(message) => write!(f, "{message}"),
             WrongDtype {
                 field,
                 found,
@@ -401,6 +403,11 @@ where
             if let Some(delta) = delta_s.f64().unwrap().get(i) {
                 if !delta.is_finite() || delta <= 0.0 {
                     return Err(CodecError::InvalidField(F_DELTA));
+                }
+                if scale != ScaleFamily::K2Norm || policy != SingletonPolicy::Off {
+                    return Err(CodecError::InvalidConfiguration(
+                        "delta mode requires K2Norm scale and singleton policy Off",
+                    ));
                 }
                 builder = builder.delta(delta);
             }

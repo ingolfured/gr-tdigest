@@ -18,6 +18,8 @@ All notable changes to this project are documented in this file.
 
 - Copy NumPy query outputs without changing ownership or results.
 
+- Reject inconsistent delta settings in Polars digest structs.
+
 - Merge master into the K2Norm review branch, preserving both branches' unreleased notes.
 
 - Preserve original source and independent fixture LF bytes across Git checkouts; keep attribute rules focused on retained library inputs.
