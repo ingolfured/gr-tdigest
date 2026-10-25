@@ -43,6 +43,7 @@ fn seeded<F: FloatLike + FloatCore>(
             },
         )
         .build()
+        .unwrap()
 }
 
 fn close(actual: f64, expected: f64) {
@@ -195,7 +196,10 @@ fn empty_and_normal_mass_behavior_is_unchanged() {
     assert_eq!(normal.quantile(1.0), 10.0);
 }
 
-fn with_count<F: FloatLike + FloatCore>(td: &TDigest<F>, count: f64) -> TDigest<F> {
+fn with_count<F: FloatLike + FloatCore>(
+    td: &TDigest<F>,
+    count: f64,
+) -> gr_tdigest::TdResult<TDigest<F>> {
     TDigest::<F>::builder()
         .with_centroids_and_stats(
             td.centroids().to_vec(),
@@ -212,20 +216,13 @@ fn with_count<F: FloatLike + FloatCore>(td: &TDigest<F>, count: f64) -> TDigest<
 fn different_subnormal_header<F: FloatLike + FloatCore>() {
     let tiny = f64::from_bits(1);
     let correct = seeded::<F>(&[tiny, tiny], &[true, true], -2.0, 6.0);
-    // Directly seeded state can supply an inconsistent count. Once the rare
-    // branch is entered, both queries must use the actual centroid mass and
-    // the temporary normal count must prevent recursive normalization.
-    let td = with_count(&correct, tiny * 3.0);
-    let before = td.to_bytes();
-    assert_eq!(td.count(), tiny * 3.0);
-    assert_eq!(td.cdf(&[-2.0, 2.0, 6.0]), vec![0.25, 0.5, 0.75]);
-    assert_eq!(td.quantile(0.5), 2.0);
-    assert_eq!(td.quantile(0.6), 6.0);
-    assert_eq!(td.to_bytes(), before);
+    // Malformed public seeds are now rejected before queries can observe an
+    // inconsistent header, including differences in the subnormal range.
+    assert!(with_count(&correct, tiny * 3.0).is_err());
 }
 
 #[test]
-fn subnormal_query_view_uses_actual_mass_when_header_count_differs() {
+fn inconsistent_subnormal_header_is_rejected_at_construction() {
     different_subnormal_header::<f32>();
     different_subnormal_header::<f64>();
 }
@@ -234,19 +231,12 @@ fn inconsistent_normal_boundary<F: FloatLike + FloatCore>() {
     let tiny = f64::from_bits(1);
     let normal = seeded::<F>(&[1.0, 1.0], &[true, true], -2.0, 6.0);
     let subnormal = seeded::<F>(&[tiny, tiny], &[true, true], -2.0, 6.0);
-    for td in [with_count(&normal, tiny), with_count(&subnormal, 1.0)] {
-        let before = td.to_bytes();
-        // Malformed seeded headers are outside the accuracy contract. Guard
-        // against recursion without fixing their existing query answers as a
-        // supported behavior: the normal query path must not acquire a scan.
-        assert!(td.quantile(0.5).is_finite());
-        assert!(td.cdf(&[-2.0, 2.0, 6.0]).iter().all(|v| v.is_finite()));
-        assert_eq!(td.to_bytes(), before);
-    }
+    assert!(with_count(&normal, tiny).is_err());
+    assert!(with_count(&subnormal, 1.0).is_err());
 }
 
 #[test]
-fn inconsistent_header_across_normal_boundary_does_not_recurse() {
+fn inconsistent_normal_and_subnormal_headers_are_rejected() {
     inconsistent_normal_boundary::<f32>();
     inconsistent_normal_boundary::<f64>();
 }
@@ -289,6 +279,7 @@ fn tiny_positive_quantiles_retain_large_finite_mixed_tail_values() {
                 },
             )
             .build()
+            .unwrap()
     };
     let tiny = build(f64::from_bits(1));
     let normal = build(0.5);

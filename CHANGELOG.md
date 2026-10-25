@@ -4,6 +4,8 @@ All notable changes to this project are documented in this file.
 
 ## [Unreleased]
 
+- Check modern construction, reconstruction, precision casts and merges, including numerical-foundation caller migrations.
+
 - Merge the updated quality-gates base into the comparison documentation branch, preserving both sets of unreleased notes.
 
 - Align Python package and compatibility notes with the single source-archive build gate.
