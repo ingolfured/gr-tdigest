@@ -51,8 +51,8 @@ Linux x86_64 regression checks, not proof across every possible platform/input.
 Current packaging supports standard CPython3.10–3.15 and NumPy1.26/2 on the
 older runtimes, NumPy2 on3.13–3.15. Polars1.44.2 is an optional extra matched
 to the plugin ABI; numerical-only installations do not require Polars. The
-release gate installs one wheel on every advertised minor and rebuilds the
-verified source archive on3.12/3.14/3.15. This does not publish a `tdigest-rs`
+release gate compiles the verified source archive once with Python 3.10 and
+installs the same ABI3 wheel on every advertised minor. This does not publish a `tdigest-rs`
 release or establish portability across untested operating systems.
 
 ## Accuracy comparison
