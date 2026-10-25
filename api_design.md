@@ -108,6 +108,17 @@ installation on every runtime. The 3.15 cell uses SciPy >=1.18.1 and pytest
 The bounded Python metadata is narrower than upstream's open-ended >=3.10
 declaration. The development tool environment remains Python 3.12.
 
+### 4.1.4 Java build configuration
+
+Java builds accept `TDIGEST_GRADLE_URL` and `TDIGEST_GRADLE_SHA256` from the
+shell or CI environment to select a verified distribution ZIP from Artifactory
+or another configured source. The override takes effect before the wrapper JAR
+starts, without editing the tracked `distributionUrl`. An installed JDK can be
+used with this override. Download failures and checksum errors stop setup with
+no public fallback. Dependency JARs use the separate, exclusive
+`TDIGEST_MAVEN_REPOSITORY_URL` setting. See `bindings/java/README.md` for
+credentials, compatible distributions and offline preparation.
+
 ### 4.2 Queries
 
 Quantile:

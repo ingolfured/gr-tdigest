@@ -112,6 +112,24 @@ make build
 make test
 ```
 
+For Java builds using Artifactory, set these environment variables locally or
+in CI before invoking the wrapper or Make targets (Python 3.10+ is required):
+
+```sh
+export TDIGEST_GRADLE_URL=https://artifacts.example/artifactory/gradle/gradle-8.14.5-bin.zip
+export TDIGEST_GRADLE_SHA256=6f74b601422d6d6fc4e1f9a1ab6522f642c2fdcbc15ae33ebd30ba3d7198e854
+export TDIGEST_MAVEN_REPOSITORY_URL=https://artifacts.example/artifactory/maven-virtual
+make java-prepare build-java java-test
+```
+
+The Gradle URL selects the distribution ZIP before the wrapper JAR starts;
+it overrides `distributionUrl` without editing tracked files. The checksum
+above is for the unchanged Gradle 8.14.5 ZIP. Configured download failures
+stop the build, with no fallback to the public Gradle URL. The Maven variable
+separately replaces Maven Central for dependency JARs. See
+[Java build configuration](bindings/java/README.md#internal-downloads-and-artifactory)
+for credentials, Java 25 distributions and offline builds.
+
 Setup supports linked Git worktrees. If the checkout path contains spaces,
 set `CARGO_TARGET_DIR` to a build directory without spaces: the bundled
 jemalloc build rejects spaces in its installation prefix. Keep `target` as a

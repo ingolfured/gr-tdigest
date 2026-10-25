@@ -4,6 +4,8 @@ All notable changes to this project are documented in this file.
 
 ## [Unreleased]
 
+- Document the Gradle distribution URL override for Artifactory and verify authenticated wrapper downloads fail without public fallback.
+
 - Stage verified JDK and Gradle archives from configured sources.
 
 - Build Java 11 bytecode with exclusive internal and offline dependencies.

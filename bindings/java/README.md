@@ -38,6 +38,28 @@ access; applications launching the JAR on Java 25 should use
 
 ## Internal downloads and Artifactory
 
+`distributionUrl` in `gradle/wrapper/gradle-wrapper.properties` is the public
+default for unconfigured builds. Set `TDIGEST_GRADLE_URL` and
+`TDIGEST_GRADLE_SHA256` in your shell or CI environment to replace it without
+editing that file. Both `gradlew` and `gradlew.bat` select the configured
+distribution before starting the wrapper JAR, so the public default is bypassed.
+`JAVA_HOME` can point to an existing JDK; a JDK archive is optional.
+
+For example, with an installed JDK and an unchanged Gradle 8.14.5 ZIP mirrored
+in Artifactory:
+
+```sh
+export TDIGEST_GRADLE_URL=https://artifacts.example/artifactory/gradle/gradle-8.14.5-bin.zip
+export TDIGEST_GRADLE_SHA256=6f74b601422d6d6fc4e1f9a1ab6522f642c2fdcbc15ae33ebd30ba3d7198e854
+make java-prepare build-java java-test
+```
+
+For JDK 25, use your mirror's `gradle-9.1.0-bin.zip` URL and the Gradle 9.1.0
+checksum shown above. Set these variables before every build, including in CI;
+`java-prepare` warms the cache but does not persist your environment settings.
+Store credentials in your CI's secret environment variables. A Maven mirror
+alone does not override the Gradle distribution download.
+
 The optional bootstrap needs Python3.10+ and its standard library. Configure
 JDK/Gradle archive URLs, local paths or `file:` URLs and their expected SHA256:
 
@@ -60,6 +82,7 @@ vendor download; choose the archive for your OS and architecture.
 
 | Variable | Meaning |
 | --- | --- |
+| `TDIGEST_GRADLE_URL`, `TDIGEST_GRADLE_SHA256` | Distribution ZIP URL/path and required SHA256; replaces the public wrapper distribution. |
 | `JAVA_HOME` | Existing JDK; an explicit `TDIGEST_JDK_URL` selects its verified JDK instead. |
 | `TDIGEST_GRADLE_HOME` | Existing Gradle installation; skips distribution download. |
 | `TDIGEST_TOOLCHAIN_CACHE` | Bootstrap cache; default `~/.cache/gr-tdigest/toolchains`. |
