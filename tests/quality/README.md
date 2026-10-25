@@ -48,6 +48,14 @@ input fixtures and their hashes are unchanged; tests never download data.
 
 `make quality-boundaries` runs 15 hand-checkable Rust controls. After the numerical fixes in #55, 14 pass; subnormal aggregate-mean loss remains the one **failure**. The tiny-capacity mass, residual tail, cancellation and fractional-weight median controls now pass in both precisions. These are numerical measurements, not skipped tests.
 
+`make quality-boundary-audit` checks those outcomes against the frozen inventory
+and retains source and executable hashes. Both commands use the dev profile to
+reuse the dependencies already compiled by `make build` and `make test`. The
+audit shows compiler progress and records elapsed time. CI runs the extended
+profiles and boundary audit as separate visible steps; `make quality-regression`
+still runs both locally. Optimized installed-wheel checks run in the parallel
+Python compatibility job.
+
 The boundary inventory was updated from [CI run 153](https://github.com/ingolfured/gr-tdigest/actions/runs/40185398411) after checking that its native source hashes match the reviewed source and that the 12 changed controls all improved from FAIL to PASS without changing their expected values. The unresolved subnormal failure remains explicit.
 
 

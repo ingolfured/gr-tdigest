@@ -239,18 +239,20 @@ py-test: build-python
 	$(UV_ENV) $(UV) run --project "$(PY_DIR)" --no-sync python -m pytest -q "$(PY_TESTS_DIR)" "$(INTEG_TESTS_DIR)" tests/quality --quality-report "$(QUALITY_RESULTS_DIR)"
 
 QUALITY_RESULTS_DIR ?= $(CURDIR)/build/quality
-.PHONY: quality-fast quality-extended quality-regression quality-boundaries
+.PHONY: quality-fast quality-extended quality-regression quality-boundaries quality-boundary-audit
 quality-fast: build-python
 	@$(UV_ENV) $(UV) run --project "$(PY_DIR)" --no-sync python -m pytest -q tests/quality --quality-report "$(QUALITY_RESULTS_DIR)"
 
 quality-extended: build-python
 	@$(UV_ENV) $(UV) run --project "$(PY_DIR)" --no-sync python -m pytest -q tests/quality --quality-extended -m slow --quality-report "$(QUALITY_RESULTS_DIR)"
 
-quality-regression: quality-extended
+quality-regression: quality-extended quality-boundary-audit
+
+quality-boundary-audit:
 	@$(UV_ENV) $(UV) run --project "$(PY_DIR)" --no-sync python scripts/audit_quality_boundaries.py --baseline tests/quality/known-boundaries.json --output "$(QUALITY_RESULTS_DIR)/boundaries-$$(date +%Y%m%dT%H%M%S)-$$$$.json"
 
 quality-boundaries:
-	@$(CARGO) run --locked --release --example quality_boundaries -- --require-clean
+	@$(CARGO) run --locked --profile dev --example quality_boundaries -- --require-clean
 
 .PHONY: java-bootstrap-test
 java-bootstrap-test:

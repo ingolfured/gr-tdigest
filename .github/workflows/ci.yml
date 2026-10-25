@@ -155,8 +155,11 @@ jobs:
       - name: Test
         run: make test
 
-      - name: Extended quality regression gate (known accuracy limits remain explicit)
-        run: make quality-regression
+      - name: Extended accuracy profiles (known accuracy limits remain explicit)
+        run: make quality-extended
+
+      - name: Numerical boundary audit (reuse the dev build)
+        run: make quality-boundary-audit
 
       - name: Preserve quality findings even when a gate fails
         if: always()
