@@ -4,11 +4,19 @@ All notable changes to this project are documented in this file.
 
 ## [Unreleased]
 
+- Keep Polars compatibility separate from the prerequisite and adapter review branches.
+
+- Preserve preinstalled Polars 1.x/2.x for ordinary and extra installs: require only Polars >=1.0.0, remove the upper cap, and test the 1.0 floor plus representative 1.x releases against the same native wheel.
+
+- Support both Polars 1.x (development pin 1.44.2) and 2.x (tested 2.0.0), including consumer schema, cardinality and streaming regressions.
+
+- Make Polars cardinality, validation and binary schemas explicit.
+
+- Extract the Polars adapter without changing expression behavior, public signatures or the pinned dependency.
+
+- Separate previously merged JVM consumers, Python typing, delivery gates and original-oracle work from Polars compatibility review.
+
 - Reject absolute paths and symlink escapes in the local Maven fixture so requests cannot read outside its repository.
-
-- Isolate lazy Polars expression wiring in a dedicated adapter, preserve public call signatures and enum identities, and align the tdigest type stub with its runtime API.
-
-- Resolve the updated base conflicts while preserving Polars compatibility coverage, and track Kotlin consumer sources and runtime dependencies for incremental compilation.
 
 - Verify toolchain selection, source archives and installed artifacts.
 
@@ -20,15 +28,9 @@ All notable changes to this project are documented in this file.
 
 - Load and identify native payloads outside the build checkout.
 
-- Preserve preinstalled Polars 1.x/2.x for ordinary and extra installs: require only Polars >=1.0.0, remove the upper cap, and test the 1.0 floor plus representative 1.x releases against the same native wheel.
-
-- Support both Polars 1.x (development pin 1.44.2) and 2.x (tested 2.0.0), with the same installed wheel tested on both across supported Python versions, including consumer and streaming regressions.
-
 - Keep runtime payload identity with the following standalone-loader change.
 
 - Expose fluent JVM operations, safe serialization and native failures.
-
-- Make Polars cardinality, validation and binary schemas explicit.
 
 - Remove unused imports and normalize spacing in modern Python consumer regressions for CI lint.
 
