@@ -506,7 +506,7 @@ Modern Python training uses `training_array_values` for constructors and updates
 
 The extension targets the CPython3.10 stable ABI and advertises standard CPython3.10–3.15. The binding stack uses PyO3 0.29.3, rust-numpy 0.29, pyo3-polars 0.28 and Polars Rust0.55 with Python Polars1.44.2. Rust1.95 is pinned because the updated Polars dependency tree requires it. PyO3 attachment/cast and Polars iterator API migrations do not change digest arithmetic. The original upstream numerical sources, wrapper and91 tests remain checksum-bound.
 
-The release gate installs one unchanged wheel into isolated runtimes, including Polars-free3.10/3.15 environments, and rebuilds the actual verified source archive under3.12/3.14/3.15. Standard CPython is the supported runtime; free-threaded and PyPy builds require separate artifacts and are not covered by these claims.
+The release gate builds the verified source archive once with Python 3.10, then installs that unchanged ABI3 wheel into isolated Python 3.10–3.15 runtimes, including a Polars-free installation on every version. It reuses Cargo dependency artifacts and runs alongside the main build and unit tests in CI. Standard CPython is the supported runtime; free-threaded and PyPy builds require separate artifacts and are not covered by these claims.
 
 ## Quality measurement and failure visibility
 

@@ -4,6 +4,10 @@ All notable changes to this project are documented in this file.
 
 ## [Unreleased]
 
+- Run Python packaging checks alongside core CI, avoid redundant package builds, reuse Cargo dependencies for source-archive rebuilds, and retain live build logs and timings.
+
+- Speed up Python CI by compiling one release wheel from the verified source archive and checking it across all runtime cells, removing three repeated optimized builds.
+
 - Document pytest profile selection, expected accuracy failures and candidate-baseline review.
 
 - Keep stacked CI and source-archive checks aligned with pytest accuracy profiles.

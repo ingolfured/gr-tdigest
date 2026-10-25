@@ -115,10 +115,13 @@ compatibility with untested future Polars releases. Existing numerical imports
 remain lazy, while expression operations require the extra.
 
 The installed-artifact gate reuses one real wheel across all six Python
-versions, using both NumPy lines on3.10–3.12 and NumPy2 on3.13–3.15. It also
-tests genuinely Polars-free installations on every runtime and rebuilds the verified
-source archive under3.12/3.14/3.15. Standard CPython is covered; free-threaded
-runtimes and PyPy need separate qualification.
+versions, using both NumPy lines on 3.10–3.12 and NumPy 2 on 3.13–3.15. It also
+tests genuinely Polars-free installations on every runtime. The default gate
+builds that ABI3 wheel once from the verified source archive with Python 3.10,
+reusing Cargo dependency artifacts, then installs it on every supported runtime.
+The 3.15 cell uses SciPy >=1.18.1 and pytest >=9.1.1 for compatibility validation;
+these are test dependencies. Standard CPython is covered; free-threaded runtimes
+and PyPy need separate qualification.
 The bounded Python metadata is narrower than upstream's open-ended >=3.10
 declaration. The development tool environment remains Python 3.12.
 
