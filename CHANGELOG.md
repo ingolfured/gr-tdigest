@@ -10,6 +10,8 @@ All notable changes to this project are documented in this file.
 
 - Validate modern Rust construction, transformations and full state.
 
+- Adapt numerical-foundation regressions to checked modern construction after stacking the validation API migration.
+
 - Add regression tests for tiny-capacity mass retention, residual tail contributions, cancellation, intermediate overflow and fractional atomic quantile boundaries.
 - Focus the comparison guide on choosing Modern over legacy G-Research, with measured accuracy advantages, practical capabilities and explicit tradeoffs.
 
