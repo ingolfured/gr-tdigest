@@ -545,3 +545,28 @@ Polars training uses checked precision conversion and reconstruction validates e
 ## Polars CDF shape and broadcasting
 
 CDF broadcasting follows row counts instead of nonempty digest contents. Scalar probes broadcast over digest rows. List probes retain List output, including one-row and empty results. Python sequence probes become a flat probe Series.
+
+## Complete overflow boundaries
+
+The original `tdigest_core` entry points now route through `checked.rs`. It uses
+checked uint32 total accumulation before the pinned kernels and rejects nonfinite
+outputs or discarded cluster mass produced from finite observations. The original
+numerical kernels and Python wrapper remain checksum-pinned; the checksum gate
+reverses only the explicitly enumerated import routing in `lib.rs`. Source archive
+verification includes the guard module. In-range exact-output fixtures still run.
+The Python native adapter translates these checked errors to `ValueError`.
+
+Modern normalization uses a compensated run-mass fallback when naive coalescing
+overflows. Normalization and compression propagate `Result` to the public checked
+operations. Each compression-stage boundary checks finite mass and means before
+further accumulation or ordering assertions; an unsupported rounded total returns
+an error instead of reaching a centroid assertion. Temporary result state is never
+committed after a failure. Trimmed means additionally accumulate normalized mass
+and moments, using those only when the historical direct moment is nonfinite.
+This preserves ordinary query results while recovering finite extreme averages.
+
+`tests/overflow_boundaries.rs`, original Rust overflow tests, and the language
+coherence overflow matrix cover integer limits, overflowed moments, coalescing,
+creation/merge/scaling rollback, and finite extreme CDF/quantile queries. These
+checks concern arithmetic safety; they do not promise exact statistics or remove
+floating-point rounding, capacity limits, or explicitly permitted NaN semantics.

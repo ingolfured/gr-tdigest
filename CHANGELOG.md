@@ -4,6 +4,12 @@ All notable changes to this project are documented in this file.
 
 ## [Unreleased]
 
+- Merge the updated Polars-state base into the CDF-shapes branch, preserving both CDF broadcasting and overflow documentation.
+
+- Include the original arithmetic overflow guard in published Rust and Python source packages.
+
+- Guard original Rust/Python uint32 totals and finite-input arithmetic, propagate modern compression overflow as errors without mutation, and recover representable extreme trimmed means; add cross-language overflow regressions.
+
 - Reject TDIG v1 export when its unit-weight kind heuristic would produce contradictory atomic extrema on reconstruction.
 
 - Reject contradictory centroid moments and atomic bounds, zero edge pins, incomplete struct configuration and missing centroid lists; validate export and no-op paths, check binary lengths/platform sizes, and preserve rounded precision round-trips.
