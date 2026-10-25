@@ -64,3 +64,5 @@ weight 0.1 rounds to zero.
 The existing package tests check that source archives include these Python
 tests, their saved reference results and the compressed input data. Tests use
 the included data and never download it.
+
+Quality runs verify that the source and installed native binary remain unchanged during measurement. Changed inputs invalidate the retained report, fail pytest teardown and prevent candidate baseline generation. Historical comparisons in [the recorded results](../../compat/quality-20261020/RESULTS.md) retain their original source identities and known accuracy limits.

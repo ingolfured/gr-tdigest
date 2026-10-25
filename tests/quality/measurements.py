@@ -68,6 +68,11 @@ def source_hashes() -> dict[str, str]:
     return {str(p.relative_to(root)): sha(p) for p in paths}
 
 
+def verify_inputs_unchanged(receipt, native):
+    if source_hashes() != receipt["source_inputs_sha256"] or sha(native) != receipt["native_sha256"]:
+        raise RuntimeError("Source or installed native binary changed during quality measurements")
+
+
 @dataclass
 class Exact:
     values: list[float]

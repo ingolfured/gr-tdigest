@@ -79,13 +79,14 @@ def load_run(mode):
         assert known["protocol_sha256"] == PROTOCOL_SHA256, "known-limit protocol changed"
         known_findings = known["findings"]
         assert set(known_findings) <= set(cases), "known-limit case absent from matrix"
+    native = Path(sys.modules["gr_tdigest._gr_tdigest"].__file__)
     receipt = {
         "protocol": quality.PROTOCOL,
         "protocol_sha256": PROTOCOL_SHA256,
         "runner_sha256": quality.sha(Path(quality.__file__)),
         "test_inputs_sha256": {path.name: quality.sha(path) for path in sorted(DIRECTORY.glob("*.py"))},
         "data_manifest_sha256": manifest_sha256,
-        "native_sha256": quality.sha(Path(sys.modules["gr_tdigest._gr_tdigest"].__file__)),
+        "native_sha256": quality.sha(native),
         "python": sys.version,
         "package": importlib.metadata.version("gr-tdigest"),
         "numpy": np.__version__,
@@ -96,9 +97,15 @@ def load_run(mode):
         "status": "INCOMPLETE",
         "regression_status": "INCOMPLETE",
         "complete": False,
+        "input_status": "NOT_VERIFIED",
     }
     return dict(
-        baseline=baseline, cases=cases, known_findings=known_findings, receipt=receipt, start=time.perf_counter()
+        baseline=baseline,
+        cases=cases,
+        known_findings=known_findings,
+        receipt=receipt,
+        native=native,
+        start=time.perf_counter(),
     )
 
 
@@ -126,6 +133,17 @@ def write_report(run, directory):
     receipt["status"] = (
         "KNOWN_LIMITS" if receipt["regression_status"] == "PASS" and findings else receipt["regression_status"]
     )
+    if receipt["input_status"] != "INVALID_INPUTS_CHANGED":
+        try:
+            quality.verify_inputs_unchanged(receipt, run["native"])
+        except (RuntimeError, OSError) as error:
+            receipt["input_status"] = "INVALID_INPUTS_CHANGED"
+            receipt["input_error"] = str(error)
+        else:
+            receipt["input_status"] = "UNCHANGED"
+    if receipt["input_status"] == "INVALID_INPUTS_CHANGED":
+        receipt["regression_status"] = "FAIL"
+        receipt["status"] = "INVALID_INPUTS_CHANGED"
     if directory:
         target = directory / receipt["mode"]
         target.mkdir(parents=True, exist_ok=True)
@@ -136,8 +154,11 @@ def write_report(run, directory):
 def quality_runs(request):
     runs = {}
     yield runs
-    for mode, run in runs.items():
+    for run in runs.values():
         write_report(run, request.config.getoption("--quality-report"))
+    invalid = [mode for mode, run in runs.items() if run["receipt"]["input_status"] != "UNCHANGED"]
+    assert not invalid, f"Source or installed native binary changed during quality measurements: {invalid}"
+    for mode, run in runs.items():
         output = request.config.getoption("--quality-baseline-output")
         if output:
             rows = run["receipt"]["rows"]

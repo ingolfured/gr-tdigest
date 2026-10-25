@@ -96,3 +96,5 @@ These references are design background, not a benchmark ranking. The case for ad
 ## Modern versus original GR: measured accuracy (CI, 21 October 2026)
 
 For the complete size/merge/precision breakdown, see [recorded results](compat/quality-20261020/RESULTS.md). Every cell names the winner and uses the same Modern/GR error ratio. The [API contract](api_design.md) and [implementation design](tdigest_design.md) document the behavior behind those results.
+
+These figures describe historical CI run 104 at `e6a14a2`. They compare accuracy at matched logical centroid-field byte budgets, excluding allocation overhead and RSS; they do not establish a throughput ranking or equal process memory use. Later measurement-input and regression-gate changes do not establish a new accuracy winner without fresh measurements. That run passed its regression gate while retaining 10 synthetic accuracy-limit failures and 13/15 separate numerical boundary failures.

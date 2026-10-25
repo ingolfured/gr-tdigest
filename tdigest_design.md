@@ -514,13 +514,13 @@ The parametrized tests in `tests/quality/test_accuracy.py` use shared independen
 
 Fast profiles run in normal pytest discovery and `make test`; the extended matrix is marked slow and collected with `--quality-extended`. Known accuracy-limit cases become expected failures only after invariants, frozen-metric tolerances and the exact finding inventory have been checked. New regressions fail normally. Optional pytest reports retain all measured outcomes, and candidate baseline generation requires a complete matrix and an explicit output directory without replacing the checked-in baselines.
 
-Exact rational weighted controls cover probability semantics across extreme mass scales. `examples/quality_boundaries.rs` separately exposes existing tiny-capacity mass/contribution loss, cancellation, fractional median asymmetry and subnormal aggregate-mean loss. A frozen expected-outcome check detects any change; it does not fix or waive these failures. The independent original arithmetic, wrapper, oracle and91 original tests stay untouched.
+Exact rational weighted controls cover probability semantics across extreme mass scales. Rust numerical-foundation regressions cover tiny-capacity mass, residual contributions, cancellation and fractional atomic boundaries. The quality pytest lifecycle verifies source and installed native-binary hashes before finalizing reports or generating candidate baselines; changed inputs invalidate the receipt and fail the run. This verifies input stability, not universal Modern accuracy superiority. The independent original arithmetic, wrapper, oracle and 91 original tests stay untouched.
 
 JVM test tool selection is shared through `bindings/java/bootstrap.py::java_environment`: Gradle and direct coherence subprocesses use the same verified JDK and child environment, including when host Java commands are unavailable.
 
-## Preserve residual mass and compensated modern centroid arithmetic.
+## Transactional modern operations
 
-Modern normalization uses compensated mass and moment sums; cluster averaging uses compensation for cancellation or overflow. Equal-weight buckets retain positive residuals. Atomic quantile boundaries sum actual prefix mass. Centroid::weight returns f64 independently of mean precision. Public digest construction and update signatures are unchanged in this prerequisite.
+Checked construction and compensated accumulation validate represented mass and aggregate statistics. Compression retains exact-point identity through subnormal weighted products. The Polars adapter validates every reconstructed row before queries or reductions, and chooses CDF broadcasting by input lengths. Incompatible empty contributors are checked along with populated contributors.
 
 Regression coverage in `tests/numerical_foundation.rs` checks both mean precisions for tiny Use capacities, rounded-away tail mass with a nonzero moment, cancellation at compressed and uncompressed capacities, and fractional symmetric atomic boundaries with probes on both sides. Compressor unit coverage checks recovery from intermediate moment overflow and accumulator reuse after clearing.
 

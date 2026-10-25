@@ -212,7 +212,9 @@ Modern training and updates copy compatible aligned, native-endian contiguous on
 
 `make test` now includes fast quality checks using recorded bike-rental and household-energy data, varied distributions and exact weighted references. `make quality-extended` measures full datasets, both precisions, several summary sizes and40-way merges. It retains failing profiles and reports percentile position, value and cumulative-probability errors separately.
 
-The recorded comparison supports choosing Modern for better average accuracy on these real-data workloads:
+The recorded comparison is legacy/original G-Research versus the opt-in Modern engine at matched logical centroid-field byte budgets. It measures accuracy on these workloads; it does not establish a universal replacement for legacy, a speed ranking or equal process memory use. The figures below come from CI run 104 at `e6a14a2`, rather than a fresh measurement of the current branch.
+
+The modern engine is not universally more accurate than original G-Research:
 
 - **Bike:** Modern wins average rank, tail rank, average value and peak value error in every grouped size/merge setup tested.
 - **Energy:** Modern wins average rank, tail rank and average value error. GR wins peak value error: Modern's error is **1.81–1.86 times GR's** across the grouped setups.

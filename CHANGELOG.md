@@ -4,6 +4,10 @@ All notable changes to this project are documented in this file.
 
 ## [Unreleased]
 
+- Format the quality-run fixture to satisfy the CI Ruff formatting check.
+
+- Resolve the quality chapter against the pytest-based gates, retaining source/native stability checks and removing the retired boundary-runner adapter.
+
 - Resolve the checked-state base merge while retaining its validation fixes, transactional scaling, Polars contracts and updated quality gates.
 
 - Reject TDIG v1 export when its unit-weight kind heuristic would produce contradictory atomic extrema on reconstruction.
@@ -29,6 +33,12 @@ All notable changes to this project are documented in this file.
 - Run accuracy profiles as parametrized pytest cases, with opt-in extended checks and retained baseline reports.
 
 - Update boundary regression expectations for the 12 verified numerical improvements from #55; retain the unresolved subnormal-mean failure.
+
+- Clarify legacy versus Modern accuracy tradeoffs, historical benchmark scope, and the distinction between regression checks and accuracy passes.
+
+- Keep checked precision adapters and Polars sequence probes coherent with validated modern state.
+
+- Validate modern Rust construction, transformations and full state.
 
 - Adapt numerical-foundation regressions to checked modern construction after stacking the validation API migration.
 
