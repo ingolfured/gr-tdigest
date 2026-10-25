@@ -8,15 +8,24 @@ All notable changes to this project are documented in this file.
 
 - Expose weighted modern Python operations and independent state copies.
 
+- Clarify legacy versus Modern accuracy tradeoffs, historical benchmark scope, and the distinction between regression checks and accuracy passes.
+
 - Keep checked precision adapters and Polars sequence probes coherent with validated modern state.
 
 - Validate modern Rust construction, transformations and full state.
+
+- Add regression tests for tiny-capacity mass retention, residual tail contributions, cancellation, intermediate overflow and fractional atomic quantile boundaries.
+- Focus the comparison guide on choosing Modern over legacy G-Research, with measured accuracy advantages, practical capabilities and explicit tradeoffs.
 
 - Document measured Modern versus G-Research accuracy winners and error ratios by dataset, summary size, precision and merge setup.
 
 - Test accuracy on recorded data and deterministic distributions.
 
+- Pin the optional Polars integration and support checks to Polars 1.44.2; defer Polars 2.0 evaluation.
+
 - Support Python 3.14 and 3.15 on the current NumPy and Polars stack.
+
+- Add JDK 25 build/runtime coverage with verified Gradle 9.1.0, retaining Java 11 bytecode and older-JDK builds.
 
 - Build Java 11 bytecode with exclusive internal and offline dependencies.
 
@@ -28,9 +37,13 @@ All notable changes to this project are documented in this file.
 
 - Copy NumPy query outputs without changing ownership or results.
 
+- Merge master into the K2Norm review branch, preserving both branches' unreleased notes.
+
 - Preserve original source and independent fixture LF bytes across Git checkouts; keep attribute rules focused on retained library inputs.
 
 - Preserve centroids outside the positive K2Norm scale domain.
+
+- Support CPython 3.10–3.15 with one ABI3 wheel, runtime-specific dependency combinations, and Polars-free install checks on every version.
 
 - Check supported Python runtimes and Polars-free wheel installs.
 
