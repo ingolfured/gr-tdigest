@@ -26,6 +26,8 @@ All notable changes to this project are documented in this file.
 
 - Test accuracy on recorded data and deterministic distributions.
 
+- Update boundary regression expectations for the 12 verified numerical improvements from #55; retain the unresolved subnormal-mean failure.
+
 - Merge master into the K2Norm review branch, preserving both branches' unreleased notes.
 
 - Preserve original source and independent fixture LF bytes across Git checkouts; keep attribute rules focused on retained library inputs.

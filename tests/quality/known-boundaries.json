@@ -1,0 +1,96 @@
+{
+  "accuracy_status": "FAIL",
+  "controls": [
+    {
+      "expected": 4.0,
+      "id": "tiny_use_mass_cap1/f32",
+      "observed": 4.0,
+      "status": "PASS"
+    },
+    {
+      "expected": 4.0,
+      "id": "tiny_use_mass_cap2/f32",
+      "observed": 4.0,
+      "status": "PASS"
+    },
+    {
+      "expected": 1.5,
+      "id": "residual_tail_moment/f32",
+      "observed": 1.5,
+      "status": "PASS"
+    },
+    {
+      "expected": 0.3333333333333333,
+      "id": "finite_cancellation_mean/f32",
+      "observed": 0.3333333333333333,
+      "status": "PASS"
+    },
+    {
+      "expected": 2.5,
+      "id": "fractional_symmetric_median_0/f32",
+      "observed": 2.5,
+      "status": "PASS"
+    },
+    {
+      "expected": 2.5,
+      "id": "fractional_symmetric_median_1/f32",
+      "observed": 2.5,
+      "status": "PASS"
+    },
+    {
+      "expected": 2.5,
+      "id": "fractional_symmetric_median_2/f32",
+      "observed": 2.5,
+      "status": "PASS"
+    },
+    {
+      "expected": 4.0,
+      "id": "tiny_use_mass_cap1/f64",
+      "observed": 4.0,
+      "status": "PASS"
+    },
+    {
+      "expected": 4.0,
+      "id": "tiny_use_mass_cap2/f64",
+      "observed": 4.0,
+      "status": "PASS"
+    },
+    {
+      "expected": 1.5,
+      "id": "residual_tail_moment/f64",
+      "observed": 1.5,
+      "status": "PASS"
+    },
+    {
+      "expected": 0.3333333333333333,
+      "id": "finite_cancellation_mean/f64",
+      "observed": 0.3333333333333333,
+      "status": "PASS"
+    },
+    {
+      "expected": 2.5,
+      "id": "fractional_symmetric_median_0/f64",
+      "observed": 2.5,
+      "status": "PASS"
+    },
+    {
+      "expected": 2.5,
+      "id": "fractional_symmetric_median_1/f64",
+      "observed": 2.5,
+      "status": "PASS"
+    },
+    {
+      "expected": 2.5,
+      "id": "fractional_symmetric_median_2/f64",
+      "observed": 2.5,
+      "status": "PASS"
+    },
+    {
+      "expected": 5e-324,
+      "id": "subnormal_aggregate_mean/f64",
+      "observed": 0.0,
+      "status": "FAIL"
+    }
+  ],
+  "failed": 1
+}
