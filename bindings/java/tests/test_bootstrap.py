@@ -8,6 +8,8 @@ import importlib.util
 import io
 import os
 from pathlib import Path
+import subprocess
+import sys
 import tarfile
 import tempfile
 import threading
@@ -129,6 +131,90 @@ class BootstrapTest(unittest.TestCase):
                 bootstrap.download(url, self.root / "download", False)
             self.assertEqual((self.root / "download").read_bytes(), payload)
             self.assertEqual(requests, ["/internal", "/internal"])
+        finally:
+            server.shutdown()
+            server.server_close()
+            thread.join()
+
+    @unittest.skipIf(os.name == "nt", "POSIX fake launchers; portable archive checks also run on Windows")
+    def test_wrapper_uses_authenticated_distribution_override_without_public_fallback(self):
+        jdk = self.root / "installed jdk"
+        (jdk / "bin").mkdir(parents=True)
+        java = jdk / "bin/java"
+        java.write_text('#!/bin/sh\necho "Public wrapper path was used" >&2\nexit 99\n')
+        java.chmod(0o755)
+        gradle, digest = self.archive(
+            "gradle",
+            {"bin/gradle": b'#!/bin/sh\nprintf "%s\\n" "$@" > "$TRACE_FILE"\n'},
+            zipped=True,
+        )
+        payload = gradle.read_bytes()
+        expected_auth = "Basic " + base64.b64encode(b"build:secret").decode()
+        requests = []
+        response_status = 200
+
+        class Handler(BaseHTTPRequestHandler):
+            def log_message(self, *_):
+                pass
+
+            def do_GET(self):
+                requests.append(self.path)
+                if self.headers.get("Authorization") != expected_auth:
+                    self.send_response(401)
+                    self.send_header("WWW-Authenticate", 'Basic realm="artifactory"')
+                    self.end_headers()
+                    return
+                self.send_response(response_status)
+                self.end_headers()
+                if response_status == 200:
+                    self.wfile.write(payload)
+
+        server = ThreadingHTTPServer(("127.0.0.1", 0), Handler)
+        thread = threading.Thread(target=server.serve_forever, daemon=True)
+        thread.start()
+        path = "/artifactory/gradle/gradle-test-bin.zip"
+        wrapper = Path(__file__).resolve().parents[1] / "gradlew"
+        try:
+            for scenario, status, sha, error in [
+                ("success", 200, digest, None),
+                ("unavailable", 404, digest, "no alternate source was attempted"),
+                ("bad-checksum", 200, "0" * 64, "checksum mismatch"),
+                ("missing-checksum", 200, "", "SHA256 is required"),
+            ]:
+                with self.subTest(scenario=scenario):
+                    response_status = status
+                    requests.clear()
+                    trace = self.root / (scenario + ".trace")
+                    env = {
+                        "PATH": os.defpath,
+                        "JAVA_HOME": str(jdk),
+                        "TDIGEST_BOOTSTRAP_PYTHON": sys.executable,
+                        "TDIGEST_GRADLE_URL": f"http://127.0.0.1:{server.server_port}{path}",
+                        "TDIGEST_GRADLE_SHA256": sha,
+                        "TDIGEST_DOWNLOAD_USERNAME": "build",
+                        "TDIGEST_DOWNLOAD_PASSWORD": "secret",
+                        "TDIGEST_TOOLCHAIN_CACHE": str(self.cache / scenario),
+                        "TRACE_FILE": str(trace),
+                    }
+                    result = subprocess.run(
+                        [str(wrapper), "-p", "project with spaces", "test"],
+                        cwd=self.root,
+                        env=env,
+                        capture_output=True,
+                        text=True,
+                        timeout=15,
+                    )
+                    if error is None:
+                        self.assertEqual(result.returncode, 0, result.stderr)
+                        self.assertEqual(trace.read_text().splitlines(), ["-p", "project with spaces", "test"])
+                    else:
+                        self.assertEqual(result.returncode, 1, result.stderr)
+                        self.assertIn(error, result.stderr)
+                        self.assertFalse(trace.exists())
+                    self.assertNotIn("Public wrapper path was used", result.stderr)
+                    self.assertNotIn(env["TDIGEST_GRADLE_URL"], result.stderr)
+                    self.assertNotIn("secret", result.stderr)
+                    self.assertEqual(requests, [] if scenario == "missing-checksum" else [path, path])
         finally:
             server.shutdown()
             server.server_close()
