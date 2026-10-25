@@ -153,3 +153,14 @@ jobs:
 
       - name: Runtime matrix and Polars-free install against one wheel
         run: make python-support-test
+
+      - name: Extended quality regression gate (known accuracy limits remain explicit)
+        run: make quality-regression
+
+      - name: Preserve quality findings even when a gate fails
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: quality-results
+          path: build/quality/
+          if-no-files-found: ignore

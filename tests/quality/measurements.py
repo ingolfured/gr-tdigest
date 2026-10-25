@@ -1,25 +1,19 @@
-"""Reproducible accuracy checks against exact data and the preserved original engine.
+"""Independent references and measurements shared by the quality tests.
 
-Run with an installed gr-tdigest wheel. No data downloads occur during tests.
 Logical field bytes are a comparison budget, not an estimate of heap/RSS use.
 """
 
 from __future__ import annotations
 
-import argparse
 from bisect import bisect_left, bisect_right
 import csv
 from dataclasses import dataclass
 import gzip
 import hashlib
-import importlib.metadata
 import json
 import math
-import platform
 from pathlib import Path
 from statistics import NormalDist
-import sys
-import time
 
 import numpy as np
 from gr_tdigest import TDigest as Modern
@@ -61,7 +55,7 @@ def read_json(path: Path):
 
 
 def source_hashes() -> dict[str, str]:
-    root = Path(__file__).resolve().parents[1]
+    root = Path(__file__).resolve().parents[2]
     paths = [
         root / "Cargo.toml",
         root / "Cargo.lock",
@@ -320,145 +314,3 @@ def summarize(rows):
             "metrics": comparison,
         }
     return groups
-
-
-def main():
-    parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--mode", choices=("fast", "extended"), default="fast")
-    parser.add_argument("--data", type=Path, default=Path(__file__).resolve().parents[1] / "tests/quality/data")
-    parser.add_argument("--output", type=Path, required=True)
-    parser.add_argument("--baseline", type=Path)
-    parser.add_argument("--known-failures", type=Path, help="explicit regression gate; retains FAIL accuracy status")
-    args = parser.parse_args()
-    if args.known_failures and not args.baseline:
-        parser.error("--known-failures requires a frozen --baseline")
-    args.output.mkdir(parents=True, exist_ok=False)
-    start = time.perf_counter()
-    native = Path(sys.modules["gr_tdigest._gr_tdigest"].__file__)
-    receipt = {
-        "protocol": PROTOCOL,
-        "protocol_sha256": hashlib.sha256(json.dumps(PROTOCOL, sort_keys=True).encode()).hexdigest(),
-        "runner_sha256": sha(Path(__file__)),
-        "data_manifest_sha256": sha(args.data / "manifest.json"),
-        "native_sha256": sha(native),
-        "python": sys.version,
-        "package": importlib.metadata.version("gr-tdigest"),
-        "numpy": np.__version__,
-        "platform": platform.platform(),
-        "source_inputs_sha256": source_hashes(),
-        "mode": args.mode,
-        "rows": [],
-    }
-    baseline = {}
-    if args.baseline:
-        frozen = read_json(args.baseline)
-        if (
-            frozen["protocol_sha256"] != receipt["protocol_sha256"]
-            or frozen["data_manifest_sha256"] != receipt["data_manifest_sha256"]
-        ):
-            raise RuntimeError("Baseline protocol/data changed; review the measurements before replacing it")
-        baseline = {r["id"]: r for r in frozen["rows"]}
-        if not baseline or len(baseline) != len(frozen["rows"]):
-            raise RuntimeError("Baseline must contain unique, nonempty cases")
-    for name, kind, raw in datasets(args.data, args.mode):
-        for precision in PROTOCOL["precisions"]:
-            values = np.array(raw, dtype=np.float32 if precision == "f32" else np.float64)
-            exact = Exact(values.tolist())
-            for budget in PROTOCOL["budgets"][args.mode]:
-                for order in PROTOCOL["orders"][args.mode]:
-                    data = values if order == "natural" else values[::-1].copy()
-                    for path in PROTOCOL["paths"][args.mode]:
-                        ident = f"{name}/{precision}/size{budget}/{order}/{path}"
-                        row = {
-                            "id": ident,
-                            "dataset": name,
-                            "kind": kind,
-                            "precision": precision,
-                            "max_size": budget,
-                            "order": order,
-                            "path": path,
-                            "n": len(data),
-                        }
-                        try:
-                            modern = build(data, precision, budget, "modern", path)
-                            modern_bytes = len(modern) * (data.dtype.itemsize + 8 + 1)
-                            row["modern_state"] = dict(
-                                centroids=len(modern),
-                                field_bytes=modern_bytes,
-                                wire_bytes=len(modern.to_bytes()),
-                                **invariants(modern, data, precision, True),
-                            )
-                            row["modern"] = score(modern, exact, True)
-                            original, delta, size, trace = match_original(data, precision, modern_bytes, path)
-                            row["original_state"] = dict(
-                                centroids=len(original),
-                                field_bytes=size,
-                                delta=delta,
-                                selection_trace=trace,
-                                **invariants(original, data, precision, False),
-                            )
-                            row["original"] = score(original, exact, False)
-                            row["comparison_eligible"] = 0.9 <= size / modern_bytes <= 1.0
-                            row["budget_fill"] = size / modern_bytes
-                            # Hard accuracy envelope is intentionally independent
-                            # of which implementation wins this comparison.
-                            bound = 0.1 if budget <= 32 else 0.05
-                            row["accuracy_limits"] = [
-                                metric for metric in ("rank_max", "cdf_max") if row["modern"][metric] > bound
-                            ]
-                            if baseline:
-                                if ident not in baseline:
-                                    raise AssertionError("case absent from frozen baseline")
-                                for metric in GATED:
-                                    limit = regression_limit(
-                                        metric, baseline[ident]["modern"][metric], len(data), precision
-                                    )
-                                    if row["modern"][metric] > limit:
-                                        raise AssertionError("quality regression: " + metric)
-                        except Exception as error:
-                            row["error"] = f"{type(error).__name__}: {error}"
-                        receipt["rows"].append(row)
-        print(name, "completed", flush=True)
-        atomic_json(args.output / "results.json", receipt)
-    if baseline and set(baseline) != {r["id"] for r in receipt["rows"]}:
-        raise RuntimeError("Baseline/case coverage differs")
-    receipt["elapsed_seconds"] = time.perf_counter() - start
-    receipt["summary"] = summarize(receipt["rows"])
-    receipt["facets"] = {
-        field: {
-            str(value): summarize([r for r in receipt["rows"] if r[field] == value])["all"]
-            for value in sorted({r[field] for r in receipt["rows"]})
-        }
-        for field in ("precision", "max_size", "path", "dataset")
-    }
-    findings = {r["id"]: r["accuracy_limits"] for r in receipt["rows"] if r.get("accuracy_limits")}
-    errors = any("error" in r for r in receipt["rows"])
-    receipt["accuracy_status"] = "FAIL" if findings or errors else "PASS"
-    known_matches = False
-    if args.known_failures:
-        known = json.loads(args.known_failures.read_text())
-        known_matches = known["protocol_sha256"] == receipt["protocol_sha256"] and known["findings"] == findings
-    receipt["regression_status"] = (
-        "FAIL" if errors or (findings and not known_matches) or (args.known_failures and not known_matches) else "PASS"
-    )
-    receipt["status"] = (
-        "KNOWN_LIMITS" if receipt["regression_status"] == "PASS" and findings else receipt["regression_status"]
-    )
-    atomic_json(args.output / "results.json", receipt)
-    print(
-        json.dumps(
-            {
-                "status": receipt["status"],
-                "accuracy_status": receipt["accuracy_status"],
-                "regression_status": receipt["regression_status"],
-                "seconds": receipt["elapsed_seconds"],
-                "summary": receipt["summary"],
-            },
-            indent=2,
-        )
-    )
-    return 0 if receipt["regression_status"] == "PASS" else 1
-
-
-if __name__ == "__main__":
-    raise SystemExit(main())

@@ -1,18 +1,12 @@
 """Small hand-checkable controls for the independent accuracy measurements."""
 
-import importlib.util
 from fractions import Fraction
 from pathlib import Path
-import sys
+
 import pytest
 
-spec = importlib.util.spec_from_file_location(
-    "quality_suite", Path(__file__).resolve().parents[2] / "scripts/quality_suite.py"
-)
-quality = importlib.util.module_from_spec(spec)
-sys.modules[spec.name] = quality
-spec.loader.exec_module(quality)
-Exact = quality.Exact
+from . import measurements as quality
+from .measurements import Exact
 
 
 def test_ties_have_a_rank_interval_instead_of_a_penalty_for_correct_values():

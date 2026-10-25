@@ -236,7 +236,17 @@ rust-test:
 
 # Explicit path to bindings/python/tests (pytest discovers from pyproject too)
 py-test: build-python
-	$(UV_ENV) $(UV) run --project "$(PY_DIR)" --no-sync python -m pytest -q "$(PY_TESTS_DIR)" "$(INTEG_TESTS_DIR)"
+	$(UV_ENV) $(UV) run --project "$(PY_DIR)" --no-sync python -m pytest -q "$(PY_TESTS_DIR)" "$(INTEG_TESTS_DIR)" tests/quality --quality-report "$(QUALITY_RESULTS_DIR)"
+
+QUALITY_RESULTS_DIR ?= $(CURDIR)/build/quality
+.PHONY: quality-fast quality-extended quality-regression
+quality-fast: build-python
+	@$(UV_ENV) $(UV) run --project "$(PY_DIR)" --no-sync python -m pytest -q tests/quality --quality-report "$(QUALITY_RESULTS_DIR)"
+
+quality-extended: build-python
+	@$(UV_ENV) $(UV) run --project "$(PY_DIR)" --no-sync python -m pytest -q tests/quality --quality-extended -m slow --quality-report "$(QUALITY_RESULTS_DIR)"
+
+quality-regression: quality-extended
 
 .PHONY: java-bootstrap-test
 java-bootstrap-test:
@@ -282,6 +292,8 @@ lint:
 	$(UV_ENV) $(UV) run --project "$(PY_DIR)" --no-sync ruff format --check --config "$(PY_DIR)/pyproject.toml" scripts/test_legacy_wheel.py scripts/test_python_support.py scripts/check_python_sdist.py
 	$(UV_ENV) $(UV) run --project "$(PY_DIR)" --no-sync ruff check --config "$(PY_DIR)/pyproject.toml" bindings/java/bootstrap.py bindings/java/tests
 	$(UV_ENV) $(UV) run --project "$(PY_DIR)" --no-sync ruff format --check --config "$(PY_DIR)/pyproject.toml" bindings/java/bootstrap.py bindings/java/tests
+	$(UV_ENV) $(UV) run --project "$(PY_DIR)" --no-sync ruff check --config "$(PY_DIR)/pyproject.toml" tests/quality
+	$(UV_ENV) $(UV) run --project "$(PY_DIR)" --no-sync ruff format --check --config "$(PY_DIR)/pyproject.toml" tests/quality
 
 	$(call banner,Python: mypy (auto-install types if missing))
 	@(cd "$(PY_DIR)" && $(UV_ENV) $(UV) run --no-sync python -m mypy gr_tdigest --install-types --non-interactive)
