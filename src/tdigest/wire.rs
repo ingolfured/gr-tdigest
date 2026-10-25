@@ -101,6 +101,8 @@ impl WireVersion {
     /// Check whether this version can represent the digest's weights and config.
     /// V1 still reconstructs centroid kind using its historical weight heuristic.
     pub fn validate_digest<F: FloatLike + FloatCore>(self, td: &TDigest<F>) -> WireResult<()> {
+        td.validate_state()
+            .map_err(|_| WireError::InvalidPayload("invalid digest state"))?;
         self.validate_delta(td.delta())?;
         if td.delta().is_some()
             && (td.scale() != ScaleFamily::K2Norm || td.singleton_policy() != SingletonPolicy::Off)
@@ -758,8 +760,10 @@ fn decode_digest_v12(bytes: &[u8], version: WireVersion) -> WireResult<WireDecod
         return Err(WireError::InvalidHeader("header length mismatch"));
     }
 
-    let max_size = max_size_u64 as usize;
-    let centroid_count = centroid_count_u64 as usize;
+    let max_size = usize::try_from(max_size_u64)
+        .map_err(|_| WireError::InvalidHeader("max_size exceeds platform size"))?;
+    let centroid_count = usize::try_from(centroid_count_u64)
+        .map_err(|_| WireError::InvalidHeader("centroid_count exceeds platform size"))?;
 
     let scale = code_to_scale(scale_code)?;
     let policy = code_to_policy(policy_code, pin_per_side)?;
@@ -770,6 +774,11 @@ fn decode_digest_v12(bytes: &[u8], version: WireVersion) -> WireResult<WireDecod
         .ok_or(WireError::InvalidHeader("buffer too small"))?;
 
     let width = if centroid_count == 0 {
+        if payload_len != 0 {
+            return Err(WireError::InvalidPayload(
+                "empty digest has trailing payload",
+            ));
+        }
         WireFloatWidth::F64
     } else {
         let f32_len = expected_payload_len(version, WireFloatWidth::F32, centroid_count)?;
@@ -902,7 +911,8 @@ fn parse_v3_header(bytes: &[u8], verify_checksum: bool) -> WireResult<DecodedV3H
         }
     }
 
-    let centroid_count = centroid_count_u64 as usize;
+    let centroid_count = usize::try_from(centroid_count_u64)
+        .map_err(|_| WireError::InvalidHeader("centroid_count exceeds platform size"))?;
     let payload_len = bytes
         .len()
         .checked_sub(header_len)
@@ -922,7 +932,8 @@ fn parse_v3_header(bytes: &[u8], verify_checksum: bool) -> WireResult<DecodedV3H
         width,
         scale,
         policy,
-        max_size: max_size_u64 as usize,
+        max_size: usize::try_from(max_size_u64)
+            .map_err(|_| WireError::InvalidHeader("max_size exceeds platform size"))?,
         total_weight,
         min,
         max,

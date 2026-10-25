@@ -4,6 +4,8 @@ All notable changes to this project are documented in this file.
 
 ## [Unreleased]
 
+- Reject contradictory centroid moments and atomic bounds, zero edge pins, incomplete struct configuration and missing centroid lists; validate export and no-op paths, check binary lengths/platform sizes, and preserve rounded precision round-trips.
+
 - Check modern construction, reconstruction, precision casts and merges, including numerical-foundation caller migrations.
 
 - Merge the updated quality-gates base into the comparison documentation branch, preserving both sets of unreleased notes.
