@@ -10,6 +10,10 @@ All notable changes to this project are documented in this file.
 
 - Add JDK 25 build/runtime coverage with verified Gradle 9.1.0, retaining Java 11 bytecode and older-JDK builds.
 
+- Support Python 3.14 and 3.15 on the current NumPy and Polars stack.
+
+- Pin the optional Polars integration and support checks to Polars 1.44.2; defer Polars 2.0 evaluation.
+
 - Merge master into the K2Norm review branch, preserving both branches' unreleased notes.
 
 - Preserve original source and independent fixture LF bytes across Git checkouts; keep attribute rules focused on retained library inputs.

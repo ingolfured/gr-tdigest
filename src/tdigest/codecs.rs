@@ -523,7 +523,7 @@ where
 
     let len = m.len().min(w.len());
     let mut out = Vec::with_capacity(len);
-    for (idx, (mm, ww)) in m.into_iter().zip(w.into_iter()).enumerate() {
+    for (idx, (mm, ww)) in m.iter().zip(w.iter()).enumerate() {
         let (Some(mv), Some(wv)) = (mm, ww) else {
             return Err(CodecError::NullCentroid { row, index: idx });
         };
