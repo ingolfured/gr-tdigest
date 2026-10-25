@@ -20,6 +20,10 @@ All notable changes to this project are documented in this file.
 
 - Reject inconsistent delta settings in Polars digest structs.
 
+- Preserve residual mass and compensated modern centroid arithmetic.
+
+- Add regression tests for tiny-capacity mass retention, residual tail contributions, cancellation, intermediate overflow and fractional atomic quantile boundaries.
+
 - Cite the published K2 normalizer and explain its constants beside the scale-domain guard.
 
 - Merge master into the K2Norm review branch, preserving both branches' unreleased notes.

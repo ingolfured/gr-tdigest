@@ -197,7 +197,9 @@ impl<F: FloatLike + FloatCore> TDigest<F> {
             // Deriving that boundary independently from both centers can leave
             // a rounding-sized positive span (even for equal weights like 0.1),
             // incorrectly moving the boundary quantile to one of the means.
-            let boundary = cum_w_at_left_center + w_left / 2.0;
+            let boundary = crate::tdigest::summation::sum(
+                self.centroids()[..=left_idx].iter().map(|c| c.weight_f64()),
+            );
             return if target_index < boundary {
                 m_left
             } else if target_index > boundary {
