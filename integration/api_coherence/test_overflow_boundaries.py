@@ -52,7 +52,7 @@ def test_modern_mass_overflow_is_atomic_in_python_and_rejected_by_polars(precisi
         with pytest.raises(ValueError):
             operation()
         assert d.to_bytes() == before
-    single = pl.DataFrame({"blob": [before]}).select(d=td.from_bytes("blob"))
+    single = pl.DataFrame({"blob": [before]}).select(d=td.from_bytes("blob", precision=precision))
     frame = pl.concat([single, single])
     with pytest.raises(pl.exceptions.ComputeError):
         frame.select(td.merge_tdigests("d"))
@@ -65,7 +65,7 @@ def test_extreme_queries_are_finite_in_python_and_polars(precision, dtype):
     before = d.to_bytes()
     assert d.quantile(0.5) == 0.0
     assert d.cdf([0.0]) == [0.5]
-    frame = pl.DataFrame({"blob": [before]}).select(d=td.from_bytes("blob"))
+    frame = pl.DataFrame({"blob": [before]}).select(d=td.from_bytes("blob", precision=precision))
     assert frame.select(td.quantile("d", 0.5)).item() == 0.0
     assert frame.select(td.cdf("d", 0.0)).item() == 0.5
     assert d.to_bytes() == before

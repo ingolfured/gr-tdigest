@@ -4,7 +4,11 @@ All notable changes to this project are documented in this file.
 
 ## [Unreleased]
 
+- Merge the Polars-state precision-hint test fix into the CDF-shapes branch, preserving both branches' changelog entries.
+
 - Merge the updated Polars-state base into the CDF-shapes branch, preserving both CDF broadcasting and overflow documentation.
+
+- Supply explicit binary precision hints in Polars overflow coherence tests.
 
 - Include the original arithmetic overflow guard in published Rust and Python source packages.
 
