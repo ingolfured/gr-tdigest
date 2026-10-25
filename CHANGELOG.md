@@ -14,6 +14,8 @@ All notable changes to this project are documented in this file.
 
 - Pin the optional Polars integration and support checks to Polars 1.44.2; defer Polars 2.0 evaluation.
 
+- Cite the published K2 normalizer and explain its constants beside the scale-domain guard.
+
 - Merge master into the K2Norm review branch, preserving both branches' unreleased notes.
 
 - Preserve original source and independent fixture LF bytes across Git checkouts; keep attribute rules focused on retained library inputs.
