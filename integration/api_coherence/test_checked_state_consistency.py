@@ -18,6 +18,25 @@ def test_precision_roundtrip_keeps_raw_sum_and_remains_updatable(precision):
 
 
 @pytest.mark.parametrize("precision", ["f32", "f64"])
+def test_legacy_export_rejects_unrepresentable_mixed_unit_bounds(precision):
+    dtype = pl.Float32 if precision == "f32" else pl.Float64
+    template = pl.DataFrame({"x": pl.Series([0.0, 10.0], dtype=dtype)}).select(d=td.tdigest("x"))
+    state = template["d"][0]
+    # A valid compressed summary of two half-weight observations.
+    state.update(centroids=[{"mean": 5.0, "weight": 1.0, "atomic": False}], sum=5.0, count=1.0)
+    frame = pl.DataFrame({"d": pl.Series("d", [state], dtype=template.schema["d"])})
+    digest = td.TDigest.from_bytes(frame.select(td.to_bytes("d")).item())
+    with pytest.raises(ValueError, match="unit-weight heuristic"):
+        digest.to_bytes(version=1)
+    with pytest.raises(pl.exceptions.ComputeError, match="unit-weight heuristic"):
+        frame.select(td.to_bytes("d", version=1))
+    for version in [2, 3]:
+        restored = td.TDigest.from_bytes(digest.to_bytes(version=version))
+        assert restored.quantile(0.0) == 0.0
+        assert restored.quantile(1.0) == 10.0
+
+
+@pytest.mark.parametrize("precision", ["f32", "f64"])
 @pytest.mark.parametrize("version", [1, 2, 3])
 def test_python_and_polars_reject_contradictory_wire_sum(precision, version):
     original = td.TDigest.from_array([0.0, 10.0], precision=precision)

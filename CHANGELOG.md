@@ -4,6 +4,8 @@ All notable changes to this project are documented in this file.
 
 ## [Unreleased]
 
+- Reject TDIG v1 export when its unit-weight kind heuristic would produce contradictory atomic extrema on reconstruction.
+
 - Reject contradictory centroid moments and atomic bounds, zero edge pins, incomplete struct configuration and missing centroid lists; validate export and no-op paths, check binary lengths/platform sizes, and preserve rounded precision round-trips.
 
 - Check modern construction, reconstruction, precision casts and merges, including numerical-foundation caller migrations.

@@ -132,6 +132,23 @@ fn every_binary_version_checks_state_and_empty_payload_length() {
     wire_rejects_contradictory_stats::<f64>();
 }
 
+#[test]
+fn legacy_export_rejects_unit_weight_kind_loss_that_would_invalidate_bounds() {
+    let td = TDigest::<f64>::builder()
+        .max_size(1)
+        .singleton_policy(SingletonPolicy::Off)
+        .build()
+        .unwrap()
+        .merge_weighted_unsorted(&[0.0, 10.0], &[0.5, 0.5])
+        .unwrap();
+    assert!(td.centroids()[0].is_mixed());
+    assert_eq!(td.centroids()[0].weight_f64(), 1.0);
+    assert!(WireVersion::V1.validate_digest(&td).is_err());
+    for version in [WireVersion::V2, WireVersion::V3] {
+        assert!(decode_digest(&td.to_bytes_with_version(version)).is_ok());
+    }
+}
+
 fn replace_field(s: &Series, name: &str, replacement: Option<Series>) -> Series {
     let mut fields = s.struct_().unwrap().fields_as_series();
     fields.retain(|f| f.name().as_str() != name);

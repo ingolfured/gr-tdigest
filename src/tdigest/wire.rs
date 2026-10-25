@@ -140,6 +140,17 @@ impl WireVersion {
                         "TDIG v1 total weight exceeds u64 range",
                     ))?;
             }
+            // V1 decodes every unit weight as atomic. Do not export a mixed
+            // summary whose bounds would contradict that reconstructed kind.
+            if !td.is_empty()
+                && td.centroids().iter().all(|c| c.weight_f64() == 1.0)
+                && (td.min() != td.centroids()[0].mean_f64()
+                    || td.max() != td.centroids()[td.centroids().len() - 1].mean_f64())
+            {
+                return Err(WireError::InvalidPayload(
+                    "TDIG v1 unit-weight heuristic cannot represent mixed extrema; use v2 or v3",
+                ));
+            }
         }
         if self != Self::V3 && requires_wide_weights(td) {
             return Err(WireError::InvalidPayload(
