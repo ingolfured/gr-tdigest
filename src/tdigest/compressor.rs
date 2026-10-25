@@ -326,10 +326,15 @@ fn klimit_merge<F: FloatLike + FloatCore>(
         return Vec::new();
     }
     let total_w: f64 = items.iter().map(|c| c.weight_f64()).sum();
-    // n in the canonical Dunning K2 normalizer is the centroid count of the
-    // current merge pass; for non-K2Norm families this argument is ignored.
+    // This implementation uses the current merge pass's centroid count as n
+    // in the Dunning K2 normalizer; non-K2Norm families ignore this argument.
     let n = items.len() as f64;
 
+    // Z = 4*ln(n/d) + 24 is Dunning's published K2 normalizer, not a
+    // threshold fitted for this guard. The factor 4 comes from the centroid
+    // count bound; 24 is the chosen offset for that bound over practical n/d.
+    // See "The Size of a t-Digest", section 5:
+    // https://arxiv.org/abs/1903.09921
     // K2Norm increases with q only when its normalizer is positive. At a
     // sufficiently large delta relative to the normalized input count, a
     // nonpositive normalizer would reverse the scale and accept every merge.
