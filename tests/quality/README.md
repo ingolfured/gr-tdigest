@@ -4,7 +4,7 @@
 and weighted tests. `make quality-fast` runs just these tests and retains a
 measurement report. `make quality-extended` adds the slow matrix across storage
 budgets, input orders and merge paths, and retains its report. `make quality-regression`
-is the CI entry point for the extended tests and the source-bound Rust boundary audit.
+is the CI entry point for the extended tests.
 
 The measurements compare the modern and preserved original engines against sorted
 input after precision casting. Rank, tail, value and CDF errors stay separate;
@@ -44,24 +44,23 @@ without replacing the checked-in files or bypassing assertions. Review the
 measurement changes and provenance before replacing a baseline. The recorded
 input fixtures and their hashes are unchanged; tests never download data.
 
-## Numerical boundary controls
 
-`make quality-boundaries` runs 15 hand-checkable Rust controls. After the numerical fixes in #55, 14 pass; subnormal aggregate-mean loss remains the one **failure**. The tiny-capacity mass, residual tail, cancellation and fractional-weight median controls now pass in both precisions. These are numerical measurements, not skipped tests.
+## Reading the results
 
-The boundary inventory was updated from [CI run 153](https://github.com/ingolfured/gr-tdigest/actions/runs/40185398411) after checking that its native source hashes match the reviewed source and that the 12 changed controls all improved from FAIL to PASS without changing their expected values. The unresolved subnormal failure remains explicit.
+Rank error measures how far an answer falls from the requested position in the
+sorted data, allowing for repeated values. Value error measures distance from a
+sample percentile. CDF error compares the reported fraction below a value with
+an exact count at selected points.
 
+Both engines receive the same values and precision. Comparisons use a similar
+amount of storage for centroid fields; this does not measure total memory use.
+These datasets provide regression coverage, not a guarantee for every input.
 
-## What each measurement means
+The Rust tests in `tests/numerical_foundation.rs` cover small capacities, lost
+weight, cancellation and fractional-weight medians as part of `make test`.
+A known limitation remains: the mean of the smallest positive f64 value with
+weight 0.1 rounds to zero.
 
-- **Rank error:** distance from the requested probability to the observed-data rank interval of the returned value. Correct answers at repeated values get an interval, rather than an artificial tie penalty. Mean, maximum, median and tail errors stay separate.
-- **Value error:** difference from a declared type7 sample percentile, both in original units and divided by the middle-half data spread. If that spread is zero, use the full range, then1 for constant data. This is a specified percentile convention, not the only possible convention for discrete samples.
-- **CDF error:** difference from the exact empirical midpoint probability at135 fixed percentile-based probes (deduplicated). This is a sampled check, not a supremum/KS guarantee. The original G-Research API has no CDF method, so its CDF fields are unavailable, never fabricated.
-- **State checks:** finite/positive weights, preserved total mass and weighted contribution, ordered centroids/queries, input bounds, actual storage precision and exact state round trips. Original rounding/order diagnostics are recorded separately and do not remove inconvenient comparison outcomes.
-
-## Fair comparisons and limits
-
-Both engines receive identical observations after the same precision cast. The original source/wrapper remain checksum-bound. A count-only search chooses the largest observed original summary within the modern summary's logical field-byte budget. It never chooses a parameter by accuracy. The search trace and actual sizes are recorded; it is not a proof of a globally optimal original setting.
-
-Modern logical bytes count mean(4/8)+weight8+kind1 per centroid; original bytes count mean(4/8)+weight4. This excludes headers, padding, spare capacity, allocation and RSS. Modern wire length is recorded separately. Original states filling less than90% or exceeding100% of that field budget remain in the results but are excluded from matched-budget win/loss totals. Accuracy-limit failures **remain** in those totals when both measurements exist.
-
-These are empirical fixtures on two related domains, not a universal accuracy guarantee. Reversed single-build cases can be identical, and many profiles share data. The counts are test coverage, not independent statistical trials or confidence levels. No throughput ranking is inferred from test duration.
+The existing package tests check that source archives include these Python
+tests, their saved reference results and the compressed input data. Tests use
+the included data and never download it.

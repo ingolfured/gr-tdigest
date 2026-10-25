@@ -4,7 +4,11 @@ All notable changes to this project are documented in this file.
 
 ## [Unreleased]
 
+- Merge the updated quality-gates base into the comparison documentation branch, preserving both sets of unreleased notes.
+
 - Align Python package and compatibility notes with the single source-archive build gate.
+
+- Check that source packages contain the accuracy tests, saved results and offline data.
 
 - Run Python packaging checks alongside core CI, avoid redundant package builds, reuse Cargo dependencies for source-archive rebuilds, and retain live build logs and timings.
 
