@@ -134,10 +134,11 @@ impl NativeDigest {
         self.inner.scale_values(factor).map_err(|e| e.to_string())
     }
 
-    fn cast_precision(&self, target: DigestPrecision) -> Self {
-        Self {
-            inner: self.inner.cast_precision(target),
-        }
+    fn cast_precision(&self, target: DigestPrecision) -> Result<Self, String> {
+        self.inner
+            .try_cast_precision(target)
+            .map(|inner| Self { inner })
+            .map_err(|e| e.to_string())
     }
 }
 
@@ -566,8 +567,13 @@ pub extern "system" fn Java_gr_tdigest_TDigestNative_castPrecision(
         DigestPrecision::F64
     };
     let d = unsafe { from_handle_const::<NativeDigest>(handle) };
-    let casted = d.cast_precision(target);
-    into_handle(Box::new(casted))
+    match d.cast_precision(target) {
+        Ok(casted) => into_handle(Box::new(casted)),
+        Err(error) => {
+            throw_illegal_arg(&mut env, error);
+            0
+        }
+    }
 }
 
 #[no_mangle]

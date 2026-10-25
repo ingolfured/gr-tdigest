@@ -399,7 +399,10 @@ impl PyTDigest {
     pub fn cast_precision(&self, precision: &str) -> PyResult<Self> {
         let target = parse_cast_precision(precision)?;
         Ok(Self {
-            inner: self.inner.cast_precision(target),
+            inner: self
+                .inner
+                .try_cast_precision(target)
+                .map_err(map_frontend_err)?,
         })
     }
 
@@ -429,6 +432,7 @@ impl PyTDigest {
 
 fn merge_all_impl(digests: Bound<'_, PyAny>) -> PyResult<PyTDigest> {
     if let Ok(single) = digests.extract::<PyRef<PyTDigest>>() {
+        single.inner.validate_state().map_err(map_frontend_err)?;
         return Ok(PyTDigest {
             inner: single.inner.clone(),
         });

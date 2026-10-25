@@ -235,3 +235,13 @@ Surface mapping:
 ## Empirical accuracy contract
 
 Quality acceptance uses separate rank, percentile-value and midpoint-CDF measurements against sorted observed data, with tie intervals and actual precision casts. The original API remains numerically unchanged and has no fabricated CDF comparison. The fast suite runs in `make test`; extended results and explicit unresolved boundary controls are documented in `tests/quality/README.md`. A passing known-outcome regression check must not be presented as passing accuracy. These are measured operating envelopes, not formal guarantees or universal superiority over the original engine.
+
+## Checked modern construction and merge
+
+Modern builders, reconstruction and precision conversions return checked results. Merges validate matching configuration even for empty contributors and replace the receiver only after validating the prepared result.
+
+State validation checks centroid mass, ordering, finite statistics, aggregate-moment consistency and configuration. Fully atomic state must have extrema matching its observed points; protected-edge counts must be positive. Empty additions/merges and single-item frontend merges still validate existing state. Export validation uses the same contract. Struct reconstruction distinguishes a missing centroid list from an empty list and accepts either complete modern configuration or the legacy schema with no configuration fields. Binary reconstruction rejects trailing payload on empty digests and integer fields outside the platform range.
+
+The raw Float64 sum remains authoritative across compression and precision conversion. Moment checks compare normalized quantities, with a rounding envelope that allows prior Float32 storage even after upcasting, plus subnormal quantization. These checks reject detectable contradictions; they cannot authenticate the original observations or prove statistical accuracy from a compressed summary. Positive scaling is covered by the following change in the split.
+
+Legacy TDIG v1 export rejects mixed unit-weight summaries when its historical kind heuristic would reconstruct atomic centroids inconsistent with the stored extrema; v2/v3 preserve the centroid kinds.

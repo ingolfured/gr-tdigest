@@ -43,40 +43,25 @@ fn invalid_scaled_mass_returns_normal_errors_transactionally_in_both_precisions(
 }
 
 fn rejected_seeded_count_overflow<F: FloatLike + FloatCore>() {
-    // Public seeded states carry their own count. Keep all candidate centroid
-    // products and their sum finite so this reaches the final stored-count guard.
+    // The former test seeded a count unrelated to its centroid mass. The public
+    // constructor now rejects that state before a query or update can observe it.
     let zero = F::from_f64(0.0);
-    let mut digest = TDigest::<F>::new(
+    let error = TDigest::<F>::new(
         vec![Centroid::new_atomic_unit_f64(0.0)],
         0.0,
         1e308,
         zero,
         zero,
         1000,
-    );
-    let factor = 2.0;
-    let candidate_mass: f64 = digest
-        .centroids()
-        .iter()
-        .map(|centroid| centroid.weight_f64() * factor)
-        .sum();
-    assert_eq!(candidate_mass, 2.0);
-    assert!((digest.count() * factor).is_infinite());
-    let before = digest.to_bytes();
-    let error = digest
-        .scale_weights(factor)
-        .err()
-        .expect("invalid weight scaling must fail");
-    assert!(matches!(error, TdError::InvalidWeight { .. }), "{error}");
-    assert_eq!(
-        digest.to_bytes(),
-        before,
-        "failed scaling mutated seeded state"
-    );
+    )
+    .err()
+    .expect("malformed count must be rejected");
+    assert!(matches!(error, TdError::Invariant { .. }));
+    assert!(error.to_string().contains("count differs"));
 }
 
 #[test]
-fn seeded_count_overflow_is_rejected_after_finite_centroid_products() {
+fn malformed_seeded_count_is_rejected_before_any_operation() {
     rejected_seeded_count_overflow::<f32>();
     rejected_seeded_count_overflow::<f64>();
 }

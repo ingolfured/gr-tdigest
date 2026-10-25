@@ -223,3 +223,6 @@ These conclusions average cases within each setup; individual cases can differ.
 See the [winner and error-ratio tables](compat/quality-20261020/RESULTS.md) for each summary size and merge setup. Every ratio is **Modern error ÷ GR error**: below 1 favors Modern; above 1 favors GR. The [comparison document](comparison_design.md#modern-versus-original-gr-measured-accuracy-ci-21-october-2026) records the positioning and limits; the [test methods](tests/quality/README.md) define the metrics. `make quality-regression` protects recorded outcomes while preserving known accuracy failures.
 
 The configured JDK also supplies the direct Java compiler/runtime subprocesses used by `make test`; an environment-selected JDK does not require a separate system Java installation.
+
+Modern Rust builders, seeded construction, merges and explicit precision conversions return checked results. Malformed reconstructed state is rejected before use.
+Validation includes numerical consistency between aggregate statistics and centroids, within floating-point rounding limits. It does not prove the original data or statistical accuracy. Scaling validation is the next part of this change series.
