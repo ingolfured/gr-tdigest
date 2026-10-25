@@ -24,6 +24,8 @@ All notable changes to this project are documented in this file.
 
 - Add regression tests for tiny-capacity mass retention, residual tail contributions, cancellation, intermediate overflow and fractional atomic quantile boundaries.
 
+- Test accuracy on recorded data.
+
 - Cite the published K2 normalizer and explain its constants beside the scale-domain guard.
 
 - Merge master into the K2Norm review branch, preserving both branches' unreleased notes.
