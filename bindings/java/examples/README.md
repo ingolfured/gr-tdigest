@@ -49,6 +49,7 @@ runtime independently of the build JDK. Test that runtime explicitly.
 Both examples exercise weighted construction, array merge-all and a byte
 round-trip. They print the loaded JAR origin and native payload hash through
 `TDigest.runtimeInfo()`. The coverage manifest identifies the exact artifact and
-runtime checks actually completed. Spark 3.5 / Scala 2.12 remains provisional;
-driver/executor serialization, shuffles, broadcasts, checkpoint settings and
-executor images still require the consuming environment's checks.
+runtime checks actually completed. The [Spark consumer check](spark/README.md) exercises driver/executor
+serialization, shuffles, broadcasts and checkpoint restoration with separate
+executor JVMs. Actual checkpoint settings and executor images still require the
+consuming environment's checks.
