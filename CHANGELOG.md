@@ -4,6 +4,8 @@ All notable changes to this project are documented in this file.
 
 ## [Unreleased]
 
+- Resolve the checked-state base merge while retaining its validation fixes, transactional scaling, Polars contracts and updated quality gates.
+
 - Reject TDIG v1 export when its unit-weight kind heuristic would produce contradictory atomic extrema on reconstruction.
 
 - Reject contradictory centroid moments and atomic bounds, zero edge pins, incomplete struct configuration and missing centroid lists; validate export and no-op paths, check binary lengths/platform sizes, and preserve rounded precision round-trips.
@@ -28,10 +30,18 @@ All notable changes to this project are documented in this file.
 
 - Update boundary regression expectations for the 12 verified numerical improvements from #55; retain the unresolved subnormal-mean failure.
 
+- Adapt numerical-foundation regressions to checked modern construction after stacking the validation API migration.
+
 - Add regression tests for tiny-capacity mass retention, residual tail contributions, cancellation, intermediate overflow and fractional atomic quantile boundaries.
 - Focus the comparison guide on choosing Modern over legacy G-Research, with measured accuracy advantages, practical capabilities and explicit tradeoffs.
 
 - Document measured Modern versus G-Research accuracy winners and error ratios by dataset, summary size, precision and merge setup.
+
+- Use checked modern state and length-based CDF broadcasting in Polars.
+
+- Validate positive transformations before committing modern state.
+
+- Check modern construction, reconstruction, precision casts and merges.
 
 - Preserve residual mass and compensated modern centroid arithmetic.
 

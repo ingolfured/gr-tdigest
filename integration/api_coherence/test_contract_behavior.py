@@ -219,9 +219,20 @@ class TestEmptyDigestBehavior:
             ).alias("td")
         )
 
+        joined = groups.join(td_by_g, on="g", how="left")
+        # Missing is rejected under the explicitly selected modern contract.
+        with pytest.raises(pl.exceptions.ComputeError, match="missing digest"):
+            joined.with_columns(td2=td.merge_tdigests("td").over("g"))
+        # The application explicitly supplies a genuine empty digest for B.
+        empty = data.head(0).select(td.tdigest(
+            "x", max_size=cfg["max_size"], scale=cfg["scale_pl"],
+            singleton_policy=cfg["singleton_pl"], precision=cfg["precision_pl"],
+        ).alias("td")).item()
+        joined = joined.with_columns(pl.when(pl.col("td").is_null())
+            .then(pl.lit(empty, dtype=td_by_g.schema["td"]))
+            .otherwise(pl.col("td")).alias("td"))
         out = (
-            groups
-            .join(td_by_g, on="g", how="left")                                   # A→td; B→td=null
+            joined
             .with_columns(td2 = td.merge_tdigests(pl.col("td")).over("g"))       # B→empty digest (n=0)
             .with_columns(
                 probe_f = pl.repeat(pl.lit(2.0, dtype=pl.Float64), pl.len()),

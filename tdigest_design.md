@@ -526,10 +526,18 @@ Regression coverage in `tests/numerical_foundation.rs` checks both mean precisio
 
 ## Check modern construction, reconstruction, precision casts and merges.
 
-Builders and seeded constructors return Result and validate mass, finite ordered means, extrema, aggregate metadata and delta configuration. Merges validate all contributors, including empties, and commit only a validated independent result. Precision casts reject unrepresentable values. Rust, Python/JNI and Polars call sites propagate the checked results. Exact-point subnormal state is recognized; scaling validation follows in the next change.
+Builders and seeded constructors return Result and validate mass, finite ordered means, extrema, aggregate metadata and delta configuration. Merges validate all contributors, including empties, and commit only a validated independent result. Precision casts reject unrepresentable values. Rust, Python/JNI and Polars call sites propagate the checked results. Exact-point subnormal state is recognized; positive scaling validates candidate state before commit.
 
 The shared validator additionally compares the stored aggregate mean with a compensated normalized centroid moment. Dividing means by the largest absolute observed bound and weights by total mass avoids intermediate weighted-product overflow. The comparison allows 32 Float32 epsilons of the observed magnitude, Float64 accumulation roundoff, and absolute subnormal mean/moment quantization. Float32 rounding remains allowed after a Float64 upcast because no rounding-history field is retained. The original sum is never replaced with the lossy centroid moment. Fully atomic summaries require their first/last means to match the extrema. These are numerical consistency checks, not reconstruction of the discarded observations.
 
 Checked export and no-op update/merge paths use this validator too. Struct codecs reject missing centroid lists and partial modern configuration while retaining the six-field legacy schema. Polars integer export errors instead of narrowing configuration; binary decoders check platform-sized integers and reject nonempty payloads for empty legacy digests.
 
 V1 export additionally rejects all-unit-weight payloads whose historical atomic-kind inference would contradict mixed-cluster bounds. V2/V3 retain kinds and can represent those valid summaries.
+
+## Validate positive transformations before committing modern state.
+
+Weight and value scaling prepare independent candidate state, reject aggregate overflow and unsupported underflow, validate the candidate, and replace the receiver only on success. Exact atomic points retain their distribution when the rounded weighted moment is subnormal or zero and recover representable moments after later scaling or merging.
+
+## Use checked modern state and length-based CDF broadcasting in Polars.
+
+Polars training uses checked precision conversion and reconstruction validates every digest row. Missing digests error rather than becoming empty digests. CDF broadcasting follows row counts; List probes retain List output. Python sequence probes become a flat probe Series. Binary decoding requires a precision hint and empty decoding uses its schema.

@@ -225,4 +225,4 @@ See the [winner and error-ratio tables](compat/quality-20261020/RESULTS.md) for 
 The configured JDK also supplies the direct Java compiler/runtime subprocesses used by `make test`; an environment-selected JDK does not require a separate system Java installation.
 
 Modern Rust builders, seeded construction, merges and explicit precision conversions return checked results. Malformed reconstructed state is rejected before use.
-Validation includes numerical consistency between aggregate statistics and centroids, within floating-point rounding limits. It does not prove the original data or statistical accuracy. Scaling validation is the next part of this change series.
+Validation includes numerical consistency between aggregate statistics and centroids, within floating-point rounding limits. It does not prove the original data or statistical accuracy. Positive scaling validates independent candidate state before replacing the receiver.

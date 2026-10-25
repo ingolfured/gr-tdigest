@@ -874,7 +874,7 @@ impl<F: FloatLike + FloatCore> TDigest<F> {
     /// This preserves quantile/cdf/median shape while re-weighting the digest,
     /// subject to floating-point rounding. If a scaled centroid weight becomes
     /// zero/nonfinite or either mass total becomes nonfinite, return an error without
-    /// changing the digest. This does not validate weighted-value sum overflow.
+    /// changing the digest. Weighted-sum overflow/underflow is checked too.
     pub fn scale_weights(&mut self, factor: f64) -> TdResult<&mut Self> {
         ensure_positive_finite_scale_factor(factor, "weight scale factor must be finite and > 0")?;
         if self.centroids.is_empty() {
@@ -906,10 +906,25 @@ impl<F: FloatLike + FloatCore> TDigest<F> {
             });
         }
 
+        let scaled_sum = if self.has_subnormal_point_moment() {
+            self.centroids[0].mean_f64() * scaled_count
+        } else {
+            self.sum * factor
+        };
+        if !scaled_sum.is_finite()
+            || (self.sum != 0.0 && scaled_sum == 0.0 && !self.is_exact_point())
+        {
+            return Err(TdError::NonFiniteInput {
+                context: "scaled sum overflow or underflow",
+            });
+        }
         // Commit only after all products and both total representations pass.
-        self.centroids = scaled_centroids;
-        self.count = scaled_count;
-        self.sum *= factor;
+        let mut candidate = self.clone();
+        candidate.centroids = scaled_centroids;
+        candidate.count = scaled_count;
+        candidate.sum = scaled_sum;
+        candidate.validate_state()?;
+        *self = candidate;
         Ok(self)
     }
 
@@ -927,15 +942,42 @@ impl<F: FloatLike + FloatCore> TDigest<F> {
             return Ok(self);
         }
 
-        self.centroids = self
+        let scaled = |value: f64| -> TdResult<f64> {
+            let result = <F as FloatLike>::to_f64(F::from_f64(value * factor));
+            if !result.is_finite() || (value != 0.0 && result == 0.0) {
+                return Err(TdError::NonFiniteInput {
+                    context: "value scale overflows or underflows selected precision",
+                });
+            }
+            Ok(result)
+        };
+        for centroid in &self.centroids {
+            scaled(centroid.mean_f64())?;
+        }
+        let minimum = scaled(self.min())?;
+        let maximum = scaled(self.max())?;
+        let sum = if self.has_subnormal_point_moment() {
+            minimum * self.count
+        } else {
+            self.sum * factor
+        };
+        if !sum.is_finite() || (self.sum != 0.0 && sum == 0.0 && !self.is_exact_point()) {
+            return Err(TdError::NonFiniteInput {
+                context: "scaled sum overflow or underflow",
+            });
+        }
+        let mut candidate = self.clone();
+        candidate.centroids = self
             .centroids
             .iter()
             .map(|c| rescaled_centroid(c, factor, 1.0))
             .collect();
 
-        self.set_min(self.min() * factor);
-        self.set_max(self.max() * factor);
-        self.sum *= factor;
+        candidate.set_min(minimum);
+        candidate.set_max(maximum);
+        candidate.sum = sum;
+        candidate.validate_state()?;
+        *self = candidate;
         Ok(self)
     }
 
