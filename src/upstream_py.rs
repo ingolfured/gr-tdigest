@@ -50,7 +50,7 @@ macro_rules! generate {
                     return Err(PyValueError::new_err("Array must be non-empty!"));
                 }
                 let arr = arr.as_array().to_vec();
-                py.allow_threads(|| {
+                py.detach(|| {
                     Ok(Self {
                         inner: compact_digest(TDigest::from_array(&arr, delta)?),
                     })
@@ -74,7 +74,7 @@ macro_rules! generate {
                 let arr = arr.as_array().to_vec();
                 let weights = weights.as_array().to_vec();
 
-                py.allow_threads(|| {
+                py.detach(|| {
                     Ok(Self {
                         inner: compact_digest(TDigest::from_means_weights(&arr, &weights, delta)?),
                     })
@@ -82,19 +82,19 @@ macro_rules! generate {
             }
 
             fn quantile(&self, py: Python, x: $type) -> PyResult<$type> {
-                py.allow_threads(|| Ok(self.inner.quantile(x)?))
+                py.detach(|| Ok(self.inner.quantile(x)?))
             }
 
             fn median(&self, py: Python) -> PyResult<$type> {
-                py.allow_threads(|| Ok(self.inner.median()?))
+                py.detach(|| Ok(self.inner.median()?))
             }
 
             fn trimmed_mean(&self, py: Python, lower: $type, upper: $type) -> PyResult<$type> {
-                py.allow_threads(|| Ok(self.inner.trimmed_mean(lower, upper)?))
+                py.detach(|| Ok(self.inner.trimmed_mean(lower, upper)?))
             }
 
             fn merge(&self, py: Python, other: &Self, delta: $type) -> PyResult<Self> {
-                py.allow_threads(|| {
+                py.detach(|| {
                     Ok(Self {
                         inner: compact_digest(self.inner.merge(&other.inner, delta)?),
                     })

@@ -4,6 +4,8 @@ All notable changes to this project are documented in this file.
 
 ## [Unreleased]
 
+- Keep the Python runtime gate aligned with the tests present in the runtime-support PR, before the later NumPy buffer changes.
+
 - Document the Gradle distribution URL override for Artifactory and verify authenticated wrapper downloads fail without public fallback.
 
 - Stage verified JDK and Gradle archives from configured sources.
@@ -11,6 +13,10 @@ All notable changes to this project are documented in this file.
 - Build Java 11 bytecode with exclusive internal and offline dependencies.
 
 - Add JDK 25 build/runtime coverage with verified Gradle 9.1.0, retaining Java 11 bytecode and older-JDK builds.
+
+- Support Python 3.14 and 3.15 on the current NumPy and Polars stack.
+
+- Pin the optional Polars integration and support checks to Polars 1.44.2; defer Polars 2.0 evaluation.
 
 - Cite the published K2 normalizer and explain its constants beside the scale-domain guard.
 

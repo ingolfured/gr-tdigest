@@ -1,4 +1,4 @@
-"""Check one release wheel on supported runtimes with and without Polars.
+"""Check one release wheel on CPython3.10-3.15 and Polars-free baselines.
 
 Linux gate. --wheel reuses a real release artifact without rebuilding it.
 The matrix intentionally pins tested dependency combinations; the project lock
@@ -15,6 +15,7 @@ import os
 from pathlib import Path
 import shutil
 import subprocess
+import tarfile
 import tempfile
 import xml.etree.ElementTree as ET
 from zipfile import ZipFile
@@ -28,19 +29,20 @@ from test_legacy_wheel import (
 )
 
 MATRIX = (
-    ("3.10", "1.26.4", "1.15.3"),
-    ("3.10", "2.2.6", "1.15.3"),
-    ("3.11", "1.26.4", "1.17.1"),
-    ("3.11", "2.3.4", "1.17.1"),
-    ("3.12", "1.26.4", "1.17.1"),
-    ("3.12", "2.3.4", "1.17.1"),
-    ("3.13", "2.3.4", "1.17.1"),
-    ("3.14", "2.3.4", "1.17.1"),
-    ("3.15", "2.5.4", "1.18.1"),
+    ("3.10", "1.26.4", "1.15.3", "8.4.2"),
+    ("3.10", "2.2.6", "1.15.3", "8.4.2"),
+    ("3.11", "1.26.4", "1.17.1", "8.4.2"),
+    ("3.11", "2.3.4", "1.17.1", "8.4.2"),
+    ("3.12", "1.26.4", "1.17.1", "8.4.2"),
+    ("3.12", "2.3.4", "1.17.1", "8.4.2"),
+    ("3.13", "2.3.4", "1.17.1", "8.4.2"),
+    ("3.14", "2.5.4", "1.18.1", "9.1.1"),
+    ("3.15", "2.5.4", "1.18.1", "9.1.1"),
 )
 MODERN_TESTS = (
     "bindings/python/tests/test_api_python.py",
     "bindings/python/tests/test_api_polars.py",
+    "bindings/python/tests/test_digest_regressions.py",
     "integration/api_coherence/test_cluster_mean_bounds.py",
     "integration/api_coherence/test_subnormal_query_coherence.py",
     "integration/api_coherence/test_transactional_weight_scaling.py",
@@ -65,7 +67,7 @@ native_hash = hashlib.sha256(paths['gr_tdigest._gr_tdigest'].read_bytes()).hexdi
 assert native_hash == expected['native_sha256'], native_hash
 dist = metadata.distribution(expected['distribution'])
 assert dist.version == expected['version'], dist.version
-assert dist.metadata['Requires-Python'] == expected['requires_python'], dist.metadata['Requires-Python']
+assert sorted(part.strip() for part in dist.metadata['Requires-Python'].split(',')) == ['<3.16', '>=3.10'], dist.metadata['Requires-Python']
 versions = {name: metadata.version(name) for name in ('numpy', 'scipy', 'pytest', 'pip')}
 if expected['polars'] is None:
     assert importlib.util.find_spec('polars') is None
@@ -114,7 +116,7 @@ def inspect_wheel(wheel: Path) -> dict:
         polars_requirements = [item for item in metadata.get_all("Requires-Dist", []) if item.startswith("polars")]
         require(
             len(polars_requirements) == 1
-            and polars_requirements[0].replace(" ", "").replace("'", '"') == 'polars==1.34.0;extra=="polars"',
+            and polars_requirements[0].replace(" ", "").replace("'", '"') == 'polars==1.44.2;extra=="polars"',
             f"Polars must only be the tested optional extra, got {polars_requirements}",
         )
         native_sha = hashlib.sha256(archive.read("gr_tdigest/_gr_tdigest.abi3.so")).hexdigest()
@@ -189,23 +191,19 @@ def main() -> None:
         modern.mkdir()
         for relative in MODERN_TESTS:
             shutil.copyfile(root / relative, modern / Path(relative).name)
-        runtimes = sorted({minor for minor, _, _ in MATRIX})
-        run("python-runtimes", ["uv", "python", "install", *runtimes], work)
+        run("python-runtimes", ["uv", "python", "install", *dict.fromkeys(row[0] for row in MATRIX)], work)
         cells = []
-        variants = [(minor, numpy, scipy, "1.34.0") for minor, numpy, scipy in MATRIX]
-        # Exercise the base installation on every runtime, including the oldest
-        # NumPy baseline and the newer runtimes that require NumPy 2.x.
+        variants = [(minor, numpy, scipy, pytest, "1.44.2") for minor, numpy, scipy, pytest in MATRIX]
         baselines = {}
-        for minor, numpy, scipy in MATRIX:
-            baselines.setdefault(minor, (minor, numpy, scipy, None))
+        for minor, numpy, scipy, pytest in MATRIX:
+            baselines.setdefault(minor, (minor, numpy, scipy, pytest, None))
         variants.extend(baselines.values())
-        for minor, numpy, scipy, polars in variants:
+        for minor, numpy, scipy, pytest, polars in variants:
             label = f"py{minor.replace('.', '')}-numpy{numpy.split('.')[0]}" + ("-no-polars" if polars is None else "")
             venv = work / label
             run(label + "-venv", ["uv", "venv", "--python", minor, str(venv)], work)
             python = str(venv / "bin/python")
             run(label + "-pip", [python, "-I", "-m", "ensurepip", "--upgrade"], work)
-            pytest = "9.1.1" if minor == "3.15" else "8.4.2"
             requirements = [f"numpy=={numpy}", f"scipy=={scipy}", f"pytest=={pytest}"]
             if polars:
                 requirements.append(f"polars=={polars}")
@@ -280,9 +278,21 @@ def main() -> None:
                 result["installed"] = json.loads(imports)
                 suites = [("compatibility", [tests, parity], 208)]
                 if cell["polars"]:
-                    suites.append(("modern", [modern], 90))
+                    suites.append(("modern", [modern], 112))
                 else:
-                    suites.append(("modern_python", [modern / "test_api_python.py"], 26))
+                    suites.append(
+                        (
+                            "modern_python",
+                            [
+                                modern / name
+                                for name in (
+                                    "test_api_python.py",
+                                    "test_digest_regressions.py",
+                                )
+                            ],
+                            48,
+                        )
+                    )
                 for suite, directories, expected in suites:
                     xml = output / f"{label}-{suite}.xml"
                     run(
@@ -316,9 +326,102 @@ def main() -> None:
             len(results) == len(variants) and all(result["status"] == "PASS" for result in results),
             f"runtime support failed; inspect {output}",
         )
+        # Rebuild the verified source archive with each newly requested build
+        # interpreter. These are fresh artifacts, never retagged release wheels.
+        source_results = []
+        if sdist:
+            unpack = work / "source"
+            unpack.mkdir()
+            with tarfile.open(sdist, "r:gz") as archive:
+                # verify_sdist_contents already rejected traversal, links and
+                # duplicate paths. data_filter is also used where available.
+                if hasattr(tarfile, "data_filter"):
+                    archive.extractall(unpack, filter="data")
+                else:
+                    archive.extractall(unpack)
+            (source,) = unpack.iterdir()
+            for minor in ("3.12", "3.14", "3.15"):
+                cell = next(c for c in cells if c["python"] == minor and c["numpy"].startswith("2.") and c["polars"])
+                label, python = "source-py" + minor.replace(".", ""), cell["executable"]
+                wheels = output / label
+                run(
+                    label + "-build",
+                    [
+                        "uv",
+                        "run",
+                        "--project",
+                        str(root / "bindings/python"),
+                        "--no-sync",
+                        "maturin",
+                        "build",
+                        "--release",
+                        "--locked",
+                        "-F",
+                        "python",
+                        "--compatibility",
+                        "linux",
+                        "--interpreter",
+                        python,
+                        "-o",
+                        str(wheels),
+                    ],
+                    source,
+                    build=True,
+                )
+                (rebuilt,) = wheels.glob("*.whl")
+                built = inspect_wheel(rebuilt)
+                run(
+                    label + "-install",
+                    [
+                        "uv",
+                        "pip",
+                        "install",
+                        "--python",
+                        python,
+                        "--no-deps",
+                        "--reinstall-package",
+                        "gr-tdigest",
+                        str(rebuilt),
+                    ],
+                    work,
+                )
+                run(label + "-pip-check", [python, "-I", "-m", "pip", "check"], work)
+                installed = json.loads(
+                    run(label + "-imports", [python, "-I", "-c", INSPECT, json.dumps({**built, **cell})], work)
+                )
+                xml = output / (label + ".xml")
+                run(
+                    label + "-tests",
+                    [
+                        python,
+                        "-I",
+                        "-m",
+                        "pytest",
+                        "-q",
+                        "-c",
+                        "/dev/null",
+                        "-p",
+                        "no:cacheprovider",
+                        "-o",
+                        "xfail_strict=true",
+                        "--junitxml",
+                        str(xml),
+                        str(tests),
+                        str(parity),
+                        str(modern),
+                    ],
+                    work,
+                )
+                passed = check_results(xml, 320)
+                source_results.append({"python": minor, "artifact": built, "installed": installed, "passed": passed})
+                (output / "source-builds.json").write_text(json.dumps(source_results, indent=2) + "\n")
+            require(len(source_results) == 3, "incomplete source-build matrix")
     print(
         f"{len(MATRIX)} full cells passed compatibility and modern checks; "
-        f"{len(baselines)} Polars-free cells passed 208 + 26 each; evidence: {output}"
+        f"{len(baselines)} Polars-free cells passed; evidence: {output}"
+    )
+    print(
+        "Source rebuilds: " + ("3.12, 3.14 and 3.15 passed" if sdist else "not requested: no source archive supplied")
     )
 
 
