@@ -17,6 +17,7 @@ import shutil
 import subprocess
 import tarfile
 import tempfile
+import time
 import xml.etree.ElementTree as ET
 from zipfile import ZipFile
 
@@ -168,6 +169,13 @@ def main() -> None:
             "PIP_NO_INPUT": "1",
         }
     )
+    # Source archives are extracted into temporary directories. Keep dependency
+    # artifacts in the same cached target as the checkout's release-wheel build;
+    # Cargo still fingerprints and compiles the extracted source independently.
+    target = Path(env.get("CARGO_TARGET_DIR", root / "target"))
+    if not target.is_absolute():
+        target = root / target
+    target = target.resolve()
     journal = []
 
     def run(label: str, command: list[str], cwd: Path, *, build: bool = False) -> str:
@@ -177,17 +185,29 @@ def main() -> None:
             # The project tools already exist in the development environment;
             # these are never used by the isolated installed-wheel test cells.
             command_env["UV_PROJECT_ENVIRONMENT"] = str(root / ".venv")
-            # Reuse dependency artifacts when compiling the verified archive
-            # outside the checkout. Cargo still rebuilds the extracted sources.
-            command_env["CARGO_TARGET_DIR"] = str((root / env.get("CARGO_TARGET_DIR", "target")).resolve())
-        result = subprocess.run(
-            command, cwd=cwd, env=command_env, text=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT
-        )
-        (output / (label + ".log")).write_text(result.stdout)
-        journal.append({"label": label, "command": command, "cwd": str(cwd), "exit_code": result.returncode})
+            command_env["CARGO_TARGET_DIR"] = str(target)
+        entry = {"label": label, "command": command, "cwd": str(cwd), "exit_code": None}
+        if build:
+            entry["cargo_target_dir"] = str(target)
+        journal.append(entry)
         (output / "commands.json").write_text(json.dumps(journal, indent=2) + "\n")
-        require(result.returncode == 0, f"{label} failed; see {output / (label + '.log')}")
-        return result.stdout
+        start = time.perf_counter()
+        log = output / (label + ".log")
+        with log.open("w", buffering=1) as stream:
+            process = subprocess.Popen(
+                command, cwd=cwd, env=command_env, text=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT
+            )
+            assert process.stdout is not None
+            for line in process.stdout:
+                stream.write(line)
+                if build:
+                    print(line, end="", flush=True)
+            entry["exit_code"] = process.wait()
+        entry["elapsed_seconds"] = time.perf_counter() - start
+        (output / "commands.json").write_text(json.dumps(journal, indent=2) + "\n")
+        print(f"{label} completed in {entry['elapsed_seconds']:.1f}s", flush=True)
+        require(entry["exit_code"] == 0, f"{label} failed; see {log}")
+        return log.read_text()
 
     with tempfile.TemporaryDirectory(prefix="tdigest-support-cells-") as temporary:
         work = Path(temporary)

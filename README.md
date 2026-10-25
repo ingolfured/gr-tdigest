@@ -144,6 +144,16 @@ promise the same numbers. See [source provenance](src/upstream/PROVENANCE.md).
 
 The unchanged upstream Python suite runs in `make test` and Linux CI. `make python-support-test` builds one release Linux wheel from the verified source archive on Python 3.10 and tests it outside the checkout on Python 3.10–3.15, with both NumPy lines on 3.10–3.12 and NumPy 2.x on newer runtimes. Each Python version also gets a Polars-free installation cell. Cargo dependency artifacts are reused; the gate compiles the archive once instead of rebuilding the same ABI3 extension for each build interpreter. See [legacy compatibility](compat/gr_tdigest_vs_tdigest_rs.md).
 
+CI installs development dependencies before `make build` compiles the package.
+Installed-wheel and source-archive compatibility run in a separate job alongside
+the main build, unit tests and accuracy checks.
+The source-archive build reuses the checkout's Cargo target directory (or an
+explicit `CARGO_TARGET_DIR`). One genuine ABI3 wheel is built from the extracted
+source archive and checked on every supported runtime. `make python-support-test`
+streams compiler progress and retains
+per-command timings and logs in `build/python-support/`; CI uploads these even
+when a run fails or is cancelled.
+
 ## Changelog
 - See `CHANGELOG.md`.
 
