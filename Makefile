@@ -133,7 +133,7 @@ API_JAR := $(DIST)/$(JAR_ARTIFACT)-latest.jar
 JAVA_WRAPPER_CHECK:
 	@test -x "$(GRADLEW_PATH)" || { \
 	  echo "$(STYLE_ERR)✗ Missing Gradle wrapper ($(GRADLEW_PATH))$(STYLE_RESET)"; \
-	  echo "  Bootstrap once: (cd $(JAVA_SRC) && gradle wrapper --gradle-version 9.1.0 --distribution-type bin)"; \
+	  echo "  Bootstrap once: (cd $(JAVA_SRC) && gradle wrapper --gradle-version 8.14.5 --distribution-type bin)"; \
 	  exit 1; }
 
 # ==============================================================================
@@ -158,7 +158,7 @@ setup:
 	$(call need,uv)
 	@test -x "$(GRADLEW_PATH)" || { \
 	  echo "$(STYLE_ERR)✗ Missing Gradle wrapper ($(GRADLEW_PATH))$(STYLE_RESET)"; \
-	  echo "  Bootstrap once: (cd $(JAVA_SRC) && gradle wrapper --gradle-version 9.1.0 --distribution-type bin)"; \
+	  echo "  Bootstrap once: (cd $(JAVA_SRC) && gradle wrapper --gradle-version 8.14.5 --distribution-type bin)"; \
 	  exit 1; }
 	$(UV) --version
 	$(call banner,Create repo .venv and install Python deps (all groups))
@@ -211,6 +211,10 @@ build-python:
 	$(call banner,Build: Python extension (maturin develop, dev))
 	@(cd "$(PY_DIR)" && $(UV_ENV) $(UV) run --no-sync maturin develop -F python)
 
+.PHONY: java-prepare
+java-prepare:
+	@"$${TDIGEST_BOOTSTRAP_PYTHON:-python3}" "$(JAVA_SRC)/bootstrap.py" --tdigest-prepare
+
 build-java: JAVA_WRAPPER_CHECK
 	$(call banner,Build: Java via Gradle (clean + jar))
 	@GRADLE_USER_HOME="$(GRADLE_USER_HOME)" "$(GRADLE)" --no-daemon --console=plain -p "$(JAVA_SRC)" clean jar
@@ -234,7 +238,11 @@ rust-test:
 py-test: build-python
 	$(UV_ENV) $(UV) run --project "$(PY_DIR)" --no-sync python -m pytest -q "$(PY_TESTS_DIR)" "$(INTEG_TESTS_DIR)"
 
-java-test: JAVA_WRAPPER_CHECK
+.PHONY: java-bootstrap-test
+java-bootstrap-test:
+	@"$${TDIGEST_BOOTSTRAP_PYTHON:-python3}" -m unittest discover -s "$(JAVA_SRC)/tests" -v
+
+java-test: JAVA_WRAPPER_CHECK java-bootstrap-test
 	@GRADLE_USER_HOME="$(GRADLE_USER_HOME)" "$(GRADLE)" --no-daemon --console=plain -p "$(JAVA_SRC)" test
 
 compat-test: build-python
@@ -272,6 +280,8 @@ lint:
 	$(call banner,Python: installed-artifact gate scripts)
 	$(UV_ENV) $(UV) run --project "$(PY_DIR)" --no-sync ruff check --config "$(PY_DIR)/pyproject.toml" scripts/test_legacy_wheel.py scripts/test_python_support.py scripts/check_python_sdist.py
 	$(UV_ENV) $(UV) run --project "$(PY_DIR)" --no-sync ruff format --check --config "$(PY_DIR)/pyproject.toml" scripts/test_legacy_wheel.py scripts/test_python_support.py scripts/check_python_sdist.py
+	$(UV_ENV) $(UV) run --project "$(PY_DIR)" --no-sync ruff check --config "$(PY_DIR)/pyproject.toml" bindings/java/bootstrap.py bindings/java/tests
+	$(UV_ENV) $(UV) run --project "$(PY_DIR)" --no-sync ruff format --check --config "$(PY_DIR)/pyproject.toml" bindings/java/bootstrap.py bindings/java/tests
 
 	$(call banner,Python: mypy (auto-install types if missing))
 	@(cd "$(PY_DIR)" && $(UV_ENV) $(UV) run --no-sync python -m mypy gr_tdigest --install-types --non-interactive)

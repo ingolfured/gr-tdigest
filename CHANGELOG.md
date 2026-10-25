@@ -4,6 +4,14 @@ All notable changes to this project are documented in this file.
 
 ## [Unreleased]
 
+- Document the Gradle distribution URL override for Artifactory and verify authenticated wrapper downloads fail without public fallback.
+
+- Stage verified JDK and Gradle archives from configured sources.
+
+- Build Java 11 bytecode with exclusive internal and offline dependencies.
+
+- Add JDK 25 build/runtime coverage with verified Gradle 9.1.0, retaining Java 11 bytecode and older-JDK builds.
+
 - Cite the published K2 normalizer and explain its constants beside the scale-domain guard.
 
 - Merge master into the K2Norm review branch, preserving both branches' unreleased notes.

@@ -13,6 +13,18 @@ if "%DIRNAME%" == "" set DIRNAME=.
 set APP_BASE_NAME=%~n0
 set APP_HOME=%DIRNAME%
 
+@rem Optional internal-source/offline bootstrap (normal wrapper needs no Python).
+if defined TDIGEST_JDK_URL goto tdigestBootstrap
+if defined TDIGEST_GRADLE_URL goto tdigestBootstrap
+if defined TDIGEST_GRADLE_HOME goto tdigestBootstrap
+if defined TDIGEST_OFFLINE goto tdigestBootstrap
+goto tdigestNormal
+:tdigestBootstrap
+if not defined TDIGEST_BOOTSTRAP_PYTHON set TDIGEST_BOOTSTRAP_PYTHON=python
+"%TDIGEST_BOOTSTRAP_PYTHON%" "%APP_HOME%bootstrap.py" %*
+exit /b %ERRORLEVEL%
+:tdigestNormal
+
 @rem Add default JVM options here. You can also use JAVA_OPTS and GRADLE_OPTS to pass JVM options to this script.
 set DEFAULT_JVM_OPTS=
 

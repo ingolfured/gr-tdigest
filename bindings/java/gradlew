@@ -24,6 +24,11 @@ cd "`dirname \"$PRG\"`/" >/dev/null
 APP_HOME="`pwd -P`"
 cd "$SAVED" >/dev/null
 
+# Optional internal-source/offline bootstrap. Normal wrapper use needs no Python.
+if [ -n "${TDIGEST_JDK_URL:-}${TDIGEST_GRADLE_URL:-}${TDIGEST_GRADLE_HOME:-}${TDIGEST_OFFLINE:-}" ]; then
+    exec "${TDIGEST_BOOTSTRAP_PYTHON:-python3}" "$APP_HOME/bootstrap.py" "$@"
+fi
+
 APP_NAME="Gradle"
 APP_BASE_NAME=`basename "$0"`
 
