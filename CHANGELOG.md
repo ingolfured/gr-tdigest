@@ -4,6 +4,10 @@ All notable changes to this project are documented in this file.
 
 ## [Unreleased]
 
+- Merge the Polars-state precision-hint test fix into the CDF-shapes branch, preserving both branches' changelog entries.
+
+- Merge the updated Polars-state base into the CDF-shapes branch, preserving both CDF broadcasting and overflow documentation.
+
 - Supply explicit binary precision hints in Polars overflow coherence tests.
 
 - Include the original arithmetic overflow guard in published Rust and Python source packages.
@@ -13,6 +17,8 @@ All notable changes to this project are documented in this file.
 - Reject TDIG v1 export when its unit-weight kind heuristic would produce contradictory atomic extrema on reconstruction.
 
 - Reject contradictory centroid moments and atomic bounds, zero edge pins, incomplete struct configuration and missing centroid lists; validate export and no-op paths, check binary lengths/platform sizes, and preserve rounded precision round-trips.
+
+- Select Polars CDF broadcasting by input length, preserve List expression output, and normalize Python probe sequences.
 
 - Check Polars training and reconstructed state, reject missing digest rows, and require explicit binary precision hints.
 
