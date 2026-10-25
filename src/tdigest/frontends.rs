@@ -534,6 +534,7 @@ Rebuild or cast to a shared configuration before merge.",
         }
 
         let first = digests[0].clone();
+        first.validate_state()?;
         let mut acc = first.clone();
         for d in digests.iter().skip(1) {
             acc.merge_in_place(d)?;

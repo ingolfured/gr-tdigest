@@ -432,6 +432,7 @@ impl PyTDigest {
 
 fn merge_all_impl(digests: Bound<'_, PyAny>) -> PyResult<PyTDigest> {
     if let Ok(single) = digests.extract::<PyRef<PyTDigest>>() {
+        single.inner.validate_state().map_err(map_frontend_err)?;
         return Ok(PyTDigest {
             inner: single.inner.clone(),
         });
