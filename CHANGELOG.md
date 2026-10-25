@@ -4,11 +4,13 @@ All notable changes to this project are documented in this file.
 
 ## [Unreleased]
 
-- Apply the lint-required formatting to the quality fixture and modern Python consumer regressions.
+- Remove unused imports and normalize spacing in modern Python consumer regressions for CI lint.
 
 - Resolve the modern Python chapter against the updated quality base, preserving checked-state validation and the Python object API contracts.
 
 - Expose weighted modern Python operations and independent state copies.
+
+- Format the quality-run fixture to satisfy the CI Ruff formatting check.
 
 - Resolve the quality chapter against the pytest-based gates, retaining source/native stability checks and removing the retired boundary-runner adapter.
 
