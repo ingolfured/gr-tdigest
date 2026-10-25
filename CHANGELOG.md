@@ -4,6 +4,24 @@ All notable changes to this project are documented in this file.
 
 ## [Unreleased]
 
+- Separate previously merged JVM consumers, Python typing, delivery gates and original-oracle work from Polars compatibility review.
+
+- Reject absolute paths and symlink escapes in the local Maven fixture so requests cannot read outside its repository.
+
+- Verify toolchain selection, source archives and installed artifacts.
+
+- Preserve the independent original Rust oracle, pinned lockfile and recorded evidence.
+
+- Ship installed Python API documentation and typing metadata.
+
+- Compile Scala and Kotlin consumers through authenticated Maven fixtures.
+
+- Load and identify native payloads outside the build checkout.
+
+- Keep runtime payload identity with the following standalone-loader change.
+
+- Expose fluent JVM operations, safe serialization and native failures.
+
 - Remove unused imports and normalize spacing in modern Python consumer regressions for CI lint.
 
 - Resolve the modern Python chapter against the updated quality base, preserving checked-state validation and the Python object API contracts.
