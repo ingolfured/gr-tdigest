@@ -17,6 +17,7 @@ pub mod precision;
 pub mod quantile;
 pub mod scale;
 pub mod singleton_policy;
+pub(crate) mod summation;
 pub mod tdigest;
 pub mod wire;
 

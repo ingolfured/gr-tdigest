@@ -110,13 +110,11 @@ impl<F: FloatLike + FloatCore> Centroid<F> {
         self.mean
     }
 
-    /// Compatibility view of the mass in the mean's precision.
-    ///
-    /// This conversion may round, underflow, or overflow for `F = f32`.
-    /// Use [`Self::weight_f64`] for the authoritative stored mass.
+    /// Statistical mass in Float64, independent of mean precision.
+    /// This modern accessor never narrows Float32-mean digest weights.
     #[inline]
-    pub fn weight(&self) -> F {
-        F::from_f64(self.weight)
+    pub fn weight(&self) -> f64 {
+        self.weight
     }
 
     #[inline]
