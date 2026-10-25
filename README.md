@@ -1,7 +1,9 @@
 # tdigest-rs
 
-Java builds support JDK11 and17, including an optional checksum-verified JDK and
-Gradle bootstrap from internal URLs or local archives. Configure
+Java builds cover JDK 11, 17, 21 and 25 while targeting Java 11 bytecode.
+JDK 25 uses Gradle 9.1; the default Gradle 8.14.5 retains JDK 11 build support.
+An optional checksum-verified JDK and
+Gradle bootstrap supports internal URLs or local archives. Configure
 `TDIGEST_JDK_URL`, `TDIGEST_GRADLE_URL` and an exclusive
 `TDIGEST_MAVEN_REPOSITORY_URL`; use `TDIGEST_OFFLINE=1` with prepared caches.
 See [Java setup and offline builds](bindings/java/README.md) for all environment
@@ -25,6 +27,12 @@ T-Digest provides a mergeable summary of a distribution, enabling approximate qu
 - 🖥️ Rust CLI subcommands (`build`, `quantile`, `cdf`, `median`) with `text|csv|json|ndjson` ingestion.
 - 🎚️ Scale families: `Quad`, `K1`, `K2`, `K3`.
 - 🔩 Singleton handling policy: edge-precision (`keep N`), respect singletons, or uniform merge.
+
+## Why choose Modern over legacy GR?
+
+**Modern is our recommended engine for new applications.** At matched logical centroid-field byte budgets, it wins average rank error in **279/324** recorded real-data cases, tail rank error in **295/324**, and average value error in **260/324**. It also provides CDF queries, fractional weights, portable TDIG state and a shared Rust/Python/Polars/Java core.
+
+For a Bike single build at size 128, Modern has about **0.017 times GR's average rank error** and **0.035 times its average value error**. Energy also favors Modern on average accuracy, while GR has lower peak value error. See [why choose Modern](comparison_design.md) for the recommendation and [setup tables](compat/quality-20261020/RESULTS.md) for the full comparison, including cases GR wins.
 
 ## Examples
 
@@ -132,9 +140,9 @@ packager respect `CARGO_TARGET_DIR` directly.
 - Weighted medians use centroid mass. TDIG v3 and Polars round-trips retain compression configuration and centroid kind.
 - Delta-mode export requires TDIG v3; older formats cannot retain delta.
 - Rust: 1.95.0 (pinned; edition 2021)
-- Python: CPython 3.10–3.15 (ABI3 wheels built with maturin); development tools default to 3.12
+- Python: CPython 3.10–3.15 (standard GIL builds, ABI3 wheels built with maturin); development tools default to 3.12
 - NumPy: 1.26.4 or the 2.x line; tested combinations are recorded in `scripts/test_python_support.py`
-- Polars: optional; install `gr-tdigest[polars]` for the tested 2.0.0 integration
+- Polars: optional; install `gr-tdigest[polars]` for the tested 1.44.2 integration
 
 Existing G-Research applications keep `from tdigest_rs import TDigest` and
 `TDigest.from_array(values, delta=300)`. This interface uses the unmodified
@@ -143,7 +151,7 @@ arithmetic, uint32 weights, and the original copy/pickle behavior. The new engin
 is opt-in through `from gr_tdigest import TDigest`; using `delta` there does not
 promise the same numbers. See [source provenance](src/upstream/PROVENANCE.md).
 
-The unchanged upstream Python suite runs in `make test` and Linux CI. `make python-support-test` builds one release Linux wheel and tests it outside the checkout on Python 3.10–3.15 (both NumPy lines on 3.10–3.12), plus source-archive rebuilds on 3.12, 3.14 and 3.15. See [legacy compatibility](compat/gr_tdigest_vs_tdigest_rs.md).
+The unchanged upstream Python suite runs in `make test` and Linux CI. `make python-support-test` builds one release Linux wheel and tests it outside the checkout on Python 3.10–3.15 (both NumPy lines on 3.10–3.12), Polars-free installation cells on every runtime, plus source-archive rebuilds on 3.12, 3.14 and 3.15. See [legacy compatibility](compat/gr_tdigest_vs_tdigest_rs.md).
 
 ## Changelog
 - See `CHANGELOG.md`.
@@ -186,7 +194,7 @@ Modern training and updates copy compatible aligned, native-endian contiguous on
 
 `make test` now includes fast quality checks using recorded bike-rental and household-energy data, varied distributions and exact weighted references. `make quality-extended` measures full datasets, both precisions, several summary sizes and40-way merges. It retains failing profiles and reports percentile position, value and cumulative-probability errors separately.
 
-The modern engine is not universally more accurate than original G-Research:
+The recorded comparison supports choosing Modern for better average accuracy on these real-data workloads:
 
 - **Bike:** Modern wins average rank, tail rank, average value and peak value error in every grouped size/merge setup tested.
 - **Energy:** Modern wins average rank, tail rank and average value error. GR wins peak value error: Modern's error is **1.81–1.86 times GR's** across the grouped setups.
