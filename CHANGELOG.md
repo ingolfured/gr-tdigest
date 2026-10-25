@@ -4,9 +4,37 @@ All notable changes to this project are documented in this file.
 
 ## [Unreleased]
 
-- Expose weighted modern Python operations and independent state copies.
+- Resolve the modern Python chapter against the updated quality base, preserving checked-state validation and the Python object API contracts.
 
 - Expose weighted modern Python operations and independent state copies.
+
+- Resolve the quality chapter against the pytest-based gates, retaining source/native stability checks and removing the retired boundary-runner adapter.
+
+- Resolve the checked-state base merge while retaining its validation fixes, transactional scaling, Polars contracts and updated quality gates.
+
+- Reject TDIG v1 export when its unit-weight kind heuristic would produce contradictory atomic extrema on reconstruction.
+
+- Reject contradictory centroid moments and atomic bounds, zero edge pins, incomplete struct configuration and missing centroid lists; validate export and no-op paths, check binary lengths/platform sizes, and preserve rounded precision round-trips.
+
+- Check modern construction, reconstruction, precision casts and merges, including numerical-foundation caller migrations.
+
+- Merge the updated quality-gates base into the comparison documentation branch, preserving both sets of unreleased notes.
+
+- Align Python package and compatibility notes with the single source-archive build gate.
+
+- Check that source packages contain the accuracy tests, saved results and offline data.
+
+- Run Python packaging checks alongside core CI, avoid redundant package builds, reuse Cargo dependencies for source-archive rebuilds, and retain live build logs and timings.
+
+- Speed up Python CI by compiling one release wheel from the verified source archive and checking it across all runtime cells, removing three repeated optimized builds.
+
+- Document pytest profile selection, expected accuracy failures and candidate-baseline review.
+
+- Keep stacked CI and source-archive checks aligned with pytest accuracy profiles.
+
+- Run accuracy profiles as parametrized pytest cases, with opt-in extended checks and retained baseline reports.
+
+- Update boundary regression expectations for the 12 verified numerical improvements from #55; retain the unresolved subnormal-mean failure.
 
 - Clarify legacy versus Modern accuracy tradeoffs, historical benchmark scope, and the distinction between regression checks and accuracy passes.
 
@@ -20,6 +48,14 @@ All notable changes to this project are documented in this file.
 - Focus the comparison guide on choosing Modern over legacy G-Research, with measured accuracy advantages, practical capabilities and explicit tradeoffs.
 
 - Document measured Modern versus G-Research accuracy winners and error ratios by dataset, summary size, precision and merge setup.
+
+- Use checked modern state and length-based CDF broadcasting in Polars.
+
+- Validate positive transformations before committing modern state.
+
+- Check modern construction, reconstruction, precision casts and merges.
+
+- Preserve residual mass and compensated modern centroid arithmetic.
 
 - Test accuracy on recorded data and deterministic distributions.
 
@@ -38,6 +74,8 @@ All notable changes to this project are documented in this file.
 - Reject inconsistent delta settings in Polars digest structs.
 
 - Copy NumPy query outputs without changing ownership or results.
+
+- Cite the published K2 normalizer and explain its constants beside the scale-domain guard.
 
 - Merge master into the K2Norm review branch, preserving both branches' unreleased notes.
 

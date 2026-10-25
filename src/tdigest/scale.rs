@@ -67,6 +67,8 @@ pub(crate) fn q_to_k(q: f64, d: f64, family: ScaleFamily, n: f64) -> f64 {
         }
         // k2_norm: canonical Dunning K2 with n-aware normalizer.
         // Paper eq (8): k(q) = δ / (4·ln(n/δ) + 24) · ln(q/(1-q)).
+        // Normalizer constants and size-bound rationale: Dunning,
+        // "The Size of a t-Digest", section 5, https://arxiv.org/abs/1903.09921.
         ScaleFamily::K2Norm => {
             let factor = d / ((n / d).ln().mul_add(4.0, 24.0));
             factor * (qq / (1.0 - qq)).ln()
