@@ -1,4 +1,4 @@
-"""Check one release wheel on CPython3.10-3.15 and Polars-free baselines.
+"""Check one release wheel on CPython3.10-3.15, Polars1/2 and Polars-free baselines.
 
 Linux gate. --wheel reuses a real release artifact without rebuilding it.
 The matrix intentionally pins tested dependency combinations; the project lock
@@ -43,8 +43,10 @@ MATRIX = (
 # Coverage inventory for the staged suites in this revision. Keep source-build
 # totals derived from these values, and reject failures/skips independently.
 COMPATIBILITY_CASES = 208
-MODERN_CASES = 225
+MODERN_CASES = 233
 NUMPY_ONLY_CASES = 120
+
+POLARS_VERSIONS = ("1.0.0", "1.20.0", "1.38.1", "1.44.2", "2.0.0")
 
 MODERN_TESTS = (
     "bindings/python/tests/test_api_python.py",
@@ -132,7 +134,7 @@ def inspect_wheel(wheel: Path) -> dict:
         polars_requirements = [item for item in metadata.get_all("Requires-Dist", []) if item.startswith("polars")]
         require(
             len(polars_requirements) == 1
-            and polars_requirements[0].replace(" ", "").replace("'", '"') == 'polars==2.0.0;extra=="polars"',
+            and polars_requirements[0].replace(" ", "").replace("'", '"') == 'polars>=1.0.0;extra=="polars"',
             f"Polars must only be the tested optional extra, got {polars_requirements}",
         )
         native_sha = hashlib.sha256(archive.read("gr_tdigest/_gr_tdigest.abi3.so")).hexdigest()
@@ -200,7 +202,11 @@ def main() -> None:
         require(result.returncode == 0, f"{label} failed; see {output / (label + '.log')}")
         return result.stdout
 
-    with tempfile.TemporaryDirectory(prefix="tdigest-support-cells-") as temporary:
+    # Large dependency matrices can exhaust a tmpfs-backed /tmp. Keep cells
+    # beside build outputs so uv can also hardlink from its disk-backed cache.
+    scratch = root / "build"
+    scratch.mkdir(exist_ok=True)
+    with tempfile.TemporaryDirectory(prefix="tdigest-support-cells-", dir=scratch) as temporary:
         work = Path(temporary)
         tests, parity = stage_compatibility_tests(root, work)
         modern = work / "modern"
@@ -209,10 +215,15 @@ def main() -> None:
             shutil.copyfile(root / relative, modern / Path(relative).name)
         run("python-runtimes", ["uv", "python", "install", *dict.fromkeys(row[0] for row in MATRIX)], work)
         cells = []
-        variants = [(minor, numpy, scipy, pytest, "2.0.0") for minor, numpy, scipy, pytest in MATRIX]
-        variants.extend((("3.10", "1.26.4", "1.15.3", "8.4.2", None), ("3.15", "2.5.4", "1.18.1", "9.1.1", None)))
+        variants = [(*row, polars) for row in MATRIX for polars in POLARS_VERSIONS]
+        baselines = {}
+        for minor, numpy, scipy, pytest in MATRIX:
+            baselines.setdefault(minor, (minor, numpy, scipy, pytest, None))
+        variants.extend(baselines.values())
         for minor, numpy, scipy, pytest, polars in variants:
-            label = f"py{minor.replace('.', '')}-numpy{numpy}" + ("-no-polars" if polars is None else "")
+            label = f"py{minor.replace('.', '')}-numpy{numpy}" + (
+                "-no-polars" if polars is None else f"-polars{polars}"
+            )
             venv = work / label
             run(label + "-venv", ["uv", "venv", "--python", minor, str(venv)], work)
             python = str(venv / "bin/python")
@@ -282,13 +293,24 @@ def main() -> None:
             result = {**cell, "status": "RUNNING"}
             results.append(result)
             try:
-                # Dependencies are already present. Keep normal pip dependency
-                # checking enabled: the base cell must not request Polars, and
-                # the extra cells must resolve the advertised Polars extra.
-                requirement = str(wheel) + ("[polars]" if cell["polars"] else "")
-                run(label + "-install", [python, "-I", "-m", "pip", "install", "--no-index", requirement], work)
-                run(label + "-pip-check", [python, "-I", "-m", "pip", "check"], work)
-                imports = run(label + "-imports", [python, "-I", "-c", INSPECT, json.dumps({**artifact, **cell})], work)
+                # Start with the user's existing Polars. Neither an ordinary
+                # install nor opting into the extra may replace that version.
+                run(label + "-base-install", [python, "-I", "-m", "pip", "install", "--no-index", str(wheel)], work)
+                run(label + "-base-pip-check", [python, "-I", "-m", "pip", "check"], work)
+                imports = run(
+                    label + "-base-imports", [python, "-I", "-c", INSPECT, json.dumps({**artifact, **cell})], work
+                )
+                result["base_installed"] = json.loads(imports)
+                if cell["polars"]:
+                    run(
+                        label + "-extra-install",
+                        [python, "-I", "-m", "pip", "install", "--no-index", str(wheel) + "[polars]"],
+                        work,
+                    )
+                    run(label + "-extra-pip-check", [python, "-I", "-m", "pip", "check"], work)
+                    imports = run(
+                        label + "-extra-imports", [python, "-I", "-c", INSPECT, json.dumps({**artifact, **cell})], work
+                    )
                 result["installed"] = json.loads(imports)
                 suites = [("compatibility", [tests, parity], COMPATIBILITY_CASES)]
                 if cell["polars"]:
@@ -435,8 +457,8 @@ def main() -> None:
                 (output / "source-builds.json").write_text(json.dumps(source_results, indent=2) + "\n")
             require(len(source_results) == 3, "incomplete source-build matrix")
     print(
-        f"Ten full cells passed {COMPATIBILITY_CASES} compatibility + {MODERN_CASES} modern cases each; "
-        f"two Polars-free cells passed {COMPATIBILITY_CASES} + {NUMPY_ONLY_CASES}; evidence: {output}"
+        f"{len(MATRIX) * len(POLARS_VERSIONS)} full cells passed on Polars {POLARS_VERSIONS}; "
+        f"{len(baselines)} Polars-free cells passed; evidence: {output}"
     )
     print(
         "Source rebuilds: " + ("3.12, 3.14 and 3.15 passed" if sdist else "not requested: no source archive supplied")
