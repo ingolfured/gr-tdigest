@@ -264,8 +264,9 @@ legacy-strict-test: compat-test
 legacy-wheel-test:
 	@$(UV_ENV) $(UV) run --project "$(PY_DIR)" --no-sync python scripts/test_legacy_wheel.py
 
+PYTHON_SUPPORT_RESULTS_DIR ?= $(CURDIR)/build/python-support
 python-support-test:
-	@$(UV_ENV) $(UV) run --project "$(PY_DIR)" --no-sync python scripts/test_python_support.py
+	@$(UV_ENV) $(UV) run --project "$(PY_DIR)" --no-sync python scripts/test_python_support.py --output-dir "$(PYTHON_SUPPORT_RESULTS_DIR)/support-$$(date +%Y%m%dT%H%M%S)-$$$$"
 
 compat-bench: build-python
 	@$(UV_ENV) $(UV) run --project "$(PY_DIR)" --no-sync python "$(STRICT_COMPAT_BENCH)"
