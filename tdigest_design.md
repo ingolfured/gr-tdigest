@@ -3,7 +3,10 @@
 ## JVM toolchain delivery
 
 Java classes and tests compile with `--release 11`; a Gradle task checks class
-major version55. Gradle8.14.5 permits the build itself to run on JDK11. Optional
+major version55. Gradle 8.14.5 permits the build itself to run on JDK 11. The CI matrix covers
+JDK 11, 17, 21 and 25; its JDK 25 entry selects checksum-verified Gradle 9.1.0
+through `TDIGEST_GRADLE_URL`/`TDIGEST_GRADLE_SHA256`, keeping the Java 11 target
+and older-JDK wrapper unchanged. Optional
 `bindings/java/bootstrap.py` is standard-library-only and runs before JVM lookup
 when tool-source/offline environment settings are present. It verifies archive
 SHA256, validates extraction paths/links, and installs into a digest-keyed cache
@@ -501,7 +504,7 @@ Modern Python training uses `training_array_values` for constructors and updates
 
 ## Python runtime compatibility
 
-The extension targets the CPython3.10 stable ABI and advertises standard CPython3.10–3.15. The binding stack uses PyO3 0.29.3, rust-numpy 0.29, pyo3-polars 0.28 and Polars Rust0.55 with Python Polars2.0. Rust1.95 is pinned because the updated Polars dependency tree requires it. PyO3 attachment/cast and Polars iterator API migrations do not change digest arithmetic. The original upstream numerical sources, wrapper and91 tests remain checksum-bound.
+The extension targets the CPython3.10 stable ABI and advertises standard CPython3.10–3.15. The binding stack uses PyO3 0.29.3, rust-numpy 0.29, pyo3-polars 0.28 and Polars Rust0.55 with Python Polars1.44.2. Rust1.95 is pinned because the updated Polars dependency tree requires it. PyO3 attachment/cast and Polars iterator API migrations do not change digest arithmetic. The original upstream numerical sources, wrapper and91 tests remain checksum-bound.
 
 The release gate installs one unchanged wheel into isolated runtimes, including Polars-free3.10/3.15 environments, and rebuilds the actual verified source archive under3.12/3.14/3.15. Standard CPython is the supported runtime; free-threaded and PyPy builds require separate artifacts and are not covered by these claims.
 
@@ -516,3 +519,5 @@ JVM test tool selection is shared through `bindings/java/bootstrap.py::java_envi
 ## Transactional modern operations
 
 Checked construction and compensated accumulation validate represented mass and aggregate statistics. Compression retains exact-point identity through subnormal weighted products. The Polars adapter validates every reconstructed row before queries or reductions, and chooses CDF broadcasting by input lengths. Incompatible empty contributors are checked along with populated contributors.
+
+Regression coverage in `tests/numerical_foundation.rs` checks both mean precisions for tiny Use capacities, residual tail mass, cancellation and fractional atomic boundaries. Compressor unit tests cover recovery from intermediate moment overflow and accumulator reuse after clearing.

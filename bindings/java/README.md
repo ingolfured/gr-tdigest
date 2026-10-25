@@ -1,8 +1,10 @@
 # Java 11 and later
 
-Java code and tests compile with `--release 11`. The pinned Gradle8.14.5 can
-itself run on JDK11. CI builds and runs the JNI tests and packaged JAR on JDK11
-and17, in addition to the full project's JDK21 build.
+Java code and tests compile with `--release 11`. CI builds and runs the JNI
+tests and packaged JAR on JDK 11, 17, 21 and 25, checking Java 11 class files
+on every version. The default Gradle 8.14.5 runs on JDK 11 through 24;
+JDK 25 builds use Gradle 9.1.0 through the verified distribution override.
+The full project's build also runs on JDK 21.
 
 With an installed JDK, the normal wrapper needs no Python:
 
@@ -13,6 +15,26 @@ JAVA_HOME=/opt/jdk-11 ./bindings/java/gradlew --no-daemon -p bindings/java clean
 `verifyJava11Bytecode` checks compiled class files, not just Gradle settings.
 Native code is built for the host OS/architecture and packaged in the JAR.
 `CARGO_TARGET_DIR` is respected without a target symlink.
+
+## Building on Java 25
+
+Keep the default wrapper distribution for older JDKs and select Gradle 9.1.0
+when building on JDK 25 (the optional bootstrap requires Python 3.10+):
+
+```sh
+JAVA_HOME=/opt/jdk-25 \
+TDIGEST_GRADLE_URL=https://services.gradle.org/distributions/gradle-9.1.0-bin.zip \
+TDIGEST_GRADLE_SHA256=a17ddd85a26b6a7f5ddb71ff8b05fc5104c0202c6e64782429790c933686c806 \
+./bindings/java/gradlew --no-daemon -p bindings/java clean test jar smoke verifyJava11Bytecode
+```
+
+For an installed Gradle 9.1.0, use `TDIGEST_GRADLE_HOME=/opt/gradle-9.1.0`
+instead of the URL and checksum. Internal mirrors and local archives use the
+same settings shown below. Prepare that selected distribution before going
+offline, and keep its URL/checksum or home configured for offline builds.
+The JAR still targets Java 11. Java 25 JNI tests and smoke tasks enable native
+access; applications launching the JAR on Java 25 should use
+`java --enable-native-access=ALL-UNNAMED -jar path/to/gr-tdigest.jar`.
 
 ## Internal downloads and Artifactory
 
