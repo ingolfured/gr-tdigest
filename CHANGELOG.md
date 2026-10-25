@@ -4,6 +4,12 @@ All notable changes to this project are documented in this file.
 
 ## [Unreleased]
 
+- Stage verified JDK and Gradle archives from configured sources.
+
+- Build Java 11 bytecode with exclusive internal and offline dependencies.
+
+- Add JDK 25 build/runtime coverage with verified Gradle 9.1.0, retaining Java 11 bytecode and older-JDK builds.
+
 - Merge master into the K2Norm review branch, preserving both branches' unreleased notes.
 
 - Preserve original source and independent fixture LF bytes across Git checkouts; keep attribute rules focused on retained library inputs.

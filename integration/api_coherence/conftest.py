@@ -65,8 +65,9 @@ def paths() -> Paths:
     profile = os.environ.get("PROFILE", "dev")
     cargo_dir = "release" if profile == "release" else "debug"
 
-    # CLI binary (adjust name if your target differs)
-    cli_bin = root / "target" / cargo_dir / "tdigest"
+    # Match Cargo and the Java resource packager when builds use an external cache.
+    target_dir = root / os.environ.get("CARGO_TARGET_DIR", "target")
+    cli_bin = target_dir / cargo_dir / ("tdigest.exe" if os.name == "nt" else "tdigest")
 
     # Java bits
     java_src_dir = root / "bindings" / "java"
