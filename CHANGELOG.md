@@ -4,6 +4,8 @@ All notable changes to this project are documented in this file.
 
 ## [Unreleased]
 
+- Check Polars training and reconstructed state, reject missing digest rows, and require explicit binary precision hints.
+
 - Validate positive transformations before committing modern state.
 
 - Check modern construction, reconstruction, precision casts and merges, including numerical-foundation caller migrations.
