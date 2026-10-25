@@ -3,7 +3,10 @@
 ## JVM toolchain delivery
 
 Java classes and tests compile with `--release 11`; a Gradle task checks class
-major version55. Gradle8.14.5 permits the build itself to run on JDK11. Optional
+major version55. Gradle 8.14.5 permits the build itself to run on JDK 11. The CI matrix covers
+JDK 11, 17, 21 and 25; its JDK 25 entry selects checksum-verified Gradle 9.1.0
+through `TDIGEST_GRADLE_URL`/`TDIGEST_GRADLE_SHA256`, keeping the Java 11 target
+and older-JDK wrapper unchanged. Optional
 `bindings/java/bootstrap.py` is standard-library-only and runs before JVM lookup
 when tool-source/offline environment settings are present. It verifies archive
 SHA256, validates extraction paths/links, and installs into a digest-keyed cache
@@ -501,15 +504,15 @@ Modern Python training uses `training_array_values` for constructors and updates
 
 ## Python runtime compatibility
 
-The extension targets the CPython3.10 stable ABI and advertises standard CPython3.10–3.15. The binding stack uses PyO3 0.29.3, rust-numpy 0.29, pyo3-polars 0.28 and Polars Rust0.55 with Python Polars2.0. Rust1.95 is pinned because the updated Polars dependency tree requires it. PyO3 attachment/cast and Polars iterator API migrations do not change digest arithmetic. The original upstream numerical sources, wrapper and91 tests remain checksum-bound.
+The extension targets the CPython3.10 stable ABI and advertises standard CPython3.10–3.15. The binding stack uses PyO3 0.29.3, rust-numpy 0.29, pyo3-polars 0.28 and Polars Rust0.55 with Python Polars 1.44.2 and 2.0.0. Development pins 1.44.2; the optional integration accepts >=1.0.0 without an upper cap. An installed-wheel matrix covers the 1.0 floor, representative 1.x releases and 2.0, verifying both base and extra installs preserve the preinstalled Polars version. Rust1.95 is pinned because the updated Polars dependency tree requires it. PyO3 attachment/cast and Polars iterator API migrations do not change digest arithmetic. The original upstream numerical sources, wrapper and91 tests remain checksum-bound.
 
-The release gate installs one unchanged wheel into isolated runtimes, including Polars-free3.10/3.15 environments, and rebuilds the actual verified source archive under3.12/3.14/3.15. Standard CPython is the supported runtime; free-threaded and PyPy builds require separate artifacts and are not covered by these claims.
+The release gate installs one unchanged wheel into isolated runtimes, including Polars-free environments on every advertised Python minor, and rebuilds the actual verified source archive under3.12/3.14/3.15. Standard CPython is the supported runtime; free-threaded and PyPy builds require separate artifacts and are not covered by these claims.
 
 ## Quality measurement and failure visibility
 
 The new `scripts/quality_suite.py` uses independent sorted-data references, pinned recorded observations and deterministic distribution grids. It tests real f32/f64 storage, three budgets, input reversal and40-way sequential/balanced merges. It matches original parameters by observed logical field bytes without consulting accuracy, records all search candidates and retains poor modern outcomes in comparison totals. The earlier exponential quality-score helper is not an acceptance metric.
 
-Exact rational weighted controls cover probability semantics across extreme mass scales. `examples/quality_boundaries.rs` separately exposes existing tiny-capacity mass/contribution loss, cancellation, fractional median asymmetry and subnormal aggregate-mean loss. A frozen expected-outcome check detects any change; it does not fix or waive these failures. The independent original arithmetic, wrapper, oracle and91 original tests stay untouched.
+Exact rational weighted controls cover probability semantics across extreme mass scales. `examples/quality_boundaries.rs` separately exposes existing tiny-capacity mass/contribution loss, cancellation, fractional median asymmetry and subnormal aggregate-mean loss. The boundary regression check preserves exact frozen targets, accepts unchanged known failures and genuine exact passes, and rejects changed targets, missing/duplicate/unexpected controls and new or changed numerical failures. Its regression PASS does not imply that all accuracy targets pass. The quality suite compares source and installed native-binary hashes before and after measurement and invalidates the receipt if either changed; this verifies input stability, not universal Modern accuracy superiority. The independent original arithmetic, wrapper, oracle and91 original tests stay untouched.
 
 JVM test tool selection is shared through `bindings/java/bootstrap.py::java_environment`: Gradle and direct coherence subprocesses use the same verified JDK and child environment, including when host Java commands are unavailable.
 
@@ -520,3 +523,5 @@ Checked construction and compensated accumulation validate represented mass and 
 ## Standalone JNI payload selection
 
 The JAR bundles a canonically named native payload with source and SHA-256 identity in its manifest. Explicit native overrides accept relative distributed-file paths; extraction can use a configured writable directory. Loader diagnostics identify attempted paths and causes. Configured build-native overrides are packaged under the runtime resource name.
+
+Regression coverage in `tests/numerical_foundation.rs` checks both mean precisions for tiny Use capacities, residual tail mass, cancellation and fractional atomic boundaries. Compressor unit tests cover recovery from intermediate moment overflow and accumulator reuse after clearing.
