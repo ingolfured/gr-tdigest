@@ -1,4 +1,4 @@
-"""Check one release wheel on CPython3.10-3.15 and Polars-free baselines.
+"""Build one release wheel from the sdist and check CPython3.10-3.15 runtimes.
 
 Linux gate. --wheel reuses a real release artifact without rebuilding it.
 The matrix intentionally pins tested dependency combinations; the project lock
@@ -17,6 +17,7 @@ import shutil
 import subprocess
 import tarfile
 import tempfile
+import time
 import xml.etree.ElementTree as ET
 from zipfile import ZipFile
 
@@ -168,6 +169,13 @@ def main() -> None:
             "PIP_NO_INPUT": "1",
         }
     )
+    # Source archives are extracted into temporary directories. Keep dependency
+    # artifacts in the same cached target as the checkout's release-wheel build;
+    # Cargo still fingerprints and compiles the extracted source independently.
+    target = Path(env.get("CARGO_TARGET_DIR", root / "target"))
+    if not target.is_absolute():
+        target = root / target
+    target = target.resolve()
     journal = []
 
     def run(label: str, command: list[str], cwd: Path, *, build: bool = False) -> str:
@@ -177,14 +185,29 @@ def main() -> None:
             # The project tools already exist in the development environment;
             # these are never used by the isolated installed-wheel test cells.
             command_env["UV_PROJECT_ENVIRONMENT"] = str(root / ".venv")
-        result = subprocess.run(
-            command, cwd=cwd, env=command_env, text=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT
-        )
-        (output / (label + ".log")).write_text(result.stdout)
-        journal.append({"label": label, "command": command, "cwd": str(cwd), "exit_code": result.returncode})
+            command_env["CARGO_TARGET_DIR"] = str(target)
+        entry = {"label": label, "command": command, "cwd": str(cwd), "exit_code": None}
+        if build:
+            entry["cargo_target_dir"] = str(target)
+        journal.append(entry)
         (output / "commands.json").write_text(json.dumps(journal, indent=2) + "\n")
-        require(result.returncode == 0, f"{label} failed; see {output / (label + '.log')}")
-        return result.stdout
+        start = time.perf_counter()
+        log = output / (label + ".log")
+        with log.open("w", buffering=1) as stream:
+            process = subprocess.Popen(
+                command, cwd=cwd, env=command_env, text=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT
+            )
+            assert process.stdout is not None
+            for line in process.stdout:
+                stream.write(line)
+                if build:
+                    print(line, end="", flush=True)
+            entry["exit_code"] = process.wait()
+        entry["elapsed_seconds"] = time.perf_counter() - start
+        (output / "commands.json").write_text(json.dumps(journal, indent=2) + "\n")
+        print(f"{label} completed in {entry['elapsed_seconds']:.1f}s", flush=True)
+        require(entry["exit_code"] == 0, f"{label} failed; see {log}")
+        return log.read_text()
 
     with tempfile.TemporaryDirectory(prefix="tdigest-support-cells-") as temporary:
         work = Path(temporary)
@@ -235,6 +258,17 @@ def main() -> None:
             sdist = build_and_check_sdist(
                 root, output / "sdist", lambda *command, cwd: run("source-archive", list(command), cwd, build=True)
             )
+            unpack = work / "source"
+            unpack.mkdir()
+            with tarfile.open(sdist, "r:gz") as archive:
+                # Verification rejected traversal, links and duplicate paths.
+                if hasattr(tarfile, "data_filter"):
+                    archive.extractall(unpack, filter="data")
+                else:
+                    archive.extractall(unpack)
+            (source,) = unpack.iterdir()
+            # Compile the archive once on the oldest supported interpreter.
+            # Every runtime cell below checks this same ABI3 native binary.
             run(
                 "release-wheel",
                 [
@@ -256,13 +290,15 @@ def main() -> None:
                     "-o",
                     str(wheels),
                 ],
-                root / "bindings/python",
+                source,
                 build=True,
             )
             (wheel,) = wheels.glob("*.whl")
         artifact = inspect_wheel(wheel)
         if sdist:
             artifact.update({"sdist": str(sdist), "sdist_sha256": hashlib.sha256(sdist.read_bytes()).hexdigest()})
+        if not args.wheel:
+            artifact["source_build_python"] = cells[0]["python"]
         (output / "artifact.json").write_text(json.dumps(artifact, indent=2) + "\n")
         results = []
         for cell in cells:
@@ -330,103 +366,12 @@ def main() -> None:
             len(results) == len(variants) and all(result["status"] == "PASS" for result in results),
             f"runtime support failed; inspect {output}",
         )
-        # Rebuild the verified source archive with each newly requested build
-        # interpreter. These are fresh artifacts, never retagged release wheels.
-        source_results = []
-        if sdist:
-            unpack = work / "source"
-            unpack.mkdir()
-            with tarfile.open(sdist, "r:gz") as archive:
-                # verify_sdist_contents already rejected traversal, links and
-                # duplicate paths. data_filter is also used where available.
-                if hasattr(tarfile, "data_filter"):
-                    archive.extractall(unpack, filter="data")
-                else:
-                    archive.extractall(unpack)
-            (source,) = unpack.iterdir()
-            for minor in ("3.12", "3.14", "3.15"):
-                cell = next(c for c in cells if c["python"] == minor and c["numpy"].startswith("2.") and c["polars"])
-                label, python = "source-py" + minor.replace(".", ""), cell["executable"]
-                wheels = output / label
-                run(
-                    label + "-build",
-                    [
-                        "uv",
-                        "run",
-                        "--project",
-                        str(root / "bindings/python"),
-                        "--no-sync",
-                        "maturin",
-                        "build",
-                        "--release",
-                        "--locked",
-                        "-F",
-                        "python",
-                        "--compatibility",
-                        "linux",
-                        "--interpreter",
-                        python,
-                        "-o",
-                        str(wheels),
-                    ],
-                    source,
-                    build=True,
-                )
-                (rebuilt,) = wheels.glob("*.whl")
-                built = inspect_wheel(rebuilt)
-                run(
-                    label + "-install",
-                    [
-                        "uv",
-                        "pip",
-                        "install",
-                        "--python",
-                        python,
-                        "--no-deps",
-                        "--reinstall-package",
-                        "gr-tdigest",
-                        str(rebuilt),
-                    ],
-                    work,
-                )
-                run(label + "-pip-check", [python, "-I", "-m", "pip", "check"], work)
-                installed = json.loads(
-                    run(label + "-imports", [python, "-I", "-c", INSPECT, json.dumps({**built, **cell})], work)
-                )
-                xml = output / (label + ".xml")
-                run(
-                    label + "-tests",
-                    [
-                        python,
-                        "-I",
-                        "-m",
-                        "pytest",
-                        "-q",
-                        "-c",
-                        "/dev/null",
-                        "-p",
-                        "no:cacheprovider",
-                        "-o",
-                        "xfail_strict=true",
-                        "--junitxml",
-                        str(xml),
-                        str(tests),
-                        str(parity),
-                        str(modern),
-                    ],
-                    work,
-                )
-                passed = check_results(xml, 392)
-                source_results.append({"python": minor, "artifact": built, "installed": installed, "passed": passed})
-                (output / "source-builds.json").write_text(json.dumps(source_results, indent=2) + "\n")
-            require(len(source_results) == 3, "incomplete source-build matrix")
     print(
         f"{len(MATRIX)} full cells passed compatibility and modern checks; "
         f"{len(baselines)} Polars-free cells passed; evidence: {output}"
     )
-    print(
-        "Source rebuilds: " + ("3.12, 3.14 and 3.15 passed" if sdist else "not requested: no source archive supplied")
-    )
+    if not args.wheel:
+        print(f"Source archive compiled once with Python {cells[0]['python']}; wheel passed every runtime cell")
 
 
 if __name__ == "__main__":

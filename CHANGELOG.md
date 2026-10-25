@@ -4,6 +4,12 @@ All notable changes to this project are documented in this file.
 
 ## [Unreleased]
 
+- Run Python packaging checks alongside core CI, avoid redundant package builds, reuse Cargo dependencies for source-archive rebuilds, and retain live build logs and timings.
+
+- Speed up Python CI by compiling one release wheel from the verified source archive and checking it across all runtime cells, removing three repeated optimized builds.
+
+- Run accuracy profiles as parametrized pytest cases, with opt-in extended checks and retained baseline reports.
+
 - Stage verified JDK and Gradle archives from configured sources.
 
 - Build Java 11 bytecode with exclusive internal and offline dependencies.
@@ -24,7 +30,7 @@ All notable changes to this project are documented in this file.
 
 - Add regression tests for tiny-capacity mass retention, residual tail contributions, cancellation, intermediate overflow and fractional atomic quantile boundaries.
 
-- Test accuracy on recorded data.
+- Test accuracy on recorded data and deterministic distributions.
 
 - Cite the published K2 normalizer and explain its constants beside the scale-domain guard.
 
