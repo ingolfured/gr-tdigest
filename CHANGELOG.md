@@ -29,9 +29,13 @@ All notable changes to this project are documented in this file.
 
 - Copy NumPy query outputs without changing ownership or results.
 
+- Merge master into the K2Norm review branch, preserving both branches' unreleased notes.
+
 - Preserve original source and independent fixture LF bytes across Git checkouts; keep attribute rules focused on retained library inputs.
 
 - Preserve centroids outside the positive K2Norm scale domain.
+
+- Support CPython 3.10–3.15 with one ABI3 wheel, runtime-specific dependency combinations, and Polars-free install checks on every version.
 
 - Check supported Python runtimes and Polars-free wheel installs.
 

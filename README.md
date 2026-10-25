@@ -140,7 +140,7 @@ packager respect `CARGO_TARGET_DIR` directly.
 - Weighted medians use centroid mass. TDIG v3 and Polars round-trips retain compression configuration and centroid kind.
 - Delta-mode export requires TDIG v3; older formats cannot retain delta.
 - Rust: 1.95.0 (pinned; edition 2021)
-- Python: CPython 3.10–3.15 (ABI3 wheels built with maturin); development tools default to 3.12
+- Python: CPython 3.10–3.15 (standard GIL builds, ABI3 wheels built with maturin); development tools default to 3.12
 - NumPy: 1.26.4 or the 2.x line; tested combinations are recorded in `scripts/test_python_support.py`
 - Polars: optional; install `gr-tdigest[polars]` for the tested 1.44.2 integration
 
@@ -151,7 +151,7 @@ arithmetic, uint32 weights, and the original copy/pickle behavior. The new engin
 is opt-in through `from gr_tdigest import TDigest`; using `delta` there does not
 promise the same numbers. See [source provenance](src/upstream/PROVENANCE.md).
 
-The unchanged upstream Python suite runs in `make test` and Linux CI. `make python-support-test` builds one release Linux wheel and tests it outside the checkout on Python 3.10–3.15 (both NumPy lines on 3.10–3.12), plus source-archive rebuilds on 3.12, 3.14 and 3.15. See [legacy compatibility](compat/gr_tdigest_vs_tdigest_rs.md).
+The unchanged upstream Python suite runs in `make test` and Linux CI. `make python-support-test` builds one release Linux wheel and tests it outside the checkout on Python 3.10–3.15 (both NumPy lines on 3.10–3.12), Polars-free installation cells on every runtime, plus source-archive rebuilds on 3.12, 3.14 and 3.15. See [legacy compatibility](compat/gr_tdigest_vs_tdigest_rs.md).
 
 ## Changelog
 - See `CHANGELOG.md`.

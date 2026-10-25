@@ -196,7 +196,10 @@ def main() -> None:
         run("python-runtimes", ["uv", "python", "install", *dict.fromkeys(row[0] for row in MATRIX)], work)
         cells = []
         variants = [(minor, numpy, scipy, pytest, "1.44.2") for minor, numpy, scipy, pytest in MATRIX]
-        variants.extend((("3.10", "1.26.4", "1.15.3", "8.4.2", None), ("3.15", "2.5.4", "1.18.1", "9.1.1", None)))
+        baselines = {}
+        for minor, numpy, scipy, pytest in MATRIX:
+            baselines.setdefault(minor, (minor, numpy, scipy, pytest, None))
+        variants.extend(baselines.values())
         for minor, numpy, scipy, pytest, polars in variants:
             label = f"py{minor.replace('.', '')}-numpy{numpy.split('.')[0]}" + ("-no-polars" if polars is None else "")
             venv = work / label
@@ -418,7 +421,8 @@ def main() -> None:
                 (output / "source-builds.json").write_text(json.dumps(source_results, indent=2) + "\n")
             require(len(source_results) == 3, "incomplete source-build matrix")
     print(
-        f"Nine full cells passed 208 compatibility + 184 modern cases each; two Polars-free cells passed 208 + 120; evidence: {output}"
+        f"{len(MATRIX)} full cells passed compatibility and modern checks; "
+        f"{len(baselines)} Polars-free cells passed; evidence: {output}"
     )
     print(
         "Source rebuilds: " + ("3.12, 3.14 and 3.15 passed" if sdist else "not requested: no source archive supplied")
