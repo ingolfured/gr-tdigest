@@ -4,6 +4,8 @@ All notable changes to this project are documented in this file.
 
 ## [Unreleased]
 
+- Validate positive transformations before committing modern state.
+
 - Check modern construction, reconstruction, precision casts and merges, including numerical-foundation caller migrations.
 
 - Merge the updated quality-gates base into the comparison documentation branch, preserving both sets of unreleased notes.
