@@ -4,35 +4,48 @@ All notable changes to this project are documented in this file.
 
 ## [Unreleased]
 
+- Merge the updated quality-gates base into the comparison documentation branch, preserving both sets of unreleased notes.
+
+- Align Python package and compatibility notes with the single source-archive build gate.
+
 - Check that source packages contain the accuracy tests, saved results and offline data.
 
 - Run Python packaging checks alongside core CI, avoid redundant package builds, reuse Cargo dependencies for source-archive rebuilds, and retain live build logs and timings.
 
 - Speed up Python CI by compiling one release wheel from the verified source archive and checking it across all runtime cells, removing three repeated optimized builds.
 
+- Document pytest profile selection, expected accuracy failures and candidate-baseline review.
+
+- Keep stacked CI and source-archive checks aligned with pytest accuracy profiles.
+
 - Run accuracy profiles as parametrized pytest cases, with opt-in extended checks and retained baseline reports.
 
-- Stage verified JDK and Gradle archives from configured sources.
+- Update boundary regression expectations for the 12 verified numerical improvements from #55; retain the unresolved subnormal-mean failure.
 
-- Build Java 11 bytecode with exclusive internal and offline dependencies.
+- Add regression tests for tiny-capacity mass retention, residual tail contributions, cancellation, intermediate overflow and fractional atomic quantile boundaries.
+- Focus the comparison guide on choosing Modern over legacy G-Research, with measured accuracy advantages, practical capabilities and explicit tradeoffs.
 
-- Add JDK 25 build/runtime coverage with verified Gradle 9.1.0, retaining Java 11 bytecode and older-JDK builds.
-
-- Support Python 3.14 and 3.15 on the current NumPy and Polars stack.
-
-- Pin the optional Polars integration and support checks to Polars 1.44.2; defer Polars 2.0 evaluation.
-
-- Copy compatible NumPy training buffers and allow independent constructors.
-
-- Copy NumPy query outputs without changing ownership or results.
-
-- Reject inconsistent delta settings in Polars digest structs.
+- Document measured Modern versus G-Research accuracy winners and error ratios by dataset, summary size, precision and merge setup.
 
 - Preserve residual mass and compensated modern centroid arithmetic.
 
-- Add regression tests for tiny-capacity mass retention, residual tail contributions, cancellation, intermediate overflow and fractional atomic quantile boundaries.
-
 - Test accuracy on recorded data and deterministic distributions.
+
+- Pin the optional Polars integration and support checks to Polars 1.44.2; defer Polars 2.0 evaluation.
+
+- Support Python 3.14 and 3.15 on the current NumPy and Polars stack.
+
+- Add JDK 25 build/runtime coverage with verified Gradle 9.1.0, retaining Java 11 bytecode and older-JDK builds.
+
+- Build Java 11 bytecode with exclusive internal and offline dependencies.
+
+- Stage verified JDK and Gradle archives from configured sources.
+
+- Copy compatible NumPy training buffers and allow independent constructors.
+
+- Reject inconsistent delta settings in Polars digest structs.
+
+- Copy NumPy query outputs without changing ownership or results.
 
 - Cite the published K2 normalizer and explain its constants beside the scale-domain guard.
 

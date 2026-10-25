@@ -31,9 +31,22 @@ For current implementation internals, see `tdigest_design.md`.
 
 3. Explicit cast only.
 - No implicit precision/config coercion in merge or decode.
+- Polars struct decoding rejects delta configurations unless the scale is K2Norm and singleton policy is Off, matching binary decoding and training validation.
 - Precision cast helpers are explicit API calls.
 
 ## 3. Capability parity contract
+
+### JVM build and runtime support
+
+The Java binding targets Java 11 bytecode, with Java/JNI tests, JAR smoke tests
+and compiled-class version checks on JDK 11, 17, 21 and 25. The default
+Gradle 8.14.5 build can itself run on JDK 11; JDK 25 builds select Gradle 9.1.0
+through the verified distribution override. Internal build environments
+can select verified JDK/Gradle archives and an exclusive Maven dependency
+repository through the documented `TDIGEST_*` environment settings. Offline mode
+uses pre-staged tools/dependencies and never attempts a public fallback. It
+applies to Gradle and the native Cargo build. Publishing coordinates and the
+numerical API are unchanged.
 
 All surfaces must support:
 - Build/train from numeric values.
@@ -97,19 +110,26 @@ The Python distribution supports standard GIL builds of CPython 3.10–3.15 thro
 ABI3 wheel, with NumPy >=1.26.4,<3 on 3.10–3.12, >=2.3.4,<3 on
 3.13–3.14, and >=2.5.4,<3 on 3.15. The base installation exposes both NumPy numerical
 interfaces without requiring the Polars Python package. The optional `polars`
-extra installs the tested Polars 1.34.0 integration; this pin does not promise
+extra installs the tested Polars 1.44.2 integration; this pin does not promise
 compatibility with untested future Polars releases. Existing numerical imports
 remain lazy, while expression operations require the extra.
 
 The installed-artifact gate reuses one real wheel across all six Python
-versions, both NumPy lines where available, and a genuinely Polars-free
-installation on every runtime. The default gate builds that wheel once from the
-verified source archive with Python 3.10, reusing Cargo dependency artifacts.
-It validates newer Python versions by installing that same ABI3 wheel rather
-than recompiling it with each interpreter. The 3.15 cell uses SciPy >=1.18.1 and pytest
->=9.1.1 for compatibility validation; these are test dependencies.
+versions, using both NumPy lines on 3.10–3.12 and NumPy 2 on 3.13–3.15. It also
+tests genuinely Polars-free installations on every runtime. The default gate
+builds that ABI3 wheel once from the verified source archive with Python 3.10,
+reusing Cargo dependency artifacts, then installs it on every supported runtime.
+The 3.15 cell uses SciPy >=1.18.1 and pytest >=9.1.1 for compatibility validation;
+these are test dependencies. Standard CPython is covered; free-threaded runtimes
+and PyPy need separate qualification.
 The bounded Python metadata is narrower than upstream's open-ended >=3.10
 declaration. The development tool environment remains Python 3.12.
+
+Modern NumPy training inputs are copied into owned Rust vectors. Compatible aligned/native-endian/contiguous Float32/Float64 arrays use a bulk copy; other layouts/dtypes retain their generic conversion and validation behavior. Constructors and updates neither retain nor mutate input storage.
+
+### 4.1.4 Modern Python constructor concurrency
+
+`gr_tdigest.TDigest.from_array` and `from_means_weights` convert their Python inputs to owned Rust vectors before releasing the GIL for native construction. Each call builds a private digest and retains existing validation and numerical order. Independent calls may overlap in a caller-managed pool; input conversion remains serialized by the GIL. This does not add a shared-object mutation guarantee or change the original `tdigest_rs` interface.
 
 ### 4.2 Queries
 
@@ -211,3 +231,7 @@ Surface mapping:
 - Capability/coherence/serialization suites pass.
 - No documented cross-surface contract drift.
 - Binding layers are thinner with less duplicated validation logic.
+
+## Empirical accuracy contract
+
+Quality acceptance uses separate rank, percentile-value and midpoint-CDF measurements against sorted observed data, with tie intervals and actual precision casts. The original API remains numerically unchanged and has no fabricated CDF comparison. The fast suite runs in `make test`; extended results and explicit unresolved boundary controls are documented in `tests/quality/README.md`. A passing known-outcome regression check must not be presented as passing accuracy. These are measured operating envelopes, not formal guarantees or universal superiority over the original engine.

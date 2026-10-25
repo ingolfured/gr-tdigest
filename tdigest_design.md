@@ -1,5 +1,22 @@
 # tdigest_design.md
 
+## JVM toolchain delivery
+
+Java classes and tests compile with `--release 11`; a Gradle task checks class
+major version55. Gradle 8.14.5 permits the build itself to run on JDK 11. The CI matrix covers
+JDK 11, 17, 21 and 25; its JDK 25 entry selects checksum-verified Gradle 9.1.0
+through `TDIGEST_GRADLE_URL`/`TDIGEST_GRADLE_SHA256`, keeping the Java 11 target
+and older-JDK wrapper unchanged. Optional
+`bindings/java/bootstrap.py` is standard-library-only and runs before JVM lookup
+when tool-source/offline environment settings are present. It verifies archive
+SHA256, validates extraction paths/links, and installs into a digest-keyed cache
+by atomic rename. Configured-source failure has no fallback. Offline mode refuses
+network downloads and adds `--offline` to Gradle/Cargo. Gradle's internal Maven
+repository replaces MavenCentral exclusively. Native JAR resources follow the
+actual `CARGO_TARGET_DIR`. No digest arithmetic or original compatibility source
+changes are involved.
+
+
 This document is the **current-state implementation design** for the Rust TDigest core.
 
 - Scope: internals in `src/tdigest/*` and how frontends use them.
@@ -434,6 +451,9 @@ Decode behavior:
   their original defaults and weight-based kind inference. Mutation/serialization
   upgrades to the current schema without changing mean precision. Single-digest
   serialization avoids recompression.
+  Struct decoding checks delta/scale/policy compatibility before building the
+  digest, so malformed configurations return codec errors before queries or
+  serialization can use them.
 
 ## 7. Frontend service role
 
@@ -471,3 +491,35 @@ preserves existing application outputs; `gr_tdigest`, Polars, Java, and the CLI
 continue using the modern shared core. Numerical fixes there must not silently
 change the original interface. See the vendored source provenance and exact
 output regression tests.
+
+Modern Python NumPy outputs use PyArray1::from_slice to copy f64 results directly into NumPy-owned memory. List and tuple outputs retain their existing container paths. The direct copy preserves dtype, shape, independent writable storage, OWNDATA and resizing. Moving Rust vectors into NumPy was considered but excluded because Rust-owned ndarray buffers cannot be resized.
+
+The measured NumPy output change and its remaining inconclusive observations are documented in `compat/performance/numpy-output-20261015`. It changes conversion overhead only; core query arithmetic and both public interfaces retain their results.
+
+## Modern Python construction and the GIL
+
+The raw constructor calls the unchanged `FrontendDigest::from_values` inside `Python::allow_threads` once input conversion and configuration resolution are complete. The weighted constructor creates an unexposed empty digest, then releases the GIL around its unchanged `add_weighted_f64` call. Both closures work with owned vectors and Rust state only; error translation and returning the new Python object occur with the GIL held. Existing object methods and pinned original arithmetic retain their existing paths.
+
+Modern Python training uses `training_array_values` for constructors and updates. Aligned native-endian contiguous one-dimensional NumPy f32/f64 arrays are borrowed read-only while copying into an owned f64 vector; the borrow ends before the constructor releases the GIL. Other layouts/dtypes use the existing NumPy/Python conversion. Query conversion remains unchanged.
+
+## Python runtime compatibility
+
+The extension targets the CPython3.10 stable ABI and advertises standard CPython3.10–3.15. The binding stack uses PyO3 0.29.3, rust-numpy 0.29, pyo3-polars 0.28 and Polars Rust0.55 with Python Polars1.44.2. Rust1.95 is pinned because the updated Polars dependency tree requires it. PyO3 attachment/cast and Polars iterator API migrations do not change digest arithmetic. The original upstream numerical sources, wrapper and91 tests remain checksum-bound.
+
+The release gate builds the verified source archive once with Python 3.10, then installs that unchanged ABI3 wheel into isolated Python 3.10–3.15 runtimes, including a Polars-free installation on every version. It reuses Cargo dependency artifacts and runs alongside the main build and unit tests in CI. Standard CPython is the supported runtime; free-threaded and PyPy builds require separate artifacts and are not covered by these claims.
+
+## Quality measurement and failure visibility
+
+The parametrized tests in `tests/quality/test_accuracy.py` use shared independent sorted-data references, pinned recorded observations and deterministic distribution grids. They test real f32/f64 storage, three budgets, input reversal and40-way sequential/balanced merges. They match original parameters by observed logical field bytes without consulting accuracy, record all search candidates and retain poor modern outcomes in comparison totals. The earlier exponential quality-score helper is not an acceptance metric.
+
+Fast profiles run in normal pytest discovery and `make test`; the extended matrix is marked slow and collected with `--quality-extended`. Known accuracy-limit cases become expected failures only after invariants, frozen-metric tolerances and the exact finding inventory have been checked. New regressions fail normally. Optional pytest reports retain all measured outcomes, and candidate baseline generation requires a complete matrix and an explicit output directory without replacing the checked-in baselines.
+
+Exact rational weighted controls cover probability semantics across extreme mass scales. `examples/quality_boundaries.rs` separately exposes existing tiny-capacity mass/contribution loss, cancellation, fractional median asymmetry and subnormal aggregate-mean loss. A frozen expected-outcome check detects any change; it does not fix or waive these failures. The independent original arithmetic, wrapper, oracle and91 original tests stay untouched.
+
+JVM test tool selection is shared through `bindings/java/bootstrap.py::java_environment`: Gradle and direct coherence subprocesses use the same verified JDK and child environment, including when host Java commands are unavailable.
+
+## Preserve residual mass and compensated modern centroid arithmetic.
+
+Modern normalization uses compensated mass and moment sums; cluster averaging uses compensation for cancellation or overflow. Equal-weight buckets retain positive residuals. Atomic quantile boundaries sum actual prefix mass. Centroid::weight returns f64 independently of mean precision. Public digest construction and update signatures are unchanged in this prerequisite.
+
+Regression coverage in `tests/numerical_foundation.rs` checks both mean precisions for tiny Use capacities, rounded-away tail mass with a nonzero moment, cancellation at compressed and uncompressed capacities, and fractional symmetric atomic boundaries with probes on both sides. Compressor unit coverage checks recovery from intermediate moment overflow and accumulator reuse after clearing.

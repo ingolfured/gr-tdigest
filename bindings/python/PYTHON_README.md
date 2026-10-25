@@ -11,4 +11,4 @@ The repository runtime gate records the exact tested dependency combinations.
 
 For full project documentation, examples, and release notes, see the repository root `README.md`.
 
-The optional Polars integration is pinned to1.44.2, matching the Rust plugin ABI. Source builds use the pinned Rust1.95 toolchain. The Linux release gate installs the same ABI3 wheel on3.10–3.15, then rebuilds the actual source archive with3.12,3.14 and3.15. These claims cover standard CPython; free-threaded variants and PyPy are not qualified.
+The optional Polars integration is pinned to1.44.2, matching the Rust plugin ABI. Source builds use the pinned Rust1.95 toolchain. The Linux release gate compiles the verified source archive once with Python 3.10, then installs that unchanged ABI3 wheel on every supported runtime from 3.10 to 3.15. These claims cover standard CPython; free-threaded variants and PyPy are not qualified.
