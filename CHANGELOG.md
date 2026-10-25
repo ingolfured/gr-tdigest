@@ -18,6 +18,8 @@ All notable changes to this project are documented in this file.
 
 - Copy NumPy query outputs without changing ownership or results.
 
+- Reject inconsistent delta settings in Polars digest structs.
+
 - Cite the published K2 normalizer and explain its constants beside the scale-domain guard.
 
 - Merge master into the K2Norm review branch, preserving both branches' unreleased notes.
