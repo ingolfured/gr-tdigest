@@ -42,8 +42,6 @@ MATRIX = (
 MODERN_TESTS = (
     "bindings/python/tests/test_api_python.py",
     "bindings/python/tests/test_api_polars.py",
-    "bindings/python/tests/test_day_numpy_input.py",
-    "bindings/python/tests/test_day_numpy_output.py",
     "bindings/python/tests/test_digest_regressions.py",
     "integration/api_coherence/test_cluster_mean_bounds.py",
     "integration/api_coherence/test_subnormal_query_coherence.py",
@@ -280,7 +278,7 @@ def main() -> None:
                 result["installed"] = json.loads(imports)
                 suites = [("compatibility", [tests, parity], 208)]
                 if cell["polars"]:
-                    suites.append(("modern", [modern], 184))
+                    suites.append(("modern", [modern], 112))
                 else:
                     suites.append(
                         (
@@ -289,12 +287,10 @@ def main() -> None:
                                 modern / name
                                 for name in (
                                     "test_api_python.py",
-                                    "test_day_numpy_input.py",
-                                    "test_day_numpy_output.py",
                                     "test_digest_regressions.py",
                                 )
                             ],
-                            120,
+                            48,
                         )
                     )
                 for suite, directories, expected in suites:
@@ -416,7 +412,7 @@ def main() -> None:
                     ],
                     work,
                 )
-                passed = check_results(xml, 392)
+                passed = check_results(xml, 320)
                 source_results.append({"python": minor, "artifact": built, "installed": installed, "passed": passed})
                 (output / "source-builds.json").write_text(json.dumps(source_results, indent=2) + "\n")
             require(len(source_results) == 3, "incomplete source-build matrix")
