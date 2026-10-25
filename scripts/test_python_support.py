@@ -1,4 +1,4 @@
-"""Check one release wheel on CPython3.10-3.15 and Polars-free baselines.
+"""Build one release wheel from the sdist and check CPython3.10-3.15 runtimes.
 
 Linux gate. --wheel reuses a real release artifact without rebuilding it.
 The matrix intentionally pins tested dependency combinations; the project lock
@@ -258,6 +258,17 @@ def main() -> None:
             sdist = build_and_check_sdist(
                 root, output / "sdist", lambda *command, cwd: run("source-archive", list(command), cwd, build=True)
             )
+            unpack = work / "source"
+            unpack.mkdir()
+            with tarfile.open(sdist, "r:gz") as archive:
+                # Verification rejected traversal, links and duplicate paths.
+                if hasattr(tarfile, "data_filter"):
+                    archive.extractall(unpack, filter="data")
+                else:
+                    archive.extractall(unpack)
+            (source,) = unpack.iterdir()
+            # Compile the archive once on the oldest supported interpreter.
+            # Every runtime cell below checks this same ABI3 native binary.
             run(
                 "release-wheel",
                 [
@@ -279,13 +290,15 @@ def main() -> None:
                     "-o",
                     str(wheels),
                 ],
-                root / "bindings/python",
+                source,
                 build=True,
             )
             (wheel,) = wheels.glob("*.whl")
         artifact = inspect_wheel(wheel)
         if sdist:
             artifact.update({"sdist": str(sdist), "sdist_sha256": hashlib.sha256(sdist.read_bytes()).hexdigest()})
+        if not args.wheel:
+            artifact["source_build_python"] = cells[0]["python"]
         (output / "artifact.json").write_text(json.dumps(artifact, indent=2) + "\n")
         results = []
         for cell in cells:
@@ -353,103 +366,12 @@ def main() -> None:
             len(results) == len(variants) and all(result["status"] == "PASS" for result in results),
             f"runtime support failed; inspect {output}",
         )
-        # Rebuild the verified source archive with each newly requested build
-        # interpreter. These are fresh artifacts, never retagged release wheels.
-        source_results = []
-        if sdist:
-            unpack = work / "source"
-            unpack.mkdir()
-            with tarfile.open(sdist, "r:gz") as archive:
-                # verify_sdist_contents already rejected traversal, links and
-                # duplicate paths. data_filter is also used where available.
-                if hasattr(tarfile, "data_filter"):
-                    archive.extractall(unpack, filter="data")
-                else:
-                    archive.extractall(unpack)
-            (source,) = unpack.iterdir()
-            for minor in ("3.12", "3.14", "3.15"):
-                cell = next(c for c in cells if c["python"] == minor and c["numpy"].startswith("2.") and c["polars"])
-                label, python = "source-py" + minor.replace(".", ""), cell["executable"]
-                wheels = output / label
-                run(
-                    label + "-build",
-                    [
-                        "uv",
-                        "run",
-                        "--project",
-                        str(root / "bindings/python"),
-                        "--no-sync",
-                        "maturin",
-                        "build",
-                        "--release",
-                        "--locked",
-                        "-F",
-                        "python",
-                        "--compatibility",
-                        "linux",
-                        "--interpreter",
-                        python,
-                        "-o",
-                        str(wheels),
-                    ],
-                    source,
-                    build=True,
-                )
-                (rebuilt,) = wheels.glob("*.whl")
-                built = inspect_wheel(rebuilt)
-                run(
-                    label + "-install",
-                    [
-                        "uv",
-                        "pip",
-                        "install",
-                        "--python",
-                        python,
-                        "--no-deps",
-                        "--reinstall-package",
-                        "gr-tdigest",
-                        str(rebuilt),
-                    ],
-                    work,
-                )
-                run(label + "-pip-check", [python, "-I", "-m", "pip", "check"], work)
-                installed = json.loads(
-                    run(label + "-imports", [python, "-I", "-c", INSPECT, json.dumps({**built, **cell})], work)
-                )
-                xml = output / (label + ".xml")
-                run(
-                    label + "-tests",
-                    [
-                        python,
-                        "-I",
-                        "-m",
-                        "pytest",
-                        "-q",
-                        "-c",
-                        "/dev/null",
-                        "-p",
-                        "no:cacheprovider",
-                        "-o",
-                        "xfail_strict=true",
-                        "--junitxml",
-                        str(xml),
-                        str(tests),
-                        str(parity),
-                        str(modern),
-                    ],
-                    work,
-                )
-                passed = check_results(xml, 392)
-                source_results.append({"python": minor, "artifact": built, "installed": installed, "passed": passed})
-                (output / "source-builds.json").write_text(json.dumps(source_results, indent=2) + "\n")
-            require(len(source_results) == 3, "incomplete source-build matrix")
     print(
         f"{len(MATRIX)} full cells passed compatibility and modern checks; "
         f"{len(baselines)} Polars-free cells passed; evidence: {output}"
     )
-    print(
-        "Source rebuilds: " + ("3.12, 3.14 and 3.15 passed" if sdist else "not requested: no source archive supplied")
-    )
+    if not args.wheel:
+        print(f"Source archive compiled once with Python {cells[0]['python']}; wheel passed every runtime cell")
 
 
 if __name__ == "__main__":
