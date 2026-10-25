@@ -1,8 +1,33 @@
 # Modern Polars API: consumer candidate
 
-The modern candidate targets the explicitly pinned Polars 2.0.0 stack. Moving
-from 1.38.1 is an approved dependency migration, not a claim that the same plugin
-binary works on both. Original `tdigest_rs` objects are a separate API.
+Install `gr-tdigest` normally when Polars is already installed. Its expressions
+use that existing Polars runtime. The optional `gr-tdigest[polars]` extra installs
+Polars if needed and requires only `polars>=1.0.0`, without an upper cap; it also
+retains an existing compatible version. There is no need to pick a separate
+package or native build for Polars 1.x versus 2.x. Development stays pinned to
+1.44.2. Original `tdigest_rs` objects remain a separate API.
+
+`make python-support-test` installs the same compiled wheel in isolated cells
+for Polars 1.0.0, 1.20.0, 1.38.1, 1.44.2 and 2.0.0 across CPython 3.10–3.15.
+Every cell starts with Polars installed, installs the base package and then the
+extra with normal dependency resolution, and verifies both preserve its version
+and the native library hash. The public API and consumer regressions cover
+grouped lazy joins, chunked inputs, streaming execution, empty/missing states,
+list schemas and binary precision. Polars-free baseline installs remain covered.
+The open dependency range permits newer Polars releases without a package
+metadata change; unreleased versions still need verification before compatibility
+can be guaranteed.
+
+Use the collection API of the installed Polars release (`streaming=True` on
+early 1.x, `engine="streaming"` on newer releases). In grouped queries, train a
+digest first, then encode it in a subsequent expression: early 1.x planners
+reject nested reductions such as `to_bytes(tdigest("x"))` inside one `agg`.
+
+On CPython 3.15, Polars 1.44.2 has an upstream Series namespace dispatch
+limitation: `series.struct.field(...)` can return `None` even for ordinary
+structs. Use `frame.select(pl.col("d").struct.field("count"))` for field
+extraction on that combination. The expression API and plugin are exercised
+by the compatibility gate; this package does not patch Polars namespace methods.
 
 ```python
 import polars as pl
