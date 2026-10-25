@@ -4,6 +4,8 @@ All notable changes to this project are documented in this file.
 
 ## [Unreleased]
 
+- Select Polars CDF broadcasting by input length, preserve List expression output, and normalize Python probe sequences.
+
 - Check Polars training and reconstructed state, reject missing digest rows, and require explicit binary precision hints.
 
 - Validate positive transformations before committing modern state.

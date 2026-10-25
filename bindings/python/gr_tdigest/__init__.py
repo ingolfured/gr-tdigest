@@ -624,7 +624,18 @@ def _output_name_or_raise(e: pl.Expr, ctx: str) -> str:
 
 def cdf(digest: "IntoExpr", values: "IntoExpr") -> pl.Expr:
     d_expr = _into_expr(digest)
-    v_expr = _into_expr(values)
+    pl = _require_polars()
+    # Python sequences/Series are a probe vector. A List-valued expression is
+    # instead a column of per-row lists and keeps List output even for one row.
+    import numpy as np
+
+    if isinstance(values, np.ndarray) and values.ndim > 1:
+        raise ValueError("Polars CDF probe arrays must be scalar or one-dimensional")
+    if isinstance(values, (list, tuple, pl.Series)) or isinstance(values, np.ndarray) and values.ndim == 1:
+        probes = values if isinstance(values, pl.Series) else pl.Series("probe", values)
+        v_expr = pl.lit(probes)
+    else:
+        v_expr = _into_expr(values)
 
     expr = _register_plugin_function(
         plugin_path=str(lib),

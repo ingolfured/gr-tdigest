@@ -896,12 +896,23 @@ where
 {
     let digests: Vec<TDigest<F>> = parse_digest_column_strict::<F>(digest_s)?;
     let digest_len = digest_s.len();
+    // A scalar/list literal probe may also broadcast over aligned digest rows.
+    let repeated_values;
+    let values_s = if digest_len != 1 && values_s.len() == 1 {
+        repeated_values = values_s.new_from_index(0, digest_len);
+        &repeated_values
+    } else {
+        values_s
+    };
 
-    // Detect broadcast: exactly one non-empty digest across all rows
-    let mut non_empty_iter = digests.iter().filter(|td| !td.is_empty());
-    let single_non_empty = match (non_empty_iter.next(), non_empty_iter.next()) {
-        (Some(td0), None) => Some(td0.clone()),
-        _ => None,
+    // Cardinality, never digest contents, selects broadcasting. An aligned
+    // empty digest must keep its own NaN result rather than borrow a neighbor.
+    polars_ensure!(digest_len == 1 || digest_len == values_s.len(), ComputeError:
+        "tdigest.cdf: expected one digest or one digest per probe row");
+    let single_non_empty = if digest_len == 1 {
+        digests.first().cloned()
+    } else {
+        None
     };
 
     match values_s.dtype() {
@@ -1002,7 +1013,7 @@ where
 /// Strict policy: any NULL list cell or inner NULL → ERROR.
 fn cdf_on_list_out<F, Out>(
     digests: &[TDigest<F>],
-    digest_len: usize,
+    _digest_len: usize,
     lc: &ListChunked,
     single_non_empty: Option<TDigest<F>>,
 ) -> PolarsResult<Series>
@@ -1013,26 +1024,6 @@ where
     // If any list element is null → ERROR (strict probe policy)
     if lc.null_count() > 0 {
         polars_bail!(ComputeError: "tdigest.cdf: probe list contains null values; nulls are not allowed");
-    }
-
-    // Fast-path: single digest row + single list row → flat vector output (not a list)
-    if digest_len == 1 && lc.len() == 1 {
-        let td = digests.get(0).cloned().unwrap_or_default();
-        let sub = lc
-            .get_as_series(0)
-            .unwrap_or_else(|| Series::new("".into(), Vec::<f64>::new()));
-
-        if sub.null_count() > 0 {
-            polars_bail!(ComputeError: "tdigest.cdf: probe list contains nulls; nulls are not allowed");
-        }
-
-        let vals = subseries_to_f64_vec(&sub)?;
-        let out_native: Vec<<Out as PolarsNumericType>::Native> = td
-            .cdf_or_nan(&vals)
-            .into_iter()
-            .map(Out::from_f64)
-            .collect();
-        return Ok(Out::series_from_vec("", out_native));
     }
 
     // General case: build list-per-row
@@ -1060,7 +1051,10 @@ where
     }
 
     let out_lc: ListChunked = rows.into_iter().collect();
-    Ok(out_lc.into_series())
+    let item_dtype = Out::series_from_vec("", Vec::new()).dtype().clone();
+    out_lc
+        .into_series()
+        .cast(&DataType::List(Box::new(item_dtype)))
 }
 
 fn quantile_impl(inputs: &[Series], q: f64) -> PolarsResult<Series> {

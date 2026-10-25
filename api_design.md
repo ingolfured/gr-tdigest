@@ -245,3 +245,7 @@ Positive transformations prepare and validate independent state before commit; f
 ## Checked Polars state
 
 Polars rejects missing digest rows, checks training representability, and requires a binary precision hint. Empty binary decoding uses the hinted schema.
+
+## Polars CDF shape and broadcasting
+
+CDF broadcasting follows input lengths; per-row List expressions retain List output, while Python sequences provide a flat probe vector. Aligned empty digests retain their own NaN results.

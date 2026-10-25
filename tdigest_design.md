@@ -535,3 +535,7 @@ Weight and value scaling prepare independent candidate state, reject aggregate o
 ## Checked Polars state and binary precision
 
 Polars training uses checked precision conversion and reconstruction validates every digest row. Missing digests error rather than becoming empty digests. Binary decoding requires a precision hint and empty decoding uses its schema.
+
+## Polars CDF shape and broadcasting
+
+CDF broadcasting follows row counts instead of nonempty digest contents. Scalar probes broadcast over digest rows. List probes retain List output, including one-row and empty results. Python sequence probes become a flat probe Series.
