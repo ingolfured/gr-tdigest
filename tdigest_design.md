@@ -538,6 +538,10 @@ JAR task inspects the final archive and rejects missing, extra or misnamed nativ
 payloads. A renamed-override build followed by an outside-checkout JAR execution
 is a CI regression; ordinary Java tests alone previously missed this path.
 
+## Capacity-search implementation
+
+Trial capacity searches count k-limit clusters using the same ordered weight additions and scale comparisons as the emitting pass. They do not construct temporary centroid means or allocate discarded output vectors. The selected final pass still uses the existing full compression path. This changes work performed during search, not its numerical decisions or storage settings.
+
 The JAR bundles a canonically named native payload with source and SHA-256 identity in its manifest. Explicit native overrides accept relative distributed-file paths; extraction can use a configured writable directory. Loader diagnostics identify attempted paths and causes. Configured build-native overrides are packaged under the runtime resource name.
 
 Regression coverage in `tests/numerical_foundation.rs` checks both mean precisions for tiny Use capacities, residual tail mass, cancellation and fractional atomic boundaries. Compressor unit tests cover recovery from intermediate moment overflow and accumulator reuse after clearing.

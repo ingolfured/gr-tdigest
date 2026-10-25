@@ -373,6 +373,44 @@ fn klimit_merge<F: FloatLike + FloatCore>(
     clusters
 }
 
+/// Count a trial k-limit pass without constructing discarded centroid means.
+/// Decisions depend only on weights; preserve the full pass's addition order.
+fn klimit_count<F: FloatLike + FloatCore>(
+    items: &[Centroid<F>],
+    d: f64,
+    family: ScaleFamily,
+    tol: f64,
+) -> usize {
+    if items.is_empty() {
+        return 0;
+    }
+    let total_w: f64 = items.iter().map(|c| c.weight_f64()).sum();
+    let n = items.len() as f64;
+    if family == ScaleFamily::K2Norm && (n / d).ln().mul_add(4.0, 24.0) <= 0.0 {
+        return items.len();
+    }
+    let mut c_acc = 0.0_f64;
+    let mut weight = 0.0_f64;
+    let mut clusters = 0;
+    let mut k_left = q_to_k(c_acc / total_w, d, family, n);
+    for centroid in items {
+        let next = centroid.weight_f64();
+        let q_r = (c_acc + weight + next) / total_w;
+        if (q_to_k(q_r, d, family, n) - k_left) <= 1.0 + tol {
+            weight += next;
+        } else {
+            if weight > 0.0 {
+                clusters += 1;
+                c_acc += weight;
+                weight = 0.0;
+            }
+            k_left = q_to_k(c_acc / total_w, d, family, n);
+            weight += next;
+        }
+    }
+    clusters + usize::from(weight > 0.0)
+}
+
 /// **(4) Cap** — reduce to at most `core_cap` by running a second k-limit pass.
 ///
 /// We binary-search `d'` in `(0, d]` and choose the largest value that yields `<= core_cap`
@@ -415,7 +453,7 @@ fn cap_with_second_klimit<F: FloatLike + FloatCore>(
 
     for _ in 0..CAP_SEARCH_ITERS {
         let mid = 0.5 * (lo + hi);
-        let len_mid = klimit_merge(core, mid, family, KLIMIT_TOL).len();
+        let len_mid = klimit_count(core, mid, family, KLIMIT_TOL);
         if len_mid <= core_cap {
             found = true;
             best = mid;
@@ -1063,5 +1101,66 @@ mod tests {
         assert!(approx(td.sum(), mw_sum, 1e-12));
         assert!(approx(td.min(), -3.0, 1e-12));
         assert!(approx(td.max(), 4.0, 1e-12));
+    }
+}
+
+#[cfg(test)]
+mod count_probe_tests {
+    use super::*;
+
+    fn compare_counts<F: FloatLike + FloatCore>() {
+        for size in [0, 1, 2, 3, 16, 67, 200, 1003] {
+            for weighted in [false, true] {
+                let weights = [1.0, 0.5, 0.25, 16777217.0, 1e-100, 1e100];
+                let items: Vec<Centroid<F>> = (0..size)
+                    .map(|i| {
+                        let mean = (i as f64 - size as f64 / 2.0) * 1e25;
+                        let weight = if weighted {
+                            weights[i % weights.len()]
+                        } else {
+                            1.0
+                        };
+                        if i % 2 == 0 {
+                            Centroid::new_atomic_f64(mean, weight)
+                        } else {
+                            Centroid::new_mixed_f64(mean, weight)
+                        }
+                    })
+                    .collect();
+                for family in [
+                    ScaleFamily::Quad,
+                    ScaleFamily::K1,
+                    ScaleFamily::K2,
+                    ScaleFamily::K2Norm,
+                    ScaleFamily::K3,
+                ] {
+                    for delta in [
+                        f64::MIN_POSITIVE,
+                        1e-6,
+                        0.5,
+                        2.0,
+                        16.0,
+                        32.0,
+                        200.0,
+                        1000.0,
+                        1e100,
+                    ] {
+                        for tolerance in [0.0, KLIMIT_TOL] {
+                            assert_eq!(klimit_count(&items, delta, family, tolerance), klimit_merge(&items, delta, family, tolerance).len(), "size={size} weighted={weighted} family={family:?} delta={delta} tolerance={tolerance}");
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    #[test]
+    fn count_probe_matches_full_pass_f32() {
+        compare_counts::<f32>();
+    }
+
+    #[test]
+    fn count_probe_matches_full_pass_f64() {
+        compare_counts::<f64>();
     }
 }

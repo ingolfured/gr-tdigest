@@ -228,3 +228,5 @@ JVM builds accept a selected native file with any basename through
 `TDIGEST_NATIVE_FILE`. Packaging renames it to the native loader's canonical
 resource path, removes stale generated payloads and verifies the finished JAR.
 CI exercises a renamed override and runs that JAR outside the checkout.
+
+Capacity tuning counts trial clusters without building discarded centroids; final compression and public numerical settings retain their existing behavior.
