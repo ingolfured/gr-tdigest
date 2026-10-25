@@ -21,6 +21,10 @@ from check_upstream_sources import verify_sources
 def verify_wheel_contents(wheel: Path) -> None:
     """Reject generated Python caches before installing the release artifact."""
     with ZipFile(wheel) as archive:
+        required = {"gr_tdigest/_polars.py", "gr_tdigest/_shared.py"}
+        missing = required.difference(archive.namelist())
+        if missing:
+            raise RuntimeError("wheel omits Python adapter modules: " + ", ".join(sorted(missing)))
         unexpected = sorted(
             name
             for name in archive.namelist()

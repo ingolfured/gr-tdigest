@@ -151,6 +151,8 @@ packager respect `CARGO_TARGET_DIR` directly.
 - NumPy: 1.26.4 or the 2.x line; tested combinations are recorded in `scripts/test_python_support.py`
 - Polars: optional; install `gr-tdigest[polars]` to install Polars when needed. Existing Polars 1.x or 2.x installs are retained (`polars>=1.0.0`, no upper cap); development uses 1.44.2
 
+Polars integration is isolated in an internal adapter behind the existing public functions. Numerical imports remain usable without Polars installed.
+
 Existing G-Research applications keep `from tdigest_rs import TDigest` and
 `TDigest.from_array(values, delta=300)`. This interface uses the unmodified
 original numerical implementation and Python wrapper, including float32

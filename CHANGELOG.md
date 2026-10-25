@@ -4,6 +4,8 @@ All notable changes to this project are documented in this file.
 
 ## [Unreleased]
 
+- Isolate lazy Polars expression wiring in a dedicated adapter, preserve public call signatures and enum identities, and align the tdigest type stub with its runtime API.
+
 - Resolve the updated base conflicts while preserving Polars compatibility coverage, and track Kotlin consumer sources and runtime dependencies for incremental compilation.
 
 - Verify toolchain selection, source archives and installed artifacts.
