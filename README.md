@@ -213,7 +213,7 @@ Use the [Python/NumPy guide](bindings/python/OBJECT_API.md), [Polars guide](bind
 
 Modern Rust construction returns a checked result, for example `TDigest::<f64>::builder().max_size(1000).build()?`. Modern defaults use capacity 1,000; the separate original `tdigest_rs` and `tdigest_core` interfaces retain their pinned API and calculations.
 
-The upcoming release is `0.2.5-rc.1` (`0.2.5rc1` for Python). Use the guides above for installation and API examples.
+The upcoming release is `0.3.0` for Rust, Python and the JVM. Use the guides above for installation and API examples.
 
 ## Measured summary-size tradeoffs
 

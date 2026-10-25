@@ -1,7 +1,7 @@
 # Standalone JVM consumers
 
 These examples resolve the same prebuilt `gr.tdigest:gr-tdigest` JAR used by Java.
-They need no Rust compiler or Python at runtime. Use `0.2.5-rc.1` for this release candidate. A successful local example is not Spark cluster
+They need no Rust compiler or Python at runtime. Use `0.3.0` for this release. A successful local example is not Spark cluster
 qualification.
 
 ## Kotlin and Gradle
