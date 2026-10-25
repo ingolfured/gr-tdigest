@@ -225,4 +225,18 @@ See the [winner and error-ratio tables](compat/quality-20261020/RESULTS.md) for 
 The configured JDK also supplies the direct Java compiler/runtime subprocesses used by `make test`; an environment-selected JDK does not require a separate system Java installation.
 
 Modern Rust builders, seeded construction, merges and explicit precision conversions return checked results. Malformed reconstructed state is rejected before use.
-Validation includes numerical consistency between aggregate statistics and centroids, within floating-point rounding limits. It does not prove the original data or statistical accuracy. Scaling validation is the next part of this change series.
+Validation includes numerical consistency between aggregate statistics and centroids, within floating-point rounding limits. It does not prove the original data or statistical accuracy.
+
+
+Overflow protection covers modern construction, reconstruction, updates, merges
+and positive scaling through the shared Rust core used by Python, Polars, Java
+and the CLI. Unsupported aggregate or selected-precision results return errors;
+failed updates preserve the receiver. CDF/quantile interpolation avoids extreme
+finite endpoint overflow; trimmed means normalize overflowing moments before
+averaging. Ordinary floating-point rounding and statistical approximation remain.
+
+The original `tdigest_core` / Python `tdigest_rs` interface retains uint32 weights
+and its in-range arithmetic. Totals above `u32::MAX` and nonfinite arithmetic
+results from finite inputs now return errors (Python `ValueError`) instead of
+integer wraparound, overflow panics, or corrupted summaries. Explicit nonfinite
+observations and permissive original probes retain their historical semantics.

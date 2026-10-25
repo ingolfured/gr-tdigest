@@ -229,7 +229,7 @@ pub struct Normalized<F: FloatLike + FloatCore> {
 /// - **validate** non-decreasing means (panic on violation to match tests)
 /// - **coalesce** adjacent equal-mean centroids, preserving mixed provenance
 /// - **accumulate** total weight/sum and min/max
-pub fn normalize_stream<F, I>(items: I) -> Normalized<F>
+pub fn normalize_stream<F, I>(items: I) -> crate::TdResult<Normalized<F>>
 where
     F: FloatLike + FloatCore,
     I: IntoIterator<Item = Centroid<F>>,
@@ -245,18 +245,20 @@ where
     let first = match it.next() {
         Some(c) => c,
         None => {
-            return Normalized {
+            return Ok(Normalized {
                 out,
                 total_w,
                 total_mw,
                 min: 0.0,
                 max: 0.0,
-            }
+            })
         }
     };
 
     let mut cur_mean = first.mean_f64();
     let mut cur_w = first.weight_f64();
+    let mut run_mass = crate::tdigest::summation::Sum::default();
+    run_mass.add(cur_w);
     let mut cur_atomic = first.is_atomic();
 
     let min_mean = cur_mean;
@@ -272,9 +274,14 @@ where
         }
 
         if m == cur_mean {
+            run_mass.add(w);
             cur_w += w;
+            if !cur_w.is_finite() {
+                cur_w = run_mass.total();
+            }
             cur_atomic &= c.is_atomic();
         } else {
+            ensure_run_mass(cur_w)?;
             out.push(if cur_atomic {
                 Centroid::<F>::new_atomic_f64(cur_mean, cur_w)
             } else {
@@ -286,6 +293,8 @@ where
             // Start new run
             cur_mean = m;
             cur_w = w;
+            run_mass = crate::tdigest::summation::Sum::default();
+            run_mass.add(w);
             cur_atomic = c.is_atomic();
         }
 
@@ -295,6 +304,7 @@ where
     }
 
     // Flush last run
+    ensure_run_mass(cur_w)?;
     out.push(if cur_atomic {
         Centroid::<F>::new_atomic_f64(cur_mean, cur_w)
     } else {
@@ -305,13 +315,22 @@ where
     total_w = mass.total();
     total_mw = moment.total();
 
-    Normalized {
+    Ok(Normalized {
         out,
         total_w,
         total_mw,
         min: min_mean,
         max: max_mean,
+    })
+}
+
+fn ensure_run_mass(weight: f64) -> crate::TdResult<()> {
+    if !weight.is_finite() || weight <= 0.0 {
+        return Err(crate::TdError::NonFiniteInput {
+            context: "coalesced centroid mass overflow",
+        });
     }
+    Ok(())
 }
 
 #[cfg(test)]
@@ -325,7 +344,8 @@ mod tests {
             Centroid::<f64>::new_mixed_f64(0.0, 90.0),
             Centroid::<f64>::new_atomic_f64(0.0, 0.25),
             Centroid::<f64>::new_atomic_f64(10.0, 0.5),
-        ]);
+        ])
+        .unwrap();
         assert!(!result.out[0].is_atomic());
         assert!(result.out[1].is_atomic());
         assert_eq!(result.out[0].weight_f64(), 90.25);
