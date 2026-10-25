@@ -4,6 +4,8 @@ All notable changes to this project are documented in this file.
 
 ## [Unreleased]
 
+- Update boundary regression expectations for the 12 verified numerical improvements from #55; retain the unresolved subnormal-mean failure.
+
 - Add regression tests for tiny-capacity mass retention, residual tail contributions, cancellation, intermediate overflow and fractional atomic quantile boundaries.
 - Focus the comparison guide on choosing Modern over legacy G-Research, with measured accuracy advantages, practical capabilities and explicit tradeoffs.
 

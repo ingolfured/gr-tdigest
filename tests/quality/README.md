@@ -10,7 +10,9 @@ The weighted controls use exact rational arithmetic for the input masses. They c
 
 `make quality-extended` reads every row of both real datasets and runs756 profiles:21 data columns/distributions ×2 precisions ×3 sizes ×2 orders ×3 construction/merge paths. The paths are a single build,40 sequential merges and a balanced40-way merge. It currently returns **failure** for ten size32 synthetic merge profiles. See [recorded findings](../../compat/quality-20261020/RESULTS.md).
 
-`make quality-boundaries` runs15 hand-checkable Rust controls and currently returns **failure** for13. They expose existing tiny-capacity mass loss, a dropped tiny tail contribution, cancellation, fractional-weight median asymmetry and subnormal aggregate-mean loss. These are numerical failures, not skipped tests.
+`make quality-boundaries` runs 15 hand-checkable Rust controls. After the numerical fixes in #55, 14 pass; subnormal aggregate-mean loss remains the one **failure**. The tiny-capacity mass, residual tail, cancellation and fractional-weight median controls now pass in both precisions. These are numerical measurements, not skipped tests.
+
+The boundary inventory was updated from [CI run 153](https://github.com/ingolfured/gr-tdigest/actions/runs/40185398411) after checking that its native source hashes match the reviewed source and that the 12 changed controls all improved from FAIL to PASS without changing their expected values. The unresolved subnormal failure remains explicit.
 
 ## Regression checks with known limits
 
