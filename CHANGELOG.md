@@ -4,6 +4,8 @@ All notable changes to this project are documented in this file.
 
 ## [Unreleased]
 
+- Prepare exact original sources and run the independent Rust oracle without regenerating pinned golden outputs.
+
 - Retain the original Rust lockfile, source hashes and historical oracle receipts with checksum-bound JSON formatting exclusions.
 
 - Ship public Python type declarations and py.typed metadata, and check installed signature/docstring discovery in the runtime gate.
