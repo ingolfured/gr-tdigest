@@ -4,15 +4,36 @@ All notable changes to this project are documented in this file.
 
 ## [Unreleased]
 
+- Refresh merged Spark consumer checks on the current 0.3.0 release preparation.
+
 - Add a staged-tool Spark/Scala check for separate-executor broadcast, shuffle and checkpoint restoration with exact JAR/native identity receipts.
+
+- Refresh 0.3.0 preparation on current consumer diagnostics, overflow guards and source-archive gates.
 
 - Count capacity-search trial clusters without allocating or averaging discarded centroids; retain the full final compression path and existing numerical decisions.
 
-- Align public guides for the 0.2.5 release candidate.
-- Use version `0.2.5-rc.1` (`0.2.5rc1` for Python) and simplify public release guidance.
-
-- Align public guides for the 0.3.0 release.
+- Align the 0.3.0 public guides, publishing prerequisites, Polars installation advice and JVM runtime coverage.
 - Use version `0.3.0` for Rust, Python and the JVM and simplify public release guidance.
+
+- Refresh consumer diagnostics on the repaired Polars stack and reuse the current pytest measurement helpers.
+
+- Preserve merged arithmetic overflow guards beneath Polars 1.x/2.x compatibility.
+
+- Keep Polars compatibility separate from the prerequisite and adapter review branches.
+
+- Preserve preinstalled Polars 1.x/2.x for ordinary and extra installs: require only Polars >=1.0.0, remove the upper cap, and test the 1.0 floor plus representative 1.x releases against the same native wheel.
+
+- Support both Polars 1.x (development pin 1.44.2) and 2.x (tested 2.0.0), including consumer schema, cardinality and streaming regressions.
+
+- Make Polars cardinality, validation and binary schemas explicit.
+- Refresh the adapter extraction on the consumer foundation with merged overflow guards.
+
+- Extract the Polars adapter without changing expression behavior, public signatures or the pinned dependency.
+- Refresh consumer prerequisites on the foundation containing the merged overflow audit.
+
+- Separate previously merged JVM consumers, Python typing, delivery gates and original-oracle work from Polars compatibility review.
+
+- Reject absolute paths and symlink escapes in the local Maven fixture so requests cannot read outside its repository.
 
 - Verify toolchain selection, source archives and installed artifacts.
 
@@ -26,19 +47,61 @@ All notable changes to this project are documented in this file.
 
 - Load and identify native payloads outside the build checkout.
 
-- Preserve preinstalled Polars 1.x/2.x for ordinary and extra installs: require only Polars >=1.0.0, remove the upper cap, and test the 1.0 floor plus representative 1.x releases against the same native wheel.
-
-- Support both Polars 1.x (development pin 1.44.2) and 2.x (tested 2.0.0), with the same installed wheel tested on both across supported Python versions, including consumer and streaming regressions.
-
 - Keep runtime payload identity with the following standalone-loader change.
 
 - Expose fluent JVM operations, safe serialization and native failures.
+- Carry the merged arithmetic overflow guards and source-package checks into the downstream consumer foundation, preserving checked merge error propagation.
 
-- Make Polars cardinality, validation and binary schemas explicit.
+- Remove unused imports and normalize spacing in modern Python consumer regressions for CI lint.
+
+- Resolve the modern Python chapter against the updated quality base, preserving checked-state validation and the Python object API contracts.
 
 - Expose weighted modern Python operations and independent state copies.
 
-- Expose weighted modern Python operations and independent state copies.
+- Format the quality-run fixture to satisfy the CI Ruff formatting check.
+
+- Resolve the quality chapter against the pytest-based gates, retaining source/native stability checks and removing the retired boundary-runner adapter.
+
+- Resolve the checked-state base merge while retaining its validation fixes, transactional scaling, Polars contracts and updated quality gates.
+- Merge the Polars-state precision-hint test fix into the CDF-shapes branch, preserving both branches' changelog entries.
+
+- Merge the updated Polars-state base into the CDF-shapes branch, preserving both CDF broadcasting and overflow documentation.
+
+- Supply explicit binary precision hints in Polars overflow coherence tests.
+
+- Include the original arithmetic overflow guard in published Rust and Python source packages.
+
+- Guard original Rust/Python uint32 totals and finite-input arithmetic, propagate modern compression overflow as errors without mutation, and recover representable extreme trimmed means; add cross-language overflow regressions.
+
+- Reject TDIG v1 export when its unit-weight kind heuristic would produce contradictory atomic extrema on reconstruction.
+
+- Reject contradictory centroid moments and atomic bounds, zero edge pins, incomplete struct configuration and missing centroid lists; validate export and no-op paths, check binary lengths/platform sizes, and preserve rounded precision round-trips.
+
+- Select Polars CDF broadcasting by input length, preserve List expression output, and normalize Python probe sequences.
+
+- Check Polars training and reconstructed state, reject missing digest rows, and require explicit binary precision hints.
+
+- Validate positive transformations before committing modern state.
+
+- Check modern construction, reconstruction, precision casts and merges, including numerical-foundation caller migrations.
+
+- Merge the updated quality-gates base into the comparison documentation branch, preserving both sets of unreleased notes.
+
+- Align Python package and compatibility notes with the single source-archive build gate.
+
+- Check that source packages contain the accuracy tests, saved results and offline data.
+
+- Run Python packaging checks alongside core CI, avoid redundant package builds, reuse Cargo dependencies for source-archive rebuilds, and retain live build logs and timings.
+
+- Speed up Python CI by compiling one release wheel from the verified source archive and checking it across all runtime cells, removing three repeated optimized builds.
+
+- Document pytest profile selection, expected accuracy failures and candidate-baseline review.
+
+- Keep stacked CI and source-archive checks aligned with pytest accuracy profiles.
+
+- Run accuracy profiles as parametrized pytest cases, with opt-in extended checks and retained baseline reports.
+
+- Update boundary regression expectations for the 12 verified numerical improvements from #55; retain the unresolved subnormal-mean failure.
 
 - Clarify legacy versus Modern accuracy tradeoffs, historical benchmark scope, and the distinction between regression checks and accuracy passes.
 
@@ -52,6 +115,14 @@ All notable changes to this project are documented in this file.
 - Focus the comparison guide on choosing Modern over legacy G-Research, with measured accuracy advantages, practical capabilities and explicit tradeoffs.
 
 - Document measured Modern versus G-Research accuracy winners and error ratios by dataset, summary size, precision and merge setup.
+
+- Use checked modern state and length-based CDF broadcasting in Polars.
+
+- Validate positive transformations before committing modern state.
+
+- Check modern construction, reconstruction, precision casts and merges.
+
+- Preserve residual mass and compensated modern centroid arithmetic.
 
 - Test accuracy on recorded data and deterministic distributions.
 
@@ -70,6 +141,8 @@ All notable changes to this project are documented in this file.
 - Reject inconsistent delta settings in Polars digest structs.
 
 - Copy NumPy query outputs without changing ownership or results.
+
+- Cite the published K2 normalizer and explain its constants beside the scale-domain guard.
 
 - Merge master into the K2Norm review branch, preserving both branches' unreleased notes.
 

@@ -18,7 +18,7 @@ import gr_tdigest._gr_tdigest as native
 # Load only the explicit reference file, so -I can keep package imports isolated
 # to the installed wheel without adding the checkout to sys.path.
 reference_spec = importlib.util.spec_from_file_location(
-    "_tdigest_quality_reference", Path(__file__).with_name("quality_suite.py")
+    "_tdigest_quality_reference", Path(__file__).resolve().parents[1] / "tests/quality/measurements.py"
 )
 q = importlib.util.module_from_spec(reference_spec)
 sys.modules[reference_spec.name] = q
@@ -108,7 +108,7 @@ def main():
             "matrices": MATRICES,
             "cohort": args.cohort,
             "diagnostic_criteria": "reuse0.1rank_max/CDF_max for capacity<=32,0.05above32; diagnostic extension, not an owner-approved new acceptance policy",
-            "reference": "unchanged exact observed-data scoring/invariants from quality_suite.py",
+            "reference": "unchanged exact observed-data scoring/invariants from tests/quality/measurements.py",
             "original": "only established data at K2capacity200/1000; actual logical-byte budget,90%-100% eligibility, no accuracy-based selection; no fabricated original CDF",
             "counts": "profiles share data and are not independent statistical trials",
         },
