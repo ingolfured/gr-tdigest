@@ -263,6 +263,10 @@ The modern constructor accepts explicit positive weights. Copy and pickle preser
 
 Java restoration registers the restored object itself as the Cleaner referent and owns a fresh native handle. Builders expose weighted observations and explicit modern delta configuration; checked JNI construction rejects unsupported arrays, scales and capacities. Failed updates preserve the receiver.
 
+## JNI construction and codec failure boundary
+
+Catchable Rust panics in JNI construction, decoding, encoding and destruction are translated to Java IllegalStateException after releasing the closure borrow. Existing pending Java exceptions are retained. Allocation aborts and invalid raw pointers remain outside this catchable boundary.
+
 ## Overflow behavior across interfaces
 
 Modern creation, update, merge and scaling return checked results. Compression
