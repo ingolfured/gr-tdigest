@@ -253,6 +253,10 @@ where
     F: FloatLike + FloatCore,
     N: PlFloat,
 {
+    td.validate_state()
+        .map_err(|e| PolarsError::ComputeError(e.to_string().into()))?;
+    let max_size = i64::try_from(td.max_size())
+        .map_err(|_| PolarsError::ComputeError("capacity exceeds Polars Int64 range".into()))?;
     // Gather once in f64 from centroids
     let means_f64: Vec<f64> = td.centroids().iter().map(|c| c.mean_f64()).collect();
     let wgts_f64: Vec<f64> = td.centroids().iter().map(|c| c.weight_f64()).collect();
@@ -284,12 +288,17 @@ where
     let min_s = N::series_from_vec(F_MIN, vec![N::from_f64(td.min())]);
     let max_s = N::series_from_vec(F_MAX, vec![N::from_f64(td.max())]);
     let count_s = Series::new(F_COUNT.into(), [td.count()]);
-    let max_size_s = Series::new(F_MAX_SIZE.into(), [td.max_size() as i64]);
+    let max_size_s = Series::new(F_MAX_SIZE.into(), [max_size]);
     let scale_s = Series::new(F_SCALE.into(), [scale_to_code(td.scale()) as i64]);
     let (policy, pin) = match td.singleton_policy() {
         SingletonPolicy::Off => (0_i64, 0_i64),
         SingletonPolicy::Use => (1, 0),
-        SingletonPolicy::UseWithProtectedEdges(k) => (2, k as i64),
+        SingletonPolicy::UseWithProtectedEdges(k) => (
+            2,
+            i64::try_from(k).map_err(|_| {
+                PolarsError::ComputeError("pin_per_side exceeds Polars Int64 range".into())
+            })?,
+        ),
     };
     let policy_s = Series::new(F_POLICY.into(), [policy]);
     let pin_s = Series::new(F_PIN.into(), [pin]);
@@ -331,6 +340,15 @@ where
     let s = input.struct_().map_err(|_| CodecError::NotAStruct {
         series_name: input.name().to_string(),
     })?;
+    let config_fields = [F_SCALE, F_POLICY, F_PIN, F_DELTA];
+    let has_config = config_fields
+        .iter()
+        .any(|name| s.field_by_name(name).is_ok());
+    if has_config {
+        for name in config_fields {
+            let _ = field(s, name)?;
+        }
+    }
 
     // Required fields
     let centroids = field(s, F_CENTROIDS)?;
@@ -386,7 +404,7 @@ where
 
         let mut builder = TDigest::<F>::builder().max_size(max_size);
         // Older structs omitted configuration and kind; retain their historical defaults.
-        if s.field_by_name(F_SCALE).is_ok() {
+        if has_config {
             let integer = |name| -> Result<i64, CodecError> {
                 let column = field(s, name)?;
                 expect_dtype(&column, DataType::Int64, name)?;
@@ -402,7 +420,9 @@ where
             let policy = match integer(F_POLICY)? {
                 0 if pin == 0 => SingletonPolicy::Off,
                 1 if pin == 0 => SingletonPolicy::Use,
-                2 if pin > 0 => SingletonPolicy::UseWithProtectedEdges(pin as usize),
+                2 if pin > 0 => SingletonPolicy::UseWithProtectedEdges(
+                    usize::try_from(pin).map_err(|_| CodecError::InvalidField(F_PIN))?,
+                ),
                 _ => return Err(CodecError::InvalidField(F_POLICY)),
             };
             builder = builder.scale(scale).singleton_policy(policy);
@@ -515,9 +535,13 @@ where
     N: PlFloat,
     F: FloatLike + FloatCore,
 {
-    let Some(row_ser) = lc.get_as_series(row) else {
-        return Ok(Vec::new());
-    };
+    let row_ser = lc.get_as_series(row).ok_or(CodecError::NullField {
+        field: F_CENTROIDS,
+        row,
+    })?;
+    if row_ser.null_count() != 0 {
+        return Err(CodecError::InvalidField(F_CENTROIDS));
+    }
     let sc = row_ser
         .struct_()
         .map_err(|_| CodecError::BadCentroidLayout {

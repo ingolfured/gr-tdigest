@@ -9,6 +9,7 @@ is not Spark cluster qualification.
 
 The example pins Kotlin 2.4.21 and emits Java 11 bytecode. This is a tested
 compiler selection, not a claim about the minimum supported Kotlin compiler.
+Incremental compilation tracks source edits and application classpath changes.
 Use the repository's complete Gradle wrapper or its configured Gradle bootstrap:
 
 ```sh

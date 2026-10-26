@@ -274,6 +274,9 @@ impl<F: FloatLike + FloatCore> TDigest<F> {
         let mut cur = 0.0_f64;
         let mut acc_sum = 0.0_f64;
         let mut acc_w = 0.0_f64;
+        let magnitude = self.min().abs().max(self.max().abs());
+        let mut normalized_sum = crate::tdigest::summation::Sum::default();
+        let mut normalized_mass = crate::tdigest::summation::Sum::default();
 
         for c in self.centroids() {
             let w = c.weight_f64();
@@ -295,12 +298,23 @@ impl<F: FloatLike + FloatCore> TDigest<F> {
             if take > 0.0 {
                 acc_sum += c.mean_f64() * take;
                 acc_w += take;
+                if magnitude > 0.0 {
+                    let relative_mass = take / total;
+                    normalized_sum.add((c.mean_f64() / magnitude) * relative_mass);
+                    normalized_mass.add(relative_mass);
+                }
             }
             cur = next;
         }
 
         if acc_w > 0.0 {
-            acc_sum / acc_w
+            if acc_sum.is_finite() {
+                acc_sum / acc_w
+            } else {
+                // A selected tail's moment can overflow although its average
+                // lies between finite extrema. Divide before multiplying.
+                (normalized_sum.total() / normalized_mass.total()).clamp(-1.0, 1.0) * magnitude
+            }
         } else {
             f64::NAN
         }
