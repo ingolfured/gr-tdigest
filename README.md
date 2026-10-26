@@ -268,3 +268,5 @@ and its in-range arithmetic. Totals above `u32::MAX` and nonfinite arithmetic
 results from finite inputs now return errors (Python `ValueError`) instead of
 integer wraparound, overflow panics, or corrupted summaries. Explicit nonfinite
 observations and permissive original probes retain their historical semantics.
+
+Java object restoration owns an independent native handle; builder and ownership contracts are covered by the Java consumer regression tests. See the [Java guide](bindings/java/README.md).
