@@ -24,6 +24,19 @@ def verify_sources(root: Path) -> None:
     }
     for expected, relative in checksums:
         content = (root / relative).read_bytes()
+        if relative == "src/upstream/lib.rs":
+            # Only the public entry-point routing changes: the independently
+            # pinned numerical kernels and their in-range order remain intact.
+            for guarded, original in (
+                (b"mod checked;\n", b""),
+                (
+                    b"    checked::{compute, compute_quantile, compute_trimmed_mean, create_clusters, merge_clusters},",
+                    b"    core::{compute, compute_quantile, compute_trimmed_mean, create_clusters, merge_clusters},",
+                ),
+            ):
+                if content.count(guarded) != 1:
+                    raise RuntimeError("unexpected original overflow-guard routing")
+                content = content.replace(guarded, original, 1)
         if relative in namespace_imports:
             adapted, original = namespace_imports[relative]
             if content.count(adapted) != 1:

@@ -4,7 +4,10 @@ The original G-Research Rust API and arithmetic, retained at the pinned source
 revision documented in PROVENANCE.md. The package exposes `tdigest_core::TDigest`
 with public `means: Vec<T>` and `weights: Vec<u32>` fields for `f32`/`f64` use.
 Its constructors, queries, immutable merge, result types, and inherited edge
-behavior remain unchanged. The modern implementation is a separate `gr-tdigest`
+behavior remain unchanged for in-range calculations. A checked entry boundary
+rejects total mass above `u32::MAX` and overflowed arithmetic from finite inputs
+with `anyhow::Error`; it also validates queries/merges of directly constructed
+public fields. The pinned numerical kernels remain unchanged. The modern implementation is a separate `gr-tdigest`
 package; matching its delta does not imply identical outputs.
 
 ```rust
