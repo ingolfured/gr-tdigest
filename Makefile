@@ -235,7 +235,7 @@ build-java: build-toolchain-check JAVA_WRAPPER_CHECK
 # ==============================================================================
 .PHONY: test rust-test py-test java-test compat-test legacy-strict-test compat-bench legacy-bench-smoke legacy-wheel-test python-support-test
 
-test: rust-test java-test py-test compat-test quality-fast
+test: rust-test java-test py-test compat-test
 	@echo "✅ all unit tests passed"
 
 rust-test:
@@ -244,7 +244,17 @@ rust-test:
 
 # Explicit path to bindings/python/tests (pytest discovers from pyproject too)
 py-test: build-python
-	$(UV_ENV) $(UV) run --project "$(PY_DIR)" --no-sync python -m pytest -q "$(PY_TESTS_DIR)" "$(INTEG_TESTS_DIR)"
+	$(UV_ENV) $(UV) run --project "$(PY_DIR)" --no-sync python -m pytest -q "$(PY_TESTS_DIR)" "$(INTEG_TESTS_DIR)" tests/quality --quality-report "$(QUALITY_RESULTS_DIR)"
+
+QUALITY_RESULTS_DIR ?= $(CURDIR)/build/quality
+.PHONY: quality-fast quality-extended quality-regression
+quality-fast: build-python
+	@$(UV_ENV) $(UV) run --project "$(PY_DIR)" --no-sync python -m pytest -q tests/quality --quality-report "$(QUALITY_RESULTS_DIR)"
+
+quality-extended: build-python
+	@$(UV_ENV) $(UV) run --project "$(PY_DIR)" --no-sync python -m pytest -q tests/quality --quality-extended -m slow --quality-report "$(QUALITY_RESULTS_DIR)"
+
+quality-regression: quality-extended
 
 .PHONY: java-bootstrap-test
 java-bootstrap-test:
@@ -257,40 +267,19 @@ compat-test: build-python
 	@$(UV_ENV) $(UV) run --project "$(PY_DIR)" --no-sync python scripts/check_upstream_sources.py
 	@(cd "$(COMPAT_PY_DIR)" && $(UV_ENV) $(UV) run --project "$(abspath $(PY_DIR))" --no-sync python -m pytest -q tests)
 
-# Fast gates run with every make test. Extended checks preserve all measured
-# losses; the explicit regression target distinguishes known limits from fixes.
-QUALITY_RESULTS_DIR ?= $(CURDIR)/build/quality
-.PHONY: quality-fast quality-extended quality-regression quality-boundaries quality-budgets
-quality-fast: build-python
-	@$(UV_ENV) $(UV) run --project "$(PY_DIR)" --no-sync python -m pytest -q -c /dev/null -p no:cacheprovider tests/quality
-	@mkdir -p "$(QUALITY_RESULTS_DIR)"
-	@$(UV_ENV) RAYON_NUM_THREADS=1 OPENBLAS_NUM_THREADS=1 OMP_NUM_THREADS=1 $(UV) run --project "$(PY_DIR)" --no-sync python scripts/quality_suite.py --baseline tests/quality/baseline-fast.json.gz --output "$(QUALITY_RESULTS_DIR)/fast-$$(date +%Y%m%dT%H%M%S)-$$$$"
-
-quality-extended: build-python
-	@mkdir -p "$(QUALITY_RESULTS_DIR)"
-	@$(UV_ENV) RAYON_NUM_THREADS=1 OPENBLAS_NUM_THREADS=1 OMP_NUM_THREADS=1 $(UV) run --project "$(PY_DIR)" --no-sync python scripts/quality_suite.py --mode extended --baseline tests/quality/baseline-extended.json.gz --output "$(QUALITY_RESULTS_DIR)/extended-$$(date +%Y%m%dT%H%M%S)-$$$$"
-
-quality-regression: build-python
-	@mkdir -p "$(QUALITY_RESULTS_DIR)"
-	@$(UV_ENV) RAYON_NUM_THREADS=1 OPENBLAS_NUM_THREADS=1 OMP_NUM_THREADS=1 $(UV) run --project "$(PY_DIR)" --no-sync python scripts/quality_suite.py --mode extended --baseline tests/quality/baseline-extended.json.gz --known-failures tests/quality/known-limits.json --output "$(QUALITY_RESULTS_DIR)/regression-$$(date +%Y%m%dT%H%M%S)-$$$$"
-	@$(UV_ENV) $(UV) run --project "$(PY_DIR)" --no-sync python scripts/audit_quality_boundaries.py --baseline tests/quality/known-boundaries.json --output "$(QUALITY_RESULTS_DIR)/boundaries-$$(date +%Y%m%dT%H%M%S)-$$$$.json"
-
-# Wider diagnostic sweep is deliberately separate from routine tests. It returns
-# failure for observed accuracy failures; no known-limit waiver is applied here.
+.PHONY: quality-budgets
 quality-budgets: build-python
 	@mkdir -p "$(QUALITY_RESULTS_DIR)"
 	@$(UV_ENV) RAYON_NUM_THREADS=1 OPENBLAS_NUM_THREADS=1 OMP_NUM_THREADS=1 $(UV) run --project "$(PY_DIR)" --no-sync python scripts/quality_budgets.py --output "$(QUALITY_RESULTS_DIR)/budgets-$$(date +%Y%m%dT%H%M%S)-$$$$.json"
-
-quality-boundaries:
-	@$(CARGO) run --locked --release --example quality_boundaries -- --require-clean
 
 legacy-strict-test: compat-test
 
 legacy-wheel-test:
 	@$(UV_ENV) $(UV) run --project "$(PY_DIR)" --no-sync python scripts/test_legacy_wheel.py
 
+PYTHON_SUPPORT_RESULTS_DIR ?= $(CURDIR)/build/python-support
 python-support-test:
-	@$(UV_ENV) $(UV) run --project "$(PY_DIR)" --no-sync python scripts/test_python_support.py --output-dir "$(CURDIR)/build/python-support/run-$$(date +%Y%m%dT%H%M%S)-$$$$"
+	@$(UV_ENV) $(UV) run --project "$(PY_DIR)" --no-sync python scripts/test_python_support.py --output-dir "$(PYTHON_SUPPORT_RESULTS_DIR)/support-$$(date +%Y%m%dT%H%M%S)-$$$$"
 
 compat-bench: build-python
 	@$(UV_ENV) $(UV) run --project "$(PY_DIR)" --no-sync python "$(STRICT_COMPAT_BENCH)"
@@ -317,8 +306,8 @@ lint:
 	$(UV_ENV) $(UV) run --project "$(PY_DIR)" --no-sync ruff format --check --config "$(PY_DIR)/pyproject.toml" scripts/test_legacy_wheel.py scripts/test_python_support.py scripts/check_python_sdist.py
 	$(UV_ENV) $(UV) run --project "$(PY_DIR)" --no-sync ruff check --config "$(PY_DIR)/pyproject.toml" bindings/java/bootstrap.py bindings/java/tests bindings/java/examples/spark/check.py
 	$(UV_ENV) $(UV) run --project "$(PY_DIR)" --no-sync ruff format --check --config "$(PY_DIR)/pyproject.toml" bindings/java/bootstrap.py bindings/java/tests bindings/java/examples/spark/check.py
-	$(UV_ENV) $(UV) run --project "$(PY_DIR)" --no-sync ruff check --config "$(PY_DIR)/pyproject.toml" scripts/quality_suite.py scripts/quality_budgets.py scripts/fetch_quality_data.py scripts/audit_quality_boundaries.py scripts/consumer_benchmark.py scripts/qualify_host.py tests/quality
-	$(UV_ENV) $(UV) run --project "$(PY_DIR)" --no-sync ruff format --check --config "$(PY_DIR)/pyproject.toml" scripts/quality_suite.py scripts/quality_budgets.py scripts/fetch_quality_data.py scripts/audit_quality_boundaries.py scripts/consumer_benchmark.py scripts/qualify_host.py tests/quality
+	$(UV_ENV) $(UV) run --project "$(PY_DIR)" --no-sync ruff check --config "$(PY_DIR)/pyproject.toml" scripts/quality_budgets.py scripts/fetch_quality_data.py scripts/consumer_benchmark.py scripts/qualify_host.py tests/quality
+	$(UV_ENV) $(UV) run --project "$(PY_DIR)" --no-sync ruff format --check --config "$(PY_DIR)/pyproject.toml" scripts/quality_budgets.py scripts/fetch_quality_data.py scripts/consumer_benchmark.py scripts/qualify_host.py tests/quality
 
 	$(call banner,Python: mypy (auto-install types if missing))
 	@(cd "$(PY_DIR)" && $(UV_ENV) $(UV) run --no-sync python -m mypy gr_tdigest --install-types --non-interactive)

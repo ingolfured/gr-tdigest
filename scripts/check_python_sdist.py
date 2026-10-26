@@ -67,6 +67,8 @@ def verify_sdist_contents(sdist: Path, root: Path) -> None:
             "README.md",
             "bindings/python/PYTHON_README.md",
             "bindings/python/gr_tdigest/__init__.py",
+            "bindings/python/gr_tdigest/_polars.py",
+            "bindings/python/gr_tdigest/_shared.py",
             "bindings/python/tdigest_rs/__init__.py",
             "bindings/python/tdigest_rs/lib.py",
             "bindings/python/tdigest_rs/tdigest_rs.py",
@@ -93,19 +95,19 @@ def verify_sdist_contents(sdist: Path, root: Path) -> None:
             "bindings/python/tests/test_consumer_contracts.py",
         ):
             require_same(relative, relative)
-        # make test now includes the offline recorded-data gate. A source
-        # distribution must carry the actual runners, controls and fixtures.
+        # Include everything needed to run the accuracy tests offline.
         for relative in (
-            "scripts/quality_suite.py",
-            "scripts/audit_quality_boundaries.py",
+            "pytest.ini",
+            "tests/quality/__init__.py",
+            "tests/quality/conftest.py",
+            "tests/quality/measurements.py",
+            "tests/quality/test_accuracy.py",
             "scripts/fetch_quality_data.py",
-            "examples/quality_boundaries.rs",
             "tests/quality/test_reference.py",
             "tests/quality/test_weighted_quality.py",
             "tests/quality/baseline-fast.json.gz",
             "tests/quality/baseline-extended.json.gz",
             "tests/quality/known-limits.json",
-            "tests/quality/known-boundaries.json",
             "tests/quality/data/manifest.json",
             "tests/quality/data/bike.csv.gz",
             "tests/quality/data/energy.csv.gz",
@@ -119,6 +121,8 @@ def verify_sdist_contents(sdist: Path, root: Path) -> None:
             raise RuntimeError("sdist has an unexpected active Python source directory")
         for relative in (
             "gr_tdigest/__init__.py",
+            "gr_tdigest/_polars.py",
+            "gr_tdigest/_shared.py",
             "gr_tdigest/__init__.pyi",
             "gr_tdigest/_gr_tdigest.pyi",
             "gr_tdigest/py.typed",
@@ -149,6 +153,6 @@ def verify_sdist_contents(sdist: Path, root: Path) -> None:
                 raise RuntimeError("sdist active original core has the wrong library path")
         else:
             core_dir = "src/upstream"  # Older snapshots used a private path module.
-        for name in ("lib.rs", "core.rs", "scale.rs", "traits.rs", "LICENSE"):
+        for name in ("lib.rs", "core.rs", "scale.rs", "traits.rs", "checked.rs", "LICENSE"):
             require_same(core_dir + "/" + name, "src/upstream/" + name)
     print("Source archive contains required active source bytes and no duplicate paths or Python caches.", flush=True)

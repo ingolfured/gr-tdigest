@@ -553,7 +553,7 @@ impl<F: FloatLike + FloatCore> TDigest<F> {
             });
         }
         let count = result.count;
-        let compressed: Vec<Centroid<F>> = compress_into(&mut result, self.max_size, stream);
+        let compressed: Vec<Centroid<F>> = compress_into(&mut result, self.max_size, stream)?;
         result.centroids = compressed;
         result.sum = data_sum;
         result.count = count;
@@ -576,6 +576,7 @@ impl<F: FloatLike + FloatCore> TDigest<F> {
     /// Each pair is treated as exact atomic mass at the given value, then merged
     /// through the same digest merge/compression path.
     pub fn merge_weighted_unsorted(&self, values: &[F], weights: &[f64]) -> TdResult<TDigest<F>> {
+        self.validate_state()?;
         ensure_weighted_input_lengths(values.len(), weights.len())?;
         ensure_no_non_finite_values(values)?;
         ensure_no_invalid_weights(weights)?;
@@ -660,9 +661,8 @@ impl<F: FloatLike + FloatCore> TDigest<F> {
 
         // The private weighted stream deliberately contains equal-mean runs;
         // normalize it before requiring the external strict-state invariant.
-        self.validate_state()?;
         let recover_point_moment = point_product_underflow || self.has_subnormal_point_moment();
-        let mut merged = TDigest::merge_digests_unchecked(vec![self.clone(), weighted]);
+        let mut merged = TDigest::merge_digests_unchecked(vec![self.clone(), weighted])?;
         if recover_point_moment && merged.is_exact_point() {
             merged.sum = merged.centroids[0].mean_f64() * merged.count;
         }
@@ -672,7 +672,7 @@ impl<F: FloatLike + FloatCore> TDigest<F> {
 
     /// Merge multiple digests by k-way merging their centroid runs and sending the result through
     /// the same pipeline used for raw values.
-    fn merge_digests_unchecked(digests: Vec<TDigest<F>>) -> TDigest<F> {
+    fn merge_digests_unchecked(digests: Vec<TDigest<F>>) -> TdResult<TDigest<F>> {
         // Decide defaults by first non-empty digest to keep semantics stable.
         let mut chosen: Option<(usize, ScaleFamily, SingletonPolicy, Option<f64>)> = None;
         let mut runs: Vec<&[Centroid<F>]> = Vec::with_capacity(digests.len());
@@ -696,7 +696,7 @@ impl<F: FloatLike + FloatCore> TDigest<F> {
         }
         let total_count = mass.total();
         if total_count == 0.0 {
-            return TDigest::default();
+            return Ok(TDigest::default());
         }
         let (chosen_max_size, chosen_scale, chosen_policy, chosen_delta) = chosen.unwrap();
 
@@ -717,7 +717,7 @@ impl<F: FloatLike + FloatCore> TDigest<F> {
 
         // Same pipeline as values.
         let compressed: Vec<Centroid<F>> =
-            compress_into(&mut result, chosen_max_size, merged_stream);
+            compress_into(&mut result, chosen_max_size, merged_stream)?;
         result.centroids = compressed;
         // Full incoming aggregate statistics remain authoritative. Centroid
         // means have already been rounded/compressed and cannot restore them.
@@ -728,7 +728,7 @@ impl<F: FloatLike + FloatCore> TDigest<F> {
             is_sorted_strict_by_mean(&result.centroids),
             "duplicate centroid means after merge_digests"
         );
-        result
+        Ok(result)
     }
 
     /// Checked modern merge. All inputs, including empties, must have matching
@@ -761,7 +761,7 @@ impl<F: FloatLike + FloatCore> TDigest<F> {
             return Ok(digests[0].clone());
         }
         let recover_point_moment = digests.iter().any(Self::has_subnormal_point_moment);
-        let mut result = Self::merge_digests_unchecked(digests);
+        let mut result = Self::merge_digests_unchecked(digests)?;
         if recover_point_moment && result.is_exact_point() {
             result.sum = result.centroids[0].mean_f64() * result.count;
         }
@@ -825,6 +825,7 @@ impl<F: FloatLike + FloatCore> TDigest<F> {
     /// This is a convenience wrapper over [`TDigest::merge_digests`].
     pub fn merge_many(&mut self, others: &[TDigest<F>]) -> TdResult<&mut Self> {
         if others.is_empty() {
+            self.validate_state()?;
             return Ok(self);
         }
         let mut all = Vec::with_capacity(others.len() + 1);
@@ -843,6 +844,7 @@ impl<F: FloatLike + FloatCore> TDigest<F> {
     pub fn add_many<A: IntoVecF<F>>(&mut self, values: A) -> TdResult<&mut Self> {
         let vals = values.into_vec_f();
         if vals.is_empty() {
+            self.validate_state()?;
             return Ok(self);
         }
         let merged = self.merge_unsorted(vals)?;
@@ -1003,7 +1005,7 @@ impl<F: FloatLike + FloatCore> TDigest<F> {
         if seeded.centroids.len() <= max_size {
             return Ok(seeded);
         }
-        let result = Self::merge_digests_unchecked(vec![seeded]);
+        let result = Self::merge_digests_unchecked(vec![seeded])?;
         result.validate_state()?;
         Ok(result)
     }
@@ -1030,6 +1032,9 @@ impl<F: FloatLike + FloatCore> TDigest<F> {
         let invalid = |what| TdError::Invariant { what };
         if self.max_size == 0 {
             return Err(invalid("capacity must be positive"));
+        }
+        if self.policy == SingletonPolicy::UseWithProtectedEdges(0) {
+            return Err(invalid("edges policy requires pin_per_side >= 1"));
         }
         if let Some(delta) = self.delta {
             if !delta.is_finite() || delta <= 0.0 {
@@ -1066,12 +1071,16 @@ impl<F: FloatLike + FloatCore> TDigest<F> {
             ));
         }
         let aggregate_mean = self.sum / self.count;
-        let mean_epsilon = if Precision::of_type::<F>().is_f32() {
-            f32::EPSILON as f64
+        // A digest may have been upcast from f32 while retaining its original
+        // f64 sum. Current storage width does not record that rounding history.
+        let mean_epsilon = f32::EPSILON as f64;
+        let magnitude = self.min().abs().max(self.max().abs());
+        let mean_quantum = if magnitude >= f32::from_bits(1) as f64 {
+            f32::from_bits(1) as f64
         } else {
-            f64::EPSILON
+            f64::from_bits(1)
         };
-        let tolerance = 4.0 * mean_epsilon * self.min().abs().max(self.max().abs());
+        let tolerance = 4.0 * mean_epsilon * magnitude + mean_quantum;
         if (!aggregate_mean.is_finite()
             || aggregate_mean < self.min() - tolerance
             || aggregate_mean > self.max() + tolerance)
@@ -1083,6 +1092,11 @@ impl<F: FloatLike + FloatCore> TDigest<F> {
         }
         let mut mass = 0.0;
         let mut previous = f64::NEG_INFINITY;
+        if magnitude == 0.0 && self.sum != 0.0 {
+            return Err(invalid("zero-valued state must have zero sum"));
+        }
+        let mut normalized_moment = crate::tdigest::summation::Sum::default();
+        let mut all_atomic = true;
         for centroid in &self.centroids {
             let mean = centroid.mean_f64();
             let weight = centroid.weight_f64();
@@ -1097,10 +1111,34 @@ impl<F: FloatLike + FloatCore> TDigest<F> {
             }
             previous = mean;
             mass += weight;
+            all_atomic &= centroid.is_atomic();
+            if magnitude > 0.0 {
+                // Divide before multiplying: mean * weight can overflow even
+                // when the aggregate is representable after cancellation.
+                normalized_moment.add((mean / magnitude) * (weight / self.count));
+            }
         }
         let roundoff = f64::EPSILON * (self.centroids.len() as f64 + 2.0) * mass.max(self.count);
         if !mass.is_finite() || (mass - self.count).abs() > roundoff {
             return Err(invalid("count differs from represented centroid mass"));
+        }
+        if all_atomic && (self.min() != self.centroids[0].mean_f64() || self.max() != previous) {
+            return Err(invalid("atomic state extrema differ from observed points"));
+        }
+        if magnitude > 0.0 && !self.has_subnormal_point_moment() {
+            // Raw sums remain authoritative: rounded/compressed centroid means
+            // cannot reproduce them exactly. Check agreement within a numerical
+            // envelope, including absolute quantization at subnormal scales.
+            let terms = self.centroids.len() as f64 + 2.0;
+            let tolerance = 32.0 * mean_epsilon
+                + 8.0 * f64::EPSILON * terms
+                + mean_quantum / magnitude
+                + (f64::from_bits(1) / self.count) / magnitude * terms;
+            if (normalized_moment.total() - aggregate_mean / magnitude).abs() > tolerance {
+                return Err(invalid(
+                    "weighted sum differs from represented centroid moment",
+                ));
+            }
         }
         Ok(())
     }
@@ -1232,6 +1270,22 @@ mod tests {
     use std::time::Instant;
     use testdata::{gen_dataset, DistKind};
 
+    #[test]
+    fn damaged_state_cannot_bypass_validation_through_noops_or_export() {
+        use crate::tdigest::frontends::FrontendDigest;
+        let mut damaged = TDigest::<f64>::from_unsorted(&[0.0, 10.0], 100).unwrap();
+        damaged.set_sum(2.0);
+        let before = damaged.clone();
+        assert!(damaged.add_many(Vec::<f64>::new()).is_err());
+        assert!(damaged.add_weighted_many(&[], &[]).is_err());
+        assert!(damaged.merge_many(&[]).is_err());
+        assert!(TDigest::merge_digests(vec![damaged.clone()]).is_err());
+        assert!(FrontendDigest::merge_all(vec![FrontendDigest::F64(damaged.clone())]).is_err());
+        assert!(WireVersion::V3.validate_digest(&damaged).is_err());
+        assert!(damaged.to_series("td").is_err());
+        assert_eq!(damaged, before);
+    }
+
     fn approx(a: f64, b: f64, eps: f64) -> bool {
         (a - b).abs() <= eps * (1.0 + a.abs() + b.abs())
     }
@@ -1339,11 +1393,11 @@ mod tests {
         let compressed: Vec<Centroid<f64>> = match strategy {
             MergeStrategy::ConcatSort => {
                 let merged = crate::tdigest::merges::merge_runs_concat_sort(&scan.runs);
-                compress_into(&mut result, scan.chosen_max_size, merged)
+                compress_into(&mut result, scan.chosen_max_size, merged).unwrap()
             }
             MergeStrategy::HeapStream => {
                 let merged = KWayCentroidMerge::from_runs(&scan.runs);
-                compress_into(&mut result, scan.chosen_max_size, merged)
+                compress_into(&mut result, scan.chosen_max_size, merged).unwrap()
             }
         };
         result.centroids = compressed;
@@ -1364,14 +1418,14 @@ mod tests {
             MergeStrategy::ConcatSort => {
                 let merged = crate::tdigest::merges::merge_runs_concat_sort(&scan.runs);
                 let after_stream = allocated_now_bytes();
-                let compressed = compress_into(&mut result, scan.chosen_max_size, merged);
+                let compressed = compress_into(&mut result, scan.chosen_max_size, merged).unwrap();
                 let after_compress = allocated_now_bytes();
                 (compressed, after_stream.max(after_compress))
             }
             MergeStrategy::HeapStream => {
                 let merged = KWayCentroidMerge::from_runs(&scan.runs);
                 let after_stream = allocated_now_bytes();
-                let compressed = compress_into(&mut result, scan.chosen_max_size, merged);
+                let compressed = compress_into(&mut result, scan.chosen_max_size, merged).unwrap();
                 let after_compress = allocated_now_bytes();
                 (compressed, after_stream.max(after_compress))
             }

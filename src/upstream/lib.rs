@@ -1,9 +1,10 @@
+mod checked;
 mod core;
 mod scale;
 mod traits;
 
 use self::{
-    core::{compute, compute_quantile, compute_trimmed_mean, create_clusters, merge_clusters},
+    checked::{compute, compute_quantile, compute_trimmed_mean, create_clusters, merge_clusters},
     traits::{FloatConst, TotalOrd},
 };
 use anyhow::Result;
