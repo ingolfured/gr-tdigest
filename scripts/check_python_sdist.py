@@ -147,6 +147,6 @@ def verify_sdist_contents(sdist: Path, root: Path) -> None:
                 raise RuntimeError("sdist active original core has the wrong library path")
         else:
             core_dir = "src/upstream"  # Older snapshots used a private path module.
-        for name in ("lib.rs", "core.rs", "scale.rs", "traits.rs", "LICENSE"):
+        for name in ("lib.rs", "core.rs", "scale.rs", "traits.rs", "checked.rs", "LICENSE"):
             require_same(core_dir + "/" + name, "src/upstream/" + name)
     print("Source archive contains required active source bytes and no duplicate paths or Python caches.", flush=True)

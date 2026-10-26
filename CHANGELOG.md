@@ -4,6 +4,8 @@ All notable changes to this project are documented in this file.
 
 ## [Unreleased]
 
+- Refresh consumer prerequisites on the foundation containing the merged overflow audit.
+
 - Separate previously merged JVM consumers, Python typing, delivery gates and original-oracle work from Polars compatibility review.
 
 - Reject absolute paths and symlink escapes in the local Maven fixture so requests cannot read outside its repository.
@@ -21,6 +23,7 @@ All notable changes to this project are documented in this file.
 - Keep runtime payload identity with the following standalone-loader change.
 
 - Expose fluent JVM operations, safe serialization and native failures.
+- Carry the merged arithmetic overflow guards and source-package checks into the downstream consumer foundation, preserving checked merge error propagation.
 
 - Remove unused imports and normalize spacing in modern Python consumer regressions for CI lint.
 
@@ -33,10 +36,25 @@ All notable changes to this project are documented in this file.
 - Resolve the quality chapter against the pytest-based gates, retaining source/native stability checks and removing the retired boundary-runner adapter.
 
 - Resolve the checked-state base merge while retaining its validation fixes, transactional scaling, Polars contracts and updated quality gates.
+- Merge the Polars-state precision-hint test fix into the CDF-shapes branch, preserving both branches' changelog entries.
+
+- Merge the updated Polars-state base into the CDF-shapes branch, preserving both CDF broadcasting and overflow documentation.
+
+- Supply explicit binary precision hints in Polars overflow coherence tests.
+
+- Include the original arithmetic overflow guard in published Rust and Python source packages.
+
+- Guard original Rust/Python uint32 totals and finite-input arithmetic, propagate modern compression overflow as errors without mutation, and recover representable extreme trimmed means; add cross-language overflow regressions.
 
 - Reject TDIG v1 export when its unit-weight kind heuristic would produce contradictory atomic extrema on reconstruction.
 
 - Reject contradictory centroid moments and atomic bounds, zero edge pins, incomplete struct configuration and missing centroid lists; validate export and no-op paths, check binary lengths/platform sizes, and preserve rounded precision round-trips.
+
+- Select Polars CDF broadcasting by input length, preserve List expression output, and normalize Python probe sequences.
+
+- Check Polars training and reconstructed state, reject missing digest rows, and require explicit binary precision hints.
+
+- Validate positive transformations before committing modern state.
 
 - Check modern construction, reconstruction, precision casts and merges, including numerical-foundation caller migrations.
 

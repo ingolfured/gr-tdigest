@@ -553,7 +553,7 @@ impl<F: FloatLike + FloatCore> TDigest<F> {
             });
         }
         let count = result.count;
-        let compressed: Vec<Centroid<F>> = compress_into(&mut result, self.max_size, stream);
+        let compressed: Vec<Centroid<F>> = compress_into(&mut result, self.max_size, stream)?;
         result.centroids = compressed;
         result.sum = data_sum;
         result.count = count;
@@ -662,7 +662,7 @@ impl<F: FloatLike + FloatCore> TDigest<F> {
         // The private weighted stream deliberately contains equal-mean runs;
         // normalize it before requiring the external strict-state invariant.
         let recover_point_moment = point_product_underflow || self.has_subnormal_point_moment();
-        let mut merged = TDigest::merge_digests_unchecked(vec![self.clone(), weighted]);
+        let mut merged = TDigest::merge_digests_unchecked(vec![self.clone(), weighted])?;
         if recover_point_moment && merged.is_exact_point() {
             merged.sum = merged.centroids[0].mean_f64() * merged.count;
         }
@@ -672,7 +672,7 @@ impl<F: FloatLike + FloatCore> TDigest<F> {
 
     /// Merge multiple digests by k-way merging their centroid runs and sending the result through
     /// the same pipeline used for raw values.
-    fn merge_digests_unchecked(digests: Vec<TDigest<F>>) -> TDigest<F> {
+    fn merge_digests_unchecked(digests: Vec<TDigest<F>>) -> TdResult<TDigest<F>> {
         // Decide defaults by first non-empty digest to keep semantics stable.
         let mut chosen: Option<(usize, ScaleFamily, SingletonPolicy, Option<f64>)> = None;
         let mut runs: Vec<&[Centroid<F>]> = Vec::with_capacity(digests.len());
@@ -696,7 +696,7 @@ impl<F: FloatLike + FloatCore> TDigest<F> {
         }
         let total_count = mass.total();
         if total_count == 0.0 {
-            return TDigest::default();
+            return Ok(TDigest::default());
         }
         let (chosen_max_size, chosen_scale, chosen_policy, chosen_delta) = chosen.unwrap();
 
@@ -717,7 +717,7 @@ impl<F: FloatLike + FloatCore> TDigest<F> {
 
         // Same pipeline as values.
         let compressed: Vec<Centroid<F>> =
-            compress_into(&mut result, chosen_max_size, merged_stream);
+            compress_into(&mut result, chosen_max_size, merged_stream)?;
         result.centroids = compressed;
         // Full incoming aggregate statistics remain authoritative. Centroid
         // means have already been rounded/compressed and cannot restore them.
@@ -728,7 +728,7 @@ impl<F: FloatLike + FloatCore> TDigest<F> {
             is_sorted_strict_by_mean(&result.centroids),
             "duplicate centroid means after merge_digests"
         );
-        result
+        Ok(result)
     }
 
     /// Checked modern merge. All inputs, including empties, must have matching
@@ -761,7 +761,7 @@ impl<F: FloatLike + FloatCore> TDigest<F> {
             return Ok(digests[0].clone());
         }
         let recover_point_moment = digests.iter().any(Self::has_subnormal_point_moment);
-        let mut result = Self::merge_digests_unchecked(digests);
+        let mut result = Self::merge_digests_unchecked(digests)?;
         if recover_point_moment && result.is_exact_point() {
             result.sum = result.centroids[0].mean_f64() * result.count;
         }
@@ -1005,7 +1005,7 @@ impl<F: FloatLike + FloatCore> TDigest<F> {
         if seeded.centroids.len() <= max_size {
             return Ok(seeded);
         }
-        let result = Self::merge_digests_unchecked(vec![seeded]);
+        let result = Self::merge_digests_unchecked(vec![seeded])?;
         result.validate_state()?;
         Ok(result)
     }
@@ -1393,11 +1393,11 @@ mod tests {
         let compressed: Vec<Centroid<f64>> = match strategy {
             MergeStrategy::ConcatSort => {
                 let merged = crate::tdigest::merges::merge_runs_concat_sort(&scan.runs);
-                compress_into(&mut result, scan.chosen_max_size, merged)
+                compress_into(&mut result, scan.chosen_max_size, merged).unwrap()
             }
             MergeStrategy::HeapStream => {
                 let merged = KWayCentroidMerge::from_runs(&scan.runs);
-                compress_into(&mut result, scan.chosen_max_size, merged)
+                compress_into(&mut result, scan.chosen_max_size, merged).unwrap()
             }
         };
         result.centroids = compressed;
@@ -1418,14 +1418,14 @@ mod tests {
             MergeStrategy::ConcatSort => {
                 let merged = crate::tdigest::merges::merge_runs_concat_sort(&scan.runs);
                 let after_stream = allocated_now_bytes();
-                let compressed = compress_into(&mut result, scan.chosen_max_size, merged);
+                let compressed = compress_into(&mut result, scan.chosen_max_size, merged).unwrap();
                 let after_compress = allocated_now_bytes();
                 (compressed, after_stream.max(after_compress))
             }
             MergeStrategy::HeapStream => {
                 let merged = KWayCentroidMerge::from_runs(&scan.runs);
                 let after_stream = allocated_now_bytes();
-                let compressed = compress_into(&mut result, scan.chosen_max_size, merged);
+                let compressed = compress_into(&mut result, scan.chosen_max_size, merged).unwrap();
                 let after_compress = allocated_now_bytes();
                 (compressed, after_stream.max(after_compress))
             }
