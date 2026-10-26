@@ -30,8 +30,8 @@ pub extern "system" fn JNI_OnUnload(_vm: JavaVM, _reserved: *mut c_void) {}
 
 // -------------------- Helpers --------------------
 
-fn map_scale(s: &str) -> ScaleFamily {
-    parse_scale_str(Some(s)).unwrap_or(ScaleFamily::K2)
+fn map_scale(s: &str) -> Result<ScaleFamily, String> {
+    parse_scale_str(Some(s)).map_err(|error| error.to_string())
 }
 
 fn map_policy(code: jint, edges: jint) -> Result<SingletonPolicy, String> {
@@ -85,6 +85,7 @@ impl NativeDigest {
         scale: ScaleFamily,
         policy: SingletonPolicy,
         f32mode: bool,
+        delta: Option<f64>,
     ) -> Result<Self, String> {
         let precision = if f32mode {
             DigestPrecision::F32
@@ -95,7 +96,7 @@ impl NativeDigest {
             max_size,
             scale,
             policy,
-            delta: None,
+            delta,
         };
         FrontendDigest::from_values(values, config, precision)
             .map(|inner| Self { inner })
@@ -271,8 +272,9 @@ pub extern "system" fn Java_gr_tdigest_TDigestNative_fromArray(
     policy_code: jint,
     edges: jint,
     f32mode: jboolean,
+    delta: jdouble,
 ) -> jlong {
-    let mut xs: Vec<f64> = Vec::new();
+    let xs: Vec<f64>;
 
     if env.is_instance_of(&values_obj, "[D").unwrap_or(false) {
         let raw: jarray = env
@@ -329,7 +331,8 @@ pub extern "system" fn Java_gr_tdigest_TDigestNative_fromArray(
         }
         xs = out;
     } else {
-        // Unsupported input → empty digest
+        throw_illegal_arg(&mut env, "fromArray expects a numeric array".to_string());
+        return 0;
     }
 
     let scale_str = env
@@ -337,7 +340,17 @@ pub extern "system" fn Java_gr_tdigest_TDigestNative_fromArray(
         .ok()
         .map(|s| s.to_string_lossy().into_owned())
         .unwrap_or_else(|| "k2".to_string());
-    let sf = map_scale(&scale_str);
+    let sf = match map_scale(&scale_str) {
+        Ok(scale) => scale,
+        Err(error) => {
+            throw_illegal_arg(&mut env, error);
+            return 0;
+        }
+    };
+    if max_size <= 0 {
+        throw_illegal_arg(&mut env, "max_size must be positive".to_string());
+        return 0;
+    }
     let policy = match map_policy(policy_code, edges) {
         Ok(p) => p,
         Err(msg) => {
@@ -347,7 +360,14 @@ pub extern "system" fn Java_gr_tdigest_TDigestNative_fromArray(
     };
     let f32 = f32mode != 0;
 
-    match NativeDigest::from_values(xs, max_size.max(1) as usize, sf, policy, f32) {
+    match NativeDigest::from_values(
+        xs,
+        max_size as usize,
+        sf,
+        policy,
+        f32,
+        if delta == 0.0 { None } else { Some(delta) },
+    ) {
         Ok(nd) => into_handle(Box::new(nd)),
         Err(e) => {
             throw_illegal_arg(&mut env, e.to_string());

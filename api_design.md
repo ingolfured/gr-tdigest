@@ -259,6 +259,10 @@ Polars rejects missing digest rows, checks training representability, and requir
 
 The modern constructor accepts explicit positive weights. Copy and pickle preserve independent full state. A one-dimensional NumPy query returns an owned Float64 array even when it has one element; zero-dimensional probes return scalars, lists and tuples retain their containers, and multidimensional probes are rejected. See bindings/python/OBJECT_API.md.
 
+## Modern Java ownership and serialization
+
+Java restoration registers the restored object itself as the Cleaner referent and owns a fresh native handle. Builders expose weighted observations and explicit modern delta configuration; checked JNI construction rejects unsupported arrays, scales and capacities. Failed updates preserve the receiver.
+
 ## Overflow behavior across interfaces
 
 Modern creation, update, merge and scaling return checked results. Compression

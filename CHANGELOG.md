@@ -4,6 +4,8 @@ All notable changes to this project are documented in this file.
 
 ## [Unreleased]
 
+- Keep Java restored handles attached to their actual Cleaner referent and expose checked weighted/delta builders with consumer regressions.
+
 - Carry the merged arithmetic overflow guards and source-package checks into the downstream consumer foundation, preserving checked merge error propagation.
 
 - Remove unused imports and normalize spacing in modern Python consumer regressions for CI lint.
