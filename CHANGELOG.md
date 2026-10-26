@@ -187,6 +187,8 @@ All notable changes to this project are documented in this file.
 - DRY: shared `validate_trimmed_mean_bounds` helper now used by both `trimmed_mean` (silent, returns NaN on invalid bounds) and `trimmed_mean_strict` (loud, returns `FrontendError::InvalidProbe`).
 - Reconciled defaults across surfaces. There are now exactly two: `DEFAULT_MAX_SIZE = 1000` (used when neither `max_size` nor `delta` is set; consistent across Rust `py.rs` PyO3 signature, Rust CLI `--max-size`, the Python shim's `from_array` etc., and the Polars `tdigest()` expression) and `DEFAULT_DELTA = 300.0` (matches old `tdigest-rs`'s `DEFAULT_DELTA`; exposed as a public Python constant so `delta=DEFAULT_DELTA` reproduces that library's out-of-the-box behavior). The historical intent was `1000` (commit `14b34ac` "Default arguments k2, 1000 and f64"); the Python shim's `200` default was drift introduced when the shim layer was created and now follows the rest.
 
+- Reconcile the Polars adapter with the squashed prerequisite merges while preserving its source.
+
 ## [0.2.4] - 2026-02-16
 
 ### Changed
