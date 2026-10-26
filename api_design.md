@@ -270,6 +270,14 @@ Catchable Rust panics in JNI construction, decoding, encoding and destruction ar
 
 The shared panic translator also wraps updates, digest merges, scaling, precision conversion, CDF, quantile and median. Checked frontend errors retain their existing mappings; public numeric behavior and wire formats are unchanged.
 
+## Scala and Kotlin consumer examples
+
+Public examples compile Scala 2.12.16 and Kotlin consumers against the shared Java JAR. The local authenticated Maven fixture exercises selected dependency resolution and prepared-cache offline use. Actual Spark driver/executor, serializer and checkpoint qualification remains a consumer-environment check.
+
+The loopback Maven fixture serves only paths contained within its configured repository, rejecting absolute paths and symlinks that resolve outside it.
+
+Kotlin example compilation tracks its source and application classpath so incremental builds recompile after either changes.
+
 ## Overflow behavior across interfaces
 
 Modern creation, update, merge and scaling return checked results. Compression

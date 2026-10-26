@@ -4,6 +4,8 @@ All notable changes to this project are documented in this file.
 
 ## [Unreleased]
 
+- Add Scala/Kotlin consumer examples, track Kotlin incremental inputs, and reject loopback Maven fixture path escapes with regressions.
+
 - Package one canonically named native payload, report its identity and loader failures, and select the system allocator for JNI builds.
 
 - Apply the shared JNI exception boundary to mutations, precision casts and queries without changing their numerical operations.
