@@ -71,30 +71,6 @@ fn read_jfloat_array(env: &JNIEnv, arr: &JFloatArray) -> Result<Vec<f32>, String
     Ok(out)
 }
 
-// A catchable Rust panic must never unwind across the JNI ABI. Allocation
-// aborts, invalid raw pointers and VM/process failure are not catchable errors.
-fn catch_native<T>(operation: impl FnOnce() -> T) -> Result<T, String> {
-    std::panic::catch_unwind(std::panic::AssertUnwindSafe(operation)).map_err(|panic| {
-        let message = panic
-            .downcast_ref::<&str>()
-            .copied()
-            .or_else(|| panic.downcast_ref::<String>().map(String::as_str))
-            .unwrap_or("unknown native panic");
-        format!("TDigest native operation failed: {message}")
-    })
-}
-
-#[cfg(test)]
-mod boundary_tests {
-    #[test]
-    fn catches_native_panics_without_unwinding_across_jni() {
-        assert_eq!(super::catch_native(|| 42).unwrap(), 42);
-        assert!(super::catch_native(|| panic!("controlled boundary test"))
-            .unwrap_err()
-            .contains("controlled boundary test"));
-    }
-}
-
 // --------------- Native handle ---------------
 
 #[derive(Clone)]
@@ -191,42 +167,28 @@ pub extern "system" fn Java_gr_tdigest_TDigestNative_fromBytes(
     _cls: JClass,
     bytes: JByteArray,
 ) -> jlong {
-    let raw_env = env.get_raw();
-    match catch_native(|| {
-        let len = env.get_array_length(&bytes).unwrap_or(0) as usize;
-        let mut buf = vec![0i8; len];
-        if len > 0 {
-            if let Err(e) = env.get_byte_array_region(&bytes, 0, &mut buf) {
-                throw_illegal_arg(
-                    &mut env,
-                    format!("jni: get_byte_array_region failed: {e:?}"),
-                );
-                return 0;
-            }
+    let len = env.get_array_length(&bytes).unwrap_or(0) as usize;
+    let mut buf = vec![0i8; len];
+    if len > 0 {
+        if let Err(e) = env.get_byte_array_region(&bytes, 0, &mut buf) {
+            throw_illegal_arg(
+                &mut env,
+                format!("jni: get_byte_array_region failed: {e:?}"),
+            );
+            return 0;
         }
+    }
 
-        let ubuf: &[u8] = unsafe { slice::from_raw_parts(buf.as_ptr() as *const u8, buf.len()) };
+    let ubuf: &[u8] = unsafe { slice::from_raw_parts(buf.as_ptr() as *const u8, buf.len()) };
 
-        let nd_res: Result<NativeDigest, String> = FrontendDigest::from_bytes(ubuf)
-            .map(|inner| NativeDigest { inner })
-            .map_err(|e| format!("jni: {e}"));
+    let nd_res: Result<NativeDigest, String> = FrontendDigest::from_bytes(ubuf)
+        .map(|inner| NativeDigest { inner })
+        .map_err(|e| format!("jni: {e}"));
 
-        match nd_res {
-            Ok(nd) => into_handle(Box::new(nd)),
-            Err(msg) => {
-                throw_illegal_arg(&mut env, msg);
-                0
-            }
-        }
-    }) {
-        Ok(value) => value,
-        Err(message) => {
-            // The closure has released its JNIEnv borrow before reporting.
-            if let Ok(mut report_env) = unsafe { JNIEnv::from_raw(raw_env) } {
-                if !report_env.exception_check().unwrap_or(true) {
-                    let _ = report_env.throw_new("java/lang/IllegalStateException", message);
-                }
-            }
+    match nd_res {
+        Ok(nd) => into_handle(Box::new(nd)),
+        Err(msg) => {
+            throw_illegal_arg(&mut env, msg);
             0
         }
     }
@@ -238,40 +200,26 @@ pub extern "system" fn Java_gr_tdigest_TDigestNative_toBytes(
     _cls: JClass,
     handle: jlong,
 ) -> jbyteArray {
-    let raw_env = env.get_raw();
-    match catch_native(|| {
-        // Canonical TDIG wire format — width follows backend precision:
-        // - F32 → f32 means on the wire
-        // - F64 → f64 means on the wire
-        let bytes: Vec<u8> = if handle == 0 {
-            Vec::new()
-        } else {
-            let d = unsafe { from_handle::<NativeDigest>(handle) };
-            d.inner.to_bytes()
-        };
+    // Canonical TDIG wire format — width follows backend precision:
+    // - F32 → f32 means on the wire
+    // - F64 → f64 means on the wire
+    let bytes: Vec<u8> = if handle == 0 {
+        Vec::new()
+    } else {
+        let d = unsafe { from_handle::<NativeDigest>(handle) };
+        d.inner.to_bytes()
+    };
 
-        let arr = env
-            .new_byte_array(bytes.len() as jint)
-            .expect("new_byte_array");
-        if !bytes.is_empty() {
-            let ptr = bytes.as_ptr() as *const jbyte;
-            let slice_i8 = unsafe { slice::from_raw_parts(ptr, bytes.len()) };
-            env.set_byte_array_region(&arr, 0, slice_i8)
-                .expect("set_byte_array_region");
-        }
-        arr.into_raw()
-    }) {
-        Ok(value) => value,
-        Err(message) => {
-            // The closure has released its JNIEnv borrow before reporting.
-            if let Ok(mut report_env) = unsafe { JNIEnv::from_raw(raw_env) } {
-                if !report_env.exception_check().unwrap_or(true) {
-                    let _ = report_env.throw_new("java/lang/IllegalStateException", message);
-                }
-            }
-            std::ptr::null_mut()
-        }
+    let arr = env
+        .new_byte_array(bytes.len() as jint)
+        .expect("new_byte_array");
+    if !bytes.is_empty() {
+        let ptr = bytes.as_ptr() as *const jbyte;
+        let slice_i8 = unsafe { slice::from_raw_parts(ptr, bytes.len()) };
+        env.set_byte_array_region(&arr, 0, slice_i8)
+            .expect("set_byte_array_region");
     }
+    arr.into_raw()
 }
 
 #[no_mangle]
@@ -281,50 +229,36 @@ pub extern "system" fn Java_gr_tdigest_TDigestNative_toBytesVersion(
     handle: jlong,
     version: jint,
 ) -> jbyteArray {
-    let raw_env = env.get_raw();
-    match catch_native(|| {
-        let arr = env.new_byte_array(0).expect("new_byte_array");
-        if handle == 0 {
-            return arr.into_raw();
-        }
-
-        let version = match map_wire_version(version) {
-            Ok(v) => v,
-            Err(msg) => {
-                throw_illegal_arg(&mut env, msg);
-                return arr.into_raw();
-            }
-        };
-
-        let d = unsafe { from_handle::<NativeDigest>(handle) };
-        if let Err(error) = d.inner.validate_wire_version(version) {
-            throw_illegal_arg(&mut env, error.to_string());
-            return arr.into_raw();
-        }
-        let bytes = d.inner.to_bytes_with_version(version);
-
-        let out = env
-            .new_byte_array(bytes.len() as jint)
-            .expect("new_byte_array");
-        if !bytes.is_empty() {
-            let ptr = bytes.as_ptr() as *const jbyte;
-            let slice_i8 = unsafe { slice::from_raw_parts(ptr, bytes.len()) };
-            env.set_byte_array_region(&out, 0, slice_i8)
-                .expect("set_byte_array_region");
-        }
-        out.into_raw()
-    }) {
-        Ok(value) => value,
-        Err(message) => {
-            // The closure has released its JNIEnv borrow before reporting.
-            if let Ok(mut report_env) = unsafe { JNIEnv::from_raw(raw_env) } {
-                if !report_env.exception_check().unwrap_or(true) {
-                    let _ = report_env.throw_new("java/lang/IllegalStateException", message);
-                }
-            }
-            std::ptr::null_mut()
-        }
+    let arr = env.new_byte_array(0).expect("new_byte_array");
+    if handle == 0 {
+        return arr.into_raw();
     }
+
+    let version = match map_wire_version(version) {
+        Ok(v) => v,
+        Err(msg) => {
+            throw_illegal_arg(&mut env, msg);
+            return arr.into_raw();
+        }
+    };
+
+    let d = unsafe { from_handle::<NativeDigest>(handle) };
+    if let Err(error) = d.inner.validate_wire_version(version) {
+        throw_illegal_arg(&mut env, error.to_string());
+        return arr.into_raw();
+    }
+    let bytes = d.inner.to_bytes_with_version(version);
+
+    let out = env
+        .new_byte_array(bytes.len() as jint)
+        .expect("new_byte_array");
+    if !bytes.is_empty() {
+        let ptr = bytes.as_ptr() as *const jbyte;
+        let slice_i8 = unsafe { slice::from_raw_parts(ptr, bytes.len()) };
+        env.set_byte_array_region(&out, 0, slice_i8)
+            .expect("set_byte_array_region");
+    }
+    out.into_raw()
 }
 
 #[allow(unused_mut)] // some builds warn; we *do* pass &mut env on error paths
@@ -340,117 +274,103 @@ pub extern "system" fn Java_gr_tdigest_TDigestNative_fromArray(
     f32mode: jboolean,
     delta: jdouble,
 ) -> jlong {
-    let raw_env = env.get_raw();
-    match catch_native(|| {
-        let xs: Vec<f64>;
+    let xs: Vec<f64>;
 
-        if env.is_instance_of(&values_obj, "[D").unwrap_or(false) {
-            let raw: jarray = env
-                .new_local_ref(&values_obj)
-                .expect("new_local_ref")
-                .as_raw();
-            let darr = unsafe { JDoubleArray::from_raw(raw) };
-            match read_jdouble_array(&env, &darr) {
-                Ok(v) => xs = v,
-                Err(msg) => {
-                    throw_illegal_arg(&mut env, msg);
-                    return 0;
-                }
-            }
-        } else if env.is_instance_of(&values_obj, "[F").unwrap_or(false) {
-            let raw: jarray = env
-                .new_local_ref(&values_obj)
-                .expect("new_local_ref")
-                .as_raw();
-            let farr = unsafe { JFloatArray::from_raw(raw) };
-            match read_jfloat_array(&env, &farr) {
-                Ok(v) => xs = v.into_iter().map(|x| x as f64).collect(),
-                Err(msg) => {
-                    throw_illegal_arg(&mut env, msg);
-                    return 0;
-                }
-            }
-        } else if env
-            .is_instance_of(&values_obj, "java/util/List")
-            .unwrap_or(false)
-        {
-            let size = env
-                .call_method(&values_obj, "size", "()I", &[])
-                .and_then(|v| v.i())
-                .unwrap_or(0);
-            let mut out = Vec::with_capacity(size as usize);
-            for i in 0..size {
-                let elem = env
-                    .call_method(
-                        &values_obj,
-                        "get",
-                        "(I)Ljava/lang/Object;",
-                        &[JValue::from(i)],
-                    )
-                    .ok()
-                    .and_then(|v| v.l().ok());
-                if let Some(obj) = elem {
-                    if let Ok(dval) = env.call_method(obj, "doubleValue", "()D", &[]) {
-                        if let Ok(d) = dval.d() {
-                            out.push(d);
-                        }
-                    }
-                }
-            }
-            xs = out;
-        } else {
-            throw_illegal_arg(&mut env, "fromArray expects a numeric array".to_string());
-            return 0;
-        }
-
-        let scale_str = env
-            .get_string(&scale)
-            .ok()
-            .map(|s| s.to_string_lossy().into_owned())
-            .unwrap_or_else(|| "k2".to_string());
-        let sf = match map_scale(&scale_str) {
-            Ok(scale) => scale,
-            Err(error) => {
-                throw_illegal_arg(&mut env, error);
-                return 0;
-            }
-        };
-        if max_size <= 0 {
-            throw_illegal_arg(&mut env, "max_size must be positive".to_string());
-            return 0;
-        }
-        let policy = match map_policy(policy_code, edges) {
-            Ok(p) => p,
+    if env.is_instance_of(&values_obj, "[D").unwrap_or(false) {
+        let raw: jarray = env
+            .new_local_ref(&values_obj)
+            .expect("new_local_ref")
+            .as_raw();
+        let darr = unsafe { JDoubleArray::from_raw(raw) };
+        match read_jdouble_array(&env, &darr) {
+            Ok(v) => xs = v,
             Err(msg) => {
                 throw_illegal_arg(&mut env, msg);
                 return 0;
             }
-        };
-        let f32 = f32mode != 0;
-
-        match NativeDigest::from_values(
-            xs,
-            max_size as usize,
-            sf,
-            policy,
-            f32,
-            if delta == 0.0 { None } else { Some(delta) },
-        ) {
-            Ok(nd) => into_handle(Box::new(nd)),
-            Err(e) => {
-                throw_illegal_arg(&mut env, e.to_string());
-                0
+        }
+    } else if env.is_instance_of(&values_obj, "[F").unwrap_or(false) {
+        let raw: jarray = env
+            .new_local_ref(&values_obj)
+            .expect("new_local_ref")
+            .as_raw();
+        let farr = unsafe { JFloatArray::from_raw(raw) };
+        match read_jfloat_array(&env, &farr) {
+            Ok(v) => xs = v.into_iter().map(|x| x as f64).collect(),
+            Err(msg) => {
+                throw_illegal_arg(&mut env, msg);
+                return 0;
             }
         }
-    }) {
-        Ok(value) => value,
-        Err(message) => {
-            // The closure has released its JNIEnv borrow before reporting.
-            if let Ok(mut report_env) = unsafe { JNIEnv::from_raw(raw_env) } {
-                if !report_env.exception_check().unwrap_or(true) {
-                    let _ = report_env.throw_new("java/lang/IllegalStateException", message);
+    } else if env
+        .is_instance_of(&values_obj, "java/util/List")
+        .unwrap_or(false)
+    {
+        let size = env
+            .call_method(&values_obj, "size", "()I", &[])
+            .and_then(|v| v.i())
+            .unwrap_or(0);
+        let mut out = Vec::with_capacity(size as usize);
+        for i in 0..size {
+            let elem = env
+                .call_method(
+                    &values_obj,
+                    "get",
+                    "(I)Ljava/lang/Object;",
+                    &[JValue::from(i)],
+                )
+                .ok()
+                .and_then(|v| v.l().ok());
+            if let Some(obj) = elem {
+                if let Ok(dval) = env.call_method(obj, "doubleValue", "()D", &[]) {
+                    if let Ok(d) = dval.d() {
+                        out.push(d);
+                    }
                 }
             }
+        }
+        xs = out;
+    } else {
+        throw_illegal_arg(&mut env, "fromArray expects a numeric array".to_string());
+        return 0;
+    }
+
+    let scale_str = env
+        .get_string(&scale)
+        .ok()
+        .map(|s| s.to_string_lossy().into_owned())
+        .unwrap_or_else(|| "k2".to_string());
+    let sf = match map_scale(&scale_str) {
+        Ok(scale) => scale,
+        Err(error) => {
+            throw_illegal_arg(&mut env, error);
+            return 0;
+        }
+    };
+    if max_size <= 0 {
+        throw_illegal_arg(&mut env, "max_size must be positive".to_string());
+        return 0;
+    }
+    let policy = match map_policy(policy_code, edges) {
+        Ok(p) => p,
+        Err(msg) => {
+            throw_illegal_arg(&mut env, msg);
+            return 0;
+        }
+    };
+    let f32 = f32mode != 0;
+
+    match NativeDigest::from_values(
+        xs,
+        max_size as usize,
+        sf,
+        policy,
+        f32,
+        if delta == 0.0 { None } else { Some(delta) },
+    ) {
+        Ok(nd) => into_handle(Box::new(nd)),
+        Err(e) => {
+            throw_illegal_arg(&mut env, e.to_string());
             0
         }
     }
@@ -458,26 +378,12 @@ pub extern "system" fn Java_gr_tdigest_TDigestNative_fromArray(
 
 #[no_mangle]
 pub extern "system" fn Java_gr_tdigest_TDigestNative_free(
-    env: JNIEnv,
+    _env: JNIEnv,
     _cls: JClass,
     handle: jlong,
 ) {
-    let raw_env = env.get_raw();
-    match catch_native(|| {
-        if handle != 0 {
-            unsafe { drop(Box::from_raw(handle as *mut NativeDigest)) };
-        }
-    }) {
-        Ok(value) => value,
-        Err(message) => {
-            // The closure has released its JNIEnv borrow before reporting.
-            if let Ok(mut report_env) = unsafe { JNIEnv::from_raw(raw_env) } {
-                if !report_env.exception_check().unwrap_or(true) {
-                    let _ = report_env.throw_new("java/lang/IllegalStateException", message);
-                }
-            }
-            ()
-        }
+    if handle != 0 {
+        unsafe { drop(Box::from_raw(handle as *mut NativeDigest)) };
     }
 }
 
@@ -489,35 +395,21 @@ pub extern "system" fn Java_gr_tdigest_TDigestNative_mergeArrayF64(
     handle: jlong,
     values: JDoubleArray,
 ) {
-    let raw_env = env.get_raw();
-    match catch_native(|| {
-        if let Err(msg) = ensure_non_null_handle(handle) {
-            throw_illegal_arg(&mut env, msg.to_string());
+    if let Err(msg) = ensure_non_null_handle(handle) {
+        throw_illegal_arg(&mut env, msg.to_string());
+        return;
+    }
+    let xs = match read_jdouble_array(&env, &values) {
+        Ok(v) => v,
+        Err(msg) => {
+            throw_illegal_arg(&mut env, msg);
             return;
         }
-        let xs = match read_jdouble_array(&env, &values) {
-            Ok(v) => v,
-            Err(msg) => {
-                throw_illegal_arg(&mut env, msg);
-                return;
-            }
-        };
+    };
 
-        let d = unsafe { from_handle::<NativeDigest>(handle) };
-        if let Err(e) = d.merge_f64_values(xs) {
-            throw_illegal_arg(&mut env, e.to_string());
-        }
-    }) {
-        Ok(value) => value,
-        Err(message) => {
-            // The closure has released its JNIEnv borrow before reporting.
-            if let Ok(mut report_env) = unsafe { JNIEnv::from_raw(raw_env) } {
-                if !report_env.exception_check().unwrap_or(true) {
-                    let _ = report_env.throw_new("java/lang/IllegalStateException", message);
-                }
-            }
-            ()
-        }
+    let d = unsafe { from_handle::<NativeDigest>(handle) };
+    if let Err(e) = d.merge_f64_values(xs) {
+        throw_illegal_arg(&mut env, e.to_string());
     }
 }
 
@@ -529,36 +421,22 @@ pub extern "system" fn Java_gr_tdigest_TDigestNative_mergeArrayF32(
     handle: jlong,
     values: JFloatArray,
 ) {
-    let raw_env = env.get_raw();
-    match catch_native(|| {
-        if let Err(msg) = ensure_non_null_handle(handle) {
-            throw_illegal_arg(&mut env, msg.to_string());
+    if let Err(msg) = ensure_non_null_handle(handle) {
+        throw_illegal_arg(&mut env, msg.to_string());
+        return;
+    }
+    let xs32 = match read_jfloat_array(&env, &values) {
+        Ok(v) => v,
+        Err(msg) => {
+            throw_illegal_arg(&mut env, msg);
             return;
         }
-        let xs32 = match read_jfloat_array(&env, &values) {
-            Ok(v) => v,
-            Err(msg) => {
-                throw_illegal_arg(&mut env, msg);
-                return;
-            }
-        };
-        let xs: Vec<f64> = xs32.into_iter().map(|v| v as f64).collect();
+    };
+    let xs: Vec<f64> = xs32.into_iter().map(|v| v as f64).collect();
 
-        let d = unsafe { from_handle::<NativeDigest>(handle) };
-        if let Err(e) = d.merge_f64_values(xs) {
-            throw_illegal_arg(&mut env, e.to_string());
-        }
-    }) {
-        Ok(value) => value,
-        Err(message) => {
-            // The closure has released its JNIEnv borrow before reporting.
-            if let Ok(mut report_env) = unsafe { JNIEnv::from_raw(raw_env) } {
-                if !report_env.exception_check().unwrap_or(true) {
-                    let _ = report_env.throw_new("java/lang/IllegalStateException", message);
-                }
-            }
-            ()
-        }
+    let d = unsafe { from_handle::<NativeDigest>(handle) };
+    if let Err(e) = d.merge_f64_values(xs) {
+        throw_illegal_arg(&mut env, e.to_string());
     }
 }
 
@@ -571,42 +449,28 @@ pub extern "system" fn Java_gr_tdigest_TDigestNative_mergeWeightedF64(
     values: JDoubleArray,
     weights: JDoubleArray,
 ) {
-    let raw_env = env.get_raw();
-    match catch_native(|| {
-        if let Err(msg) = ensure_non_null_handle(handle) {
-            throw_illegal_arg(&mut env, msg.to_string());
+    if let Err(msg) = ensure_non_null_handle(handle) {
+        throw_illegal_arg(&mut env, msg.to_string());
+        return;
+    }
+    let xs = match read_jdouble_array(&env, &values) {
+        Ok(v) => v,
+        Err(msg) => {
+            throw_illegal_arg(&mut env, msg);
             return;
         }
-        let xs = match read_jdouble_array(&env, &values) {
-            Ok(v) => v,
-            Err(msg) => {
-                throw_illegal_arg(&mut env, msg);
-                return;
-            }
-        };
-        let ws = match read_jdouble_array(&env, &weights) {
-            Ok(v) => v,
-            Err(msg) => {
-                throw_illegal_arg(&mut env, msg);
-                return;
-            }
-        };
+    };
+    let ws = match read_jdouble_array(&env, &weights) {
+        Ok(v) => v,
+        Err(msg) => {
+            throw_illegal_arg(&mut env, msg);
+            return;
+        }
+    };
 
-        let d = unsafe { from_handle::<NativeDigest>(handle) };
-        if let Err(e) = d.merge_weighted_f64(xs, ws) {
-            throw_illegal_arg(&mut env, e.to_string());
-        }
-    }) {
-        Ok(value) => value,
-        Err(message) => {
-            // The closure has released its JNIEnv borrow before reporting.
-            if let Ok(mut report_env) = unsafe { JNIEnv::from_raw(raw_env) } {
-                if !report_env.exception_check().unwrap_or(true) {
-                    let _ = report_env.throw_new("java/lang/IllegalStateException", message);
-                }
-            }
-            ()
-        }
+    let d = unsafe { from_handle::<NativeDigest>(handle) };
+    if let Err(e) = d.merge_weighted_f64(xs, ws) {
+        throw_illegal_arg(&mut env, e.to_string());
     }
 }
 
@@ -619,43 +483,29 @@ pub extern "system" fn Java_gr_tdigest_TDigestNative_mergeWeightedF32(
     values: JFloatArray,
     weights: JDoubleArray,
 ) {
-    let raw_env = env.get_raw();
-    match catch_native(|| {
-        if let Err(msg) = ensure_non_null_handle(handle) {
-            throw_illegal_arg(&mut env, msg.to_string());
+    if let Err(msg) = ensure_non_null_handle(handle) {
+        throw_illegal_arg(&mut env, msg.to_string());
+        return;
+    }
+    let xs32 = match read_jfloat_array(&env, &values) {
+        Ok(v) => v,
+        Err(msg) => {
+            throw_illegal_arg(&mut env, msg);
             return;
         }
-        let xs32 = match read_jfloat_array(&env, &values) {
-            Ok(v) => v,
-            Err(msg) => {
-                throw_illegal_arg(&mut env, msg);
-                return;
-            }
-        };
-        let ws = match read_jdouble_array(&env, &weights) {
-            Ok(v) => v,
-            Err(msg) => {
-                throw_illegal_arg(&mut env, msg);
-                return;
-            }
-        };
-        let xs: Vec<f64> = xs32.into_iter().map(|v| v as f64).collect();
+    };
+    let ws = match read_jdouble_array(&env, &weights) {
+        Ok(v) => v,
+        Err(msg) => {
+            throw_illegal_arg(&mut env, msg);
+            return;
+        }
+    };
+    let xs: Vec<f64> = xs32.into_iter().map(|v| v as f64).collect();
 
-        let d = unsafe { from_handle::<NativeDigest>(handle) };
-        if let Err(e) = d.merge_weighted_f64(xs, ws) {
-            throw_illegal_arg(&mut env, e.to_string());
-        }
-    }) {
-        Ok(value) => value,
-        Err(message) => {
-            // The closure has released its JNIEnv borrow before reporting.
-            if let Ok(mut report_env) = unsafe { JNIEnv::from_raw(raw_env) } {
-                if !report_env.exception_check().unwrap_or(true) {
-                    let _ = report_env.throw_new("java/lang/IllegalStateException", message);
-                }
-            }
-            ()
-        }
+    let d = unsafe { from_handle::<NativeDigest>(handle) };
+    if let Err(e) = d.merge_weighted_f64(xs, ws) {
+        throw_illegal_arg(&mut env, e.to_string());
     }
 }
 
@@ -667,33 +517,19 @@ pub extern "system" fn Java_gr_tdigest_TDigestNative_mergeDigest(
     handle: jlong,
     other_handle: jlong,
 ) {
-    let raw_env = env.get_raw();
-    match catch_native(|| {
-        if let Err(msg) = ensure_non_null_handle(handle) {
-            throw_illegal_arg(&mut env, msg.to_string());
-            return;
-        }
-        if let Err(msg) = ensure_non_null_handle(other_handle) {
-            throw_illegal_arg(&mut env, msg.to_string());
-            return;
-        }
+    if let Err(msg) = ensure_non_null_handle(handle) {
+        throw_illegal_arg(&mut env, msg.to_string());
+        return;
+    }
+    if let Err(msg) = ensure_non_null_handle(other_handle) {
+        throw_illegal_arg(&mut env, msg.to_string());
+        return;
+    }
 
-        let other_owned = unsafe { from_handle_const::<NativeDigest>(other_handle).clone() };
-        let d = unsafe { from_handle::<NativeDigest>(handle) };
-        if let Err(e) = d.merge_digest(&other_owned) {
-            throw_illegal_arg(&mut env, e);
-        }
-    }) {
-        Ok(value) => value,
-        Err(message) => {
-            // The closure has released its JNIEnv borrow before reporting.
-            if let Ok(mut report_env) = unsafe { JNIEnv::from_raw(raw_env) } {
-                if !report_env.exception_check().unwrap_or(true) {
-                    let _ = report_env.throw_new("java/lang/IllegalStateException", message);
-                }
-            }
-            ()
-        }
+    let other_owned = unsafe { from_handle_const::<NativeDigest>(other_handle).clone() };
+    let d = unsafe { from_handle::<NativeDigest>(handle) };
+    if let Err(e) = d.merge_digest(&other_owned) {
+        throw_illegal_arg(&mut env, e);
     }
 }
 
@@ -705,27 +541,13 @@ pub extern "system" fn Java_gr_tdigest_TDigestNative_scaleWeights(
     handle: jlong,
     factor: jdouble,
 ) {
-    let raw_env = env.get_raw();
-    match catch_native(|| {
-        if let Err(msg) = ensure_non_null_handle(handle) {
-            throw_illegal_arg(&mut env, msg.to_string());
-            return;
-        }
-        let d = unsafe { from_handle::<NativeDigest>(handle) };
-        if let Err(e) = d.scale_weights(factor) {
-            throw_illegal_arg(&mut env, e);
-        }
-    }) {
-        Ok(value) => value,
-        Err(message) => {
-            // The closure has released its JNIEnv borrow before reporting.
-            if let Ok(mut report_env) = unsafe { JNIEnv::from_raw(raw_env) } {
-                if !report_env.exception_check().unwrap_or(true) {
-                    let _ = report_env.throw_new("java/lang/IllegalStateException", message);
-                }
-            }
-            ()
-        }
+    if let Err(msg) = ensure_non_null_handle(handle) {
+        throw_illegal_arg(&mut env, msg.to_string());
+        return;
+    }
+    let d = unsafe { from_handle::<NativeDigest>(handle) };
+    if let Err(e) = d.scale_weights(factor) {
+        throw_illegal_arg(&mut env, e);
     }
 }
 
@@ -737,27 +559,13 @@ pub extern "system" fn Java_gr_tdigest_TDigestNative_scaleValues(
     handle: jlong,
     factor: jdouble,
 ) {
-    let raw_env = env.get_raw();
-    match catch_native(|| {
-        if let Err(msg) = ensure_non_null_handle(handle) {
-            throw_illegal_arg(&mut env, msg.to_string());
-            return;
-        }
-        let d = unsafe { from_handle::<NativeDigest>(handle) };
-        if let Err(e) = d.scale_values(factor) {
-            throw_illegal_arg(&mut env, e);
-        }
-    }) {
-        Ok(value) => value,
-        Err(message) => {
-            // The closure has released its JNIEnv borrow before reporting.
-            if let Ok(mut report_env) = unsafe { JNIEnv::from_raw(raw_env) } {
-                if !report_env.exception_check().unwrap_or(true) {
-                    let _ = report_env.throw_new("java/lang/IllegalStateException", message);
-                }
-            }
-            ()
-        }
+    if let Err(msg) = ensure_non_null_handle(handle) {
+        throw_illegal_arg(&mut env, msg.to_string());
+        return;
+    }
+    let d = unsafe { from_handle::<NativeDigest>(handle) };
+    if let Err(e) = d.scale_values(factor) {
+        throw_illegal_arg(&mut env, e);
     }
 }
 
@@ -769,34 +577,20 @@ pub extern "system" fn Java_gr_tdigest_TDigestNative_castPrecision(
     handle: jlong,
     f32mode: jboolean,
 ) -> jlong {
-    let raw_env = env.get_raw();
-    match catch_native(|| {
-        if let Err(msg) = ensure_non_null_handle(handle) {
-            throw_illegal_arg(&mut env, msg.to_string());
-            return 0;
-        }
-        let target = if f32mode != 0 {
-            DigestPrecision::F32
-        } else {
-            DigestPrecision::F64
-        };
-        let d = unsafe { from_handle_const::<NativeDigest>(handle) };
-        match d.cast_precision(target) {
-            Ok(casted) => into_handle(Box::new(casted)),
-            Err(error) => {
-                throw_illegal_arg(&mut env, error);
-                0
-            }
-        }
-    }) {
-        Ok(value) => value,
-        Err(message) => {
-            // The closure has released its JNIEnv borrow before reporting.
-            if let Ok(mut report_env) = unsafe { JNIEnv::from_raw(raw_env) } {
-                if !report_env.exception_check().unwrap_or(true) {
-                    let _ = report_env.throw_new("java/lang/IllegalStateException", message);
-                }
-            }
+    if let Err(msg) = ensure_non_null_handle(handle) {
+        throw_illegal_arg(&mut env, msg.to_string());
+        return 0;
+    }
+    let target = if f32mode != 0 {
+        DigestPrecision::F32
+    } else {
+        DigestPrecision::F64
+    };
+    let d = unsafe { from_handle_const::<NativeDigest>(handle) };
+    match d.cast_precision(target) {
+        Ok(casted) => into_handle(Box::new(casted)),
+        Err(error) => {
+            throw_illegal_arg(&mut env, error);
             0
         }
     }
@@ -809,37 +603,23 @@ pub extern "system" fn Java_gr_tdigest_TDigestNative_cdf(
     handle: jlong,
     values: JDoubleArray,
 ) -> jdoubleArray {
-    let raw_env = env.get_raw();
-    match catch_native(|| {
-        let n = env.get_array_length(&values).unwrap_or(0) as usize;
-        let out = env.new_double_array(n as jint).expect("new_double_array");
-        if handle == 0 || n == 0 {
-            return out.into_raw();
-        }
-        let d = unsafe { from_handle::<NativeDigest>(handle) };
-
-        let mut in_buf = vec![0f64; n];
-        if let Err(e) = env.get_double_array_region(&values, 0, &mut in_buf) {
-            eprintln!("jni: get_double_array_region failed: {e:?}");
-            return out.into_raw();
-        }
-
-        let ps = d.cdf(&in_buf);
-        env.set_double_array_region(&out, 0, &ps)
-            .expect("set_double_array_region");
-        out.into_raw()
-    }) {
-        Ok(value) => value,
-        Err(message) => {
-            // The closure has released its JNIEnv borrow before reporting.
-            if let Ok(mut report_env) = unsafe { JNIEnv::from_raw(raw_env) } {
-                if !report_env.exception_check().unwrap_or(true) {
-                    let _ = report_env.throw_new("java/lang/IllegalStateException", message);
-                }
-            }
-            std::ptr::null_mut()
-        }
+    let n = env.get_array_length(&values).unwrap_or(0) as usize;
+    let out = env.new_double_array(n as jint).expect("new_double_array");
+    if handle == 0 || n == 0 {
+        return out.into_raw();
     }
+    let d = unsafe { from_handle::<NativeDigest>(handle) };
+
+    let mut in_buf = vec![0f64; n];
+    if let Err(e) = env.get_double_array_region(&values, 0, &mut in_buf) {
+        eprintln!("jni: get_double_array_region failed: {e:?}");
+        return out.into_raw();
+    }
+
+    let ps = d.cdf(&in_buf);
+    env.set_double_array_region(&out, 0, &ps)
+        .expect("set_double_array_region");
+    out.into_raw()
 }
 
 #[allow(unused_mut)] // mutable only needed on the exceptional path
@@ -850,29 +630,15 @@ pub extern "system" fn Java_gr_tdigest_TDigestNative_quantile(
     handle: jlong,
     q: jdouble,
 ) -> jdouble {
-    let raw_env = env.get_raw();
-    match catch_native(|| {
-        if handle == 0 {
-            return f64::NAN;
-        }
-        let d = unsafe { from_handle::<NativeDigest>(handle) };
-        match d.quantile(q as f64) {
-            Ok(v) => v,
-            Err(msg) => {
-                let mut env2 = env;
-                throw_illegal_arg(&mut env2, msg.to_string());
-                f64::NAN
-            }
-        }
-    }) {
-        Ok(value) => value,
-        Err(message) => {
-            // The closure has released its JNIEnv borrow before reporting.
-            if let Ok(mut report_env) = unsafe { JNIEnv::from_raw(raw_env) } {
-                if !report_env.exception_check().unwrap_or(true) {
-                    let _ = report_env.throw_new("java/lang/IllegalStateException", message);
-                }
-            }
+    if handle == 0 {
+        return f64::NAN;
+    }
+    let d = unsafe { from_handle::<NativeDigest>(handle) };
+    match d.quantile(q as f64) {
+        Ok(v) => v,
+        Err(msg) => {
+            let mut env2 = env;
+            throw_illegal_arg(&mut env2, msg.to_string());
             f64::NAN
         }
     }
@@ -880,27 +646,13 @@ pub extern "system" fn Java_gr_tdigest_TDigestNative_quantile(
 
 #[no_mangle]
 pub extern "system" fn Java_gr_tdigest_TDigestNative_median(
-    env: JNIEnv,
+    _env: JNIEnv,
     _cls: JClass,
     handle: jlong,
 ) -> jdouble {
-    let raw_env = env.get_raw();
-    match catch_native(|| {
-        if handle == 0 {
-            return f64::NAN;
-        }
-        let d = unsafe { from_handle::<NativeDigest>(handle) };
-        d.quantile(0.5).unwrap_or(f64::NAN)
-    }) {
-        Ok(value) => value,
-        Err(message) => {
-            // The closure has released its JNIEnv borrow before reporting.
-            if let Ok(mut report_env) = unsafe { JNIEnv::from_raw(raw_env) } {
-                if !report_env.exception_check().unwrap_or(true) {
-                    let _ = report_env.throw_new("java/lang/IllegalStateException", message);
-                }
-            }
-            f64::NAN
-        }
+    if handle == 0 {
+        return f64::NAN;
     }
+    let d = unsafe { from_handle::<NativeDigest>(handle) };
+    d.quantile(0.5).unwrap_or(f64::NAN)
 }

@@ -14,8 +14,8 @@
 //!
 //! Jemalloc (Linux-only)
 //! We set jemalloc as the global allocator on Linux targets. If you prefer the
-//! system allocator for JNI, the `java` feature disables the global jemalloc
-//! selection. Python and standalone builds retain their existing allocator.
+//! system allocator, remove the `jemallocator` dependency and the
+//! `#[global_allocator]` block below.
 
 mod polars_expr;
 
@@ -39,10 +39,10 @@ pub mod quality {
 pub use crate::quality::quality_base::{print_banner, print_report, print_section};
 
 // ---- jemalloc on linux-gnu (kept intentionally) -----------------------------
-#[cfg(all(target_os = "linux", target_env = "gnu", not(feature = "java")))]
+#[cfg(all(target_os = "linux", target_env = "gnu"))]
 use jemallocator::Jemalloc;
 
-#[cfg(all(target_os = "linux", target_env = "gnu", not(feature = "java")))]
+#[cfg(all(target_os = "linux", target_env = "gnu"))]
 #[global_allocator]
 static ALLOC: Jemalloc = Jemalloc;
 

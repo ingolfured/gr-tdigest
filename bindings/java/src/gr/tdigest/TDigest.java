@@ -234,15 +234,6 @@ public final class TDigest implements AutoCloseable, Serializable {
 
   public static Builder builder() { return new Builder(); }
 
-  /** Resolved JAR version/origin and the actual loaded native payload identity. */
-  public static String runtimeInfo() {
-    String version = TDigest.class.getPackage().getImplementationVersion();
-    java.security.CodeSource origin = TDigest.class.getProtectionDomain().getCodeSource();
-    return "gr.tdigest:gr-tdigest:" + version + "; jar="
-        + (origin == null ? "unknown" : origin.getLocation()) + "; " + Natives.identity();
-  }
-
-
   /* ======================= Construction (stringly-typed) ======================= */
 
   public static TDigest fromArray(

@@ -4,25 +4,8 @@ All notable changes to this project are documented in this file.
 
 ## [Unreleased]
 
-- Refresh consumer prerequisites on the foundation containing the merged overflow audit.
+- Keep Java restored handles attached to their actual Cleaner referent and expose checked weighted/delta builders with consumer regressions.
 
-- Separate previously merged JVM consumers, Python typing, delivery gates and original-oracle work from Polars compatibility review.
-
-- Reject absolute paths and symlink escapes in the local Maven fixture so requests cannot read outside its repository.
-
-- Verify toolchain selection, source archives and installed artifacts.
-
-- Preserve the independent original Rust oracle, pinned lockfile and recorded evidence.
-
-- Ship installed Python API documentation and typing metadata.
-
-- Compile Scala and Kotlin consumers through authenticated Maven fixtures.
-
-- Load and identify native payloads outside the build checkout.
-
-- Keep runtime payload identity with the following standalone-loader change.
-
-- Expose fluent JVM operations, safe serialization and native failures.
 - Carry the merged arithmetic overflow guards and source-package checks into the downstream consumer foundation, preserving checked merge error propagation.
 
 - Remove unused imports and normalize spacing in modern Python consumer regressions for CI lint.

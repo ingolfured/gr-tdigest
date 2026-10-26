@@ -38,10 +38,6 @@ JAR_ARTIFACT    ?= $(PROJECT_SLUG)
 # ----------------------------------------------------------------------
 PATH := $(HOME)/.local/bin:$(HOME)/.cargo/bin:$(PATH)
 
-ifneq ($(filter 1 true yes,$(TDIGEST_OFFLINE)),)
-export CARGO_NET_OFFLINE := true
-endif
-
 CARGO  ?= cargo
 UV     ?= uv
 
@@ -202,20 +198,16 @@ setup-hooks:
 # ==============================================================================
 # Build (dev by default)
 # ==============================================================================
-build: build-toolchain-check build-rust build-python build-java
+build: build-rust build-python build-java
 	@printf "$(STYLE_OK)✓ all components built (PROFILE=$(PROFILE))$(STYLE_RESET)\n"
 
-.PHONY: build-toolchain-check
-build-toolchain-check:
-	@python3 scripts/check_build_tools.py
-
-build-rust: build-toolchain-check
+build-rust:
 	$(call banner,Build: Rust lib + CLI ($(PROFILE)))
 	$(CARGO) build $(CARGO_PROFILE_FLAG)
 	$(CARGO) build $(CARGO_PROFILE_FLAG) --bin $(CLI_BIN)
 
 # Always run maturin from bindings/python where its pyproject.toml lives
-build-python: build-toolchain-check
+build-python:
 	$(call banner,Build: Python extension (maturin develop, dev))
 	@(cd "$(PY_DIR)" && $(UV_ENV) $(UV) run --no-sync maturin develop -F python)
 
@@ -223,7 +215,7 @@ build-python: build-toolchain-check
 java-prepare:
 	@"$${TDIGEST_BOOTSTRAP_PYTHON:-python3}" "$(JAVA_SRC)/bootstrap.py" --tdigest-prepare
 
-build-java: build-toolchain-check JAVA_WRAPPER_CHECK
+build-java: JAVA_WRAPPER_CHECK
 	$(call banner,Build: Java via Gradle (clean + jar))
 	@GRADLE_USER_HOME="$(GRADLE_USER_HOME)" "$(GRADLE)" --no-daemon --console=plain -p "$(JAVA_SRC)" clean jar
 	@LATEST="$$(ls -1t "$(JAVA_SRC)/$(JAVA_LIBS_REL)/$(JAR_ARTIFACT)-"*.jar 2>/dev/null | head -1)"; \

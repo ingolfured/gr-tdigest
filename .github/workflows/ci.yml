@@ -50,19 +50,6 @@ jobs:
           TDIGEST_GRADLE_SHA256: ${{ matrix.gradle-sha256 }}
         run: bindings/java/gradlew --no-daemon --console=plain -p bindings/java clean test jar smoke verifyJava11Bytecode
 
-      - name: Renamed native override produces a standalone JAR
-        run: |
-          override_dir="$RUNNER_TEMP/tdigest-native-override"
-          mkdir -p "$override_dir"
-          native_target="${CARGO_TARGET_DIR:-$PWD/target}/release/libgr_tdigest.so"
-          cp "$native_target" "$override_dir/custom-native-name.so"
-          TDIGEST_NATIVE_FILE="$override_dir/custom-native-name.so" \
-          TDIGEST_SOURCE_SHA="$GITHUB_SHA" \
-          bindings/java/gradlew --no-daemon --console=plain --offline -p bindings/java jar
-          jar_path="$PWD/bindings/java/build/libs/gr-tdigest-$(sed -n 's/^version *= *"\([^"]*\)"/\1/p' Cargo.toml | head -1).jar"
-          cd "$RUNNER_TEMP"
-          "$JAVA_HOME/bin/java" -jar "$jar_path"
-
   lint:
     name: Lint
     runs-on: ubuntu-latest
