@@ -4,6 +4,8 @@ All notable changes to this project are documented in this file.
 
 ## [Unreleased]
 
+- Preserve the 43 review chapter after splitting the consumer prerequisites into smaller reviews.
+
 - Preserve merged arithmetic overflow guards beneath Polars 1.x/2.x compatibility.
 
 - Keep Polars compatibility separate from the prerequisite and adapter review branches.
@@ -13,9 +15,31 @@ All notable changes to this project are documented in this file.
 - Support both Polars 1.x (development pin 1.44.2) and 2.x (tested 2.0.0), including consumer schema, cardinality and streaming regressions.
 
 - Make Polars cardinality, validation and binary schemas explicit.
+
+- Preserve the 77 review chapter after splitting the consumer prerequisites into smaller reviews.
+
 - Refresh the adapter extraction on the consumer foundation with merged overflow guards.
 
 - Extract the Polars adapter without changing expression behavior, public signatures or the pinned dependency.
+
+- Fail early on incompatible build tools, honor Cargo offline mode, and verify the installed consumer files in source packages.
+
+- Prepare exact original sources and run the independent Rust oracle without regenerating pinned golden outputs.
+
+- Retain the original Rust lockfile, source hashes and historical oracle receipts with checksum-bound JSON formatting exclusions.
+
+- Ship public Python type declarations and py.typed metadata, and check installed signature/docstring discovery in the runtime gate.
+
+- Add Scala/Kotlin consumer examples, track Kotlin incremental inputs, and reject loopback Maven fixture path escapes with regressions.
+
+- Package one canonically named native payload, report its identity and loader failures, and select the system allocator for JNI builds.
+
+- Apply the shared JNI exception boundary to mutations, precision casts and queries without changing their numerical operations.
+
+- Translate catchable JNI lifecycle and codec panics to Java exceptions, preserving pending exceptions and existing wire semantics.
+
+- Keep Java restored handles attached to their actual Cleaner referent and expose checked weighted/delta builders with consumer regressions.
+
 - Refresh consumer prerequisites on the foundation containing the merged overflow audit.
 
 - Separate previously merged JVM consumers, Python typing, delivery gates and original-oracle work from Polars compatibility review.
