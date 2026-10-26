@@ -261,8 +261,7 @@ The modern constructor accepts explicit positive weights. Copy and pickle preser
 
 ## Modern Java ownership and serialization
 
-Java restoration registers the restored object itself as the Cleaner referent and owns a fresh native handle. Builders expose weighted observations and explicit modern delta configuration; checked JNI construction rejects unsupported arrays, scales and capacities. Failed updates preserve the receiver.
-
+Java additions and fluent merges mutate only the receiver after validation. Serialized Java state contains TDIG bytes, never a process-local native handle; restoration owns a fresh handle. Closed handles fail predictably. Catchable native failures become Java exceptions. JNI selects the system allocator; independent digests may be used concurrently, but shared-handle mutation requires caller coordination.
 ## JNI construction and codec failure boundary
 
 Catchable Rust panics in JNI construction, decoding, encoding and destruction are translated to Java IllegalStateException after releasing the closure borrow. Existing pending Java exceptions are retained. Allocation aborts and invalid raw pointers remain outside this catchable boundary.
