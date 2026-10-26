@@ -76,6 +76,7 @@ def genResDir = new File(buildDir, 'generated-resources')
 
 /* -------- Build native with feature `java` -------- */
 tasks.register('cargoBuild', Exec) {
+  onlyIf { !providers.environmentVariable('TDIGEST_NATIVE_FILE').isPresent() }
   workingDir repoRoot
   def args = ['cargo', 'build', '--locked', '--release', '--features', 'java']
   if (providers.environmentVariable('TDIGEST_OFFLINE').orElse('0').get().toLowerCase(Locale.ROOT) in ['1','true','yes']) {
@@ -100,9 +101,10 @@ tasks.register('copyNative') {
   // Rust/JNI symbol changes are not tracked by Gradle inputs here; always refresh.
   outputs.upToDateWhen { false }
   doLast {
-    def src = new File(targetRel, libFile)
-    if (!src.exists()) {
-      throw new GradleException("Native not found: ${src.absolutePath} — ensure Cargo built the cdylib named '${libBase}'.")
+    def selected = providers.environmentVariable('TDIGEST_NATIVE_FILE').orNull
+    def src = selected ? repoRoot.toPath().resolve(selected).toFile() : new File(targetRel, libFile)
+    if (!src.isFile()) {
+      throw new GradleException("Native file not found: ${src.absolutePath} — ensure Cargo built the cdylib named '${libBase}'.")
     }
 
     def arch = System.getProperty('os.arch').toLowerCase(Locale.ROOT)
@@ -111,10 +113,13 @@ tasks.register('copyNative') {
         : arch
     def plat = os.isWindows() ? 'windows' : (os.isMacOsX() ? 'macos' : 'linux')
 
+    // This task owns generated resources. Remove stale payloads from prior
+    // overrides/platforms, then always use the loader's canonical file name.
+    delete genResDir
     def dest = new File(genResDir, "META-INF/native/${plat}-${arch}")
     dest.mkdirs()
 
-    copy { from src; into dest }
+    copy { from src; into dest; rename { libFile } }
     println "Packaged native -> ${new File(dest, libFile).absolutePath}"
   }
 }
@@ -135,9 +140,32 @@ tasks.named('processResources').configure { dependsOn tasks.named('copyNative') 
 
 tasks.named('jar').configure {
   dependsOn tasks.named('copyNative')
-  manifest { attributes('Main-Class': 'gr.SmokeMain') }
+  manifest { attributes('Main-Class': 'gr.SmokeMain',
+      'Implementation-Title': 'gr-tdigest', 'Implementation-Version': project.version,
+      'TDigest-Source-SHA': providers.environmentVariable('TDIGEST_SOURCE_SHA').orElse('unrecorded').get(),
+      'TDigest-Native-Allocator': 'system') }
+  doFirst {
+    def payload = fileTree(genResDir).matching { include '**/*.so', '**/*.dylib', '**/*.dll' }.singleFile
+    def digest = java.security.MessageDigest.getInstance('SHA-256')
+    payload.withInputStream { input ->
+      byte[] buffer = new byte[65536]
+      int length
+      while ((length = input.read(buffer)) > 0) digest.update(buffer, 0, length)
+    }
+    manifest.attributes('TDigest-Native-SHA256': digest.digest().encodeHex().toString())
+  }
   doLast {
     def jarFile = archiveFile.get().asFile
+    def arch = System.getProperty('os.arch').toLowerCase(Locale.ROOT)
+    arch = (arch in ['x86_64','amd64']) ? 'x86_64' : (arch in ['aarch64','arm64']) ? 'aarch64' : arch
+    def plat = os.isWindows() ? 'windows' : (os.isMacOsX() ? 'macos' : 'linux')
+    def expected = "META-INF/native/${plat}-${arch}/${libFile}"
+    new java.util.jar.JarFile(jarFile).withCloseable { archive ->
+      def payloads = archive.entries().findAll { !it.directory && it.name.startsWith('META-INF/native/') }
+      if (payloads.size() != 1 || payloads[0].name != expected) {
+        throw new GradleException("JAR must contain exactly the loader's native resource ${expected}; got ${payloads*.name}")
+      }
+    }
     def mb = jarFile.length() / (1024.0 * 1024.0)
     println String.format("Built JAR: %s (%.2f MB)", jarFile.absolutePath, mb)
   }

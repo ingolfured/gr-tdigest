@@ -522,6 +522,10 @@ JVM test tool selection is shared through `bindings/java/bootstrap.py::java_envi
 
 Checked construction and compensated accumulation validate represented mass and aggregate statistics. Compression retains exact-point identity through subnormal weighted products. The Polars adapter validates every reconstructed row before queries or reductions, and chooses CDF broadcasting by input lengths. Incompatible empty contributors are checked along with populated contributors.
 
+## Standalone JNI payload selection
+
+The JAR bundles a canonically named native payload with source and SHA-256 identity in its manifest. Explicit native overrides accept relative distributed-file paths; extraction can use a configured writable directory. Loader diagnostics identify attempted paths and causes. Configured build-native overrides are packaged under the runtime resource name.
+
 Regression coverage in `tests/numerical_foundation.rs` checks both mean precisions for tiny Use capacities, rounded-away tail mass with a nonzero moment, cancellation at compressed and uncompressed capacities, and fractional symmetric atomic boundaries with probes on both sides. Compressor unit coverage checks recovery from intermediate moment overflow and accumulator reuse after clearing.
 
 ## Check modern construction, reconstruction, precision casts and merges.
