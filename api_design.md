@@ -262,13 +262,6 @@ The modern constructor accepts explicit positive weights. Copy and pickle preser
 ## Modern Java ownership and serialization
 
 Java additions and fluent merges mutate only the receiver after validation. Serialized Java state contains TDIG bytes, never a process-local native handle; restoration owns a fresh handle. Closed handles fail predictably. Catchable native failures become Java exceptions. JNI selects the system allocator; independent digests may be used concurrently, but shared-handle mutation requires caller coordination.
-## JNI construction and codec failure boundary
-
-Catchable Rust panics in JNI construction, decoding, encoding and destruction are translated to Java IllegalStateException after releasing the closure borrow. Existing pending Java exceptions are retained. Allocation aborts and invalid raw pointers remain outside this catchable boundary.
-
-## JNI mutation and query failure boundary
-
-The shared panic translator also wraps updates, digest merges, scaling, precision conversion, CDF, quantile and median. Checked frontend errors retain their existing mappings; public numeric behavior and wire formats are unchanged.
 
 ## Scala and Kotlin consumer examples
 
@@ -282,6 +275,9 @@ Kotlin example compilation tracks its source and application classpath so increm
 
 The installed package includes native method docstrings, public type stubs and py.typed metadata. The object and Polars guides describe defaults, shapes, mutation, ownership and errors separately.
 
+## Source-bound delivery gates
+
+Build checks reject an incompatible selected Rust/Cargo toolchain before native compilation. Installed-wheel qualification records exact runtime cells and the source-archive build.
 ## Overflow behavior across interfaces
 
 Modern creation, update, merge and scaling return checked results. Compression
