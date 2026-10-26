@@ -82,7 +82,10 @@ Notes:
 not merely approximate accuracy or passing upstream tolerances. It uses the
 pinned original Rust arithmetic and unmodified Python wrapper. Existing calls,
 dtype inference, uint32 weights, immutable merge/update, dictionary state, and
-copy/pickle reconstruction retain their upstream behavior, including quirks.
+copy/pickle reconstruction retain their upstream behavior, including quirks except for overflow. A checked boundary rejects total mass
+above `u32::MAX`, nonfinite arithmetic results from finite observations, and
+clusters lost to overflow. Python maps these failures to `ValueError`; successful
+in-range calculations still use the unchanged pinned kernels.
 The current review baseline keeps those calculations unchanged. Small numerical
 changes can be considered when they have a concrete benefit and measured impact;
 report absolute/relative differences and rank error on the affected workloads,
@@ -99,7 +102,9 @@ The unchanged 91-case upstream suite, 70 exact original-output cases, and pinned
 The `tdigest_core` workspace package exposes the original root `TDigest<T>` for
 f32/f64 with public `means: Vec<T>` and `weights: Vec<u32>` fields. Its seven
 methods and `anyhow::Result` signatures retain the pinned original semantics,
-including permissive probes and inherited malformed-input behavior. The modern
+including permissive probes and inherited malformed-input behavior, with the
+same checked overflow boundary as Python. Directly constructed public fields
+are checked on queries and merges too. The modern
 `gr-tdigest` API remains separate. New Rust checks cover both precisions and the
 same independently generated original-output fixture as the Python gate; the
 pinned upstream revision did not contain a Rust test suite.
@@ -253,3 +258,21 @@ Polars rejects missing digest rows, checks training representability, and requir
 ## Modern Python object API
 
 The modern constructor accepts explicit positive weights. Copy and pickle preserve independent full state. A one-dimensional NumPy query returns an owned Float64 array even when it has one element; zero-dimensional probes return scalars, lists and tuples retain their containers, and multidimensional probes are rejected. See bindings/python/OBJECT_API.md.
+
+## Overflow behavior across interfaces
+
+Modern creation, update, merge and scaling return checked results. Compression
+checks rounded/coalesced mass and output means before another stage or a checked
+centroid constructor can observe overflow; failures never replace the receiver.
+The normalization helper returns `Result` for overflowing mass. Queries over
+valid modern state retain finite CDF/quantile results at extreme finite values.
+Trimmed means use normalized moments if direct moment accumulation overflows.
+Empty-digest and NaN-probe semantics remain as documented above.
+
+The original compatibility interface deliberately rejects unsupported totals
+above `u32::MAX` rather than widening its storage or changing ordinary rounding.
+Its pinned kernels and independent golden fixtures remain unchanged; a separate
+Rust adapter checks mass before calls and finite outputs/conserved mass after
+calls. This covers construction, immutable merge, quantile, median and trimmed
+mean in Rust and Python. An overflow error replaces historical wrapping/panicking
+behavior; explicit nonfinite observations retain the existing compatibility API.
