@@ -22,6 +22,7 @@ def main():
     parser.add_argument("--receipt", type=Path, required=True)
     args = parser.parse_args()
     args.root.mkdir(parents=True, exist_ok=True)
+    repository = args.root.resolve()
     lock = threading.Lock()
     events = args.receipt.with_suffix(".jsonl")
 
@@ -43,12 +44,20 @@ def main():
                 self.end_headers()
                 return
             relative = self.path.removeprefix("/maven/")
-            if not self.path.startswith("/maven/") or ".." in relative or "?" in relative:
+            if (
+                not self.path.startswith("/maven/")
+                or ".." in relative
+                or "?" in relative
+                or Path(relative).is_absolute()
+            ):
                 self.send_error(400)
                 return
-            path = args.root / relative
             origin = "staged"
             try:
+                path = (repository / relative).resolve()
+                if path == repository or not path.is_relative_to(repository):
+                    self.send_error(400)
+                    return
                 if not path.is_file():
                     origin = "https://repo.maven.apache.org/maven2/" + relative
                     data = urllib.request.urlopen(origin, timeout=45).read()

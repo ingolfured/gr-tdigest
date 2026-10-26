@@ -134,6 +134,13 @@ make build
 make test
 ```
 
+Accuracy checks run as individual pytest cases in `make test`. Use
+`make quality-extended` for the slow precision/order/merge matrix. Known accuracy
+limits appear as expected failures only after their frozen regression checks
+pass. `make quality-fast` and `make quality-extended` retain JSON measurements
+under `build/quality/`, including failures. See [quality tests](tests/quality/README.md)
+for rerunning one profile and generating candidate baselines for review.
+
 Setup supports linked Git worktrees. If the checkout path contains spaces,
 set `CARGO_TARGET_DIR` to a build directory without spaces: the bundled
 jemalloc build rejects spaces in its installation prefix. The CLI tests and Java
@@ -150,6 +157,8 @@ packager respect `CARGO_TARGET_DIR` directly.
 - NumPy: 1.26.4 or the 2.x line; tested combinations are recorded in `scripts/test_python_support.py`
 - Polars: optional; install `gr-tdigest[polars]` to install Polars when needed. Existing Polars 1.x or 2.x installs are retained (`polars>=1.0.0`, no upper cap); development uses 1.44.2
 
+Polars integration is isolated in an internal adapter behind the existing public functions. Numerical imports remain usable without Polars installed.
+
 Existing G-Research applications keep `from tdigest_rs import TDigest` and
 `TDigest.from_array(values, delta=300)`. This interface uses the unmodified
 original numerical implementation and Python wrapper, including float32
@@ -157,7 +166,18 @@ arithmetic, uint32 weights, and the original copy/pickle behavior. The new engin
 is opt-in through `from gr_tdigest import TDigest`; using `delta` there does not
 promise the same numbers. See [source provenance](src/upstream/PROVENANCE.md).
 
-The unchanged upstream Python suite runs in `make test` and Linux CI. `make python-support-test` builds one release Linux wheel and tests it outside the checkout on Python 3.10–3.15 (both NumPy lines on 3.10–3.12), Polars-free installation cells on every runtime, plus source-archive rebuilds on 3.12, 3.14 and 3.15. See [legacy compatibility](compat/gr_tdigest_vs_tdigest_rs.md).
+The unchanged upstream Python suite runs in `make test` and Linux CI. `make python-support-test` builds one release Linux wheel from the verified source archive on Python 3.10 and tests it outside the checkout on Python 3.10–3.15, with both NumPy lines on 3.10–3.12 and NumPy 2.x on newer runtimes. Each Python version also gets a Polars-free installation cell. Cargo dependency artifacts are reused; the gate compiles the archive once instead of rebuilding the same ABI3 extension for each build interpreter. See [legacy compatibility](compat/gr_tdigest_vs_tdigest_rs.md).
+
+CI installs development dependencies before `make build` compiles the package.
+Installed-wheel and source-archive compatibility run in a separate job alongside
+the main build, unit tests and accuracy checks. The package tests also check
+that source archives contain the accuracy tests, saved results and offline data.
+The source-archive build reuses the checkout's Cargo target directory (or an
+explicit `CARGO_TARGET_DIR`). One genuine ABI3 wheel is built from the extracted
+source archive and checked on every supported runtime. `make python-support-test`
+streams compiler progress and retains
+per-command timings and logs in `build/python-support/`; CI uploads these even
+when a run fails or is cancelled.
 
 ## Changelog
 - See `CHANGELOG.md`.
@@ -223,17 +243,20 @@ Private consumer artifacts and representative cluster/server checks remain
 [owner-run](tests/quality/OWNER_CHECKS.md), with scripts to retain exact artifact,
 host and workload evidence inside the consuming environment.
 
+
 Modern Rust construction returns a checked result, for example `TDigest::<f64>::builder().max_size(1000).build()?`. Modern defaults use capacity 1,000; the separate original `tdigest_rs` and `tdigest_core` interfaces retain their pinned API and calculations.
 
-The upcoming release is `0.3.0` for Rust, Python and the JVM. Use the guides above for installation and API examples.
+The upcoming release is `0.3.0` for Rust, Python and the JVM. Python and Gradle derive their package versions from the root `Cargo.toml`. The separate original `tdigest_core` crate retains version `0.2.0`. See the [publishing guide](PUBLISH.md) for release prerequisites.
+
+When migrating modern callers, handle checked Rust construction and conversion results, use the documented NumPy query shapes, and account for the updated Polars struct schema. The [Python/NumPy guide](bindings/python/OBJECT_API.md) and [Polars migration guide](bindings/python/POLARS_API.md) describe these changes; the original `tdigest_rs` interface retains its pinned behavior.
 
 ## Measured summary-size tradeoffs
 
-`make quality-budgets` separately measures4140capacity/scale/data/merge profiles,
-including explicit200/1000sizes and additional deterministic shapes. It is a
+`make quality-budgets` separately measures 4,140 capacity/scale/data/merge profiles,
+including explicit 200/1,000 sizes and additional deterministic shapes. It is a
 slower diagnostic and returns failure for the observed accuracy failures. Small
 summary limits remain documented approximation tradeoffs; changing the scale
-moves accuracy between regions rather than universally improving every score. The default remainsK2/1000 and the original engine is
+moves accuracy between regions rather than universally improving every score. The default remains K2/1000 and original in-range arithmetic remains
 unchanged. See the [accuracy investigation and recommendation](https://github.com/ingolfured/gr-tdigest/blob/5801881075c6e31fec746c8c62c6a25782b6c13f/compat/consumer-20261020/accuracy-investigation/REPORT.md).
 
 JVM builds accept a selected native file with any basename through
@@ -242,3 +265,19 @@ resource path, removes stale generated payloads and verifies the finished JAR.
 CI exercises a renamed override and runs that JAR outside the checkout.
 
 Capacity tuning counts trial clusters without building discarded centroids; final compression and public numerical settings retain their existing behavior.
+
+Modern Rust builders, seeded construction, merges and explicit precision conversions return checked results. Malformed reconstructed state is rejected before use.
+Validation includes numerical consistency between aggregate statistics and centroids, within floating-point rounding limits. It does not prove the original data or statistical accuracy. Positive scaling validates independent candidate state before replacing the receiver.
+
+Overflow protection covers modern construction, reconstruction, updates, merges
+and positive scaling through the shared Rust core used by Python, Polars, Java
+and the CLI. Unsupported aggregate or selected-precision results return errors;
+failed updates preserve the receiver. CDF/quantile interpolation avoids extreme
+finite endpoint overflow; trimmed means normalize overflowing moments before
+averaging. Ordinary floating-point rounding and statistical approximation remain.
+
+The original `tdigest_core` / Python `tdigest_rs` interface retains uint32 weights
+and its in-range arithmetic. Totals above `u32::MAX` and nonfinite arithmetic
+results from finite inputs now return errors (Python `ValueError`) instead of
+integer wraparound, overflow panics, or corrupted summaries. Explicit nonfinite
+observations and permissive original probes retain their historical semantics.

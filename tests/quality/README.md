@@ -1,4 +1,4 @@
-# Quality checks
+# Accuracy tests
 
 For private consumer artifacts, actual clusters and representative servers,
 see [owner-run checks](OWNER_CHECKS.md). These inputs stay in the intranet.
@@ -11,44 +11,72 @@ correctness and frozen regression gates. No numerical fixture or gate changes.
 
 The suite measures specific errors. It does not turn them into one flattering score. The older heuristic quality score remains a historical test helper and is not an acceptance rule here.
 
-## Routine checks
+`make test` includes the fast accuracy profiles, independent-reference controls,
+and weighted tests. `make quality-fast` runs just these tests and retains a
+measurement report. `make quality-extended` adds the slow matrix across storage
+budgets, input orders and merge paths, and retains its report. `make quality-regression`
+is the CI entry point for the extended tests.
 
-`make test` includes `make quality-fast`:small reference/weighted tests and42 comparison profiles. The real-data part samples512 evenly spaced observations per column. The distributions cover constant values, ties, zero-heavy data, separated groups, drifting values, ordinary bell-shaped data and long tails. They are deterministic grids, not claims about the quality of a random-number generator.
+The measurements compare the modern and preserved original engines against sorted
+input after precision casting. Rank, tail, value and CDF errors stay separate;
+the original engine is matched by logical centroid field bytes without selecting
+for accuracy. This is a comparison budget, not a heap-memory claim. Every metric
+is checked against the existing frozen baseline with the same tolerances.
 
-The weighted controls use exact rational arithmetic for the input masses. They cover all three singleton policies, actual f32/f64 storage, decimal/binary fractions, large piles, subnormal through very large weights, serialization and query ordering.
+Ten extended profiles exceed the absolute accuracy envelope. They appear as
+pytest expected failures only after invariants and baseline regression assertions
+pass and the observed limits match `known-limits.json`. New failures, worse
+baseline metrics and changed inventories fail normally; reports retain the
+accuracy status as `FAIL` for known limits.
 
-`make quality-extended` reads every row of both real datasets and runs756 profiles:21 data columns/distributions ×2 precisions ×3 sizes ×2 orders ×3 construction/merge paths. The paths are a single build,40 sequential merges and a balanced40-way merge. The recorded CI run 104 at `e6a14a2` returned **failure** for ten size32 synthetic merge profiles; this historical count is not a fresh measurement of the current branch. See [recorded findings](../../compat/quality-20261020/RESULTS.md).
+Run one profile through pytest's usual selection options, for example:
 
-`make quality-boundaries` runs15 hand-checkable Rust controls. Current integration
-work passes all15 without changing the expected values; the historical baseline
-has13failures. They cover tiny-capacity mass, small tail contributions,
-cancellation, fractional-weight medians and subnormal exact-point means. This
-boundary result is separate from the ten approximate-accuracy failures.
+```bash
+.venv/bin/python -m pytest tests/quality \
+  -k 'accuracy and fast and bimodal and f64'
+```
 
-## Regression checks with known limits
+Add `--quality-extended -m slow` to collect and select the extended matrix.
+`--quality-report build/quality` writes `<mode>/results.json`, including source
+hashes, comparison summaries and failed cases. A filtered or interrupted run is
+reported as `INCOMPLETE` and cannot generate a candidate baseline.
 
-`make quality-regression` runs the complete comparison and boundary audit against frozen measurements and an explicit known-failure inventory. It may pass the **regression** check while reporting `accuracy_status=FAIL` and `status=KNOWN_LIMITS`. It does not turn an unresolved defect into a passing accuracy result. CI stores the reports even when a check fails. Added, removed or changed approximate-accuracy findings require review;
-improvements should update that inventory after being examined. The exact boundary
-audit accepts a known failure becoming a verified exact pass against the same
-target; it rejects changed targets, missing/duplicate/new controls, incorrect PASS
-labels and new or changed failures. Historical boundary measurements stay intact.
+To generate candidate frozen measurements deliberately, run the complete matrix
+with a new output directory:
 
-The frozen per-profile gate permits no relative error deterioration. Rank metrics allow one observation of resolution; other normalized errors allow2e-6 for f32 or1e-12 for f64. Each metric is checked independently. Dataset/protocol hashes, duplicate/missing cases and unexpected exceptions are also checked. Changing a baseline requires reviewed fresh evidence, not regeneration to hide a failure.
+```bash
+.venv/bin/python -m pytest tests/quality \
+  --quality-extended --quality-report build/quality \
+  --quality-baseline-output build/quality-candidates
+```
 
-## What each measurement means
+This writes candidate `baseline-fast.json.gz` and `baseline-extended.json.gz`
+without replacing the checked-in files or bypassing assertions. Review the
+measurement changes and provenance before replacing a baseline. The recorded
+input fixtures and their hashes are unchanged; tests never download data.
 
-- **Rank error:** distance from the requested probability to the observed-data rank interval of the returned value. Correct answers at repeated values get an interval, rather than an artificial tie penalty. Mean, maximum, median and tail errors stay separate.
-- **Value error:** difference from a declared type7 sample percentile, both in original units and divided by the middle-half data spread. If that spread is zero, use the full range, then1 for constant data. This is a specified percentile convention, not the only possible convention for discrete samples.
-- **CDF error:** difference from the exact empirical midpoint probability at135 fixed percentile-based probes (deduplicated). This is a sampled check, not a supremum/KS guarantee. The original G-Research API has no CDF method, so its CDF fields are unavailable, never fabricated.
-- **State checks:** finite/positive weights, preserved total mass and weighted contribution, ordered centroids/queries, input bounds, actual storage precision and exact state round trips. Original rounding/order diagnostics are recorded separately and do not remove inconvenient comparison outcomes.
 
-## Fair comparisons and limits
+## Reading the results
 
-Both engines receive identical observations after the same precision cast. The original source/wrapper remain checksum-bound. A count-only search chooses the largest observed original summary within the modern summary's logical field-byte budget. It never chooses a parameter by accuracy. The search trace and actual sizes are recorded; it is not a proof of a globally optimal original setting.
+Rank error measures how far an answer falls from the requested position in the
+sorted data, allowing for repeated values. Value error measures distance from a
+sample percentile. CDF error compares the reported fraction below a value with
+an exact count at selected points.
 
-Modern logical bytes count mean(4/8)+weight8+kind1 per centroid; original bytes count mean(4/8)+weight4. This excludes headers, padding, spare capacity, allocation and RSS. Modern wire length is recorded separately. Original states filling less than90% or exceeding100% of that field budget remain in the results but are excluded from matched-budget win/loss totals. Accuracy-limit failures **remain** in those totals when both measurements exist.
+Both engines receive the same values and precision. Comparisons use a similar
+amount of storage for centroid fields; this does not measure total memory use.
+These datasets provide regression coverage, not a guarantee for every input.
 
-These are empirical fixtures on two related domains, not a universal accuracy guarantee. Reversed single-build cases can be identical, and many profiles share data. The counts are test coverage, not independent statistical trials or confidence levels. No throughput ranking is inferred from test duration.
+The Rust tests in `tests/numerical_foundation.rs` cover small capacities, lost
+weight, cancellation and fractional-weight medians as part of `make test`.
+A known limitation remains: the mean of the smallest positive f64 value with
+weight 0.1 rounds to zero.
+
+The existing package tests check that source archives include these Python
+tests, their saved reference results and the compressed input data. Tests use
+the included data and never download it.
+
+Quality runs verify that the source and installed native binary remain unchanged during measurement. Changed inputs invalidate the retained report, fail pytest teardown and prevent candidate baseline generation. Historical comparisons in [the recorded results](../../compat/quality-20261020/RESULTS.md) retain their original source identities and known accuracy limits.
 
 ## Wider capacity/scale diagnostics
 

@@ -2,7 +2,10 @@
 
 From G-Research/tdigest-rs commit
 `8d9cf1fe82c5c9254e5dc9593f01717e317f4333` (Apache-2.0).
-The numerical calculations are unchanged. Three historical namespace imports
+The numerical kernels are unchanged. Public entry points additionally route
+through `checked.rs`, which rejects uint32 total overflow and overflowed finite-input
+results (including discarded cluster mass). It does not replace in-range arithmetic.
+Three historical namespace imports
 remain adapted: `use crate::{` to `use self::{` in lib.rs; `use crate::{` to
 `use super::{` in core.rs; `use crate::traits::FloatConst;` to
 `use super::traits::FloatConst;` in scale.rs. These resolve identically when this
@@ -11,15 +14,17 @@ license, and public Python wrapper are byte-for-byte unchanged. The original
 dependency constraints are in this directory's Cargo.toml; the Python feature
 depends on this shared-source crate. Dependency versions remain part of the
 numerical provenance and must pass the independent exact-output fixtures.
-`src/upstream_py.rs` adapts only PyO3/NumPy syntax and module registration.
+`src/upstream_py.rs` adapts PyO3/NumPy syntax, module registration, and maps
+checked failures to Python `ValueError`.
 
 `tdigest_rs.TDigest` must preserve the existing API and numerical behavior.
 Do not replace the calculations, normalize centroids, widen float32 arithmetic,
-convert integer weights to floats, or silently correct upstream quirks.
+convert integer weights to floats, or silently correct upstream quirks. Checked overflow rejection is the documented
+exception; unsafe overflow outcomes are not part of the preserved numerical contract.
 The modern engine is opt-in via `gr_tdigest`.
 
-Hashes below are of the original GitHub blobs, after reversing ONLY the three
-namespace changes above. `scripts/check_upstream_sources.py` verifies this rule.
+Hashes below are of the original GitHub blobs, after reversing the three namespace changes above and the explicitly enumerated
+`mod checked` / entry-point import routing in `lib.rs`. `scripts/check_upstream_sources.py` verifies this rule.
 Keep the public Python wrapper out of automatic formatting.
 
 ```text

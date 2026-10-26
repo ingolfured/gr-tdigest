@@ -1,18 +1,12 @@
 """Small hand-checkable controls for the independent accuracy measurements."""
 
-import importlib.util
 from fractions import Fraction
 from pathlib import Path
-import sys
+
 import pytest
 
-spec = importlib.util.spec_from_file_location(
-    "quality_suite", Path(__file__).resolve().parents[2] / "scripts/quality_suite.py"
-)
-quality = importlib.util.module_from_spec(spec)
-sys.modules[spec.name] = quality
-spec.loader.exec_module(quality)
-Exact = quality.Exact
+from . import measurements as quality
+from .measurements import Exact
 
 
 def test_ties_have_a_rank_interval_instead_of_a_penalty_for_correct_values():
@@ -134,3 +128,32 @@ def test_quality_measurement_rejects_source_or_installed_binary_changes(monkeypa
     binary.write_bytes(b"different binary")
     with pytest.raises(RuntimeError, match="changed"):
         quality.verify_inputs_unchanged(receipt, binary)
+
+
+def test_changed_native_invalidates_pytest_receipt_and_blocks_candidate_baselines(tmp_path):
+    import json
+    from types import SimpleNamespace
+
+    from . import conftest as fixtures
+
+    report = tmp_path / "report"
+    candidates = tmp_path / "candidates"
+    options = {"--quality-report": report, "--quality-baseline-output": candidates}
+    request = SimpleNamespace(config=SimpleNamespace(getoption=options.__getitem__))
+    lifecycle = fixtures.quality_runs.__wrapped__(request)
+    runs = next(lifecycle)
+    run = fixtures.load_run("fast")
+    native = tmp_path / "native.so"
+    native.write_bytes(b"measured binary")
+    run["native"] = native
+    run["receipt"]["native_sha256"] = quality.sha(native)
+    runs["fast"] = run
+    native.write_bytes(b"changed during measurement")
+
+    with pytest.raises(AssertionError, match="native binary changed"):
+        next(lifecycle)
+
+    saved = json.loads((report / "fast" / "results.json").read_text())
+    assert saved["input_status"] == "INVALID_INPUTS_CHANGED"
+    assert saved["regression_status"] == "FAIL"
+    assert not candidates.exists()
