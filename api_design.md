@@ -82,7 +82,10 @@ Notes:
 not merely approximate accuracy or passing upstream tolerances. It uses the
 pinned original Rust arithmetic and unmodified Python wrapper. Existing calls,
 dtype inference, uint32 weights, immutable merge/update, dictionary state, and
-copy/pickle reconstruction retain their upstream behavior, including quirks.
+copy/pickle reconstruction retain their upstream behavior, including quirks except for overflow. A checked boundary rejects total mass
+above `u32::MAX`, nonfinite arithmetic results from finite observations, and
+clusters lost to overflow. Python maps these failures to `ValueError`; successful
+in-range calculations still use the unchanged pinned kernels.
 The current review baseline keeps those calculations unchanged. Small numerical
 changes can be considered when they have a concrete benefit and measured impact;
 report absolute/relative differences and rank error on the affected workloads,
@@ -99,7 +102,9 @@ The unchanged 91-case upstream suite, 70 exact original-output cases, and pinned
 The `tdigest_core` workspace package exposes the original root `TDigest<T>` for
 f32/f64 with public `means: Vec<T>` and `weights: Vec<u32>` fields. Its seven
 methods and `anyhow::Result` signatures retain the pinned original semantics,
-including permissive probes and inherited malformed-input behavior. The modern
+including permissive probes and inherited malformed-input behavior, with the
+same checked overflow boundary as Python. Directly constructed public fields
+are checked on queries and merges too. The modern
 `gr-tdigest` API remains separate. New Rust checks cover both precisions and the
 same independently generated original-output fixture as the Python gate; the
 pinned upstream revision did not contain a Rust test suite.
@@ -122,9 +127,12 @@ remain lazy, while expression operations require Polars to be installed.
 The installed-artifact gate reuses one real wheel across the tested Polars
 versions and all six Python versions, using both NumPy lines on 3.10–3.12 and
 NumPy 2 on 3.13–3.15. It also
-tests genuinely Polars-free installations on every runtime and rebuilds the verified
-source archive under3.12/3.14/3.15. Standard CPython is covered; free-threaded
-runtimes and PyPy need separate qualification.
+tests genuinely Polars-free installations on every runtime. The default gate
+builds that ABI3 wheel once from the verified source archive with Python 3.10,
+reusing Cargo dependency artifacts, then installs it on every supported runtime.
+The 3.15 cell uses SciPy >=1.18.1 and pytest >=9.1.1 for compatibility validation;
+these are test dependencies. Standard CPython is covered; free-threaded runtimes
+and PyPy need separate qualification.
 The bounded Python metadata is narrower than upstream's open-ended >=3.10
 declaration. The development tool environment remains Python 3.12.
 
@@ -241,13 +249,25 @@ Quality acceptance uses separate rank, percentile-value and midpoint-CDF measure
 
 ## Checked modern state
 
-Modern Rust construction and precision conversion return checked results. Modern additions, merges and positive transformations prepare independent state before replacing the receiver; failures preserve its previous state. Reconstructed structs and decoded bytes validate mass, finite means, extrema and configuration, while legitimate empty states retain undefined extrema.
+Modern builders, reconstruction and precision conversions return checked results. Merges validate matching configuration even for empty contributors and replace the receiver only after validating the prepared result.
+
+State validation checks centroid mass, ordering, finite statistics, aggregate-moment consistency and configuration. Fully atomic state must have extrema matching its observed points; protected-edge counts must be positive. Empty additions/merges and single-item frontend merges still validate existing state. Export validation uses the same contract. Struct reconstruction distinguishes a missing centroid list from an empty list and accepts either complete modern configuration or the legacy schema with no configuration fields. Binary reconstruction rejects trailing payload on empty digests and integer fields outside the platform range.
+
+The raw Float64 sum remains authoritative across compression and precision conversion. Moment checks compare normalized quantities, with a rounding envelope that allows prior Float32 storage even after upcasting, plus subnormal quantization. These checks reject detectable contradictions; they cannot authenticate the original observations or prove statistical accuracy from a compressed summary.
+
+Legacy TDIG v1 export rejects mixed unit-weight summaries when its historical kind heuristic would reconstruct atomic centroids inconsistent with the stored extrema; v2/v3 preserve the centroid kinds.
+
+Positive transformations prepare and validate independent state before commit; failures preserve the receiver. Exact atomic points may retain a rounded zero moment without losing their known location or mass.
+
+Polars rejects missing digest rows, checks training representability, and requires a binary precision hint. CDF broadcasting follows input lengths; per-row List expressions retain List output, while Python sequences provide a flat probe vector.
 
 ## Modern Python object API
 
 The modern constructor accepts explicit positive weights. Copy and pickle preserve independent full state. A one-dimensional NumPy query returns an owned Float64 array even when it has one element; zero-dimensional probes return scalars, lists and tuples retain their containers, and multidimensional probes are rejected. See bindings/python/OBJECT_API.md.
 
 ## Polars expression cardinality
+
+The public Polars functions delegate to a dedicated internal adapter. Polars remains lazily imported; numerical APIs and wire-header inspection work without the optional dependency. Shared Python configuration normalization is independent of both the adapter and the numerical wrapper. The public `tdigest(values, max_size=1000, *, ...)` signature retains positional capacity and does not accept delta.
 
 CDF chooses aligned rows or one-digest broadcasting from input shape. Missing states and incompatible contributors are errors. Column-based from_bytes requires explicit f32/f64 precision and reduces each logical group, including empty groups. Planned schema must equal the runtime schema. See bindings/python/POLARS_API.md.
 
@@ -259,10 +279,32 @@ Java additions and fluent merges mutate only the receiver after validation. Seri
 
 Public examples compile Scala 2.12.16 and Kotlin consumers against the shared Java JAR. The local authenticated Maven fixture exercises selected dependency resolution and prepared-cache offline use. Actual Spark driver/executor, serializer and checkpoint qualification remains a consumer-environment check.
 
+The loopback Maven fixture serves only paths contained within its configured repository, rejecting absolute paths and symlinks that resolve outside it.
+
+Kotlin example compilation tracks its source and application classpath so incremental builds recompile after either changes.
+
 ## Installed Python discovery
 
 The installed package includes native method docstrings, public type stubs and py.typed metadata. The object and Polars guides describe defaults, shapes, mutation, ownership and errors separately.
 
 ## Source-bound delivery gates
 
-Build checks reject an incompatible selected Rust/Cargo toolchain before native compilation. Installed-wheel qualification records exact runtime cells and source-archive rebuilds. A separate wider budget diagnostic reports accuracy failures without waiving them; benchmarks retain throughput, latency and memory separately.
+Build checks reject an incompatible selected Rust/Cargo toolchain before native compilation. Installed-wheel qualification records exact runtime cells and the source-archive build. A separate wider budget diagnostic reports accuracy failures without waiving them; benchmarks retain throughput, latency and memory separately.
+
+## Overflow behavior across interfaces
+
+Modern creation, update, merge and scaling return checked results. Compression
+checks rounded/coalesced mass and output means before another stage or a checked
+centroid constructor can observe overflow; failures never replace the receiver.
+The normalization helper returns `Result` for overflowing mass. Queries over
+valid modern state retain finite CDF/quantile results at extreme finite values.
+Trimmed means use normalized moments if direct moment accumulation overflows.
+Empty-digest and NaN-probe semantics remain as documented above.
+
+The original compatibility interface deliberately rejects unsupported totals
+above `u32::MAX` rather than widening its storage or changing ordinary rounding.
+Its pinned kernels and independent golden fixtures remain unchanged; a separate
+Rust adapter checks mass before calls and finite outputs/conserved mass after
+calls. This covers construction, immutable merge, quantile, median and trimmed
+mean in Rust and Python. An overflow error replaces historical wrapping/panicking
+behavior; explicit nonfinite observations retain the existing compatibility API.

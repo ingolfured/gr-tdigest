@@ -113,13 +113,12 @@ def infer_column_precision(
 ) -> Literal["f32", "f64"]: ...
 def tdigest(
     values: Any,
-    *,
     max_size: int = ...,
+    *,
     scale: ScaleFamily | str = ...,
     precision: Precision = ...,
-    singleton_policy: SingletonPolicy | str = ...,
+    singleton_policy: SingletonPolicy | str | None = ...,
     pin_per_side: int | None = ...,
-    delta: float | None = ...,
 ) -> Expr: ...
 def cdf(digest: Any, values: Any) -> Expr: ...
 def quantile(digest: Any, q: float) -> Expr: ...

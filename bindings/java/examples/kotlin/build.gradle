@@ -24,6 +24,8 @@ def output = layout.buildDirectory.dir('classes/kotlin/main')
 tasks.register('compileKotlin', JavaExec) {
   classpath = configurations.kotlinCompiler
   mainClass = 'org.jetbrains.kotlin.cli.jvm.K2JVMCompiler'
+  inputs.file('src/main/kotlin/Example.kt')
+  inputs.files(configurations.runtimeClasspath).withPropertyName('compilationClasspath').withNormalizer(ClasspathNormalizer)
   args '-jvm-target', '11', '-no-stdlib', '-no-reflect', '-classpath',
        configurations.runtimeClasspath.asPath, '-d', output.get().asFile.absolutePath,
        file('src/main/kotlin/Example.kt').absolutePath
