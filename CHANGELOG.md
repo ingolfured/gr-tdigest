@@ -4,6 +4,8 @@ All notable changes to this project are documented in this file.
 
 ## [Unreleased]
 
+- Apply the shared JNI exception boundary to mutations, precision casts and queries without changing their numerical operations.
+
 - Translate catchable JNI lifecycle and codec panics to Java exceptions, preserving pending exceptions and existing wire semantics.
 
 - Keep Java restored handles attached to their actual Cleaner referent and expose checked weighted/delta builders with consumer regressions.

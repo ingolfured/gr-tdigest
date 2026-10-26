@@ -267,6 +267,10 @@ Java restoration registers the restored object itself as the Cleaner referent an
 
 Catchable Rust panics in JNI construction, decoding, encoding and destruction are translated to Java IllegalStateException after releasing the closure borrow. Existing pending Java exceptions are retained. Allocation aborts and invalid raw pointers remain outside this catchable boundary.
 
+## JNI mutation and query failure boundary
+
+The shared panic translator also wraps updates, digest merges, scaling, precision conversion, CDF, quantile and median. Checked frontend errors retain their existing mappings; public numeric behavior and wire formats are unchanged.
+
 ## Overflow behavior across interfaces
 
 Modern creation, update, merge and scaling return checked results. Compression
