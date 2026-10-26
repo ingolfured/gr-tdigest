@@ -77,8 +77,7 @@ On the tested Linux x86_64 target with Rust 1.90, a modern `Centroid<f32>` occup
 16 bytes instead of 12; `Centroid<f64>` remains 24 bytes. The f32 digest shell
 remains 96 bytes. This costs four bytes per allocated f32 centroid (one third more
 centroid storage), and its speed/cache impact must be measured. Means and extrema
-retain their chosen precision. Public Rust `weight() -> F` remains a potentially
-lossy compatibility accessor; `weight_f64()` exposes the authoritative mass.
+retain their chosen precision. Public modern Rust `weight()` and `weight_f64()` both expose authoritative Float64 mass, including for Float32 means.
 Python weights remain Float64 arrays and Java weighted inputs remain double[].
 The separate original `tdigest_rs` implementation retains its uint32 weights.
 
@@ -130,25 +129,15 @@ weighted-value product overflow, and the raw-sum overflow policy are separate.
 - This is a streaming two-way merge iterator (no prebuilt merged buffer).
 5. Run the full compressor pipeline with `compress_into`.
 
-Important: compressor stage 1 recomputes digest metadata (`count`, `sum`, `min`, `max`) from the normalized stream and writes those back to the result.
+Stage 1 computes centroid metadata, but add/merge callers retain authoritative data-level count and sum from raw observations and incoming aggregate headers. Rounded centroid means cannot reconstruct historical sums. Modern aggregate summation uses compensation and a power-of-two fallback for finite cancellation across intermediate overflow.
 
 Weighted constructor/merge helpers:
 - `from_weighted_unsorted(values, weights, max_size)` builds from weighted input directly.
 - `merge_weighted_unsorted(values, weights)` merges weighted input into an existing digest.
 
-### 3.3 Digest-to-digest merge (`merge_digests`)
+### 3.3 Digest-to-digest merge
 
-`TDigest::merge_digests(digests)`:
-1. Scan digests and keep only non-empty runs (`count>0` and non-empty centroid vector).
-2. Pick the first non-empty digest as the config source (`max_size`, `scale`, `policy`, `delta`).
-3. Perform a streaming k-way merge of sorted centroid runs via `KWayCentroidMerge::from_runs`.
-  - Implementation uses a min-heap over run heads (`O(total_len * log(k))`).
-  - It avoids materializing one full concat+sort buffer before compression.
-  - Historical concat+sort run merge is retained only as a `#[cfg(test)]` baseline helper.
-4. Recompress with `compress_into` using the chosen config.
-5. If all digests are empty, return `TDigest::default()`.
-
-Note: core merge is permissive by design. Strict precision/config checks are enforced in `FrontendDigest::merge_in_place`.
+Public `merge_digests` and `try_merge_digests` validate every contributor, including empty state, and reject incompatible capacity, scale, policy, delta or precision before compression. A streaming k-way merge avoids a full concatenate-and-sort buffer. In-place merge methods prepare checked independent state and replace the receiver only on success. Empty merge-all returns the documented default state.
 
 ## 4. Compression pipeline internals
 
@@ -520,11 +509,42 @@ Exact rational weighted controls cover probability semantics across extreme mass
 
 JVM test tool selection is shared through `bindings/java/bootstrap.py::java_environment`: Gradle and direct coherence subprocesses use the same verified JDK and child environment, including when host Java commands are unavailable.
 
-## Transactional modern operations
+## Consumer candidate numerical safeguards
 
-Checked construction and compensated accumulation validate represented mass and aggregate statistics. Compression retains exact-point identity through subnormal weighted products. The Polars adapter validates every reconstructed row before queries or reductions, and chooses CDF broadcasting by input lengths. Incompatible empty contributors are checked along with populated contributors.
+The consumer candidate validates externally reconstructed mass, finite metadata, ordered finite means, positive weights and extrema before accepting structs or TDIG. Empty state requires zero aggregates and NaN extrema. Count agreement uses a centroid-count-dependent floating summation roundoff bound; data sum is retained independently of compressed means.
 
-## Standalone JNI payload selection
+Capacity 1/2 with Use compresses all input mass rather than reserving edges with zero interior capacity. Equal-weight bucketization reserves its final bucket for all residual contributions. Compensated modern aggregate/cluster moments improve finite cancellation; atomic quantile boundaries use a directly accumulated prefix. These changes do not touch the original engine. Unsupported mixed-observation weighted products that underflow to zero return an error. A single exact Atomic point retains sufficient information to represent its distribution even when its rounded Float64 moment is subnormal or zero. Its mean query uses the retained point value, and merges or transforms recover a newly representable moment from that value and total mass. This rule does not restore information lost from mixed centroids. Exact-boundary targets remain frozen; a failed control may improve to a verified exact pass without editing the reference.
+
+Checked Rust `try_merge_digests` and `try_cast_precision` validate state/configuration and output. Public in-place merge/merge_many use checked preparation and return Result before committing. The public `merge_digests` and `cast_precision` also return checked Results. Unchecked recompression/conversion helpers are private. Python/JVM/Polars use checked paths. Collapsed means during an explicit precision conversion coalesce as Mixed, preserving mass and distinguishing them from an exact point.
+
+Public modern builder/seed construction now returns `Result` and validates before
+exposing state. The private builder bypass exists only for transient equal-mean
+observation streams and precision conversion, followed by normalization and final
+validation. Explicitly invalid delta settings no longer panic during option
+selection: build reports the error. Default delta configuration is K2Norm/Off.
+Oversized `TDigest::new` seeds compress using their requested capacity, rather than
+choosing the configuration from an unrelated empty digest.
+
+Cluster averaging retains the established finite same-sign addition order, because
+an unnecessary final-bit change can alter subsequent cluster boundaries. Mixed-sign
+cancellation and intermediate overflow still use the compensated accumulator.
+The full unchanged comparison suite verifies both numerical safeguards and the
+absence of newly introduced per-profile regressions.
+
+Training conversion to Float32 rejects nonfinite results and nonzero values rounded
+to zero in the shared Python/JNI frontend and Polars additions. Ordinary rounding
+remains allowed. Full-state aggregate-mean validation allows mean-precision
+roundoff (Float32 or Float64); weights and aggregate statistics remain Float64.
+
+The Gradle native-copy task clears its exclusively generated resource directory
+and renames the selected native file to the loader's canonical basename. The
+JAR task inspects the final archive and rejects missing, extra or misnamed native
+payloads. A renamed-override build followed by an outside-checkout JAR execution
+is a CI regression; ordinary Java tests alone previously missed this path.
+
+## Capacity-search implementation
+
+Trial capacity searches count k-limit clusters using the same ordered weight additions and scale comparisons as the emitting pass. They do not construct temporary centroid means or allocate discarded output vectors. The selected final pass still uses the existing full compression path. This changes work performed during search, not its numerical decisions or storage settings.
 
 The JAR bundles a canonically named native payload with source and SHA-256 identity in its manifest. Explicit native overrides accept relative distributed-file paths; extraction can use a configured writable directory. Loader diagnostics identify attempted paths and causes. Configured build-native overrides are packaged under the runtime resource name.
 

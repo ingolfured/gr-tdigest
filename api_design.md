@@ -86,13 +86,7 @@ copy/pickle reconstruction retain their upstream behavior, including quirks exce
 above `u32::MAX`, nonfinite arithmetic results from finite observations, and
 clusters lost to overflow. Python maps these failures to `ValueError`; successful
 in-range calculations still use the unchanged pinned kernels.
-The current review baseline keeps those calculations unchanged. Small numerical
-changes can be considered when they have a concrete benefit and measured impact;
-report absolute/relative differences and rank error on the affected workloads,
-including tails and repeated merges. There is no universal absolute tolerance:
-`1e-6` has different meaning for data near zero and data near a billion. Keep the
-independent upstream oracle and document deliberate differences rather than
-regenerating fixtures to hide them. The modern engine is explicitly selected
+Keep the independent upstream oracle and exact fixtures unchanged. The modern engine is explicitly selected
 through `gr_tdigest`; matching delta alone does not make its answers identical. The original interface has no new delta
 property, cdf method, or wire-state format. Focused regression tests cover immutable merge/update, dtype, copy/pickle, and the original dictionary state.
 The unchanged 91-case upstream suite, 70 exact original-output cases, and pinned-source checksums are required by `make test` and installed-wheel CI.
@@ -247,7 +241,14 @@ Surface mapping:
 
 Quality acceptance uses separate rank, percentile-value and midpoint-CDF measurements against sorted observed data, with tie intervals and actual precision casts. The original API remains numerically unchanged and has no fabricated CDF comparison. The fast suite runs in `make test`; extended results and explicit unresolved boundary controls are documented in `tests/quality/README.md`. A passing known-outcome regression check must not be presented as passing accuracy. These are measured operating envelopes, not formal guarantees or universal superiority over the original engine.
 
-## Checked modern state
+## Consumer candidate migration and strict operations
+
+Modern Rust `TDigestBuilder::build()` and seeded `TDigest::new(...)` return
+`Result<TDigest<_>, TdError>`. Invalid capacity, delta/configuration, centroid
+ordering, means, mass or aggregate metadata are rejected before a digest can be
+queried. Builder delta mode defaults to K2Norm/Off unless settings were explicitly
+provided; explicit incompatible settings fail. Private transient compression and
+precision-conversion streams are checked before becoming public state.
 
 Modern builders, reconstruction and precision conversions return checked results. Merges validate matching configuration even for empty contributors and replace the receiver only after validating the prepared result.
 
@@ -261,19 +262,40 @@ Positive transformations prepare and validate independent state before commit; f
 
 Polars rejects missing digest rows, checks training representability, and requires a binary precision hint. CDF broadcasting follows input lengths; per-row List expressions retain List output, while Python sequences provide a flat probe vector.
 
-## Modern Python object API
+Modern callers migrate to the new API and dependency defaults, while successful in-range original `tdigest_rs` calculations remain identical to the pinned oracle. The new modern default stays 1,000; historical modern callers migrate explicitly. New NumPy query outputs are Float64 one-dimensional arrays (including one element); zero-dimensional probes return scalars, list/tuple preserve containers, and multidimensional input is explicitly rejected. Native docstrings, `py.typed` and stubs ship in the actual wheel.
 
-The modern constructor accepts explicit positive weights. Copy and pickle preserve independent full state. A one-dimensional NumPy query returns an owned Float64 array even when it has one element; zero-dimensional probes return scalars, lists and tuples retain their containers, and multidimensional probes are rejected. See bindings/python/OBJECT_API.md.
+Modern missing digests and mixed capacities are rejected. Empty contributors also undergo configuration validation. Polars broadcasts by shape, supports a scalar probe across digest rows, and never substitutes healthy state for aligned empties. Missing and valid empty state are distinct. Python iterable merge prepares private state before committing; add/scale overflow and unsupported product underflow cannot corrupt the receiver.
 
-## Polars expression cardinality
+The JVM candidate exposes array merge-all, weighted builder construction and modern delta/K2Norm configuration. Java object restoration registers the restored object itself with Cleaner; temporary referents never own restored handles. JNI catches catchable Rust panics, uses the system allocator, and reports controlled native loading paths and payload identity. Independent handles are supported; shared mutable handles are not thread-safe. Actual external and internal qualification is recorded in the candidate manifest/coverage report.
+
+Polars requires explicit binary-column precision (`f32` or `f64`) so planning matches execution. This is a consistency check, not conversion. `from_bytes` remains a group reduction, including one empty state for empty input, rather than silently becoming row-wise. Scalar/list literal CDF probes and List-valued columns now have consistent planned/runtime types for zero, one and many rows.
 
 The public Polars functions delegate to a dedicated internal adapter. Polars remains lazily imported; numerical APIs and wire-header inspection work without the optional dependency. Shared Python configuration normalization is independent of both the adapter and the numerical wrapper. The public `tdigest(values, max_size=1000, *, ...)` signature retains positional capacity and does not accept delta.
 
 CDF chooses aligned rows or one-digest broadcasting from input shape. Missing states and incompatible contributors are errors. Column-based from_bytes requires explicit f32/f64 precision and reduces each logical group, including empty groups. Planned schema must equal the runtime schema. See bindings/python/POLARS_API.md.
 
-## Modern Java ownership and serialization
+Modern Float32 training rejects values that overflow or round a nonzero input to
+zero, including additions routed through Python/JNI/Polars. Explicit precision
+conversion retains the same representability rule. Ordinary Float32 rounding is
+permitted without narrowing mass. A known exact point retains its midpoint CDF,
+quantiles and mean even when the rounded Float64 weighted moment is zero or
+subnormal; its full state and positive transforms preserve point identity. Mixed
+training products that are not representable still fail explicitly and leave
+receivers unchanged. The sum getter remains the rounded Float64 weighted moment.
 
-Java additions and fluent merges mutate only the receiver after validation. Serialized Java state contains TDIG bytes, never a process-local native handle; restoration owns a fresh handle. Closed handles fail predictably. Catchable native failures become Java exceptions. JNI selects the system allocator; independent digests may be used concurrently, but shared-handle mutation requires caller coordination.
+The separate `make quality-budgets` diagnostic covers explicit modern capacities
+200/1000, smaller capacities, alternate named scales and additional data shapes.
+Its sampled rank/CDF criteria extend the existing diagnostic envelope and are not
+a new owner-approved universal guarantee. Rank, value, CDF and tail results stay
+separate. Known small-summary failures remain release-acceptance issues; no
+implicit scale selection, new API default or original-engine change is made.
+Python training currently requires capacity >= 10; checked modern Rust allows
+positive capacities including 1. These limits are stated separately.
+
+A build-time `TDIGEST_NATIVE_FILE` override may have an arbitrary basename; the
+finished JAR must contain exactly one platform-native payload under the canonical
+loader resource name. This differs from a runtime native-file override, which
+loads the selected path directly. No source/developer library is required at runtime.
 
 ## Scala and Kotlin consumer examples
 

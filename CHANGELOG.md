@@ -4,6 +4,15 @@ All notable changes to this project are documented in this file.
 
 ## [Unreleased]
 
+- Preserve the 62 review chapter after splitting the consumer prerequisites into smaller reviews.
+
+- Refresh 0.3.0 preparation on current consumer diagnostics, overflow guards and source-archive gates.
+
+- Count capacity-search trial clusters without allocating or averaging discarded centroids; retain the full final compression path and existing numerical decisions.
+
+- Align the 0.3.0 public guides, publishing prerequisites, Polars installation advice and JVM runtime coverage.
+- Use version `0.3.0` for Rust, Python and the JVM and simplify public release guidance.
+
 - Preserve the 61 review chapter after splitting the consumer prerequisites into smaller reviews.
 
 - Refresh consumer diagnostics on the repaired Polars stack and reuse the current pytest measurement helpers.
