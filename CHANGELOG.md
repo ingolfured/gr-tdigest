@@ -4,6 +4,8 @@ All notable changes to this project are documented in this file.
 
 ## [Unreleased]
 
+- Ship public Python type declarations and py.typed metadata, and check installed signature/docstring discovery in the runtime gate.
+
 - Add Scala/Kotlin consumer examples, track Kotlin incremental inputs, and reject loopback Maven fixture path escapes with regressions.
 
 - Package one canonically named native payload, report its identity and loader failures, and select the system allocator for JNI builds.
