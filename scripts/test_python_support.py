@@ -66,6 +66,12 @@ paths = {name: pathlib.Path(module.__file__).resolve() for name, module in modul
 assert all(path.is_relative_to(prefix) for path in paths.values()), paths
 assert paths['tdigest_rs.tdigest_rs'].name == 'tdigest_rs.py', paths
 assert modules['tdigest_rs'].TDigest.__module__ == 'tdigest_rs.lib'
+import inspect
+package = paths['gr_tdigest'].parent
+assert all((package / name).is_file() for name in ('py.typed', '__init__.pyi', '_gr_tdigest.pyi'))
+assert 'Modern distribution' in modules['gr_tdigest'].TDigest.__doc__
+assert 'weights' in inspect.signature(modules['gr_tdigest'].TDigest.from_array).parameters
+assert 'Midpoint CDF' in modules['gr_tdigest'].TDigest.cdf.__doc__
 native_hash = hashlib.sha256(paths['gr_tdigest._gr_tdigest'].read_bytes()).hexdigest()
 assert native_hash == expected['native_sha256'], native_hash
 dist = metadata.distribution(expected['distribution'])

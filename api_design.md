@@ -278,6 +278,10 @@ The loopback Maven fixture serves only paths contained within its configured rep
 
 Kotlin example compilation tracks its source and application classpath so incremental builds recompile after either changes.
 
+## Installed Python discovery
+
+The installed package includes native method docstrings, public type stubs and py.typed metadata. The object and Polars guides describe defaults, shapes, mutation, ownership and errors separately.
+
 ## Overflow behavior across interfaces
 
 Modern creation, update, merge and scaling return checked results. Compression
