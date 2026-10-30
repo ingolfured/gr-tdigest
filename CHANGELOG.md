@@ -4,6 +4,8 @@ All notable changes to this project are documented in this file.
 
 ## [Unreleased]
 
+- Preserve the historical numeric representability and rollback sweep.
+
 - Preserve historical installed consumer and language interoperability results.
 
 - Preserve historical installed Python runtime and source-build results.

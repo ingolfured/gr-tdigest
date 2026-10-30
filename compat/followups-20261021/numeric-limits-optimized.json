@@ -1,0 +1,1686 @@
+{
+  "constructed": 204,
+  "constructor_rejections": 6,
+  "failures": 0,
+  "kind": "Deterministic representability and failure-atomicity sweep; explicit unsupported-range rejections remain visible, not a widened guarantee",
+  "native_sha256": "1eaaf244db7004a0b8d2aca2edc6ff027a0d3a8871c2b8c450fdf94f19701d76",
+  "rejected_transforms": 348,
+  "rows": [
+    {
+      "precision": "f32",
+      "rejected_transforms": 1,
+      "status": "PASS",
+      "successful_transforms": 9,
+      "value": 0.0,
+      "weight": 4.6663180925160944e-302
+    },
+    {
+      "precision": "f32",
+      "rejected_transforms": 1,
+      "status": "PASS",
+      "successful_transforms": 9,
+      "value": 0.0,
+      "weight": 3.944304526105059e-31
+    },
+    {
+      "precision": "f32",
+      "rejected_transforms": 0,
+      "status": "PASS",
+      "successful_transforms": 10,
+      "value": 0.0,
+      "weight": 0.00048828125
+    },
+    {
+      "precision": "f32",
+      "rejected_transforms": 0,
+      "status": "PASS",
+      "successful_transforms": 10,
+      "value": 0.0,
+      "weight": 0.5
+    },
+    {
+      "precision": "f32",
+      "rejected_transforms": 0,
+      "status": "PASS",
+      "successful_transforms": 10,
+      "value": 0.0,
+      "weight": 512.0
+    },
+    {
+      "precision": "f32",
+      "rejected_transforms": 1,
+      "status": "PASS",
+      "successful_transforms": 9,
+      "value": 0.0,
+      "weight": 6.338253001141147e+29
+    },
+    {
+      "precision": "f32",
+      "rejected_transforms": 1,
+      "status": "PASS",
+      "successful_transforms": 9,
+      "value": 0.0,
+      "weight": 5.357543035931337e+300
+    },
+    {
+      "precision": "f32",
+      "rejected_transforms": 1,
+      "status": "PASS",
+      "successful_transforms": 9,
+      "value": 0.0,
+      "weight": 9.332636185032189e-302
+    },
+    {
+      "precision": "f32",
+      "rejected_transforms": 1,
+      "status": "PASS",
+      "successful_transforms": 9,
+      "value": 0.0,
+      "weight": 7.888609052210118e-31
+    },
+    {
+      "precision": "f32",
+      "rejected_transforms": 0,
+      "status": "PASS",
+      "successful_transforms": 10,
+      "value": 0.0,
+      "weight": 0.0009765625
+    },
+    {
+      "precision": "f32",
+      "rejected_transforms": 0,
+      "status": "PASS",
+      "successful_transforms": 10,
+      "value": 0.0,
+      "weight": 1.0
+    },
+    {
+      "precision": "f32",
+      "rejected_transforms": 0,
+      "status": "PASS",
+      "successful_transforms": 10,
+      "value": 0.0,
+      "weight": 1024.0
+    },
+    {
+      "precision": "f32",
+      "rejected_transforms": 1,
+      "status": "PASS",
+      "successful_transforms": 9,
+      "value": 0.0,
+      "weight": 1.2676506002282294e+30
+    },
+    {
+      "precision": "f32",
+      "rejected_transforms": 1,
+      "status": "PASS",
+      "successful_transforms": 9,
+      "value": 0.0,
+      "weight": 1.0715086071862673e+301
+    },
+    {
+      "precision": "f32",
+      "rejected_transforms": 1,
+      "status": "PASS",
+      "successful_transforms": 9,
+      "value": 0.0,
+      "weight": 1.8665272370064378e-301
+    },
+    {
+      "precision": "f32",
+      "rejected_transforms": 1,
+      "status": "PASS",
+      "successful_transforms": 9,
+      "value": 0.0,
+      "weight": 1.5777218104420236e-30
+    },
+    {
+      "precision": "f32",
+      "rejected_transforms": 0,
+      "status": "PASS",
+      "successful_transforms": 10,
+      "value": 0.0,
+      "weight": 0.001953125
+    },
+    {
+      "precision": "f32",
+      "rejected_transforms": 0,
+      "status": "PASS",
+      "successful_transforms": 10,
+      "value": 0.0,
+      "weight": 2.0
+    },
+    {
+      "precision": "f32",
+      "rejected_transforms": 0,
+      "status": "PASS",
+      "successful_transforms": 10,
+      "value": 0.0,
+      "weight": 2048.0
+    },
+    {
+      "precision": "f32",
+      "rejected_transforms": 1,
+      "status": "PASS",
+      "successful_transforms": 9,
+      "value": 0.0,
+      "weight": 2.535301200456459e+30
+    },
+    {
+      "precision": "f32",
+      "rejected_transforms": 1,
+      "status": "PASS",
+      "successful_transforms": 9,
+      "value": 0.0,
+      "weight": 2.1430172143725346e+301
+    },
+    {
+      "precision": "f32",
+      "rejected_transforms": 3,
+      "status": "PASS",
+      "successful_transforms": 7,
+      "value": 1.0,
+      "weight": 4.6663180925160944e-302
+    },
+    {
+      "precision": "f32",
+      "rejected_transforms": 3,
+      "status": "PASS",
+      "successful_transforms": 7,
+      "value": 1.0,
+      "weight": 3.944304526105059e-31
+    },
+    {
+      "precision": "f32",
+      "rejected_transforms": 2,
+      "status": "PASS",
+      "successful_transforms": 8,
+      "value": 1.0,
+      "weight": 0.00048828125
+    },
+    {
+      "precision": "f32",
+      "rejected_transforms": 2,
+      "status": "PASS",
+      "successful_transforms": 8,
+      "value": 1.0,
+      "weight": 0.5
+    },
+    {
+      "precision": "f32",
+      "rejected_transforms": 2,
+      "status": "PASS",
+      "successful_transforms": 8,
+      "value": 1.0,
+      "weight": 512.0
+    },
+    {
+      "precision": "f32",
+      "rejected_transforms": 3,
+      "status": "PASS",
+      "successful_transforms": 7,
+      "value": 1.0,
+      "weight": 6.338253001141147e+29
+    },
+    {
+      "precision": "f32",
+      "rejected_transforms": 3,
+      "status": "PASS",
+      "successful_transforms": 7,
+      "value": 1.0,
+      "weight": 5.357543035931337e+300
+    },
+    {
+      "precision": "f32",
+      "rejected_transforms": 3,
+      "status": "PASS",
+      "successful_transforms": 7,
+      "value": 1.0,
+      "weight": 9.332636185032189e-302
+    },
+    {
+      "precision": "f32",
+      "rejected_transforms": 3,
+      "status": "PASS",
+      "successful_transforms": 7,
+      "value": 1.0,
+      "weight": 7.888609052210118e-31
+    },
+    {
+      "precision": "f32",
+      "rejected_transforms": 2,
+      "status": "PASS",
+      "successful_transforms": 8,
+      "value": 1.0,
+      "weight": 0.0009765625
+    },
+    {
+      "precision": "f32",
+      "rejected_transforms": 2,
+      "status": "PASS",
+      "successful_transforms": 8,
+      "value": 1.0,
+      "weight": 1.0
+    },
+    {
+      "precision": "f32",
+      "rejected_transforms": 2,
+      "status": "PASS",
+      "successful_transforms": 8,
+      "value": 1.0,
+      "weight": 1024.0
+    },
+    {
+      "precision": "f32",
+      "rejected_transforms": 3,
+      "status": "PASS",
+      "successful_transforms": 7,
+      "value": 1.0,
+      "weight": 1.2676506002282294e+30
+    },
+    {
+      "precision": "f32",
+      "rejected_transforms": 3,
+      "status": "PASS",
+      "successful_transforms": 7,
+      "value": 1.0,
+      "weight": 1.0715086071862673e+301
+    },
+    {
+      "precision": "f32",
+      "rejected_transforms": 3,
+      "status": "PASS",
+      "successful_transforms": 7,
+      "value": 1.0,
+      "weight": 1.8665272370064378e-301
+    },
+    {
+      "precision": "f32",
+      "rejected_transforms": 3,
+      "status": "PASS",
+      "successful_transforms": 7,
+      "value": 1.0,
+      "weight": 1.5777218104420236e-30
+    },
+    {
+      "precision": "f32",
+      "rejected_transforms": 2,
+      "status": "PASS",
+      "successful_transforms": 8,
+      "value": 1.0,
+      "weight": 0.001953125
+    },
+    {
+      "precision": "f32",
+      "rejected_transforms": 2,
+      "status": "PASS",
+      "successful_transforms": 8,
+      "value": 1.0,
+      "weight": 2.0
+    },
+    {
+      "precision": "f32",
+      "rejected_transforms": 2,
+      "status": "PASS",
+      "successful_transforms": 8,
+      "value": 1.0,
+      "weight": 2048.0
+    },
+    {
+      "precision": "f32",
+      "rejected_transforms": 3,
+      "status": "PASS",
+      "successful_transforms": 7,
+      "value": 1.0,
+      "weight": 2.535301200456459e+30
+    },
+    {
+      "precision": "f32",
+      "rejected_transforms": 3,
+      "status": "PASS",
+      "successful_transforms": 7,
+      "value": 1.0,
+      "weight": 2.1430172143725346e+301
+    },
+    {
+      "precision": "f32",
+      "rejected_transforms": 3,
+      "status": "PASS",
+      "successful_transforms": 7,
+      "value": -1.0,
+      "weight": 4.6663180925160944e-302
+    },
+    {
+      "precision": "f32",
+      "rejected_transforms": 3,
+      "status": "PASS",
+      "successful_transforms": 7,
+      "value": -1.0,
+      "weight": 3.944304526105059e-31
+    },
+    {
+      "precision": "f32",
+      "rejected_transforms": 2,
+      "status": "PASS",
+      "successful_transforms": 8,
+      "value": -1.0,
+      "weight": 0.00048828125
+    },
+    {
+      "precision": "f32",
+      "rejected_transforms": 2,
+      "status": "PASS",
+      "successful_transforms": 8,
+      "value": -1.0,
+      "weight": 0.5
+    },
+    {
+      "precision": "f32",
+      "rejected_transforms": 2,
+      "status": "PASS",
+      "successful_transforms": 8,
+      "value": -1.0,
+      "weight": 512.0
+    },
+    {
+      "precision": "f32",
+      "rejected_transforms": 3,
+      "status": "PASS",
+      "successful_transforms": 7,
+      "value": -1.0,
+      "weight": 6.338253001141147e+29
+    },
+    {
+      "precision": "f32",
+      "rejected_transforms": 3,
+      "status": "PASS",
+      "successful_transforms": 7,
+      "value": -1.0,
+      "weight": 5.357543035931337e+300
+    },
+    {
+      "precision": "f32",
+      "rejected_transforms": 3,
+      "status": "PASS",
+      "successful_transforms": 7,
+      "value": -1.0,
+      "weight": 9.332636185032189e-302
+    },
+    {
+      "precision": "f32",
+      "rejected_transforms": 3,
+      "status": "PASS",
+      "successful_transforms": 7,
+      "value": -1.0,
+      "weight": 7.888609052210118e-31
+    },
+    {
+      "precision": "f32",
+      "rejected_transforms": 2,
+      "status": "PASS",
+      "successful_transforms": 8,
+      "value": -1.0,
+      "weight": 0.0009765625
+    },
+    {
+      "precision": "f32",
+      "rejected_transforms": 2,
+      "status": "PASS",
+      "successful_transforms": 8,
+      "value": -1.0,
+      "weight": 1.0
+    },
+    {
+      "precision": "f32",
+      "rejected_transforms": 2,
+      "status": "PASS",
+      "successful_transforms": 8,
+      "value": -1.0,
+      "weight": 1024.0
+    },
+    {
+      "precision": "f32",
+      "rejected_transforms": 3,
+      "status": "PASS",
+      "successful_transforms": 7,
+      "value": -1.0,
+      "weight": 1.2676506002282294e+30
+    },
+    {
+      "precision": "f32",
+      "rejected_transforms": 3,
+      "status": "PASS",
+      "successful_transforms": 7,
+      "value": -1.0,
+      "weight": 1.0715086071862673e+301
+    },
+    {
+      "precision": "f32",
+      "rejected_transforms": 3,
+      "status": "PASS",
+      "successful_transforms": 7,
+      "value": -1.0,
+      "weight": 1.8665272370064378e-301
+    },
+    {
+      "precision": "f32",
+      "rejected_transforms": 3,
+      "status": "PASS",
+      "successful_transforms": 7,
+      "value": -1.0,
+      "weight": 1.5777218104420236e-30
+    },
+    {
+      "precision": "f32",
+      "rejected_transforms": 2,
+      "status": "PASS",
+      "successful_transforms": 8,
+      "value": -1.0,
+      "weight": 0.001953125
+    },
+    {
+      "precision": "f32",
+      "rejected_transforms": 2,
+      "status": "PASS",
+      "successful_transforms": 8,
+      "value": -1.0,
+      "weight": 2.0
+    },
+    {
+      "precision": "f32",
+      "rejected_transforms": 2,
+      "status": "PASS",
+      "successful_transforms": 8,
+      "value": -1.0,
+      "weight": 2048.0
+    },
+    {
+      "precision": "f32",
+      "rejected_transforms": 3,
+      "status": "PASS",
+      "successful_transforms": 7,
+      "value": -1.0,
+      "weight": 2.535301200456459e+30
+    },
+    {
+      "precision": "f32",
+      "rejected_transforms": 3,
+      "status": "PASS",
+      "successful_transforms": 7,
+      "value": -1.0,
+      "weight": 2.1430172143725346e+301
+    },
+    {
+      "precision": "f32",
+      "rejected_transforms": 3,
+      "status": "PASS",
+      "successful_transforms": 7,
+      "value": 1.0000000195414814e-25,
+      "weight": 4.6663180925160944e-302
+    },
+    {
+      "precision": "f32",
+      "rejected_transforms": 3,
+      "status": "PASS",
+      "successful_transforms": 7,
+      "value": 1.0000000195414814e-25,
+      "weight": 3.944304526105059e-31
+    },
+    {
+      "precision": "f32",
+      "rejected_transforms": 2,
+      "status": "PASS",
+      "successful_transforms": 8,
+      "value": 1.0000000195414814e-25,
+      "weight": 0.00048828125
+    },
+    {
+      "precision": "f32",
+      "rejected_transforms": 2,
+      "status": "PASS",
+      "successful_transforms": 8,
+      "value": 1.0000000195414814e-25,
+      "weight": 0.5
+    },
+    {
+      "precision": "f32",
+      "rejected_transforms": 2,
+      "status": "PASS",
+      "successful_transforms": 8,
+      "value": 1.0000000195414814e-25,
+      "weight": 512.0
+    },
+    {
+      "precision": "f32",
+      "rejected_transforms": 3,
+      "status": "PASS",
+      "successful_transforms": 7,
+      "value": 1.0000000195414814e-25,
+      "weight": 6.338253001141147e+29
+    },
+    {
+      "precision": "f32",
+      "rejected_transforms": 3,
+      "status": "PASS",
+      "successful_transforms": 7,
+      "value": 1.0000000195414814e-25,
+      "weight": 5.357543035931337e+300
+    },
+    {
+      "precision": "f32",
+      "rejected_transforms": 3,
+      "status": "PASS",
+      "successful_transforms": 7,
+      "value": 1.0000000195414814e-25,
+      "weight": 9.332636185032189e-302
+    },
+    {
+      "precision": "f32",
+      "rejected_transforms": 3,
+      "status": "PASS",
+      "successful_transforms": 7,
+      "value": 1.0000000195414814e-25,
+      "weight": 7.888609052210118e-31
+    },
+    {
+      "precision": "f32",
+      "rejected_transforms": 2,
+      "status": "PASS",
+      "successful_transforms": 8,
+      "value": 1.0000000195414814e-25,
+      "weight": 0.0009765625
+    },
+    {
+      "precision": "f32",
+      "rejected_transforms": 2,
+      "status": "PASS",
+      "successful_transforms": 8,
+      "value": 1.0000000195414814e-25,
+      "weight": 1.0
+    },
+    {
+      "precision": "f32",
+      "rejected_transforms": 2,
+      "status": "PASS",
+      "successful_transforms": 8,
+      "value": 1.0000000195414814e-25,
+      "weight": 1024.0
+    },
+    {
+      "precision": "f32",
+      "rejected_transforms": 3,
+      "status": "PASS",
+      "successful_transforms": 7,
+      "value": 1.0000000195414814e-25,
+      "weight": 1.2676506002282294e+30
+    },
+    {
+      "precision": "f32",
+      "rejected_transforms": 3,
+      "status": "PASS",
+      "successful_transforms": 7,
+      "value": 1.0000000195414814e-25,
+      "weight": 1.0715086071862673e+301
+    },
+    {
+      "precision": "f32",
+      "rejected_transforms": 3,
+      "status": "PASS",
+      "successful_transforms": 7,
+      "value": 1.0000000195414814e-25,
+      "weight": 1.8665272370064378e-301
+    },
+    {
+      "precision": "f32",
+      "rejected_transforms": 3,
+      "status": "PASS",
+      "successful_transforms": 7,
+      "value": 1.0000000195414814e-25,
+      "weight": 1.5777218104420236e-30
+    },
+    {
+      "precision": "f32",
+      "rejected_transforms": 2,
+      "status": "PASS",
+      "successful_transforms": 8,
+      "value": 1.0000000195414814e-25,
+      "weight": 0.001953125
+    },
+    {
+      "precision": "f32",
+      "rejected_transforms": 2,
+      "status": "PASS",
+      "successful_transforms": 8,
+      "value": 1.0000000195414814e-25,
+      "weight": 2.0
+    },
+    {
+      "precision": "f32",
+      "rejected_transforms": 2,
+      "status": "PASS",
+      "successful_transforms": 8,
+      "value": 1.0000000195414814e-25,
+      "weight": 2048.0
+    },
+    {
+      "precision": "f32",
+      "rejected_transforms": 3,
+      "status": "PASS",
+      "successful_transforms": 7,
+      "value": 1.0000000195414814e-25,
+      "weight": 2.535301200456459e+30
+    },
+    {
+      "precision": "f32",
+      "rejected_transforms": 3,
+      "status": "PASS",
+      "successful_transforms": 7,
+      "value": 1.0000000195414814e-25,
+      "weight": 2.1430172143725346e+301
+    },
+    {
+      "precision": "f32",
+      "rejected_transforms": 3,
+      "status": "PASS",
+      "successful_transforms": 7,
+      "value": 9.999999562023526e+24,
+      "weight": 4.6663180925160944e-302
+    },
+    {
+      "precision": "f32",
+      "rejected_transforms": 3,
+      "status": "PASS",
+      "successful_transforms": 7,
+      "value": 9.999999562023526e+24,
+      "weight": 3.944304526105059e-31
+    },
+    {
+      "precision": "f32",
+      "rejected_transforms": 3,
+      "status": "PASS",
+      "successful_transforms": 7,
+      "value": 9.999999562023526e+24,
+      "weight": 0.00048828125
+    },
+    {
+      "precision": "f32",
+      "rejected_transforms": 3,
+      "status": "PASS",
+      "successful_transforms": 7,
+      "value": 9.999999562023526e+24,
+      "weight": 0.5
+    },
+    {
+      "precision": "f32",
+      "rejected_transforms": 3,
+      "status": "PASS",
+      "successful_transforms": 7,
+      "value": 9.999999562023526e+24,
+      "weight": 512.0
+    },
+    {
+      "precision": "f32",
+      "rejected_transforms": 3,
+      "status": "PASS",
+      "successful_transforms": 7,
+      "value": 9.999999562023526e+24,
+      "weight": 6.338253001141147e+29
+    },
+    {
+      "error": "tdigest: non-finite values are not allowed (weighted value product overflow or underflow). hint: clean your data or drop NaN/\u00b1inf before building the digest",
+      "precision": "f32",
+      "status": "REJECTED",
+      "value": 9.999999562023526e+24,
+      "weight": 5.357543035931337e+300
+    },
+    {
+      "precision": "f32",
+      "rejected_transforms": 3,
+      "status": "PASS",
+      "successful_transforms": 7,
+      "value": 9.999999562023526e+24,
+      "weight": 9.332636185032189e-302
+    },
+    {
+      "precision": "f32",
+      "rejected_transforms": 3,
+      "status": "PASS",
+      "successful_transforms": 7,
+      "value": 9.999999562023526e+24,
+      "weight": 7.888609052210118e-31
+    },
+    {
+      "precision": "f32",
+      "rejected_transforms": 3,
+      "status": "PASS",
+      "successful_transforms": 7,
+      "value": 9.999999562023526e+24,
+      "weight": 0.0009765625
+    },
+    {
+      "precision": "f32",
+      "rejected_transforms": 3,
+      "status": "PASS",
+      "successful_transforms": 7,
+      "value": 9.999999562023526e+24,
+      "weight": 1.0
+    },
+    {
+      "precision": "f32",
+      "rejected_transforms": 3,
+      "status": "PASS",
+      "successful_transforms": 7,
+      "value": 9.999999562023526e+24,
+      "weight": 1024.0
+    },
+    {
+      "precision": "f32",
+      "rejected_transforms": 3,
+      "status": "PASS",
+      "successful_transforms": 7,
+      "value": 9.999999562023526e+24,
+      "weight": 1.2676506002282294e+30
+    },
+    {
+      "error": "tdigest: non-finite values are not allowed (weighted value product overflow or underflow). hint: clean your data or drop NaN/\u00b1inf before building the digest",
+      "precision": "f32",
+      "status": "REJECTED",
+      "value": 9.999999562023526e+24,
+      "weight": 1.0715086071862673e+301
+    },
+    {
+      "precision": "f32",
+      "rejected_transforms": 3,
+      "status": "PASS",
+      "successful_transforms": 7,
+      "value": 9.999999562023526e+24,
+      "weight": 1.8665272370064378e-301
+    },
+    {
+      "precision": "f32",
+      "rejected_transforms": 3,
+      "status": "PASS",
+      "successful_transforms": 7,
+      "value": 9.999999562023526e+24,
+      "weight": 1.5777218104420236e-30
+    },
+    {
+      "precision": "f32",
+      "rejected_transforms": 3,
+      "status": "PASS",
+      "successful_transforms": 7,
+      "value": 9.999999562023526e+24,
+      "weight": 0.001953125
+    },
+    {
+      "precision": "f32",
+      "rejected_transforms": 3,
+      "status": "PASS",
+      "successful_transforms": 7,
+      "value": 9.999999562023526e+24,
+      "weight": 2.0
+    },
+    {
+      "precision": "f32",
+      "rejected_transforms": 3,
+      "status": "PASS",
+      "successful_transforms": 7,
+      "value": 9.999999562023526e+24,
+      "weight": 2048.0
+    },
+    {
+      "precision": "f32",
+      "rejected_transforms": 3,
+      "status": "PASS",
+      "successful_transforms": 7,
+      "value": 9.999999562023526e+24,
+      "weight": 2.535301200456459e+30
+    },
+    {
+      "error": "tdigest: non-finite values are not allowed (weighted value product overflow or underflow). hint: clean your data or drop NaN/\u00b1inf before building the digest",
+      "precision": "f32",
+      "status": "REJECTED",
+      "value": 9.999999562023526e+24,
+      "weight": 2.1430172143725346e+301
+    },
+    {
+      "precision": "f64",
+      "rejected_transforms": 1,
+      "status": "PASS",
+      "successful_transforms": 9,
+      "value": 0.0,
+      "weight": 4.6663180925160944e-302
+    },
+    {
+      "precision": "f64",
+      "rejected_transforms": 1,
+      "status": "PASS",
+      "successful_transforms": 9,
+      "value": 0.0,
+      "weight": 3.944304526105059e-31
+    },
+    {
+      "precision": "f64",
+      "rejected_transforms": 0,
+      "status": "PASS",
+      "successful_transforms": 10,
+      "value": 0.0,
+      "weight": 0.00048828125
+    },
+    {
+      "precision": "f64",
+      "rejected_transforms": 0,
+      "status": "PASS",
+      "successful_transforms": 10,
+      "value": 0.0,
+      "weight": 0.5
+    },
+    {
+      "precision": "f64",
+      "rejected_transforms": 0,
+      "status": "PASS",
+      "successful_transforms": 10,
+      "value": 0.0,
+      "weight": 512.0
+    },
+    {
+      "precision": "f64",
+      "rejected_transforms": 1,
+      "status": "PASS",
+      "successful_transforms": 9,
+      "value": 0.0,
+      "weight": 6.338253001141147e+29
+    },
+    {
+      "precision": "f64",
+      "rejected_transforms": 1,
+      "status": "PASS",
+      "successful_transforms": 9,
+      "value": 0.0,
+      "weight": 5.357543035931337e+300
+    },
+    {
+      "precision": "f64",
+      "rejected_transforms": 1,
+      "status": "PASS",
+      "successful_transforms": 9,
+      "value": 0.0,
+      "weight": 9.332636185032189e-302
+    },
+    {
+      "precision": "f64",
+      "rejected_transforms": 1,
+      "status": "PASS",
+      "successful_transforms": 9,
+      "value": 0.0,
+      "weight": 7.888609052210118e-31
+    },
+    {
+      "precision": "f64",
+      "rejected_transforms": 0,
+      "status": "PASS",
+      "successful_transforms": 10,
+      "value": 0.0,
+      "weight": 0.0009765625
+    },
+    {
+      "precision": "f64",
+      "rejected_transforms": 0,
+      "status": "PASS",
+      "successful_transforms": 10,
+      "value": 0.0,
+      "weight": 1.0
+    },
+    {
+      "precision": "f64",
+      "rejected_transforms": 0,
+      "status": "PASS",
+      "successful_transforms": 10,
+      "value": 0.0,
+      "weight": 1024.0
+    },
+    {
+      "precision": "f64",
+      "rejected_transforms": 1,
+      "status": "PASS",
+      "successful_transforms": 9,
+      "value": 0.0,
+      "weight": 1.2676506002282294e+30
+    },
+    {
+      "precision": "f64",
+      "rejected_transforms": 1,
+      "status": "PASS",
+      "successful_transforms": 9,
+      "value": 0.0,
+      "weight": 1.0715086071862673e+301
+    },
+    {
+      "precision": "f64",
+      "rejected_transforms": 1,
+      "status": "PASS",
+      "successful_transforms": 9,
+      "value": 0.0,
+      "weight": 1.8665272370064378e-301
+    },
+    {
+      "precision": "f64",
+      "rejected_transforms": 1,
+      "status": "PASS",
+      "successful_transforms": 9,
+      "value": 0.0,
+      "weight": 1.5777218104420236e-30
+    },
+    {
+      "precision": "f64",
+      "rejected_transforms": 0,
+      "status": "PASS",
+      "successful_transforms": 10,
+      "value": 0.0,
+      "weight": 0.001953125
+    },
+    {
+      "precision": "f64",
+      "rejected_transforms": 0,
+      "status": "PASS",
+      "successful_transforms": 10,
+      "value": 0.0,
+      "weight": 2.0
+    },
+    {
+      "precision": "f64",
+      "rejected_transforms": 0,
+      "status": "PASS",
+      "successful_transforms": 10,
+      "value": 0.0,
+      "weight": 2048.0
+    },
+    {
+      "precision": "f64",
+      "rejected_transforms": 1,
+      "status": "PASS",
+      "successful_transforms": 9,
+      "value": 0.0,
+      "weight": 2.535301200456459e+30
+    },
+    {
+      "precision": "f64",
+      "rejected_transforms": 1,
+      "status": "PASS",
+      "successful_transforms": 9,
+      "value": 0.0,
+      "weight": 2.1430172143725346e+301
+    },
+    {
+      "precision": "f64",
+      "rejected_transforms": 1,
+      "status": "PASS",
+      "successful_transforms": 9,
+      "value": 1.0,
+      "weight": 4.6663180925160944e-302
+    },
+    {
+      "precision": "f64",
+      "rejected_transforms": 1,
+      "status": "PASS",
+      "successful_transforms": 9,
+      "value": 1.0,
+      "weight": 3.944304526105059e-31
+    },
+    {
+      "precision": "f64",
+      "rejected_transforms": 0,
+      "status": "PASS",
+      "successful_transforms": 10,
+      "value": 1.0,
+      "weight": 0.00048828125
+    },
+    {
+      "precision": "f64",
+      "rejected_transforms": 0,
+      "status": "PASS",
+      "successful_transforms": 10,
+      "value": 1.0,
+      "weight": 0.5
+    },
+    {
+      "precision": "f64",
+      "rejected_transforms": 0,
+      "status": "PASS",
+      "successful_transforms": 10,
+      "value": 1.0,
+      "weight": 512.0
+    },
+    {
+      "precision": "f64",
+      "rejected_transforms": 2,
+      "status": "PASS",
+      "successful_transforms": 8,
+      "value": 1.0,
+      "weight": 6.338253001141147e+29
+    },
+    {
+      "precision": "f64",
+      "rejected_transforms": 2,
+      "status": "PASS",
+      "successful_transforms": 8,
+      "value": 1.0,
+      "weight": 5.357543035931337e+300
+    },
+    {
+      "precision": "f64",
+      "rejected_transforms": 1,
+      "status": "PASS",
+      "successful_transforms": 9,
+      "value": 1.0,
+      "weight": 9.332636185032189e-302
+    },
+    {
+      "precision": "f64",
+      "rejected_transforms": 1,
+      "status": "PASS",
+      "successful_transforms": 9,
+      "value": 1.0,
+      "weight": 7.888609052210118e-31
+    },
+    {
+      "precision": "f64",
+      "rejected_transforms": 0,
+      "status": "PASS",
+      "successful_transforms": 10,
+      "value": 1.0,
+      "weight": 0.0009765625
+    },
+    {
+      "precision": "f64",
+      "rejected_transforms": 0,
+      "status": "PASS",
+      "successful_transforms": 10,
+      "value": 1.0,
+      "weight": 1.0
+    },
+    {
+      "precision": "f64",
+      "rejected_transforms": 0,
+      "status": "PASS",
+      "successful_transforms": 10,
+      "value": 1.0,
+      "weight": 1024.0
+    },
+    {
+      "precision": "f64",
+      "rejected_transforms": 2,
+      "status": "PASS",
+      "successful_transforms": 8,
+      "value": 1.0,
+      "weight": 1.2676506002282294e+30
+    },
+    {
+      "precision": "f64",
+      "rejected_transforms": 2,
+      "status": "PASS",
+      "successful_transforms": 8,
+      "value": 1.0,
+      "weight": 1.0715086071862673e+301
+    },
+    {
+      "precision": "f64",
+      "rejected_transforms": 1,
+      "status": "PASS",
+      "successful_transforms": 9,
+      "value": 1.0,
+      "weight": 1.8665272370064378e-301
+    },
+    {
+      "precision": "f64",
+      "rejected_transforms": 1,
+      "status": "PASS",
+      "successful_transforms": 9,
+      "value": 1.0,
+      "weight": 1.5777218104420236e-30
+    },
+    {
+      "precision": "f64",
+      "rejected_transforms": 0,
+      "status": "PASS",
+      "successful_transforms": 10,
+      "value": 1.0,
+      "weight": 0.001953125
+    },
+    {
+      "precision": "f64",
+      "rejected_transforms": 0,
+      "status": "PASS",
+      "successful_transforms": 10,
+      "value": 1.0,
+      "weight": 2.0
+    },
+    {
+      "precision": "f64",
+      "rejected_transforms": 0,
+      "status": "PASS",
+      "successful_transforms": 10,
+      "value": 1.0,
+      "weight": 2048.0
+    },
+    {
+      "precision": "f64",
+      "rejected_transforms": 2,
+      "status": "PASS",
+      "successful_transforms": 8,
+      "value": 1.0,
+      "weight": 2.535301200456459e+30
+    },
+    {
+      "precision": "f64",
+      "rejected_transforms": 2,
+      "status": "PASS",
+      "successful_transforms": 8,
+      "value": 1.0,
+      "weight": 2.1430172143725346e+301
+    },
+    {
+      "precision": "f64",
+      "rejected_transforms": 1,
+      "status": "PASS",
+      "successful_transforms": 9,
+      "value": -1.0,
+      "weight": 4.6663180925160944e-302
+    },
+    {
+      "precision": "f64",
+      "rejected_transforms": 1,
+      "status": "PASS",
+      "successful_transforms": 9,
+      "value": -1.0,
+      "weight": 3.944304526105059e-31
+    },
+    {
+      "precision": "f64",
+      "rejected_transforms": 0,
+      "status": "PASS",
+      "successful_transforms": 10,
+      "value": -1.0,
+      "weight": 0.00048828125
+    },
+    {
+      "precision": "f64",
+      "rejected_transforms": 0,
+      "status": "PASS",
+      "successful_transforms": 10,
+      "value": -1.0,
+      "weight": 0.5
+    },
+    {
+      "precision": "f64",
+      "rejected_transforms": 0,
+      "status": "PASS",
+      "successful_transforms": 10,
+      "value": -1.0,
+      "weight": 512.0
+    },
+    {
+      "precision": "f64",
+      "rejected_transforms": 2,
+      "status": "PASS",
+      "successful_transforms": 8,
+      "value": -1.0,
+      "weight": 6.338253001141147e+29
+    },
+    {
+      "precision": "f64",
+      "rejected_transforms": 2,
+      "status": "PASS",
+      "successful_transforms": 8,
+      "value": -1.0,
+      "weight": 5.357543035931337e+300
+    },
+    {
+      "precision": "f64",
+      "rejected_transforms": 1,
+      "status": "PASS",
+      "successful_transforms": 9,
+      "value": -1.0,
+      "weight": 9.332636185032189e-302
+    },
+    {
+      "precision": "f64",
+      "rejected_transforms": 1,
+      "status": "PASS",
+      "successful_transforms": 9,
+      "value": -1.0,
+      "weight": 7.888609052210118e-31
+    },
+    {
+      "precision": "f64",
+      "rejected_transforms": 0,
+      "status": "PASS",
+      "successful_transforms": 10,
+      "value": -1.0,
+      "weight": 0.0009765625
+    },
+    {
+      "precision": "f64",
+      "rejected_transforms": 0,
+      "status": "PASS",
+      "successful_transforms": 10,
+      "value": -1.0,
+      "weight": 1.0
+    },
+    {
+      "precision": "f64",
+      "rejected_transforms": 0,
+      "status": "PASS",
+      "successful_transforms": 10,
+      "value": -1.0,
+      "weight": 1024.0
+    },
+    {
+      "precision": "f64",
+      "rejected_transforms": 2,
+      "status": "PASS",
+      "successful_transforms": 8,
+      "value": -1.0,
+      "weight": 1.2676506002282294e+30
+    },
+    {
+      "precision": "f64",
+      "rejected_transforms": 2,
+      "status": "PASS",
+      "successful_transforms": 8,
+      "value": -1.0,
+      "weight": 1.0715086071862673e+301
+    },
+    {
+      "precision": "f64",
+      "rejected_transforms": 1,
+      "status": "PASS",
+      "successful_transforms": 9,
+      "value": -1.0,
+      "weight": 1.8665272370064378e-301
+    },
+    {
+      "precision": "f64",
+      "rejected_transforms": 1,
+      "status": "PASS",
+      "successful_transforms": 9,
+      "value": -1.0,
+      "weight": 1.5777218104420236e-30
+    },
+    {
+      "precision": "f64",
+      "rejected_transforms": 0,
+      "status": "PASS",
+      "successful_transforms": 10,
+      "value": -1.0,
+      "weight": 0.001953125
+    },
+    {
+      "precision": "f64",
+      "rejected_transforms": 0,
+      "status": "PASS",
+      "successful_transforms": 10,
+      "value": -1.0,
+      "weight": 2.0
+    },
+    {
+      "precision": "f64",
+      "rejected_transforms": 0,
+      "status": "PASS",
+      "successful_transforms": 10,
+      "value": -1.0,
+      "weight": 2048.0
+    },
+    {
+      "precision": "f64",
+      "rejected_transforms": 2,
+      "status": "PASS",
+      "successful_transforms": 8,
+      "value": -1.0,
+      "weight": 2.535301200456459e+30
+    },
+    {
+      "precision": "f64",
+      "rejected_transforms": 2,
+      "status": "PASS",
+      "successful_transforms": 8,
+      "value": -1.0,
+      "weight": 2.1430172143725346e+301
+    },
+    {
+      "precision": "f64",
+      "rejected_transforms": 2,
+      "status": "PASS",
+      "successful_transforms": 8,
+      "value": 1e-25,
+      "weight": 4.6663180925160944e-302
+    },
+    {
+      "precision": "f64",
+      "rejected_transforms": 2,
+      "status": "PASS",
+      "successful_transforms": 8,
+      "value": 1e-25,
+      "weight": 3.944304526105059e-31
+    },
+    {
+      "precision": "f64",
+      "rejected_transforms": 1,
+      "status": "PASS",
+      "successful_transforms": 9,
+      "value": 1e-25,
+      "weight": 0.00048828125
+    },
+    {
+      "precision": "f64",
+      "rejected_transforms": 1,
+      "status": "PASS",
+      "successful_transforms": 9,
+      "value": 1e-25,
+      "weight": 0.5
+    },
+    {
+      "precision": "f64",
+      "rejected_transforms": 1,
+      "status": "PASS",
+      "successful_transforms": 9,
+      "value": 1e-25,
+      "weight": 512.0
+    },
+    {
+      "precision": "f64",
+      "rejected_transforms": 2,
+      "status": "PASS",
+      "successful_transforms": 8,
+      "value": 1e-25,
+      "weight": 6.338253001141147e+29
+    },
+    {
+      "precision": "f64",
+      "rejected_transforms": 3,
+      "status": "PASS",
+      "successful_transforms": 7,
+      "value": 1e-25,
+      "weight": 5.357543035931337e+300
+    },
+    {
+      "precision": "f64",
+      "rejected_transforms": 2,
+      "status": "PASS",
+      "successful_transforms": 8,
+      "value": 1e-25,
+      "weight": 9.332636185032189e-302
+    },
+    {
+      "precision": "f64",
+      "rejected_transforms": 2,
+      "status": "PASS",
+      "successful_transforms": 8,
+      "value": 1e-25,
+      "weight": 7.888609052210118e-31
+    },
+    {
+      "precision": "f64",
+      "rejected_transforms": 1,
+      "status": "PASS",
+      "successful_transforms": 9,
+      "value": 1e-25,
+      "weight": 0.0009765625
+    },
+    {
+      "precision": "f64",
+      "rejected_transforms": 1,
+      "status": "PASS",
+      "successful_transforms": 9,
+      "value": 1e-25,
+      "weight": 1.0
+    },
+    {
+      "precision": "f64",
+      "rejected_transforms": 1,
+      "status": "PASS",
+      "successful_transforms": 9,
+      "value": 1e-25,
+      "weight": 1024.0
+    },
+    {
+      "precision": "f64",
+      "rejected_transforms": 2,
+      "status": "PASS",
+      "successful_transforms": 8,
+      "value": 1e-25,
+      "weight": 1.2676506002282294e+30
+    },
+    {
+      "precision": "f64",
+      "rejected_transforms": 3,
+      "status": "PASS",
+      "successful_transforms": 7,
+      "value": 1e-25,
+      "weight": 1.0715086071862673e+301
+    },
+    {
+      "precision": "f64",
+      "rejected_transforms": 2,
+      "status": "PASS",
+      "successful_transforms": 8,
+      "value": 1e-25,
+      "weight": 1.8665272370064378e-301
+    },
+    {
+      "precision": "f64",
+      "rejected_transforms": 2,
+      "status": "PASS",
+      "successful_transforms": 8,
+      "value": 1e-25,
+      "weight": 1.5777218104420236e-30
+    },
+    {
+      "precision": "f64",
+      "rejected_transforms": 1,
+      "status": "PASS",
+      "successful_transforms": 9,
+      "value": 1e-25,
+      "weight": 0.001953125
+    },
+    {
+      "precision": "f64",
+      "rejected_transforms": 1,
+      "status": "PASS",
+      "successful_transforms": 9,
+      "value": 1e-25,
+      "weight": 2.0
+    },
+    {
+      "precision": "f64",
+      "rejected_transforms": 1,
+      "status": "PASS",
+      "successful_transforms": 9,
+      "value": 1e-25,
+      "weight": 2048.0
+    },
+    {
+      "precision": "f64",
+      "rejected_transforms": 2,
+      "status": "PASS",
+      "successful_transforms": 8,
+      "value": 1e-25,
+      "weight": 2.535301200456459e+30
+    },
+    {
+      "precision": "f64",
+      "rejected_transforms": 3,
+      "status": "PASS",
+      "successful_transforms": 7,
+      "value": 1e-25,
+      "weight": 2.1430172143725346e+301
+    },
+    {
+      "precision": "f64",
+      "rejected_transforms": 2,
+      "status": "PASS",
+      "successful_transforms": 8,
+      "value": 1e+25,
+      "weight": 4.6663180925160944e-302
+    },
+    {
+      "precision": "f64",
+      "rejected_transforms": 2,
+      "status": "PASS",
+      "successful_transforms": 8,
+      "value": 1e+25,
+      "weight": 3.944304526105059e-31
+    },
+    {
+      "precision": "f64",
+      "rejected_transforms": 2,
+      "status": "PASS",
+      "successful_transforms": 8,
+      "value": 1e+25,
+      "weight": 0.00048828125
+    },
+    {
+      "precision": "f64",
+      "rejected_transforms": 2,
+      "status": "PASS",
+      "successful_transforms": 8,
+      "value": 1e+25,
+      "weight": 0.5
+    },
+    {
+      "precision": "f64",
+      "rejected_transforms": 2,
+      "status": "PASS",
+      "successful_transforms": 8,
+      "value": 1e+25,
+      "weight": 512.0
+    },
+    {
+      "precision": "f64",
+      "rejected_transforms": 2,
+      "status": "PASS",
+      "successful_transforms": 8,
+      "value": 1e+25,
+      "weight": 6.338253001141147e+29
+    },
+    {
+      "error": "tdigest: non-finite values are not allowed (weighted value product overflow or underflow). hint: clean your data or drop NaN/\u00b1inf before building the digest",
+      "precision": "f64",
+      "status": "REJECTED",
+      "value": 1e+25,
+      "weight": 5.357543035931337e+300
+    },
+    {
+      "precision": "f64",
+      "rejected_transforms": 2,
+      "status": "PASS",
+      "successful_transforms": 8,
+      "value": 1e+25,
+      "weight": 9.332636185032189e-302
+    },
+    {
+      "precision": "f64",
+      "rejected_transforms": 2,
+      "status": "PASS",
+      "successful_transforms": 8,
+      "value": 1e+25,
+      "weight": 7.888609052210118e-31
+    },
+    {
+      "precision": "f64",
+      "rejected_transforms": 2,
+      "status": "PASS",
+      "successful_transforms": 8,
+      "value": 1e+25,
+      "weight": 0.0009765625
+    },
+    {
+      "precision": "f64",
+      "rejected_transforms": 2,
+      "status": "PASS",
+      "successful_transforms": 8,
+      "value": 1e+25,
+      "weight": 1.0
+    },
+    {
+      "precision": "f64",
+      "rejected_transforms": 2,
+      "status": "PASS",
+      "successful_transforms": 8,
+      "value": 1e+25,
+      "weight": 1024.0
+    },
+    {
+      "precision": "f64",
+      "rejected_transforms": 2,
+      "status": "PASS",
+      "successful_transforms": 8,
+      "value": 1e+25,
+      "weight": 1.2676506002282294e+30
+    },
+    {
+      "error": "tdigest: non-finite values are not allowed (weighted value product overflow or underflow). hint: clean your data or drop NaN/\u00b1inf before building the digest",
+      "precision": "f64",
+      "status": "REJECTED",
+      "value": 1e+25,
+      "weight": 1.0715086071862673e+301
+    },
+    {
+      "precision": "f64",
+      "rejected_transforms": 2,
+      "status": "PASS",
+      "successful_transforms": 8,
+      "value": 1e+25,
+      "weight": 1.8665272370064378e-301
+    },
+    {
+      "precision": "f64",
+      "rejected_transforms": 2,
+      "status": "PASS",
+      "successful_transforms": 8,
+      "value": 1e+25,
+      "weight": 1.5777218104420236e-30
+    },
+    {
+      "precision": "f64",
+      "rejected_transforms": 2,
+      "status": "PASS",
+      "successful_transforms": 8,
+      "value": 1e+25,
+      "weight": 0.001953125
+    },
+    {
+      "precision": "f64",
+      "rejected_transforms": 2,
+      "status": "PASS",
+      "successful_transforms": 8,
+      "value": 1e+25,
+      "weight": 2.0
+    },
+    {
+      "precision": "f64",
+      "rejected_transforms": 2,
+      "status": "PASS",
+      "successful_transforms": 8,
+      "value": 1e+25,
+      "weight": 2048.0
+    },
+    {
+      "precision": "f64",
+      "rejected_transforms": 2,
+      "status": "PASS",
+      "successful_transforms": 8,
+      "value": 1e+25,
+      "weight": 2.535301200456459e+30
+    },
+    {
+      "error": "tdigest: non-finite values are not allowed (weighted value product overflow or underflow). hint: clean your data or drop NaN/\u00b1inf before building the digest",
+      "precision": "f64",
+      "status": "REJECTED",
+      "value": 1e+25,
+      "weight": 2.1430172143725346e+301
+    }
+  ],
+  "source_sha": "aaf7ab3956fed4269c1eaeef915a6faee78fa305",
+  "successful_transforms": 1692
+}
