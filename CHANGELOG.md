@@ -4,6 +4,8 @@ All notable changes to this project are documented in this file.
 
 ## [Unreleased]
 
+- Document owner-run private baseline, cluster, internal-service and representative-server acceptance checks without requiring the withdrawn host recorder.
+
 - Configure independent-digest benchmark batches and record CPU use, observed worker threads and check-script identity; protect existing receipts.
 
 - Preserve the 52 review chapter after splitting the consumer prerequisites into smaller reviews.
