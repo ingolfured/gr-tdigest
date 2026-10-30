@@ -46,7 +46,7 @@ result = rows.lazy().join(groups, on="g").with_columns(gr.cdf("d", pl.col("x")).
 | `quantile(digest, q)`, `median(digest)` | One query of the reduced digest |
 | add/weighted-add, scale, precision cast | One transformed reduced digest |
 | `to_bytes(digest)` | One encoding of the reduced digest |
-| `from_bytes(blob)` | One reduced digest from decoded blobs, with explicit consistent precision |
+| `from_bytes(blob)` | One reduced digest; precision inferred from materialized binary inputs or supplied for column expressions |
 | `cdf(digest, values)` | One digest broadcast over probes, or aligned digest/probe rows; list probes produce list results |
 
 CDF broadcasting depends on input lengths, not how many digest rows contain
@@ -93,4 +93,16 @@ rejection, metadata corruption and lazy grouped joins with dynamic CDF probes,
 Float32 casts and clipping. These bounded checks do not qualify the user's
 unconfirmed Spark or private consumer matrix.
 
-Column-based `from_bytes` now requires `precision="f32"` or `"f64"`. This checks encoded precision; it does not convert it. Inspect eager bytes first with `wire_precision` or `infer_column_precision` when needed. Planning and execution then use the same schema, including an empty reduction.
+`from_bytes` uses `precision="auto"` by default for materialized `bytes`, `bytearray`, `memoryview` and nonempty Polars `Binary` Series. The adapter inspects every header and supplies the detected precision to the plugin before planning. It never samples, casts state, drops nulls, or collects a lazy expression. Mixed-precision Series, nulls and non-Binary Series are rejected. A Series is used as literal input; pass a column expression for per-group decoding of frame rows.
+
+Column names and expressions still require `precision="f32"` or `"f64"`. This checks encoded precision; it does not convert it. Planning and execution use the same schema, including an empty reduction. An empty Series has no header and needs an explicit precision. An encoded v3 empty digest does carry precision and supports auto. Empty v1/v2 states have no precision code and require the existing explicit legacy decoding path; use v3 to preserve the precision of an empty f32 digest.
+
+```python
+blob = gr.TDigest.from_array([0., 10.], precision="f32").to_bytes()
+decoded = pl.select(gr.from_bytes(blob).alias("d"))  # remains f32
+blobs = pl.Series("blob", [blob], dtype=pl.Binary)
+decoded_series = pl.select(gr.from_bytes(blobs).alias("d"))
+decoded_column = pl.DataFrame({"blob": blobs}).lazy().select(
+    gr.from_bytes("blob", precision="f32").alias("d")
+).collect()
+```

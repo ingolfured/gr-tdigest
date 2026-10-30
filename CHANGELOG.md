@@ -4,6 +4,8 @@ All notable changes to this project are documented in this file.
 
 ## [Unreleased]
 
+- Infer Polars binary precision for materialized bytes and nonempty Binary Series by checking every header, without casts, sampling or hidden collection; reject mixed, null and ambiguous legacy-empty input.
+
 - Preserve the 43 review chapter after splitting the consumer prerequisites into smaller reviews.
 
 - Preserve merged arithmetic overflow guards beneath Polars 1.x/2.x compatibility.

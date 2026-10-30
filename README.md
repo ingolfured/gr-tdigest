@@ -153,6 +153,8 @@ packager respect `CARGO_TARGET_DIR` directly.
 
 Polars integration is isolated in an internal adapter behind the existing public functions. Numerical imports remain usable without Polars installed.
 
+`gr_tdigest.from_bytes(blob_or_binary_series)` detects encoded precision from materialized inputs. Lazy binary column expressions require `precision="f32"` or `"f64"`; decoding checks that precision and never casts the digest.
+
 Existing G-Research applications keep `from tdigest_rs import TDigest` and
 `TDigest.from_array(values, delta=300)`. This interface uses the unmodified
 original numerical implementation and Python wrapper, including float32

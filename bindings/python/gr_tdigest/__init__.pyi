@@ -3,7 +3,7 @@ from typing import Any, Iterable, Literal, Sequence, overload
 
 import numpy as np
 import numpy.typing as npt
-from polars import DataFrame, Expr
+from polars import DataFrame, Expr, Series
 
 __version__: str
 DEFAULT_MAX_SIZE: int
@@ -130,4 +130,7 @@ def cast_precision(digest: Any, *, precision: Literal["f32", "f64"]) -> Expr: ..
 def scale_weights(digest: Any, factor: float) -> Expr: ...
 def scale_values(digest: Any, factor: float) -> Expr: ...
 def to_bytes(digest: Any, *, version: Literal[1, 2, 3] | None = ...) -> Expr: ...
+@overload
+def from_bytes(blob: bytes | bytearray | memoryview | Series, *, precision: Precision = ...) -> Expr: ...
+@overload
 def from_bytes(blob: Any, *, precision: Literal["f32", "f64"]) -> Expr: ...

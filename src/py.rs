@@ -8,7 +8,7 @@ use crate::tdigest::frontends::{
     DigestPrecision, FrontendDigest, FrontendError, PrecisionHint,
 };
 use crate::tdigest::singleton_policy::SingletonPolicy;
-use crate::tdigest::wire::{wire_precision, WirePrecision, WireVersion};
+use crate::tdigest::wire::{wire_precision, wire_precision_strict, WirePrecision, WireVersion};
 use crate::tdigest::ScaleFamily;
 
 fn parse_scale(s: Option<&str>) -> Result<ScaleFamily, PyErr> {
@@ -546,12 +546,17 @@ fn merge_all_impl(digests: Bound<'_, PyAny>) -> PyResult<PyTDigest> {
     Ok(PyTDigest { inner: merged })
 }
 
-#[pyfunction]
-fn wire_precision_py(b: &Bound<PyAny>) -> PyResult<String> {
+#[pyfunction(signature = (b, *, strict = false))]
+fn wire_precision_py(b: &Bound<PyAny>, strict: bool) -> PyResult<String> {
     let py_bytes: &Bound<PyBytes> = b.cast()?;
     let bytes = py_bytes.as_bytes();
 
-    match wire_precision(bytes) {
+    let precision = if strict {
+        wire_precision_strict(bytes)
+    } else {
+        wire_precision(bytes)
+    };
+    match precision {
         Ok(WirePrecision::F32) => Ok("f32".to_string()),
         Ok(WirePrecision::F64) => Ok("f64".to_string()),
         Err(e) => Err(PyValueError::new_err(format!("wire_precision: {e}"))),

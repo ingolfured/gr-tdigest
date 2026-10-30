@@ -546,7 +546,7 @@ Weight and value scaling prepare independent candidate state, reject aggregate o
 
 ## Checked Polars state and binary precision
 
-Polars training uses checked precision conversion and reconstruction validates every digest row. Missing digests error rather than becoming empty digests. Binary decoding requires a precision hint and empty decoding uses its schema.
+Polars training uses checked precision conversion and reconstruction validates every digest row. Missing digests error rather than becoming empty digests. Binary decoding passes a precision hint to both planning and execution. For materialized bytes-like values and nonempty Binary Series, the Python adapter derives that hint by scanning every encoded header; lazy expressions still require an explicit hint. No binary values or floating fields are cast, and no lazy plan is collected. A strict Rust wire-inspection helper rejects empty v1/v2 states because those formats carry no precision code; the historical wire_precision inspection API retains its existing default. V3 empty states encode precision and support auto. Empty Series need an explicit hint.
 
 ## Polars CDF shape and broadcasting
 

@@ -92,6 +92,7 @@ def verify_sdist_contents(sdist: Path, root: Path) -> None:
             "bindings/java/examples/kotlin/settings.gradle",
             "bindings/java/examples/kotlin/src/main/kotlin/Example.kt",
             "bindings/python/tests/test_consumer_contracts.py",
+            "bindings/python/tests/test_polars_auto_precision.py",
         ):
             require_same(relative, relative)
         # Include everything needed to run the accuracy tests offline.

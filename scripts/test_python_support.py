@@ -44,7 +44,7 @@ MATRIX = (
 # Coverage inventory for the staged suites in this revision. Keep source-build
 # totals derived from these values, and reject failures/skips independently.
 COMPATIBILITY_CASES = 208
-MODERN_CASES = 233
+MODERN_CASES = 361
 NUMPY_ONLY_CASES = 120
 
 POLARS_VERSIONS = ("1.0.0", "1.20.0", "1.38.1", "1.44.2", "2.0.0")
@@ -53,6 +53,7 @@ MODERN_TESTS = (
     "bindings/python/tests/test_api_python.py",
     "bindings/python/tests/test_consumer_contracts.py",
     "bindings/python/tests/test_api_polars.py",
+    "bindings/python/tests/test_polars_auto_precision.py",
     "bindings/python/tests/test_day_numpy_input.py",
     "bindings/python/tests/test_day_numpy_output.py",
     "bindings/python/tests/test_digest_regressions.py",

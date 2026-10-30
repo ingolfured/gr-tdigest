@@ -259,7 +259,7 @@ Legacy TDIG v1 export rejects mixed unit-weight summaries when its historical ki
 
 Positive transformations prepare and validate independent state before commit; failures preserve the receiver. Exact atomic points may retain a rounded zero moment without losing their known location or mass.
 
-Polars rejects missing digest rows, checks training representability, and requires a binary precision hint. CDF broadcasting follows input lengths; per-row List expressions retain List output, while Python sequences provide a flat probe vector.
+Polars rejects missing digest rows and checks training representability. Lazy binary columns require a precision hint; materialized bytes-like inputs and nonempty Binary Series may infer their encoded precision. CDF broadcasting follows input lengths; per-row List expressions retain List output, while Python sequences provide a flat probe vector.
 
 ## Modern Python object API
 
@@ -269,7 +269,7 @@ The modern constructor accepts explicit positive weights. Copy and pickle preser
 
 The public Polars functions delegate to a dedicated internal adapter. Polars remains lazily imported; numerical APIs and wire-header inspection work without the optional dependency. Shared Python configuration normalization is independent of both the adapter and the numerical wrapper. The public `tdigest(values, max_size=1000, *, ...)` signature retains positional capacity and does not accept delta.
 
-CDF chooses aligned rows or one-digest broadcasting from input shape. Missing states and incompatible contributors are errors. Column-based from_bytes requires explicit f32/f64 precision and reduces each logical group, including empty groups. Planned schema must equal the runtime schema. See bindings/python/POLARS_API.md.
+CDF chooses aligned rows or one-digest broadcasting from input shape. Missing states and incompatible contributors are errors. Column-based from_bytes requires explicit f32/f64 precision and reduces each logical group, including empty groups. Materialized bytes, bytearray, memoryview and Binary Series support auto by inspecting every wire header before registering the expression, without collecting lazy inputs, sampling or casting state. Mixed precision and null blobs are errors. Empty Series and empty v1/v2 states cannot supply an unambiguous precision; v3 empty states can. Planned schema must equal the runtime schema. See bindings/python/POLARS_API.md.
 
 ## Modern Java ownership and serialization
 

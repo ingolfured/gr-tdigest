@@ -19,6 +19,7 @@ from ._shared import (
     _norm_policy,
     _validate_max_size,
     _validate_pin_per_side,
+    _wire_precision_for_auto,
     wire_precision,
 )
 
@@ -373,23 +374,51 @@ def to_bytes(digest: "IntoExpr", *, version: int | None = None) -> pl.Expr:
     )
 
 
-def from_bytes(blob: "IntoExpr", *, precision: str = "auto") -> pl.Expr:
+def _materialized_wire_precision(blob: Any) -> Literal["f32", "f64"]:
+    if isinstance(blob, (bytes, bytearray, memoryview)):
+        return _wire_precision_for_auto(blob)
+
+    pl = _require_polars()
+    if not isinstance(blob, pl.Series):
+        raise ValueError(
+            "Polars from_bytes requires explicit precision='f32' or 'f64' for column names and expressions; "
+            "auto accepts bytes-like values or a nonempty Binary Series."
+        )
+    if blob.dtype != pl.Binary:
+        raise TypeError(f"from_bytes auto expects a Binary Series, got {blob.dtype}.")
+    if len(blob) == 0:
+        raise ValueError(
+            "Cannot infer precision from an empty Binary Series; specify explicit precision='f32' or 'f64'."
+        )
+    if blob.null_count():
+        raise ValueError("from_bytes: null blobs are not allowed.")
+
+    values = iter(blob)
+    precision = _wire_precision_for_auto(next(values))
+    for value in values:
+        if _wire_precision_for_auto(value) != precision:
+            raise ValueError("from_bytes: mixed TDIG wire precisions are not allowed.")
+    return precision
+
+
+def from_bytes(blob: "IntoExpr | bytes | bytearray | memoryview", *, precision: str = "auto") -> pl.Expr:
     """Decode and merge one logical group of binary states.
 
-    precision='f32' or 'f64' is required for a deterministic planned schema.
-    The hint checks the encoded precision; it never casts state. Inspect eager
-    bytes with wire_precision/infer_column_precision before constructing a lazy
-    expression when their precision is not already known. Empty input reduces
-    to one empty digest in the specified precision. Null/malformed blobs error.
+    Auto inspects every header in materialized bytes-like values or a Binary
+    Series, preserving the encoded precision. Column names and expressions
+    require precision='f32' or 'f64' because their values are unavailable during
+    planning. The hint checks precision; it never casts state. Empty Series and
+    empty v1/v2 states need a hint. Null, mixed-precision and malformed blobs
+    error. No data is collected or sampled to infer a lazy expression's schema.
     """
     pl = _require_polars()
-    b_expr = _into_expr(blob)
     prec_norm = _coerce_precision(precision)  # "auto" | "f64" | "f32"
 
     if prec_norm == "auto":
-        raise ValueError(
-            "Polars from_bytes requires explicit precision='f32' or 'f64' so the planned schema matches runtime; inspect eager bytes with wire_precision or infer_column_precision first"
-        )
+        prec_norm = _materialized_wire_precision(blob)
+    if isinstance(blob, (bytearray, memoryview)):
+        blob = bytes(blob)
+    b_expr = _into_expr(blob)
     hint = pl.lit(0.0, dtype=pl.Float32 if prec_norm == "f32" else pl.Float64)
     args = [b_expr, hint]
 
