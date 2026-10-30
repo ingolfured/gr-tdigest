@@ -1,5 +1,9 @@
 # Accuracy tests
 
+For private artifacts, actual clusters and representative servers, see the
+[owner checklist](OWNER_CHECKS.md). Numerical regression and approximate accuracy
+remain separate acceptance questions.
+
 `make test` includes the fast accuracy profiles, independent-reference controls,
 and weighted tests. `make quality-fast` runs just these tests and retains a
 measurement report. `make quality-extended` adds the slow matrix across storage

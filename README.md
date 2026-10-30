@@ -231,6 +231,10 @@ The configured JDK also supplies the direct Java compiler/runtime subprocesses u
 
 Use the [Python/NumPy guide](bindings/python/OBJECT_API.md), [Polars guide](bindings/python/POLARS_API.md), and [Java build and runtime guide](bindings/java/README.md). Scala/sbt, Kotlin/Gradle and a separate-executor Spark check are in [the JVM examples](bindings/java/examples/README.md).
 
+Private consumer fixtures, actual clusters and representative-server acceptance
+remain [owner-run](tests/quality/OWNER_CHECKS.md). Keep exact artifact and host
+identities with the results inside the consuming environment.
+
 Modern Rust construction returns a checked result, for example `TDigest::<f64>::builder().max_size(1000).build()?`. Modern defaults use capacity 1,000; the separate original `tdigest_rs` and `tdigest_core` interfaces retain their pinned API and calculations.
 
 The upcoming release is `0.3.0` for Rust, Python and the JVM. Python and Gradle derive their package versions from the root `Cargo.toml`. The separate original `tdigest_core` crate retains version `0.2.0`. See the [publishing guide](PUBLISH.md) for release prerequisites.
