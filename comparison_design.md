@@ -98,3 +98,25 @@ These references are design background, not a benchmark ranking. The case for ad
 For the complete size/merge/precision breakdown, see [recorded results](compat/quality-20261020/RESULTS.md). Every cell names the winner and uses the same Modern/GR error ratio. The [API contract](api_design.md) and [implementation design](tdigest_design.md) document the behavior behind those results.
 
 These figures describe historical CI run 104 at `e6a14a2`. They compare accuracy at matched logical centroid-field byte budgets, excluding allocation overhead and RSS; they do not establish a throughput ranking or equal process memory use. Later measurement-input and regression-gate changes do not establish a new accuracy winner without fresh measurements. That run passed its regression gate while retaining 10 synthetic accuracy-limit failures and 13/15 separate numerical boundary failures.
+
+## Default settings and practical accuracy (21 October 2026)
+
+The original default is delta 300; modern defaults to capacity 1,000. Earlier
+modern capacity 200 does not define the migration comparison. With the same
+observations and controlled mean precision, the 396-profile default comparison
+reduces average rank error by 98.7%, or 99.6% on its 108 recorded-data profiles.
+These are descriptive averages over related profiles, with different storage.
+
+At comparable logical field storage, modern capacity 1,000 improves average
+rank error in 213 of 234 eligible established-data profiles and tail rank error
+in 223, with 11 tail ties and no losses. Both comparisons retain numerical
+value-error losses, and the query-level reconstruction explains observed-point
+versus type-7 interpolation differences and local merge/compression tradeoffs.
+
+The practical standard is no obvious, unexplained accuracy deterioration, with
+separate scores and explanations. It is not a requirement to dominate every
+measure on every input. Hard correctness, exact original compatibility and
+frozen regression gates remain unchanged. Public claims should show the measured
+gains prominently alongside their configuration, storage and domain.
+See [the accuracy report](tests/quality/ACCURACY.md) and
+[its source-bound evidence](compat/accuracy-20261021/).
