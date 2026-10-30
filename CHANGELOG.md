@@ -4,6 +4,8 @@ All notable changes to this project are documented in this file.
 
 ## [Unreleased]
 
+- Preserve historical throughput and host-scaling measurements.
+
 - Preserve historical boundary, scale and state-parity measurements.
 
 - Preserve the historical numeric representability and rollback sweep.
