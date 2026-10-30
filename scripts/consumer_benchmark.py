@@ -14,6 +14,7 @@ from pathlib import Path
 import resource
 import subprocess
 import sys
+import threading
 import time
 
 import gr_tdigest as gr
@@ -48,7 +49,7 @@ def frame(groups, observations, columns, shift=0):
     )
 
 
-def worker(scenario):
+def worker(scenario, workers_to_test=(1, 2, 4, 8, 16), tasks_per_batch=64):
     if scenario.startswith("columns"):
         columns, groups, observations = int(scenario.removeprefix("columns")), 2048, 32
         source = frame(groups, observations, columns)
@@ -137,25 +138,33 @@ def worker(scenario):
     if scenario == "concurrency":
         values = (np.arange(32768, dtype=np.float64) * 17) % 1009
         rows = []
-        for workers in [1, 2, 4, 8, 16]:
-            elapsed, latency = [], []
+        for workers in workers_to_test:
+            elapsed, latency, cpu_seconds, observed_workers = [], [], [], []
             for _ in range(3):
                 with ThreadPoolExecutor(max_workers=workers) as pool:
 
                     def construct(submitted):
                         result = gr.TDigest.from_array(values, max_size=1000)
-                        return time.perf_counter() - submitted, result.median()
+                        median = result.median()
+                        return time.perf_counter() - submitted, median, threading.get_ident()
 
                     start = time.perf_counter()
-                    futures = [pool.submit(construct, time.perf_counter()) for _ in range(64)]
-                    latency.extend(future.result()[0] for future in futures)
+                    cpu_start = time.process_time()
+                    futures = [pool.submit(construct, time.perf_counter()) for _ in range(tasks_per_batch)]
+                    completed = [future.result() for future in futures]
+                    latency.extend(result[0] for result in completed)
+                    observed_workers.append(len({result[2] for result in completed}))
                     elapsed.append(time.perf_counter() - start)
+                    cpu_seconds.append(time.process_time() - cpu_start)
             rows.append(
                 {
                     "workers": workers,
-                    "tasks_per_batch": 64,
+                    "observed_worker_threads": observed_workers,
+                    "tasks_per_batch": tasks_per_batch,
                     "batch_seconds": elapsed,
-                    "values_per_second": 64 * len(values) / float(np.median(elapsed)),
+                    "process_cpu_seconds": cpu_seconds,
+                    "average_cpu_cores_used": [cpu / wall for cpu, wall in zip(cpu_seconds, elapsed)],
+                    "values_per_second": tasks_per_batch * len(values) / float(np.median(elapsed)),
                     "submission_to_completion_p95_seconds": float(np.quantile(latency, 0.95)),
                     "submission_to_completion_p99_seconds": float(np.quantile(latency, 0.99)),
                     "latency_samples": len(latency),
@@ -169,15 +178,26 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--output", type=Path, required=True)
     parser.add_argument("--source-sha", required=True)
-    parser.add_argument("--worker")
+    parser.add_argument(
+        "--worker", choices=["columns16", "columns64", "columns128", "fanin40", "stream", "bridge", "concurrency"]
+    )
+    parser.add_argument("--workers", type=int, nargs="+", default=[1, 2, 4, 8, 16])
+    parser.add_argument("--tasks-per-batch", type=int, default=64)
     args = parser.parse_args()
+    if len(set(args.workers)) != len(args.workers) or min(args.workers) < 1:
+        parser.error("worker counts must be distinct positive integers")
+    if args.tasks_per_batch < max(args.workers):
+        parser.error("tasks per batch must be at least the largest worker count")
+    if args.output.exists():
+        parser.error("output exists; select a new receipt path")
     args.output.parent.mkdir(parents=True, exist_ok=True)
     if args.worker:
-        result = worker(args.worker)
+        result = worker(args.worker, args.workers, args.tasks_per_batch)
         native = Path(importlib.import_module("gr_tdigest._gr_tdigest").__file__)
         result.update(
             scenario=args.worker,
             source_sha=args.source_sha,
+            benchmark_sha256=hashlib.sha256(Path(__file__).read_bytes()).hexdigest(),
             version=gr.__version__,
             native_sha256=hashlib.sha256(native.read_bytes()).hexdigest(),
             python=sys.version,
@@ -190,10 +210,14 @@ def main():
                 for name in ["RAYON_NUM_THREADS", "POLARS_MAX_THREADS", "OMP_NUM_THREADS", "OPENBLAS_NUM_THREADS"]
             },
         )
-        args.output.write_text(json.dumps(result, indent=2, sort_keys=True) + "\n")
+        with args.output.open("x") as receipt:
+            receipt.write(json.dumps(result, indent=2, sort_keys=True) + "\n")
         return
-    for scenario in ["columns16", "columns64", "columns128", "fanin40", "stream", "bridge", "concurrency"]:
-        output = args.output.with_name(args.output.stem + "-" + scenario + ".json")
+    scenarios = ["columns16", "columns64", "columns128", "fanin40", "stream", "bridge", "concurrency"]
+    outputs = [args.output.with_name(args.output.stem + "-" + scenario + ".json") for scenario in scenarios]
+    if any(output.exists() for output in outputs):
+        parser.error("scenario output exists; select a new receipt path")
+    for scenario, output in zip(scenarios, outputs):
         subprocess.run(
             [
                 sys.executable,
@@ -205,6 +229,10 @@ def main():
                 str(output),
                 "--worker",
                 scenario,
+                "--tasks-per-batch",
+                str(args.tasks_per_batch),
+                "--workers",
+                *map(str, args.workers),
             ],
             check=True,
         )

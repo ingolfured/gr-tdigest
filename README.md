@@ -270,3 +270,7 @@ integer wraparound, overflow panics, or corrupted summaries. Explicit nonfinite
 observations and permissive original probes retain their historical semantics.
 
 Java object restoration owns an independent native handle; builder and ownership contracts are covered by the Java consumer regression tests. See the [Java guide](bindings/java/README.md).
+
+Consumer benchmarks accept `--workers` and `--tasks-per-batch` for independent
+digest construction. Reports distinguish configured workers, observed worker
+threads and average CPU use; these measurements describe the recorded host.
