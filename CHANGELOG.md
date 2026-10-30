@@ -4,6 +4,8 @@ All notable changes to this project are documented in this file.
 
 ## [Unreleased]
 
+- Publish default-setting accuracy comparisons and query-level tradeoff explanations on the focused qualification stack.
+
 - Index the historical follow-up evidence by question and distinguish it from current release qualification.
 
 - Preserve historical throughput and host-scaling measurements.

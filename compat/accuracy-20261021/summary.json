@@ -1,0 +1,212 @@
+{
+  "aggregates": {
+    "all": {
+      "median_paired_logical_bytes_ratio_modern_over_original": 5.666666666666667,
+      "metrics": {
+        "median_rank": {
+          "modern_mean": 4.255722672294824e-05,
+          "original_mean": 0.0026591000512205857,
+          "reduction_percent": 98.39956278804127
+        },
+        "rank_max": {
+          "modern_mean": 0.0001995090936102072,
+          "original_mean": 0.013457715942309207,
+          "reduction_percent": 98.51751148214551
+        },
+        "rank_mean": {
+          "modern_mean": 3.412065094232149e-05,
+          "original_mean": 0.0026876430801673146,
+          "reduction_percent": 98.73046197264418
+        },
+        "tail_rank_max": {
+          "modern_mean": 0.0,
+          "original_mean": 0.000274856505922825,
+          "reduction_percent": 100.0
+        }
+      },
+      "modern_larger_logical_state_profiles": 254,
+      "modern_smaller_logical_state_profiles": 142,
+      "profiles": 396
+    },
+    "recorded_data": {
+      "median_paired_logical_bytes_ratio_modern_over_original": 0.708599467981184,
+      "metrics": {
+        "median_rank": {
+          "modern_mean": 3.284257147951392e-05,
+          "original_mean": 0.0033684688510032586,
+          "reduction_percent": 99.02499999459006
+        },
+        "rank_max": {
+          "modern_mean": 0.00013248458745038935,
+          "original_mean": 0.026174475960920797,
+          "reduction_percent": 99.49384053515267
+        },
+        "rank_mean": {
+          "modern_mean": 1.7213297818176038e-05,
+          "original_mean": 0.004664474963249805,
+          "reduction_percent": 99.6309703031146
+        },
+        "tail_rank_max": {
+          "modern_mean": 0.0,
+          "original_mean": 0.000744529555281839,
+          "reduction_percent": 100.0
+        }
+      },
+      "modern_larger_logical_state_profiles": 44,
+      "modern_smaller_logical_state_profiles": 64,
+      "profiles": 108
+    }
+  },
+  "default_comparison": {
+    "exceptions": 0,
+    "metrics": {
+      "median_rank": {
+        "modern_better": 218,
+        "original_better": 6,
+        "original_better_beyond_existing_resolution": 2,
+        "tied": 172,
+        "worst_modern_minus_original": {
+          "difference": 0.000244140625,
+          "id": "additional/separated_3/f32/natural/left40",
+          "modern": 0.000244140625,
+          "original": 0.0
+        }
+      },
+      "rank_max": {
+        "modern_better": 378,
+        "original_better": 0,
+        "original_better_beyond_existing_resolution": 0,
+        "tied": 18,
+        "worst_modern_minus_original": {
+          "difference": 0.0,
+          "id": "capacity/synthetic/constant/f32/natural/bulk",
+          "modern": 0.0,
+          "original": 0.0
+        }
+      },
+      "rank_mean": {
+        "modern_better": 378,
+        "original_better": 0,
+        "original_better_beyond_existing_resolution": 0,
+        "tied": 18,
+        "worst_modern_minus_original": {
+          "difference": 0.0,
+          "id": "capacity/synthetic/constant/f32/natural/bulk",
+          "modern": 0.0,
+          "original": 0.0
+        }
+      },
+      "tail_rank_max": {
+        "modern_better": 340,
+        "original_better": 0,
+        "original_better_beyond_existing_resolution": 0,
+        "tied": 56,
+        "worst_modern_minus_original": {
+          "difference": 0.0,
+          "id": "capacity/synthetic/constant/f32/natural/bulk",
+          "modern": 0.0,
+          "original": 0.0
+        }
+      },
+      "value_iqr_max": {
+        "modern_better": 168,
+        "original_better": 198,
+        "original_better_beyond_existing_resolution": 198,
+        "tied": 30,
+        "worst_modern_minus_original": {
+          "difference": 5.292662806202793e+27,
+          "id": "additional/wide_signed_axis/f64/natural/bulk",
+          "modern": 1.3581516618297927e+28,
+          "original": 8.288853812095134e+27
+        }
+      },
+      "value_iqr_mean": {
+        "modern_better": 272,
+        "original_better": 106,
+        "original_better_beyond_existing_resolution": 92,
+        "tied": 18,
+        "worst_modern_minus_original": {
+          "difference": 2.1078165435093987e+25,
+          "id": "additional/wide_signed_axis/f32/natural/left40",
+          "modern": 2.6554666278499566e+26,
+          "original": 2.4446849734990167e+26
+        }
+      }
+    },
+    "modern_cdf_max": 0.002779800509082997,
+    "profiles": 396,
+    "profiles_with_original_better_beyond_existing_resolution": 204
+  },
+  "evidence": {
+    "defaults.json.gz": {
+      "decoded_sha256": "b3fdc89ed8b42ba6abe5f124450c87d753e02e82d3fe382720257638c252f6e0",
+      "sha256": "4c24410f1753dbe10c71c5dbbb700a3a157abee7b41ddcc997d33c303600e935"
+    },
+    "matched-storage.json.gz": {
+      "decoded_sha256": "24d726c647549c4279c0cf04cae0fe13fcab864bc737a7b0fe262e23b428e9d1",
+      "sha256": "468fa409311a053ba75ec982cead73929e2dd4d4c1696a3a563a6e9ab88c4c1c"
+    },
+    "query-explanations.json.gz": {
+      "decoded_sha256": "37013656dea4b1d0af4d4eddf900136149c5ae2e39ea96a72de023a979059f28",
+      "sha256": "59fea91219349ef02e22a185c3f7ec37d81f8bf53b586500fb9ca9b10c99eab0"
+    }
+  },
+  "matched_storage": {
+    "metrics": {
+      "median_rank": {
+        "modern_better": 121,
+        "original_better": 13,
+        "tied": 100
+      },
+      "rank_max": {
+        "modern_better": 212,
+        "original_better": 20,
+        "tied": 2
+      },
+      "rank_mean": {
+        "modern_better": 213,
+        "original_better": 21,
+        "tied": 0
+      },
+      "tail_rank_max": {
+        "modern_better": 223,
+        "original_better": 0,
+        "tied": 11
+      },
+      "value_iqr_max": {
+        "modern_better": 58,
+        "original_better": 176,
+        "tied": 0
+      },
+      "value_iqr_mean": {
+        "modern_better": 135,
+        "original_better": 99,
+        "tied": 0
+      }
+    },
+    "modern_capacity": 1000,
+    "original_selection": "Largest observed sketch within90%-100% modern logical-field storage; precision/input/path held equal; no accuracy tuning",
+    "profiles": 234,
+    "source_result_sha256": "3dec6951429fcbb82028783a15bf70cc6363ada1e4af957f99a693f0cfcb800c"
+  },
+  "measurement_status": "COMPLETED",
+  "native_sha256": "1eaaf244db7004a0b8d2aca2edc6ff027a0d3a8871c2b8c450fdf94f19701d76",
+  "practical_accuracy_standard": "No obvious unexplained accuracy deterioration. Publish strengths and separate rank/value/CDF/tail/storage scores; explain approximation and merge tradeoffs. Winning every metric on every profile is not a requirement. Hard correctness and original compatibility remain strict.",
+  "profiles": 396,
+  "query_explanations": {
+    "comparison_sha256": "4c24410f1753dbe10c71c5dbbb700a3a157abee7b41ddcc997d33c303600e935",
+    "kind": "Fresh query-level reconstruction of the recorded default profiles with losses; attribution evidence, not a new acceptance gate",
+    "profiles_reconstructed": 204,
+    "profiles_whose_worst_modern_value_probe_returns_rank_correct_observed_point": 204,
+    "reference_runner_sha256": "13fac1a58037b98839677a9e6bcc8bb33924eeab8e03fa1fc08295201df5c1ef",
+    "runner_sha256": "f1dccb06354b7a54d979e36eb4aa671bf9b00a1161bd2e0ab0ecbf8231992398",
+    "shape_runner_sha256": "a90d11bff59f51fbfd24878bd112a20e9cd4ad792ed807073a27296c804df258",
+    "value_losing_probes": 2117,
+    "value_losing_probes_with_modern_rank_no_worse": 1999,
+    "value_losing_probes_with_strictly_worse_modern_rank": 118,
+    "value_losing_probes_with_zero_modern_rank_error": 1709
+  },
+  "runtime_source_sha": "aaf7ab3956fed4269c1eaeef915a6faee78fa305",
+  "scope": "Descriptive accuracy scores. Profiles share data and are not independent trials; default comparisons do not hold storage fixed; no tolerance, algorithm or fixture change. Logical field bytes exclude allocator/RSS.",
+  "zero_exceptions": true
+}
