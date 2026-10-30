@@ -4,6 +4,8 @@ All notable changes to this project are documented in this file.
 
 ## [Unreleased]
 
+- Preserve historical candidate artifact and runtime identities.
+
 - Document owner-run private baseline, cluster, internal-service and representative-server acceptance checks.
 
 - Record owner host and artifact identities while retaining unknown topology/quota limits and failed physical-core checks.
