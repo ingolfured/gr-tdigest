@@ -274,3 +274,7 @@ Java object restoration owns an independent native handle; builder and ownership
 Consumer benchmarks accept `--workers` and `--tasks-per-batch` for independent
 digest construction. Reports distinguish configured workers, observed worker
 threads and average CPU use; these measurements describe the recorded host.
+
+`python -I scripts/qualify_host.py --output host.json` records the installed
+artifact and visible host. `--require-physical-cores N` returns exit 2 when
+that count cannot be established; recording a host does not qualify a workload.

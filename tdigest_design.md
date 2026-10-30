@@ -605,3 +605,8 @@ Submission latency includes construction and its median query. The script hash
 identifies the measurement protocol; changed scripts require new measurements.
 Existing receipts are never overwritten, and the multi-scenario runner checks
 all destinations before starting work.
+
+The owner host recorder counts unique nonnegative package/core IDs within CPU
+affinity. Missing or invalid topology remains unknown. Visible cgroup-v2 quota
+files are evidence only: hidden limits may exist. Parent traversal stays within
+the cgroup mount. Failed minimum-core checks retain a receipt and exit 2.
