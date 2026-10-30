@@ -195,7 +195,7 @@ jobs:
           UV_PROJECT_ENVIRONMENT="${{ github.workspace }}/.venv" \
           uv sync --locked --python 3.12 --all-groups --no-install-project --project bindings/python
 
-      - name: Runtime matrix and Polars-free install against one wheel
+      - name: Python runtime matrix, Polars 1.x/2.x and Polars-free installs against one wheel
         run: make python-support-test
 
       - name: Preserve Python build timings and logs even when cancelled

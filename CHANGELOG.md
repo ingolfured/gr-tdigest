@@ -4,6 +4,20 @@ All notable changes to this project are documented in this file.
 
 ## [Unreleased]
 
+- Infer Polars binary precision for materialized bytes and nonempty Binary Series by checking every header, without casts, sampling or hidden collection; reject mixed, null and ambiguous legacy-empty input.
+
+- Preserve the 43 review chapter after splitting the consumer prerequisites into smaller reviews.
+
+- Preserve merged arithmetic overflow guards beneath Polars 1.x/2.x compatibility.
+
+- Keep Polars compatibility separate from the prerequisite and adapter review branches.
+
+- Preserve preinstalled Polars 1.x/2.x for ordinary and extra installs: require only Polars >=1.0.0, remove the upper cap, and test the 1.0 floor plus representative 1.x releases against the same native wheel.
+
+- Support both Polars 1.x (development pin 1.44.2) and 2.x (tested 2.0.0), including consumer schema, cardinality and streaming regressions.
+
+- Make Polars cardinality, validation and binary schemas explicit.
+
 - Preserve the 77 review chapter after splitting the consumer prerequisites into smaller reviews.
 
 - Refresh the adapter extraction on the consumer foundation with merged overflow guards.

@@ -93,7 +93,7 @@ requires-dist = [
     { name = "numpy", marker = "python_full_version < '3.13'", specifier = ">=1.26.4,<3" },
     { name = "numpy", marker = "python_full_version >= '3.13' and python_full_version < '3.15'", specifier = ">=2.3.4,<3" },
     { name = "numpy", marker = "python_full_version >= '3.15'", specifier = ">=2.5.4,<3" },
-    { name = "polars", marker = "extra == 'polars'", specifier = "==1.44.2" },
+    { name = "polars", marker = "extra == 'polars'", specifier = ">=1.0.0" },
 ]
 provides-extras = ["polars"]
 

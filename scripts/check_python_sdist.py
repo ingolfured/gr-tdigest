@@ -76,6 +76,7 @@ def verify_sdist_contents(sdist: Path, root: Path) -> None:
             "src/upstream_py.rs",
             "scripts/check_build_tools.py",
             "bindings/python/OBJECT_API.md",
+            "bindings/python/POLARS_API.md",
             "bindings/python/gr_tdigest/__init__.pyi",
             "bindings/python/gr_tdigest/_gr_tdigest.pyi",
             "bindings/python/gr_tdigest/py.typed",
@@ -91,6 +92,7 @@ def verify_sdist_contents(sdist: Path, root: Path) -> None:
             "bindings/java/examples/kotlin/settings.gradle",
             "bindings/java/examples/kotlin/src/main/kotlin/Example.kt",
             "bindings/python/tests/test_consumer_contracts.py",
+            "bindings/python/tests/test_polars_auto_precision.py",
         ):
             require_same(relative, relative)
         # Include everything needed to run the accuracy tests offline.

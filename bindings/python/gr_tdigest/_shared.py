@@ -162,3 +162,7 @@ def wire_precision(blob: bytes) -> Literal["f32", "f64"]:
     if not isinstance(blob, (bytes, bytearray, memoryview)):
         raise TypeError(f"wire_precision expects a bytes-like object; got {type(blob).__name__}")
     return _wire_precision_native(bytes(blob))
+
+
+def _wire_precision_for_auto(blob: bytes | bytearray | memoryview) -> Literal["f32", "f64"]:
+    return _wire_precision_native(bytes(blob), strict=True)
