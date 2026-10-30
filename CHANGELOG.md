@@ -4,6 +4,8 @@ All notable changes to this project are documented in this file.
 
 ## [Unreleased]
 
+- Record owner host and artifact identities while retaining unknown topology/quota limits and failed physical-core checks.
+
 - Configure independent-digest benchmark batches and record CPU use, observed worker threads and check-script identity; protect existing receipts.
 
 - Preserve the 52 review chapter after splitting the consumer prerequisites into smaller reviews.
