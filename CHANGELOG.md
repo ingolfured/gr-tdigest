@@ -4,6 +4,8 @@ All notable changes to this project are documented in this file.
 
 ## [Unreleased]
 
+- Index the historical follow-up evidence by question and distinguish it from current release qualification.
+
 - Preserve historical throughput and host-scaling measurements.
 
 - Preserve historical boundary, scale and state-parity measurements.
