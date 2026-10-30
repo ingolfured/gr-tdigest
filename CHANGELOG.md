@@ -4,6 +4,8 @@ All notable changes to this project are documented in this file.
 
 ## [Unreleased]
 
+- Preserve historical installed Python runtime and source-build results.
+
 - Preserve historical candidate artifact and runtime identities.
 
 - Document owner-run private baseline, cluster, internal-service and representative-server acceptance checks.
