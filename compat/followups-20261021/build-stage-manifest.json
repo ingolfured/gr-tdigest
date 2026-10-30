@@ -1,0 +1,55 @@
+{
+  "commands": [
+    {
+      "args": [
+        "/home/ingo/Documents/ChatGPT/gr-tdigest 2/gr-tdigest-story/.venv/bin/maturin",
+        "build",
+        "--release",
+        "--locked",
+        "--zig",
+        "--compatibility",
+        "manylinux_2_28",
+        "--auditwheel",
+        "check",
+        "--interpreter",
+        "/home/ingo/Documents/ChatGPT/gr-tdigest 2/gr-tdigest-story/.venv/bin/python",
+        "--out",
+        "/home/ingo/Documents/ChatGPT/gr-tdigest 2/followups-20261021/artifacts"
+      ],
+      "cwd": "/home/ingo/Documents/ChatGPT/gr-tdigest 2/gr-tdigest-story/bindings/python",
+      "exit": 0,
+      "log_sha256": "f3cc40f24f5cdc3cf78f6c4da787f42f35ad572644b850236cb6cddff141fe88",
+      "name": "wheel"
+    },
+    {
+      "args": [
+        "/home/ingo/Documents/ChatGPT/gr-tdigest 2/gr-tdigest-story/.venv/bin/maturin",
+        "sdist",
+        "--out",
+        "/home/ingo/Documents/ChatGPT/gr-tdigest 2/followups-20261021/artifacts"
+      ],
+      "cwd": "/home/ingo/Documents/ChatGPT/gr-tdigest 2/gr-tdigest-story/bindings/python",
+      "exit": 0,
+      "log_sha256": "dde646a2503351d5c070442bf0693354a36124b0ace7245f47eda7b3d2346754",
+      "name": "sdist"
+    },
+    {
+      "args": [
+        "git",
+        "archive",
+        "--format=tar.gz",
+        "--prefix=gr-tdigest/",
+        "--output",
+        "/home/ingo/Documents/ChatGPT/gr-tdigest 2/followups-20261021/artifacts/gr-tdigest-source-aaf7ab3956fe.tar.gz",
+        "aaf7ab3956fed4269c1eaeef915a6faee78fa305"
+      ],
+      "cwd": "/home/ingo/Documents/ChatGPT/gr-tdigest 2/gr-tdigest-story",
+      "exit": 0,
+      "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "name": "git-archive"
+    }
+  ],
+  "source_sha": "aaf7ab3956fed4269c1eaeef915a6faee78fa305",
+  "source_tree": "e40146316f0859b3c494e8bb072760b3b778d961",
+  "status": "PYTHON_BUILT_JVM_QUALIFICATION_PENDING"
+}
