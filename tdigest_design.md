@@ -596,3 +596,12 @@ coherence overflow matrix cover integer limits, overflowed moments, coalescing,
 creation/merge/scaling rollback, and finite extreme CDF/quantile queries. These
 checks concern arithmetic safety; they do not promise exact statistics or remove
 floating-point rounding, capacity limits, or explicitly permitted NaN semantics.
+
+## Independent-constructor measurements
+
+The consumer benchmark records configured pool size, distinct worker threads
+observed per batch, process CPU time and CPU/wall-time ratios separately.
+Submission latency includes construction and its median query. The script hash
+identifies the measurement protocol; changed scripts require new measurements.
+Existing receipts are never overwritten, and the multi-scenario runner checks
+all destinations before starting work.

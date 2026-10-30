@@ -4,6 +4,8 @@ All notable changes to this project are documented in this file.
 
 ## [Unreleased]
 
+- Configure independent-digest benchmark batches and record CPU use, observed worker threads and check-script identity; protect existing receipts.
+
 - Preserve the 52 review chapter after splitting the consumer prerequisites into smaller reviews.
 
 - Refresh merged Spark consumer checks on the current 0.3.0 release preparation.
