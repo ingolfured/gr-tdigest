@@ -259,6 +259,10 @@ Polars rejects missing digest rows, checks training representability, and requir
 
 The modern constructor accepts explicit positive weights. Copy and pickle preserve independent full state. A one-dimensional NumPy query returns an owned Float64 array even when it has one element; zero-dimensional probes return scalars, lists and tuples retain their containers, and multidimensional probes are rejected. See bindings/python/OBJECT_API.md.
 
+## Polars expression cardinality
+
+The public Polars functions delegate to a dedicated internal adapter. Polars remains lazily imported; numerical APIs and wire-header inspection work without the optional dependency. Shared Python configuration normalization is independent of both the adapter and the numerical wrapper. The public `tdigest(values, max_size=1000, *, ...)` signature retains positional capacity and does not accept delta.
+
 ## Modern Java ownership and serialization
 
 Java additions and fluent merges mutate only the receiver after validation. Serialized Java state contains TDIG bytes, never a process-local native handle; restoration owns a fresh handle. Closed handles fail predictably. Catchable native failures become Java exceptions. JNI selects the system allocator; independent digests may be used concurrently, but shared-handle mutation requires caller coordination.

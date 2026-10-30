@@ -4,6 +4,12 @@ All notable changes to this project are documented in this file.
 
 ## [Unreleased]
 
+- Preserve the 77 review chapter after splitting the consumer prerequisites into smaller reviews.
+
+- Refresh the adapter extraction on the consumer foundation with merged overflow guards.
+
+- Extract the Polars adapter without changing expression behavior, public signatures or the pinned dependency.
+
 - Fail early on incompatible build tools, honor Cargo offline mode, and verify the installed consumer files in source packages.
 
 - Prepare exact original sources and run the independent Rust oracle without regenerating pinned golden outputs.
@@ -180,6 +186,8 @@ All notable changes to this project are documented in this file.
 - `delta`-mode now defaults all other knobs to the old tdigest-rs contract: passing `delta=X` (with no other args) implies `scale='k2norm'` and `singleton_policy='off'`. Explicit values that disagree (e.g. `delta=X, scale='k1'`) are rejected with a clear error instead of being silently overridden, so the digest the user gets matches the old library byte-for-byte.
 - DRY: shared `validate_trimmed_mean_bounds` helper now used by both `trimmed_mean` (silent, returns NaN on invalid bounds) and `trimmed_mean_strict` (loud, returns `FrontendError::InvalidProbe`).
 - Reconciled defaults across surfaces. There are now exactly two: `DEFAULT_MAX_SIZE = 1000` (used when neither `max_size` nor `delta` is set; consistent across Rust `py.rs` PyO3 signature, Rust CLI `--max-size`, the Python shim's `from_array` etc., and the Polars `tdigest()` expression) and `DEFAULT_DELTA = 300.0` (matches old `tdigest-rs`'s `DEFAULT_DELTA`; exposed as a public Python constant so `delta=DEFAULT_DELTA` reproduces that library's out-of-the-box behavior). The historical intent was `1000` (commit `14b34ac` "Default arguments k2, 1000 and f64"); the Python shim's `200` default was drift introduced when the shim layer was created and now follows the rest.
+
+- Reconcile the Polars adapter with the squashed prerequisite merges while preserving its source.
 
 ## [0.2.4] - 2026-02-16
 
