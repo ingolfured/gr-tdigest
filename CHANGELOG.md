@@ -4,6 +4,8 @@ All notable changes to this project are documented in this file.
 
 ## [Unreleased]
 
+- Preserve historical boundary, scale and state-parity measurements.
+
 - Preserve the historical numeric representability and rollback sweep.
 
 - Preserve historical installed consumer and language interoperability results.
