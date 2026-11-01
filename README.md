@@ -255,8 +255,6 @@ JVM builds accept a selected native file with any basename through
 resource path, removes stale generated payloads and verifies the finished JAR.
 CI exercises a renamed override and runs that JAR outside the checkout.
 
-Capacity tuning counts trial clusters without building discarded centroids; final compression and public numerical settings retain their existing behavior.
-
 Modern Rust builders, seeded construction, merges and explicit precision conversions return checked results. Malformed reconstructed state is rejected before use.
 Validation includes numerical consistency between aggregate statistics and centroids, within floating-point rounding limits. It does not prove the original data or statistical accuracy. Positive scaling validates independent candidate state before replacing the receiver.
 
