@@ -328,6 +328,20 @@ pub fn wire_precision(bytes: &[u8]) -> WireResult<WirePrecision> {
     }
 }
 
+/// Inspect encoded precision without inventing a default for ambiguous legacy state.
+pub fn wire_precision_strict(bytes: &[u8]) -> WireResult<WirePrecision> {
+    let precision = wire_precision(bytes)?;
+    if matches!(bytes[4], 1 | 2) {
+        let mut offset = 40;
+        if read_u64(bytes, &mut offset)? == 0 {
+            return Err(WireError::InvalidHeader(
+                "precision cannot be inferred from an empty v1/v2 digest; specify explicit precision",
+            ));
+        }
+    }
+    Ok(precision)
+}
+
 fn wire_precision_v12(bytes: &[u8], version: WireVersion) -> WireResult<WirePrecision> {
     if bytes.len() < HEADER_LEN_V12 {
         return Err(WireError::InvalidHeader("buffer too small"));
@@ -1123,6 +1137,45 @@ fn decode_payload_into_digest(
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn strict_precision_requires_encoded_evidence() {
+        let empty32 = TDigest::<f32>::builder().build().unwrap();
+        let empty64 = TDigest::<f64>::builder().build().unwrap();
+        for version in [WireVersion::V1, WireVersion::V2] {
+            for blob in [
+                encode_digest_with_version(&empty32, version),
+                encode_digest_with_version(&empty64, version),
+            ] {
+                // Preserve the historical inspection API's default, but never
+                // use that default to claim automatic precision detection.
+                assert_eq!(wire_precision(&blob).unwrap(), WirePrecision::F64);
+                assert!(wire_precision_strict(&blob).is_err());
+            }
+        }
+        assert_eq!(
+            wire_precision_strict(&encode_digest(&empty32)).unwrap(),
+            WirePrecision::F32
+        );
+        assert_eq!(
+            wire_precision_strict(&encode_digest(&empty64)).unwrap(),
+            WirePrecision::F64
+        );
+        let full32 = empty32.merge_unsorted(vec![1.0, 3.0]).unwrap();
+        let full64 = empty64.merge_unsorted(vec![1.0, 3.0]).unwrap();
+        for version in [WireVersion::V1, WireVersion::V2, WireVersion::V3] {
+            assert_eq!(
+                wire_precision_strict(&encode_digest_with_version(&full32, version)).unwrap(),
+                WirePrecision::F32
+            );
+            assert_eq!(
+                wire_precision_strict(&encode_digest_with_version(&full64, version)).unwrap(),
+                WirePrecision::F64
+            );
+        }
+        assert!(wire_precision_strict(b"").is_err());
+        assert!(wire_precision_strict(b"TDIG").is_err());
+    }
 
     #[test]
     fn delta_extension_roundtrips_and_rejects_corruption() {

@@ -48,7 +48,7 @@ def test_python_and_polars_reject_contradictory_wire_sum(precision, version):
         td.TDigest.from_bytes(bytes(blob))
     frame = pl.DataFrame({"blob": [bytes(blob)]})
     with pytest.raises(pl.exceptions.ComputeError):
-        frame.select(td.from_bytes("blob"))
+        frame.select(td.from_bytes("blob", precision=precision))
 
 
 @pytest.mark.parametrize("precision", ["f32", "f64"])

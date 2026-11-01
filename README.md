@@ -149,9 +149,11 @@ packager respect `CARGO_TARGET_DIR` directly.
 - Rust: 1.95.0 (pinned; edition 2021)
 - Python: CPython 3.10–3.15 (standard GIL builds, ABI3 wheels built with maturin); development tools default to 3.12
 - NumPy: 1.26.4 or the 2.x line; tested combinations are recorded in `scripts/test_python_support.py`
-- Polars: optional; install `gr-tdigest[polars]` for the tested 1.44.2 integration
+- Polars: optional; install `gr-tdigest[polars]` to install Polars when needed. Existing Polars 1.x or 2.x installs are retained (`polars>=1.0.0`, no upper cap); development uses 1.44.2
 
 Polars integration is isolated in an internal adapter behind the existing public functions. Numerical imports remain usable without Polars installed.
+
+`gr_tdigest.from_bytes(blob_or_binary_series)` detects encoded precision from materialized inputs. Lazy binary column expressions require `precision="f32"` or `"f64"`; decoding checks that precision and never casts the digest.
 
 Existing G-Research applications keep `from tdigest_rs import TDigest` and
 `TDigest.from_array(values, delta=300)`. This interface uses the unmodified
