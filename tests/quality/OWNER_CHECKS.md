@@ -10,19 +10,17 @@ and decides whether the candidate is suitable for deployment.
 Install the exact candidate wheel from its manifest into a fresh environment
 using the documented package manager and internal dependency source. Do not
 rebuild under the same version. Keep the wheel/JAR SHA-256 values alongside the
-results. In that environment, record its runtime, installed native payload,
-JAR and machine:
+results. Record the runtime versions, installed native payload identity and JAR
+identity using the consuming environment's approved inventory tools, and retain
+the commands and outputs with the results.
 
-```sh
-python -I scripts/qualify_host.py --jar /staged/gr-tdigest-CANDIDATE.jar \
-  --output /results/candidate-host.json
-```
-
-The receipt records CPU affinity, available physical/logical cores, cache and
-NUMA topology, memory, visible cgroup quotas and native pool settings. Recorded quota files describe only the visible hierarchy; hidden limits may
-exist, and an unavailable quota stays unknown. Optional `--require-physical-cores N` exits 2
-and records `UNTESTED_INSUFFICIENT_CORES` when that particular check cannot be
-performed. Merely recording a host never qualifies its workload or performance.
+Record CPU affinity, physical/logical core topology, cache and NUMA topology,
+memory, visible cgroup quotas and native pool settings where available. Keep
+unavailable information explicitly unknown. Visible quota files describe only
+the visible hierarchy; hidden limits may exist. If the required physical-core
+count cannot be established or the host is too small, mark the corresponding
+acceptance check untested and retain the reason. Merely recording a host never
+qualifies its workload or performance.
 
 ## Compare the same workloads
 
