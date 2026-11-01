@@ -99,3 +99,15 @@ Fast bootstrap checks need no external network, installed JDK or Gradle:
 `make java-bootstrap-test`.
 
 Direct Java subprocesses in the cross-language tests use the same selected JDK as Gradle. Setting the archive environment variables is sufficient for `make build test`, including on a host with no usable `java`/`javac` on `PATH`; `JAVA_HOME` is also honored when explicitly supplied.
+
+## Downloaded JAR and runtime loading
+
+The shared public class is `gr.tdigest.TDigest`; the Maven coordinates remain `gr.tdigest:gr-tdigest`. The JAR bundles the platform-native library and records its SHA-256 in the manifest. Set `TDIGEST_SOURCE_SHA` to the source commit when building to record its identity; otherwise the source field is `unrecorded`. It runs outside the checkout without Rust or Python.
+
+Use `-Dgr.tdigest.native=path/to/library.so` for a controlled native override. Relative paths resolve from the process working directory, including distributed-file paths. Use `-Dgr.tdigest.extractDir=/writable/location` when the default extraction directory is restricted. Keep the extracted directory executable. Loader errors list attempted paths and causes.
+
+`add`, weighted additions and `merge` update only the receiver and return it. Array `mergeAll` returns independent state. Java object serialization and TDIG byte restoration own fresh native handles; close each object after use. Independent objects may be used concurrently; shared mutable objects require caller coordination.
+
+Java 11 is the minimum runtime, with Java 11/17/21/25 checks. The ordinary host build targets that host's native ABI. Producing a Linux glibc 2.17 JNI artifact requires a corresponding cross-build or minimum-platform build and actual minimum-platform execution; Java bytecode checks alone do not establish the native ABI floor. Python's manylinux_2_28 artifact is a separate build.
+
+See [Scala and Kotlin examples](examples/README.md) for authenticated dependency resolution and prepared-cache offline use. Actual Spark driver/executor serialization, shuffles and checkpoint recovery require the consumer's cluster checks.
