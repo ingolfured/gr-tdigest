@@ -4,7 +4,7 @@ All notable changes to this project are documented in this file.
 
 ## [Unreleased]
 
-- Preserve historical installed Python runtime and source-build results.
+- Keep generated Python runtime and source-build reports out of version control; record validation results in PR descriptions.
 
 - Preserve historical candidate artifact and runtime identities.
 
