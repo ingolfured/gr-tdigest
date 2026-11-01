@@ -524,6 +524,10 @@ JVM test tool selection is shared through `bindings/java/bootstrap.py::java_envi
 
 Checked construction and compensated accumulation validate represented mass and aggregate statistics. Compression retains exact-point identity through subnormal weighted products. The Polars adapter validates every reconstructed row before queries or reductions, and chooses CDF broadcasting by input lengths. Incompatible empty contributors are checked along with populated contributors.
 
+## Capacity-search implementation
+
+Trial capacity searches count k-limit clusters using the same ordered weight additions and scale comparisons as the emitting pass. They do not construct temporary centroid means or allocate discarded output vectors. The selected final pass still uses the existing full compression path. This changes work performed during search, not its numerical decisions or storage settings.
+
 ## Standalone JNI payload selection
 
 The JAR bundles a canonically named native payload with source and SHA-256 identity in its manifest. Explicit native overrides accept relative distributed-file paths; extraction can use a configured writable directory. Loader diagnostics identify attempted paths and causes. Configured build-native overrides are packaged under the runtime resource name.

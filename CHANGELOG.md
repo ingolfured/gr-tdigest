@@ -4,6 +4,8 @@ All notable changes to this project are documented in this file.
 
 ## [Unreleased]
 
+- Count capacity-search trial clusters without allocating or averaging discarded centroids; retain the full final compression path and existing numerical decisions.
+
 - Preserve the 61 review chapter after splitting the consumer prerequisites into smaller reviews.
 
 - Refresh consumer diagnostics on the repaired Polars stack and reuse the current pytest measurement helpers.
