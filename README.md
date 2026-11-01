@@ -1,5 +1,8 @@
 # tdigest-rs
 
+For the upcoming 0.3.0 release, read the [release notes and upgrade guide](RELEASE_NOTES_0.3.0.md)
+covering the changes from 0.2.x.
+
 Java builds cover JDK 11, 17, 21 and 25 while targeting Java 11 bytecode.
 JDK 25 uses Gradle 9.1; the default Gradle 8.14.5 retains JDK 11 build support.
 An optional checksum-verified JDK and
@@ -174,7 +177,7 @@ per-command timings and logs in `build/python-support/`; CI uploads these even
 when a run fails or is cancelled.
 
 ## Changelog
-- See `CHANGELOG.md`.
+- Read the [0.3.0 release notes](RELEASE_NOTES_0.3.0.md) for the upcoming release and [CHANGELOG.md](CHANGELOG.md) for version history.
 
 ## Future improvements
 - Auto suggest a scaling function based on distribution.
@@ -231,10 +234,6 @@ The configured JDK also supplies the direct Java compiler/runtime subprocesses u
 
 Use the [Python/NumPy guide](bindings/python/OBJECT_API.md), [Polars guide](bindings/python/POLARS_API.md), and [Java build and runtime guide](bindings/java/README.md). Scala/sbt, Kotlin/Gradle and a separate-executor Spark check are in [the JVM examples](bindings/java/examples/README.md).
 
-Private consumer fixtures, actual clusters and representative-server acceptance
-remain [owner-run](tests/quality/OWNER_CHECKS.md). Keep exact artifact and host
-identities with the results inside the consuming environment.
-
 Modern Rust construction returns a checked result, for example `TDigest::<f64>::builder().max_size(1000).build()?`. Modern defaults use capacity 1,000; the separate original `tdigest_rs` and `tdigest_core` interfaces retain their pinned API and calculations.
 
 The upcoming release is `0.3.0` for Rust, Python and the JVM. Python and Gradle derive their package versions from the root `Cargo.toml`. The separate original `tdigest_core` crate retains version `0.2.0`. See the [publishing guide](PUBLISH.md) for release prerequisites.
@@ -274,11 +273,3 @@ integer wraparound, overflow panics, or corrupted summaries. Explicit nonfinite
 observations and permissive original probes retain their historical semantics.
 
 Java object restoration owns an independent native handle; builder and ownership contracts are covered by the Java consumer regression tests. See the [Java guide](bindings/java/README.md).
-
-Consumer benchmarks accept `--workers` and `--tasks-per-batch` for independent
-digest construction. Reports distinguish configured workers, observed worker
-threads and average CPU use; these measurements describe the recorded host.
-
-`python -I scripts/qualify_host.py --output host.json` records the installed
-artifact and visible host. `--require-physical-cores N` returns exit 2 when
-that count cannot be established; recording a host does not qualify a workload.

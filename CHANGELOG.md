@@ -4,241 +4,53 @@ All notable changes to this project are documented in this file.
 
 ## [Unreleased]
 
-- Index the historical follow-up evidence by question and distinguish it from current release qualification.
-
-- Preserve historical throughput and host-scaling measurements.
-
-- Preserve historical boundary, scale and state-parity measurements.
-
-- Preserve the historical numeric representability and rollback sweep.
-
-- Preserve historical installed consumer and language interoperability results.
-
-- Preserve historical installed Python runtime and source-build results.
-
-- Preserve historical candidate artifact and runtime identities.
-
-- Document owner-run private baseline, cluster, internal-service and representative-server acceptance checks.
-
-- Record owner host and artifact identities while retaining unknown topology/quota limits and failed physical-core checks.
-
-- Configure independent-digest benchmark batches and record CPU use, observed worker threads and check-script identity; protect existing receipts.
-
-- Preserve the 52 review chapter after splitting the consumer prerequisites into smaller reviews.
-
-- Refresh merged Spark consumer checks on the current 0.3.0 release preparation.
-
-- Add a staged-tool Spark/Scala check for separate-executor broadcast, shuffle and checkpoint restoration with exact JAR/native identity receipts.
-
-- Preserve the 62 review chapter after splitting the consumer prerequisites into smaller reviews.
-
-- Refresh 0.3.0 preparation on current consumer diagnostics, overflow guards and source-archive gates.
-
-- Count capacity-search trial clusters without allocating or averaging discarded centroids; retain the full final compression path and existing numerical decisions.
-
-- Align the 0.3.0 public guides, publishing prerequisites, Polars installation advice and JVM runtime coverage.
-- Use version `0.3.0` for Rust, Python and the JVM and simplify public release guidance.
-
-- Preserve the 61 review chapter after splitting the consumer prerequisites into smaller reviews.
-
-- Refresh consumer diagnostics on the repaired Polars stack and reuse the current pytest measurement helpers.
-
-- Preserve the 43 review chapter after splitting the consumer prerequisites into smaller reviews.
-
-- Preserve merged arithmetic overflow guards beneath Polars 1.x/2.x compatibility.
-
-- Keep Polars compatibility separate from the prerequisite and adapter review branches.
-
-- Preserve preinstalled Polars 1.x/2.x for ordinary and extra installs: require only Polars >=1.0.0, remove the upper cap, and test the 1.0 floor plus representative 1.x releases against the same native wheel.
-
-- Support both Polars 1.x (development pin 1.44.2) and 2.x (tested 2.0.0), including consumer schema, cardinality and streaming regressions.
-
-- Make Polars cardinality, validation and binary schemas explicit.
-
-- Preserve the 77 review chapter after splitting the consumer prerequisites into smaller reviews.
-
-- Refresh the adapter extraction on the consumer foundation with merged overflow guards.
-
-- Extract the Polars adapter without changing expression behavior, public signatures or the pinned dependency.
-
-- Fail early on incompatible build tools, honor Cargo offline mode, and verify the installed consumer files in source packages.
-
-- Prepare exact original sources and run the independent Rust oracle without regenerating pinned golden outputs.
-
-- Retain the original Rust lockfile, source hashes and historical oracle receipts with checksum-bound JSON formatting exclusions.
-
-- Ship public Python type declarations and py.typed metadata, and check installed signature/docstring discovery in the runtime gate.
-
-- Add Scala/Kotlin consumer examples, track Kotlin incremental inputs, and reject loopback Maven fixture path escapes with regressions.
-
-- Package one canonically named native payload, report its identity and loader failures, and select the system allocator for JNI builds.
-
-- Apply the shared JNI exception boundary to mutations, precision casts and queries without changing their numerical operations.
-
-- Translate catchable JNI lifecycle and codec panics to Java exceptions, preserving pending exceptions and existing wire semantics.
-
-- Keep Java restored handles attached to their actual Cleaner referent and expose checked weighted/delta builders with consumer regressions.
-
-- Refresh consumer prerequisites on the foundation containing the merged overflow audit.
-
-- Separate previously merged JVM consumers, Python typing, delivery gates and original-oracle work from Polars compatibility review.
-
-- Reject absolute paths and symlink escapes in the local Maven fixture so requests cannot read outside its repository.
-
-- Verify toolchain selection, source archives and installed artifacts.
-
-- Preserve the independent original Rust oracle, pinned lockfile and recorded evidence.
-
-- Add consumer contract probes, benchmarks and wider accuracy diagnostics.
-
-- Ship installed Python API documentation and typing metadata.
-
-- Compile Scala and Kotlin consumers through authenticated Maven fixtures.
-
-- Load and identify native payloads outside the build checkout.
-
-- Keep runtime payload identity with the following standalone-loader change.
-
-- Expose fluent JVM operations, safe serialization and native failures.
-- Carry the merged arithmetic overflow guards and source-package checks into the downstream consumer foundation, preserving checked merge error propagation.
-
-- Remove unused imports and normalize spacing in modern Python consumer regressions for CI lint.
-
-- Resolve the modern Python chapter against the updated quality base, preserving checked-state validation and the Python object API contracts.
-
-- Expose weighted modern Python operations and independent state copies.
-
-- Format the quality-run fixture to satisfy the CI Ruff formatting check.
-
-- Resolve the quality chapter against the pytest-based gates, retaining source/native stability checks and removing the retired boundary-runner adapter.
-
-- Resolve the checked-state base merge while retaining its validation fixes, transactional scaling, Polars contracts and updated quality gates.
-- Merge the Polars-state precision-hint test fix into the CDF-shapes branch, preserving both branches' changelog entries.
-
-- Merge the updated Polars-state base into the CDF-shapes branch, preserving both CDF broadcasting and overflow documentation.
-
-- Supply explicit binary precision hints in Polars overflow coherence tests.
-
-- Include the original arithmetic overflow guard in published Rust and Python source packages.
-
-- Guard original Rust/Python uint32 totals and finite-input arithmetic, propagate modern compression overflow as errors without mutation, and recover representable extreme trimmed means; add cross-language overflow regressions.
-
-- Reject TDIG v1 export when its unit-weight kind heuristic would produce contradictory atomic extrema on reconstruction.
-
-- Reject contradictory centroid moments and atomic bounds, zero edge pins, incomplete struct configuration and missing centroid lists; validate export and no-op paths, check binary lengths/platform sizes, and preserve rounded precision round-trips.
-
-- Select Polars CDF broadcasting by input length, preserve List expression output, and normalize Python probe sequences.
-
-- Check Polars training and reconstructed state, reject missing digest rows, and require explicit binary precision hints.
-
-- Validate positive transformations before committing modern state.
-
-- Check modern construction, reconstruction, precision casts and merges, including numerical-foundation caller migrations.
-
-- Merge the updated quality-gates base into the comparison documentation branch, preserving both sets of unreleased notes.
-
-- Align Python package and compatibility notes with the single source-archive build gate.
-
-- Check that source packages contain the accuracy tests, saved results and offline data.
-
-- Run Python packaging checks alongside core CI, avoid redundant package builds, reuse Cargo dependencies for source-archive rebuilds, and retain live build logs and timings.
-
-- Speed up Python CI by compiling one release wheel from the verified source archive and checking it across all runtime cells, removing three repeated optimized builds.
-
-- Document pytest profile selection, expected accuracy failures and candidate-baseline review.
-
-- Keep stacked CI and source-archive checks aligned with pytest accuracy profiles.
-
-- Run accuracy profiles as parametrized pytest cases, with opt-in extended checks and retained baseline reports.
-
-- Update boundary regression expectations for the 12 verified numerical improvements from #55; retain the unresolved subnormal-mean failure.
-
-- Clarify legacy versus Modern accuracy tradeoffs, historical benchmark scope, and the distinction between regression checks and accuracy passes.
-
-- Keep checked precision adapters and Polars sequence probes coherent with validated modern state.
-
-- Validate modern Rust construction, transformations and full state.
-
-- Adapt numerical-foundation regressions to checked modern construction after stacking the validation API migration.
-
-- Add regression tests for tiny-capacity mass retention, residual tail contributions, cancellation, intermediate overflow and fractional atomic quantile boundaries.
-- Focus the comparison guide on choosing Modern over legacy G-Research, with measured accuracy advantages, practical capabilities and explicit tradeoffs.
-
-- Document measured Modern versus G-Research accuracy winners and error ratios by dataset, summary size, precision and merge setup.
-
-- Use checked modern state and length-based CDF broadcasting in Polars.
-
-- Validate positive transformations before committing modern state.
-
-- Check modern construction, reconstruction, precision casts and merges.
-
-- Preserve residual mass and compensated modern centroid arithmetic.
-
-- Test accuracy on recorded data and deterministic distributions.
-
-- Pin the optional Polars integration and support checks to Polars 1.44.2; defer Polars 2.0 evaluation.
-
-- Support Python 3.14 and 3.15 on the current NumPy and Polars stack.
-
-- Add JDK 25 build/runtime coverage with verified Gradle 9.1.0, retaining Java 11 bytecode and older-JDK builds.
-
-- Build Java 11 bytecode with exclusive internal and offline dependencies.
-
-- Stage verified JDK and Gradle archives from configured sources.
-
-- Copy compatible NumPy training buffers and allow independent constructors.
-
-- Reject inconsistent delta settings in Polars digest structs.
-
-- Copy NumPy query outputs without changing ownership or results.
-
-- Cite the published K2 normalizer and explain its constants beside the scale-domain guard.
-
-- Merge master into the K2Norm review branch, preserving both branches' unreleased notes.
-
-- Preserve original source and independent fixture LF bytes across Git checkouts; keep attribute rules focused on retained library inputs.
-
-- Preserve centroids outside the positive K2Norm scale domain.
-
-- Support CPython 3.10–3.15 with one ABI3 wheel, runtime-specific dependency combinations, and Polars-free install checks on every version.
-
-- Check supported Python runtimes and Polars-free wheel installs.
-
-- Expose the original tdigest_core Rust API unchanged and keep the workspace lockfile in Cargo canonical dependency order.
-
-- Ship clean source archives with one unambiguous Python README.
-
-- Preserve published original pickle restoration behavior and keep checksum-bound independent fixtures out of automatic JSON rewrites.
-
-- Verify original outputs against independent exact fixtures.
-
-- Run the unchanged upstream Python compatibility suite.
-
-- Keep compact original storage and make Polars imports optional.
-
-- Restore the original tdigest_rs Python engine and API.
-
-- Preserve tiny-mass queries and reject invalid scaling atomically.
-
-- Keep exact point means and finite cluster bounds, with explicit floating-point trait dispatch in regression fixtures.
-
-- Keep observation weights in Float64 for both mean precisions.
-
-- Preserve weighted tails, protected edges and wire settings.
-
-- Preserve weighted query results and restored digest state.
-
-- Resolve development paths from the active checkout, quote environment paths and install hooks through Git worktree paths.
+The planned release is **0.3.0**. Read the [0.3.0 release notes](RELEASE_NOTES_0.3.0.md)
+for the changes from 0.2.x, upgrade instructions and supported runtimes.
 
 ### Changed
-- Compressor Stage 4 cap strategy now uses a second k-limit merge with binary-searched `d'` (same scale-family geometry as Stage 3) instead of always using equal-weight bucketization.
-- Added Stage 4 unit coverage for cap/weight/order invariants under the new second-pass k-limit cap behavior.
-- Updated `tdigest_design.md` to document the new Stage 4 cap flow and fallback behavior.
-- Renamed `DigestConfig.legacy_delta` (and `TDigest`/builder methods) to `delta`. The field is the user-facing alternative-to-`max_size` mode, not a legacy escape hatch.
-- Added `ScaleFamily::K2Norm`: the canonical n-aware Dunning K2 from the t-digest paper (eq 8). Pairs with existing `K2` (Dunning's no-norm Java variant). `delta`-mode now routes through `klimit_merge` with `K2Norm` and strict `Δk ≤ 1` tolerance, replacing the parallel `legacy_delta_merge`/`legacy_k2_*` helpers. `klimit_merge` now takes a `tol` parameter (use `KLIMIT_TOL` for tolerant, `0.0` for strict byte-equivalence with old tdigest-rs).
-- `delta`-mode now defaults all other knobs to the old tdigest-rs contract: passing `delta=X` (with no other args) implies `scale='k2norm'` and `singleton_policy='off'`. Explicit values that disagree (e.g. `delta=X, scale='k1'`) are rejected with a clear error instead of being silently overridden, so the digest the user gets matches the old library byte-for-byte.
-- DRY: shared `validate_trimmed_mean_bounds` helper now used by both `trimmed_mean` (silent, returns NaN on invalid bounds) and `trimmed_mean_strict` (loud, returns `FrontendError::InvalidProbe`).
-- Reconciled defaults across surfaces. There are now exactly two: `DEFAULT_MAX_SIZE = 1000` (used when neither `max_size` nor `delta` is set; consistent across Rust `py.rs` PyO3 signature, Rust CLI `--max-size`, the Python shim's `from_array` etc., and the Polars `tdigest()` expression) and `DEFAULT_DELTA = 300.0` (matches old `tdigest-rs`'s `DEFAULT_DELTA`; exposed as a public Python constant so `delta=DEFAULT_DELTA` reproduces that library's out-of-the-box behavior). The historical intent was `1000` (commit `14b34ac` "Default arguments k2, 1000 and f64"); the Python shim's `200` default was drift introduced when the shim layer was created and now follows the rest.
+
+- Return checked results from modern Rust construction, merges and precision
+  conversions; reject inconsistent state and unsupported arithmetic before
+  replacing a digest.
+- Keep modern centroid weights in Float64 for both mean precisions, and
+  standardize the modern default capacity at 1,000.
+- Use `delta` in place of `legacy_delta`; modern delta mode selects K2Norm/Off
+  and rejects conflicting settings. Capacity compression uses a second scale-based
+  merge before falling back to equal-weight grouping.
+- Define NumPy query shapes and Float64 array outputs, Polars struct schemas,
+  length-based CDF broadcasting, missing-state errors and binary precision checks.
+- Preserve full modern state through copying, pickle, TDIG v3 and Polars structs;
+  reject older-format exports that cannot represent it.
+
+### Fixed
+
+- Correct weighted medians and quantiles, fractional and tiny-mass boundaries,
+  exact-point handling, residual mass retention and cancellation during compression.
+- Preserve the receiver when modern updates, iterable merges or scaling fail.
+- Honor weights in modern Python construction and give copied state independent ownership.
+- Fix Java deserialization ownership and translate catchable native panics into
+  Java exceptions.
+
+### Compatibility and delivery
+
+- Provide the original `tdigest_rs` Python and `tdigest_core` Rust interfaces
+  with pinned in-range calculations and historical behavior, plus explicit overflow errors.
+- Support standard CPython 3.10–3.15 and optional Polars with tested 1.x/2.x
+  versions; preserve an already installed compatible Polars version.
+- Ship Python type declarations, standalone native JAR loading, Scala/Kotlin/Spark
+  examples, and Java 11 bytecode with JDK 11/17/21/25 coverage.
+- Support verified JVM toolchains, configured dependency sources, offline builds
+  with prepared caches, and checkout paths containing spaces or using worktrees.
+- Expand original-engine, numerical, cross-language and installed-artifact checks.
+
+### Performance and documentation
+
+- Copy compatible NumPy buffers in bulk and release the GIL during independent
+  modern construction.
+- Count trial clusters during capacity searches without building discarded centroids.
+- Consolidate the 0.3.0 changes and migration advice into release notes; remove
+  the historical follow-up report directory and its added qualification tooling
+  and checklist. Executable library tests and frozen reference inputs remain.
 
 ## [0.2.4] - 2026-02-16
 
