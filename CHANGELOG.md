@@ -47,7 +47,7 @@ for the changes from 0.2.x, upgrade instructions and supported runtimes.
 
 - Copy compatible NumPy buffers in bulk and release the GIL during independent
   modern construction.
-- Count trial clusters during capacity searches without building discarded centroids.
+- Keep the optional capacity-search optimization separate from 0.3.0 release preparation.
 - Consolidate the 0.3.0 changes and migration advice into release notes; remove
   the historical follow-up report directory and its added qualification tooling
   and checklist. Executable library tests and frozen reference inputs remain.

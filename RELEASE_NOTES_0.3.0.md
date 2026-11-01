@@ -74,7 +74,7 @@ Compatibility checks cover selected Polars 1.x releases and 2.0.0. CDF operation
 now match digests and probes by row count, preserve List-shaped results, and keep
 valid empty digests distinct from missing rows.
 
-## JVM delivery and compression efficiency
+## JVM delivery
 
 Java gains completed weighted/delta builders and fluent operations. Deserialized
 objects own independent native handles, fixing premature cleanup of restored
@@ -85,11 +85,6 @@ use of the shared Java artifact.
 
 JVM builds support configured toolchain/dependency sources and offline operation
 after dependencies have been staged. They target Java 11 bytecode.
-
-Compression capacity searches now count trial groups without building and
-discarding complete trial summaries. The final compression pass retains its
-existing numerical decisions. This removes unnecessary work without changing
-the chosen capacity or scale settings.
 
 ## Upgrading from 0.2.x
 
