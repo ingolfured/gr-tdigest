@@ -1,9 +1,5 @@
 # Accuracy tests
 
-For private artifacts, actual clusters and representative servers, see the
-[owner checklist](OWNER_CHECKS.md). Numerical regression and approximate accuracy
-remain separate acceptance questions.
-
 See [measured accuracy gains and tradeoffs](ACCURACY.md) for the default-setting
 and comparable-storage results, including strengths and query-level explanations.
 The practical standard is no obvious, unexplained accuracy deterioration;

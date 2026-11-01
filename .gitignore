@@ -84,3 +84,6 @@ typical_usecase.md
 
 # Local Claude Code agent state (not for commit)
 .claude/
+
+# Historical follow-up reports stay in PR descriptions or local build output.
+/compat/followups-20261021/

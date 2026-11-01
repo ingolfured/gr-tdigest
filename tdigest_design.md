@@ -542,9 +542,7 @@ JAR task inspects the final archive and rejects missing, extra or misnamed nativ
 payloads. A renamed-override build followed by an outside-checkout JAR execution
 is a CI regression; ordinary Java tests alone previously missed this path.
 
-## Capacity-search implementation
-
-Trial capacity searches count k-limit clusters using the same ordered weight additions and scale comparisons as the emitting pass. They do not construct temporary centroid means or allocate discarded output vectors. The selected final pass still uses the existing full compression path. This changes work performed during search, not its numerical decisions or storage settings.
+## Standalone JNI payload selection
 
 The JAR bundles a canonically named native payload with source and SHA-256 identity in its manifest. Explicit native overrides accept relative distributed-file paths; extraction can use a configured writable directory. Loader diagnostics identify attempted paths and causes. Configured build-native overrides are packaged under the runtime resource name.
 
@@ -596,17 +594,3 @@ coherence overflow matrix cover integer limits, overflowed moments, coalescing,
 creation/merge/scaling rollback, and finite extreme CDF/quantile queries. These
 checks concern arithmetic safety; they do not promise exact statistics or remove
 floating-point rounding, capacity limits, or explicitly permitted NaN semantics.
-
-## Independent-constructor measurements
-
-The consumer benchmark records configured pool size, distinct worker threads
-observed per batch, process CPU time and CPU/wall-time ratios separately.
-Submission latency includes construction and its median query. The script hash
-identifies the measurement protocol; changed scripts require new measurements.
-Existing receipts are never overwritten, and the multi-scenario runner checks
-all destinations before starting work.
-
-The owner host recorder counts unique nonnegative package/core IDs within CPU
-affinity. Missing or invalid topology remains unknown. Visible cgroup-v2 quota
-files are evidence only: hidden limits may exist. Parent traversal stays within
-the cgroup mount. Failed minimum-core checks retain a receipt and exit 2.
