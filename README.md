@@ -37,6 +37,11 @@ T-Digest provides a mergeable summary of a distribution, enabling approximate qu
 
 For a Bike single build at size 128, Modern has about **0.017 times GR's average rank error** and **0.035 times its average value error**. Energy also favors Modern on average accuracy, while GR has lower peak value error. See [why choose Modern](comparison_design.md) for the recommendation and [setup tables](compat/quality-20261020/RESULTS.md) for the full comparison, including cases GR wins.
 
+For the 21 October 2026 comparison of original delta 300 and modern capacity
+1,000, see [accuracy results and tradeoffs](tests/quality/ACCURACY.md).
+The report separates position, numerical-value and storage results and
+identifies the historical build measured.
+
 ## Examples
 
 **Python**

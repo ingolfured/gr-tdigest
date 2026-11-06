@@ -45,6 +45,7 @@ for the changes from 0.2.x, upgrade instructions and supported runtimes.
 
 ### Performance and documentation
 
+- Document historical default-setting accuracy results and storage/value tradeoffs in one report linked from the README.
 - Copy compatible NumPy buffers in bulk and release the GIL during independent
   modern construction.
 - Keep the optional capacity-search optimization separate from 0.3.0 release preparation.
