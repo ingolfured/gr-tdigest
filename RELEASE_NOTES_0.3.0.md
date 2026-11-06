@@ -74,6 +74,14 @@ Compatibility checks cover selected Polars 1.x releases and 2.0.0. CDF operation
 now match digests and probes by row count, preserve List-shaped results, and keep
 valid empty digests distinct from missing rows.
 
+## Faster capacity searches
+
+When compression exceeds the centroid capacity, trial passes now count clusters
+without allocating temporary centroid vectors or computing means that would be
+discarded. The selected final pass retains its existing numerical arithmetic.
+This reduces work for builds and merges that need capacity tuning; paths that
+skip that search do not receive the same benefit.
+
 ## JVM delivery
 
 Java gains completed weighted/delta builders and fluent operations. Deserialized

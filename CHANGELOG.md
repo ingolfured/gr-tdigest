@@ -48,7 +48,10 @@ for the changes from 0.2.x, upgrade instructions and supported runtimes.
 - Document historical default-setting accuracy results and storage/value tradeoffs in one report linked from the README.
 - Copy compatible NumPy buffers in bulk and release the GIL during independent
   modern construction.
-- Keep the optional capacity-search optimization separate from 0.3.0 release preparation.
+- Count capacity-search trial clusters without allocating or averaging discarded
+  centroids; retain the final compression path and existing numerical decisions.
+- Integrate the completed 0.3.0 review series and capacity-search optimization
+  into the release tree for master and the upstream contribution.
 - Consolidate the 0.3.0 changes and migration advice into release notes; remove
   the historical follow-up report directory and its added qualification tooling
   and checklist. Executable library tests and frozen reference inputs remain.
