@@ -1,11 +1,5 @@
 # Accuracy tests
 
-See [measured accuracy gains and tradeoffs](ACCURACY.md) for the default-setting
-and comparable-storage results, including strengths and query-level explanations.
-The practical standard is no obvious, unexplained accuracy deterioration;
-explained rank/value/tail/storage tradeoffs are documented separately from hard
-correctness and frozen regression gates. No numerical fixture or gate changes.
-
 `make test` includes the fast accuracy profiles, independent-reference controls,
 and weighted tests. `make quality-fast` runs just these tests and retains a
 measurement report. `make quality-extended` adds the slow matrix across storage
