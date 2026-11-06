@@ -4,7 +4,9 @@ All notable changes to this project are documented in this file.
 
 ## [Unreleased]
 
-- Keep 0.3.0 release preparation separate from the optional capacity-search performance optimization.
+- Count capacity-search trial clusters without allocating or averaging discarded centroids; retain the full final compression path and existing numerical decisions.
+
+- Include the capacity-search performance optimization in 0.3.0 release preparation.
 
 - Preserve the 62 review chapter after splitting the consumer prerequisites into smaller reviews.
 
