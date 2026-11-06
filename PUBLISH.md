@@ -1,6 +1,26 @@
 # Publishing Guide
 
-This project supports publishing to PyPI, crates.io, and Maven Central.
+This project supports publishing to PyPI, crates.io, and a configured Maven
+repository. The planned public version is `0.3.0`. The root `Cargo.toml` is the
+version source for Rust, Python (via maturin) and the JVM (via Gradle).
+
+## Release prerequisites
+
+Run `make build` and `make test` on the release commit and review its CI results.
+Run `make python-support-test` for the installed-wheel/runtime and source-archive
+gates. Review the measured accuracy limits linked from `README.md`; regression
+checks do not establish that every accuracy target passes.
+
+The original `tdigest_core` workspace crate remains at `0.2.0`. Its matching
+registry package must be available before publishing `gr-tdigest`: the local path
+dependency alone is not sufficient for crates.io consumers. Neither the Cargo
+release workflow nor `make publish-cargo` publishes that dependency.
+
+Before tagging, move the pending release notes from `## [Unreleased]` into a
+`## [0.3.0]` section and leave a new empty Unreleased section. Merge the release
+commit into `master`; the tag workflows require it to be reachable from master.
+Set `TDIGEST_SOURCE_SHA` to the source commit when building a local release JAR
+to record its identity alongside the native payload SHA-256.
 
 ## GitHub Actions release workflows
 Release workflows are in `.github/workflows/`:
@@ -27,12 +47,13 @@ Maven (`maven` environment):
 - Example:
 
 ```bash
-git tag v0.2.4
-git push origin v0.2.4
+git tag v0.3.0
+git push origin v0.3.0
 ```
 
 ## Local publish
-Use `make publish` when publishing from local credentials.
+Use `make publish` when publishing from local credentials after completing the
+release prerequisites above.
 
 Dry run:
 
