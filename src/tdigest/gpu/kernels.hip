@@ -99,8 +99,8 @@ extern "C" int gr_gpu_cdf(Snapshot *s, const double *xs, const double **out, siz
         }
         std::memcpy(s->host,xs,n*sizeof(double));
         const unsigned blocks=static_cast<unsigned>(std::min<size_t>((n+255)/256,65535));
-        hipLaunchKernelGGL(cdf_batch,dim3(blocks),dim3(256),0,s->stream,s->rows,s->count,s->total,s->min,s->max,s->mapped,n);
-        auto err=hipGetLastError();
+        void *args[]={&s->rows,&s->count,&s->total,&s->min,&s->max,&s->mapped,&n};
+        auto err=hipLaunchKernel(reinterpret_cast<const void*>(cdf_batch),dim3(blocks),dim3(256),args,0,s->stream);
         if (err!=hipSuccess) return err;
         err=hipStreamSynchronize(s->stream);
         if (err==hipSuccess) *out=s->host;

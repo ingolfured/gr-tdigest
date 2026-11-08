@@ -9,7 +9,7 @@ for the changes from 0.2.x, upgrade instructions and supported runtimes.
 
 ### Changed
 
-- Add opt-in batched CDF queries on Linux HIP devices.
+- Add opt-in batched CDF queries on Linux HIP devices and isolate launch errors between calls.
 
 - Return checked results from modern Rust construction, merges and precision
   conversions; reject inconsistent state and unsupported arithmetic before

@@ -70,5 +70,7 @@ def test_special_mass_and_extrema(values, weights):
 
 
 def test_invalid_device_is_reported():
+    d = TDigest.from_array(np.array([0.0]))
     with pytest.raises(RuntimeError):
-        GpuDigest(TDigest.from_array(np.array([0.0])), 9999)
+        GpuDigest(d, 9999)
+    assert GpuDigest(d, DEVICE).cdf(np.array([0.0]))[0] == 0.5
