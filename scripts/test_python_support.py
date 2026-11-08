@@ -44,8 +44,8 @@ MATRIX = (
 # Coverage inventory for the staged suites in this revision. Keep source-build
 # totals derived from these values, and reject failures/skips independently.
 COMPATIBILITY_CASES = 208
-MODERN_CASES = 233
-NUMPY_ONLY_CASES = 120
+MODERN_CASES = 234
+NUMPY_ONLY_CASES = 121
 
 POLARS_VERSIONS = ("1.0.0", "1.20.0", "1.38.1", "1.44.2", "2.0.0")
 
