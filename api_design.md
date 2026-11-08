@@ -335,3 +335,7 @@ Rust adapter checks mass before calls and finite outputs/conserved mass after
 calls. This covers construction, immutable merge, quantile, median and trimmed
 mean in Rust and Python. An overflow error replaces historical wrapping/panicking
 behavior; explicit nonfinite observations retain the existing compatibility API.
+
+## Optional Linux GPU queries
+
+A HIP-enabled build exposes `gr_tdigest.gpu.GpuDigest(digest, device=0)` and the Rust `tdigest::gpu::GpuDigest`. The constructor uploads an immutable snapshot of a modern digest. `cdf` evaluates a contiguous one-dimensional float64 array and returns a host float64 array. Device selection and execution errors are reported to the caller. Existing CPU APIs and wheel builds require no GPU runtime.

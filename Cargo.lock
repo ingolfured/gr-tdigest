@@ -1119,6 +1119,7 @@ dependencies = [
  "assert_fs",
  "bincode",
  "bytesize",
+ "cc",
  "clap",
  "crc32fast",
  "criterion",

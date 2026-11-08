@@ -12,6 +12,8 @@ pub mod centroids;
 pub mod codecs;
 pub mod compressor;
 pub mod frontends;
+#[cfg(feature = "hip")]
+pub mod gpu;
 pub mod merges;
 pub mod precision;
 pub mod quantile;

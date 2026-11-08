@@ -598,3 +598,7 @@ coherence overflow matrix cover integer limits, overflowed moments, coalescing,
 creation/merge/scaling rollback, and finite extreme CDF/quantile queries. These
 checks concern arithmetic safety; they do not promise exact statistics or remove
 floating-point rounding, capacity limits, or explicitly permitted NaN semantics.
+
+## HIP CDF
+
+The snapshot copies means, weights, exact-point flags and ordered cumulative weights to the selected device. Rust prepares subnormal masses using the CPU query normalization. Each GPU thread binary-searches centroid means and evaluates the same midpoint/interpolation formula. Query scratch space belongs to the snapshot and grows on demand. A synchronous host result includes both transfers.

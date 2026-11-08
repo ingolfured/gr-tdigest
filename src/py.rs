@@ -183,7 +183,7 @@ fn output_for_values(py: Python<'_>, kind: ContainerKind, values: Vec<f64>) -> P
 /// to_bytes/from_bytes for independent full-state copies. This is a separate
 /// engine from the pinned original tdigest_rs.TDigest.
 pub struct PyTDigest {
-    inner: FrontendDigest,
+    pub(crate) inner: FrontendDigest,
 }
 
 impl PyTDigest {

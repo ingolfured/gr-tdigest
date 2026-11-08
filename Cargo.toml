@@ -29,6 +29,10 @@ python = [
 ]
 java = ["dep:jni"]
 bench_codecs = []
+hip = ["dep:cc"]
+
+[build-dependencies]
+cc = { version = "1", optional = true }
 
 [dependencies]
 polars       = { version = "0.55.1", default-features = false, features = ["dtype-struct", "dtype-array", "fmt"] }

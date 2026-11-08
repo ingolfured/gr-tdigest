@@ -278,3 +278,5 @@ observations and permissive original probes retain their historical semantics.
 Java object restoration owns an independent native handle; builder and ownership contracts are covered by the Java consumer regression tests. See the [Java guide](bindings/java/README.md).
 
 Capacity tuning counts trial clusters without building discarded centroids; final compression and public numerical settings retain their existing behavior.
+
+An [optional Linux HIP build](tests/gpu/README.md) can upload a modern digest once and evaluate batched CDF probes on a GPU.

@@ -50,6 +50,8 @@ static ALLOC: Jemalloc = Jemalloc;
 mod compact_storage;
 #[cfg(feature = "python")]
 mod py;
+#[cfg(all(feature = "python", feature = "hip"))]
+mod py_gpu;
 #[cfg(feature = "python")]
 use tdigest_core as upstream;
 #[cfg(feature = "python")]
@@ -65,6 +67,8 @@ use pyo3::types::PyModuleMethods;
 #[pyo3(name = "_gr_tdigest")] // ← confirm desired import name
 fn _gr_tdigest(_py: Python<'_>, m: &Bound<'_, PyModule>) -> PyResult<()> {
     crate::py::register(m)?;
+    #[cfg(feature = "hip")]
+    m.add_class::<py_gpu::PyGpuDigest>()?;
     m.add("__version__", env!("CARGO_PKG_VERSION"))?;
     Ok(())
 }
