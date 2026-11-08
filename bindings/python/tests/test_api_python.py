@@ -42,6 +42,18 @@ class TestPythonApiSmoke:
         assert as_np.shape == (3,)
         assert list(as_np) == pytest.approx([0.125, 0.5, 0.875], abs=1e-9)
 
+    def test_merge_groups_matches_individual_results(self):
+        a = TDigest.from_array([0.0, 2.0])
+        b = TDigest.from_array([-1.0, 1.0], precision="f32")
+        groups = [[b, b], [], [a], [a, a, a]]
+        expected = [TDigest.merge_all(g).to_bytes() for g in groups]
+        result = TDigest.merge_groups(groups)
+        assert [d.to_bytes() for d in result] == expected
+        result[2].add(24.0)
+        assert a.to_bytes() == expected[2]
+        with pytest.raises(ValueError):
+            TDigest.merge_groups([[a], [b, a]])
+
     def test_merge_and_merge_all_smoke(self):
         a = TDigest.from_array([0.0, 1.0, 2.0, 3.0], max_size=64, scale="k2")
         b = TDigest.from_array([10.0, 11.0, 12.0, 13.0], max_size=64, scale="k2")

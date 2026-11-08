@@ -529,17 +529,28 @@ Rebuild or cast to a shared configuration before merge.",
     }
 
     pub fn merge_all(digests: Vec<Self>) -> Result<Self, FrontendError> {
-        if digests.is_empty() {
-            return Ok(Self::canonical_empty());
-        }
+        Self::merge_group(digests.iter())
+    }
 
-        let first = digests[0].clone();
+    fn merge_group<'a>(mut digests: impl Iterator<Item = &'a Self>) -> Result<Self, FrontendError> {
+        let Some(first) = digests.next() else {
+            return Ok(Self::canonical_empty());
+        };
         first.validate_state()?;
         let mut acc = first.clone();
-        for d in digests.iter().skip(1) {
+        for d in digests {
             acc.merge_in_place(d)?;
         }
         Ok(acc)
+    }
+
+    /// Merge independent groups on the Rayon pool, retaining input and output order.
+    pub fn merge_groups(groups: &[Vec<&Self>]) -> Result<Vec<Self>, FrontendError> {
+        use rayon::prelude::*;
+        groups
+            .par_iter()
+            .map(|group| Self::merge_group(group.iter().copied()))
+            .collect()
     }
 
     pub fn quantile_strict(&self, q: f64) -> Result<f64, FrontendError> {

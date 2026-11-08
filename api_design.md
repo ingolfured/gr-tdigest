@@ -345,3 +345,5 @@ For device-side construction use `gr_tdigest.gpu.from_array(values, weights=None
 `GpuDigest.merged(other)` and `GpuDigest.merge_all(digests)` produce independent snapshots. The latter follows the CPU frontend's input-order left fold. Each pair must share device, precision and configuration. A `GpuDigest` can be uploaded from canonical TDIG with `from_bytes(data, device=0)`.
 
 Java's `gr.tdigest.Gpu` calls upload TDIG input on each invocation and return ordinary Java arrays or independently owned digests. Build the native library with the `java,hip` features. The optional `gr_tdigest.gpu_polars` module provides group construction and ordered merging as TDIG Binary expressions. Query expressions take a resident snapshot and return Float64 columns. Use the existing `gr_tdigest.from_bytes` expression for conversion to the usual Polars digest struct.
+
+`TDigest.merge_groups(groups)` runs independent left folds on the Rayon pool. Results retain group and child order and match individual `merge_all` calls.

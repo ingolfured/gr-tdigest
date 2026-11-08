@@ -292,6 +292,26 @@ impl PyTDigest {
     pub fn merge_all(_cls: &Bound<'_, PyType>, digests: Bound<'_, PyAny>) -> PyResult<Self> {
         merge_all_impl(digests)
     }
+    #[staticmethod]
+    fn merge_groups(py: Python<'_>, groups: Vec<Vec<Py<PyTDigest>>>) -> PyResult<Vec<Self>> {
+        let guards = groups
+            .iter()
+            .map(|group| {
+                group
+                    .iter()
+                    .map(|v| v.try_borrow(py))
+                    .collect::<Result<Vec<_>, _>>()
+            })
+            .collect::<Result<Vec<_>, _>>()?;
+        let groups = guards
+            .iter()
+            .map(|group| group.iter().map(|v| &v.inner).collect())
+            .collect::<Vec<_>>();
+        let output = py
+            .detach(|| FrontendDigest::merge_groups(&groups))
+            .map_err(map_frontend_err)?;
+        Ok(output.into_iter().map(|inner| Self { inner }).collect())
+    }
 
     /// Weighted 0.5 quantile; NaN for empty state. Does not mutate this digest.
     pub fn median(&self) -> PyResult<f64> {

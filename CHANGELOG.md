@@ -9,6 +9,8 @@ for the changes from 0.2.x, upgrade instructions and supported runtimes.
 
 ### Changed
 
+- Merge independent digest groups in parallel on the CPU, preserving each group’s input order.
+
 - Add an optional Linux HIP backend for batched CDF, quantile and median
   queries, construction, weighted updates and ordered merges. Rust and Python
   support resident data. Java/JNI and Polars expose explicit GPU operations.
