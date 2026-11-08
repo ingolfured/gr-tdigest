@@ -904,3 +904,10 @@ pub extern "system" fn Java_gr_tdigest_TDigestNative_median(
         }
     }
 }
+
+#[no_mangle]
+pub extern "system" fn Java_gr_tdigest_Gpu_compiled(_: JNIEnv, _: JClass) -> jni::sys::jboolean {
+    cfg!(feature = "hip").into()
+}
+#[cfg(feature = "hip")]
+mod gpu;

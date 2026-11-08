@@ -9,6 +9,8 @@ for the changes from 0.2.x, upgrade instructions and supported runtimes.
 
 ### Changed
 
+- Expose opt-in HIP batches in Java/JNI and Polars.
+
 - Merge resident HIP digest snapshots in input order and import canonical TDIG bytes.
 
 - Expose HIP construction, weighted updates and canonical TDIG export in Rust and Python.
