@@ -51,7 +51,7 @@ __global__ static void merge_round(const Group *groups, size_t n, const Child *c
         prior = next.stats;
         for (size_t i = 0; i < prior.rows; ++i) acc[i] = raw_row(next.rows[i]);
     } else if (next.stats.rows) {
-        merge_pair(acc, prior, next.rows, next.stats, g.cfg, items, work, acc, &prior);
+        merge_pair(acc, prior, next.rows, next.stats, g.cfg, items, work, acc, &prior, true);
         if (prior.rows > g.limit || !valid_intermediate(acc, prior)) prior.rows = SIZE_MAX;
     }
     states[id] = prior;

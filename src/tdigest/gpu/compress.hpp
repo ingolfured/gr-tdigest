@@ -114,11 +114,42 @@ __device__ static size_t bucketize(const Cent *cs, size_t n, Cent *out, Config c
     if (acc.count) out[written++] = acc.finish(cfg.narrow);
     return written;
 }
-__device__ static size_t cap_core(const Cent *core, size_t n, Cent *out, Config cfg, size_t cap) {
+// With integral mass up to 2^53 every grouping gives the same exact prefix.
+// K2 cap trials differ only by a multiplier; cache their logarithms in the
+// consumed interior. Fractional mass keeps klimit's original addition order.
+__device__ static double log_odds(double q) {
+    q = fmin(1. - 1e-15, fmax(1e-15, q));
+    return log(q / (1. - q));
+}
+__device__ static bool cache_k2(const Cent *cs, size_t n, Cent *cache, Config cfg) {
+    if (!cache || cfg.family != 2) return false;
+    double total = mass(cs, n), prefix = 0;
+    if (total >= 0x1p53) return false;
+    for (size_t i = 0; i < n; ++i)
+        if (cs[i].weight != trunc(cs[i].weight)) return false;
+    for (size_t i = 0; i < n; ++i) {
+        prefix += cs[i].weight;
+        cache[i].mean = log_odds(prefix / total);
+    }
+    return true;
+}
+__device__ static size_t count_k2(const Cent *cache, size_t n, double d) {
+    double factor = d / (4. * 0.6931471805599453), left = factor * log_odds(0.);
+    size_t count = 1;
+    for (size_t i = 1; i < n; ++i) {
+        if (factor * cache[i].mean - left > 1. + 1e-12) {
+            ++count;
+            left = factor * cache[i - 1].mean;
+        }
+    }
+    return count;
+}
+__device__ static size_t cap_core(const Cent *core, size_t n, Cent *out, Config cfg, size_t cap, Cent *cache) {
+    bool cached = cache_k2(core, n, cache, cfg);
     double lo = 1e-6, hi = fmax(lo, double(cfg.cap)), best = lo;
     for (int trial = 0; trial < 28; ++trial) {
         double mid = 0.5 * (lo + hi);
-        if (klimit(core, n, nullptr, cfg, mid) <= cap)
+        if ((cached ? count_k2(cache, n, mid) : klimit(core, n, nullptr, cfg, mid)) <= cap)
             lo = best = mid;
         else
             hi = mid;
@@ -131,7 +162,7 @@ __device__ static size_t cap_core(const Cent *core, size_t n, Cent *out, Config 
     return bucketize(core, n, out, cfg, cap);
 }
 // 'items' is already coalesced. 'work' and 'out' each have room for n centroids.
-__device__ static size_t compress(const Cent *items, size_t n, Cent *work, Cent *out, Config cfg) {
+__device__ static size_t compress(Cent *items, size_t n, Cent *work, Cent *out, Config cfg, bool cache_trials) {
     if (!cfg.delta && cfg.policy == 0 && n <= cfg.cap) {
         for (size_t i = 0; i < n; ++i) out[i] = items[i];
         return n;
@@ -150,7 +181,7 @@ __device__ static size_t compress(const Cent *items, size_t n, Cent *work, Cent 
     size_t count = klimit(items + l, r - l, work, cfg, cfg.delta ? cfg.delta : double(cfg.cap));
     if (!valid_stream(work, count)) return 0;
     if (!cfg.delta && count > cap)
-        count = cap_core(work, count, out + l, cfg, cap);
+        count = cap_core(work, count, out + l, cfg, cap, cache_trials ? items + l : nullptr);
     else
         for (size_t i = 0; i < count; ++i) out[l + i] = work[i];
     for (size_t i = r; i < n; ++i) out[l + count + i - r] = items[i];

@@ -47,10 +47,10 @@ __device__ static void append(Cent *items, size_t &k, Sum &run, Cent c) {
         items[k++] = c;
     }
 }
-__device__ static void finish(Cent *items, size_t k, Cent *work, Cent *out, Config cfg, Stats stats,
-                              Stats *result) {
+__device__ static void finish(Cent *items, size_t k, Cent *work, Cent *out, Config cfg, Stats stats, Stats *result,
+                              bool cache_trials = false) {
     if (!valid_stream(items, k)) return;
-    stats.rows = compress(items, k, work, out, cfg);
+    stats.rows = compress(items, k, work, out, cfg, cache_trials);
     if (stats.rows && valid_stream(out, stats.rows)) *result = stats;
 }
 __global__ static void train(const Row *old, Stats prior, Config cfg, const uint64_t *keys, const double *weights,

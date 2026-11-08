@@ -1,7 +1,7 @@
 __device__ static Cent raw_row(Cent c) { return c; }
 template <class Left>
 __device__ static void merge_pair(const Left *left, Stats a, const Row *right, Stats b, Config cfg, Cent *items,
-                                  Cent *work, Cent *out, Stats *result) {
+                                  Cent *work, Cent *out, Stats *result, bool cache_trials = false) {
     result->rows = 0;
     Sum mass, moment, run;
     mass.add(a.count);
@@ -18,7 +18,7 @@ __device__ static void merge_pair(const Left *left, Stats a, const Row *right, S
     }
     if (k == 1 && items[0].atomic && stats.min == stats.max && (point_underflow(a) || point_underflow(b)))
         stats.sum = items[0].mean * stats.count;
-    finish(items, k, work, out, cfg, stats, result);
+    finish(items, k, work, out, cfg, stats, result, cache_trials);
 }
 __global__ static void merge_sorted(const Row *left, Stats a, const Row *right, Stats b, Config cfg, Cent *items,
                                     Cent *work, Cent *out, Stats *result) {

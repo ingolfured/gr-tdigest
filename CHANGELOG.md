@@ -9,7 +9,7 @@ for the changes from 0.2.x, upgrade instructions and supported runtimes.
 
 ### Changed
 
-- Merge independent digest groups in parallel on CPU or HIP, preserving each group’s input order.
+- Merge independent digest groups in parallel on CPU or HIP, preserving each group’s input order. Integral K2 batches reuse scale evaluations during capacity search.
 
 - Add an optional Linux HIP backend for batched CDF, quantile and median
   queries, construction, weighted updates and ordered merges. Rust and Python
