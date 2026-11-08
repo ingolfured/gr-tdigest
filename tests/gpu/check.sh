@@ -4,7 +4,8 @@ set -euo pipefail
 : "${HIP_PLATFORM:?Set HIP_PLATFORM to amd or nvidia}" "${GPU_ARCH:?Set GPU_ARCH to the device architecture}"
 case "$HIP_PLATFORM" in
     amd) flags=(-x hip -ffp-contract=off "--offload-arch=$GPU_ARCH") ;;
-    nvidia) flags=(-x cu --fmad=false --ftz=false "-arch=$GPU_ARCH") ;;
+    nvidia) flags=(-x cu --fmad=false --ftz=false "-arch=$GPU_ARCH" -D__HIP_PLATFORM_NVIDIA__
+                   "-I${CUDA_PATH:-/usr/local/cuda}/include" "-I${ROCM_PATH:-/opt/rocm}/include") ;;
     *) echo "HIP_PLATFORM must be amd or nvidia" >&2; exit 2 ;;
 esac
 export GR_TDIGEST_TEST_DEVICE="${GR_TDIGEST_TEST_DEVICE:-0}"

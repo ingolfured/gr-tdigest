@@ -9,7 +9,7 @@ for the changes from 0.2.x, upgrade instructions and supported runtimes.
 
 ### Changed
 
-- Expose opt-in HIP batches in Java/JNI and Polars.
+- Expose opt-in HIP batches in Java/JNI and Polars and provide a hardware check for both toolkit targets.
 
 - Merge resident HIP digest snapshots in input order and import canonical TDIG bytes.
 
