@@ -602,3 +602,5 @@ floating-point rounding, capacity limits, or explicitly permitted NaN semantics.
 ## HIP CDF
 
 The snapshot copies means, weights, exact-point flags and ordered cumulative weights to the selected device. Rust prepares subnormal masses using the CPU query normalization. Each GPU thread binary-searches centroid means and evaluates the same midpoint/interpolation formula. Query scratch space belongs to the snapshot and grows on demand. A synchronous host result includes both transfers.
+
+HIP quantile queries use host-prepared center weights in the exact CPU addition order and compensated boundaries for adjacent atomic points. DeviceArray retains contiguous Float64 inputs and results in VRAM. Device-resident quantile validation returns one error flag to the host.

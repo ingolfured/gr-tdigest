@@ -68,7 +68,10 @@ use pyo3::types::PyModuleMethods;
 fn _gr_tdigest(_py: Python<'_>, m: &Bound<'_, PyModule>) -> PyResult<()> {
     crate::py::register(m)?;
     #[cfg(feature = "hip")]
-    m.add_class::<py_gpu::PyGpuDigest>()?;
+    {
+        m.add_class::<py_gpu::PyGpuDigest>()?;
+        m.add_class::<py_gpu::PyDeviceArray>()?;
+    }
     m.add("__version__", env!("CARGO_PKG_VERSION"))?;
     Ok(())
 }

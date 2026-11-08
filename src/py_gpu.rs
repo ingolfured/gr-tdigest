@@ -1,7 +1,13 @@
 use crate::py::PyTDigest;
-use crate::tdigest::{frontends::FrontendDigest, gpu::GpuDigest};
+use crate::tdigest::{
+    frontends::FrontendDigest,
+    gpu::{DeviceArray, GpuDigest},
+};
 use numpy::{PyArray1, PyReadonlyArray1};
-use pyo3::{exceptions::PyRuntimeError, prelude::*};
+use pyo3::{
+    exceptions::{PyRuntimeError, PyValueError},
+    prelude::*,
+};
 
 #[pyclass(name = "GpuDigest")]
 pub(crate) struct PyGpuDigest(GpuDigest);
@@ -28,5 +34,57 @@ impl PyGpuDigest {
             .cdf(probes.as_slice()?)
             .map_err(PyRuntimeError::new_err)?;
         Ok(PyArray1::from_slice(py, result))
+    }
+    fn quantile<'py>(
+        &mut self,
+        py: Python<'py>,
+        probabilities: PyReadonlyArray1<'py, f64>,
+    ) -> PyResult<Bound<'py, PyArray1<f64>>> {
+        let qs = probabilities.as_slice()?;
+        let result = self.0.quantile(qs).map_err(query_error)?;
+        Ok(PyArray1::from_slice(py, result))
+    }
+
+    fn median(&mut self) -> PyResult<f64> {
+        self.0.median().map_err(PyRuntimeError::new_err)
+    }
+    fn cdf_device(&mut self, x: &PyDeviceArray) -> PyResult<PyDeviceArray> {
+        self.0
+            .cdf_device(&x.0)
+            .map(PyDeviceArray)
+            .map_err(PyRuntimeError::new_err)
+    }
+    fn quantile_device(&mut self, x: &PyDeviceArray) -> PyResult<PyDeviceArray> {
+        self.0
+            .quantile_device(&x.0)
+            .map(PyDeviceArray)
+            .map_err(query_error)
+    }
+}
+
+#[pyclass(name = "DeviceArray")]
+pub(crate) struct PyDeviceArray(DeviceArray);
+#[pymethods]
+impl PyDeviceArray {
+    #[new]
+    #[pyo3(signature=(values,device=0))]
+    fn new(values: PyReadonlyArray1<'_, f64>, device: i32) -> PyResult<Self> {
+        DeviceArray::upload(values.as_slice()?, device)
+            .map(Self)
+            .map_err(PyRuntimeError::new_err)
+    }
+    fn to_numpy<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyArray1<f64>>> {
+        Ok(PyArray1::from_vec(
+            py,
+            self.0.to_host().map_err(PyRuntimeError::new_err)?,
+        ))
+    }
+}
+
+fn query_error(message: String) -> PyErr {
+    if message == crate::tdigest::gpu::BAD_Q {
+        PyValueError::new_err(message)
+    } else {
+        PyRuntimeError::new_err(message)
     }
 }
