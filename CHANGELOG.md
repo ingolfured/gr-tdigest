@@ -11,7 +11,7 @@ for the changes from 0.2.x, upgrade instructions and supported runtimes.
 
 - Add HIP quantile, median and device-resident batched queries.
 
-- Add opt-in batched CDF queries on Linux HIP devices and isolate launch errors between calls.
+- Add opt-in batched CDF queries on Linux HIP devices and isolate launch errors between calls. Configure HIP include paths and shared-library compilation for NVIDIA builds.
 
 - Return checked results from modern Rust construction, merges and precision
   conversions; reject inconsistent state and unsupported arithmetic before
