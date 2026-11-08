@@ -14,6 +14,7 @@ struct Row {
     atomic: u64,
     center: f64,
     boundary: f64,
+    raw_weight: f64,
 }
 unsafe extern "C" {
     fn gr_gpu_upload(
@@ -64,10 +65,17 @@ impl Drop for GpuDigest {
 }
 impl GpuDigest {
     pub fn upload<F: FloatLike + FloatCore>(d: &TDigest<F>, device: i32) -> Result<Self, String> {
+        d.validate_state().map_err(|e| e.to_string())?;
+        let raw = d;
+        let normalized;
+        let total: f64 = raw.centroids().iter().map(|c| c.weight_f64()).sum();
+        let d = if total > 0. && total < f64::MIN_POSITIVE {
+            normalized = raw.normalized_subnormal_mass_for_queries(total);
+            &normalized
+        } else {
+            raw
+        };
         let total: f64 = d.centroids().iter().map(|c| c.weight_f64()).sum();
-        if total > 0. && total < f64::MIN_POSITIVE {
-            return Self::upload(&d.normalized_subnormal_mass_for_queries(total), device);
-        }
         let mut prefix = 0.;
         let mut center = 0.;
         let mut previous = 0.;
@@ -75,7 +83,8 @@ impl GpuDigest {
         let rows: Vec<_> = d
             .centroids()
             .iter()
-            .map(|c| {
+            .zip(raw.centroids())
+            .map(|(c, original)| {
                 let weight = c.weight_f64();
                 center += (previous + weight) * 0.5;
                 previous = weight;
@@ -86,6 +95,7 @@ impl GpuDigest {
                     prefix,
                     atomic: u64::from(c.is_atomic()),
                     center,
+                    raw_weight: original.weight_f64(),
                     boundary: boundary.total(),
                 };
                 prefix += row.weight;

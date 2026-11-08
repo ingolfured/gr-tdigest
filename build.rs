@@ -14,6 +14,7 @@ fn main() {
     let mut build = cc::Build::new();
     build
         .cpp(true)
+        .std("c++17")
         .compiler(rocm.join("bin/hipcc"))
         .file("src/tdigest/gpu/kernels.hip");
     match platform.as_str() {
@@ -39,6 +40,8 @@ fn main() {
         _ => panic!("HIP_PLATFORM must be amd or nvidia"),
     }
     println!("cargo:rerun-if-changed=src/tdigest/gpu/kernels.hip");
+    println!("cargo:rerun-if-changed=src/tdigest/gpu/training.hpp");
+    println!("cargo:rerun-if-changed=src/tdigest/gpu/compress.hpp");
     build.compile("gr_tdigest_hip");
     println!(
         "cargo:rustc-link-lib={}",

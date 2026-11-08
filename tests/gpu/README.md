@@ -5,3 +5,5 @@ Build from `bindings/python` with `HIP_PLATFORM=amd GPU_ARCH=gfx1100 maturin bui
 Run `python -m pytest -q tests/gpu` against the installed GPU wheel. Select a device with `GR_TDIGEST_TEST_DEVICE`. Run `python tests/gpu/bench.py --device 0` to compare full Python calls, and `cargo test --release --features hip --test gpu_native -- --nocapture` for the native Rust comparison. A missing GPU or driver fails the explicit GPU suite. NVIDIA hardware results are pending.
 
 The same snapshot provides batched `quantile` and scalar `median`. To chain kernels without moving probe/results through NumPy, upload a contiguous float64 array with `DeviceArray(values, device)`, call `cdf_device` or `quantile_device`, and explicitly call `to_numpy()` when a host result is needed. These buffers must be on the snapshot's device. Set `GR_TDIGEST_SECOND_DEVICE` to exercise the two-device rejection test.
+
+For the native training fixture on AMD, run `/opt/rocm/bin/hipcc -std=c++17 -ffp-contract=off --offload-arch=gfx1100 tests/gpu/training_native.hip -o /tmp/gr-training` and `/tmp/gr-training 0`. Substitute the target architecture and device ordinal for your machine.

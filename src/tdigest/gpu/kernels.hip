@@ -6,7 +6,7 @@
 #include <cstring>
 #include <new>
 
-struct Row { double mean, weight, prefix; uint64_t atomic; double center, boundary; };
+struct Row { double mean, weight, prefix; uint64_t atomic; double center, boundary, raw_weight; };
 struct Snapshot {
     int device;
     Row *rows = nullptr;
@@ -29,7 +29,12 @@ template<class F> static hipError_t on_device(int device, F operation) {
     int previous;
     auto err = hipGetDevice(&previous);
     if (err != hipSuccess) return err;
-    if (previous != device && (err = hipSetDevice(device)) != hipSuccess) return err;
+    if (previous != device && (err = hipSetDevice(device)) != hipSuccess) {
+        // hipCUB reads the thread-local launch status internally. Consume the
+        // ordinal error from this call before it reaches an unrelated sort.
+        (void)hipGetLastError();
+        return err;
+    }
     err = operation();
     if (previous != device) {
         auto restore = hipSetDevice(previous);
@@ -183,3 +188,5 @@ extern "C" int gr_gpu_resident_query(Snapshot *s,bool quantiles,const double *xs
     });
     return status==hipSuccess && invalid ? -1 : status;
 }
+
+#include "training.hpp"

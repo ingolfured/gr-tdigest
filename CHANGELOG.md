@@ -9,6 +9,8 @@ for the changes from 0.2.x, upgrade instructions and supported runtimes.
 
 ### Changed
 
+- Add HIP sorting and ordered centroid compression for batched training.
+
 - Add HIP quantile, median and device-resident batched queries.
 
 - Add opt-in batched CDF queries on Linux HIP devices and isolate launch errors between calls.
