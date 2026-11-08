@@ -190,3 +190,4 @@ extern "C" int gr_gpu_resident_query(Snapshot *s,bool quantiles,const double *xs
 }
 
 #include "training.hpp"
+#include "merge.hpp"

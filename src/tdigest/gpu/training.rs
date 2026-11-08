@@ -87,6 +87,24 @@ impl Stats {
         }
     }
 }
+fn buffer_size<F: FloatLike + FloatCore>(
+    d: &TDigest<F>,
+    extra: usize,
+) -> Result<(Config, usize), TrainingError> {
+    let cfg = Config::of(d);
+    let total = d
+        .centroids()
+        .len()
+        .checked_add(extra)
+        .filter(|&n| n <= i32::MAX as usize)
+        .ok_or_else(|| Input("HIP operation exceeds the supported batch length".into()))?;
+    let limit = if d.delta().is_some() {
+        total
+    } else {
+        total.min(cfg.cap.saturating_add(cfg.pins.saturating_mul(2)))
+    };
+    Ok((cfg, limit))
+}
 fn restore<F: FloatLike + FloatCore>(
     d: &TDigest<F>,
     rows: &[Cent],
@@ -156,18 +174,7 @@ impl GpuDigest {
         xs: &DeviceArray,
         ws: Option<&DeviceArray>,
     ) -> Result<Self, TrainingError> {
-        let cfg = Config::of(d);
-        let total = d
-            .centroids()
-            .len()
-            .checked_add(xs.len)
-            .filter(|&n| n <= i32::MAX as usize)
-            .ok_or_else(|| Input("HIP sort exceeds the supported batch length".into()))?;
-        let limit = if d.delta().is_some() {
-            total
-        } else {
-            total.min(cfg.cap.saturating_add(cfg.pins.saturating_mul(2)))
-        };
+        let (cfg, limit) = buffer_size(d, xs.len)?;
         let mut rows = vec![Cent::default(); limit];
         let mut stats = Stats::default();
         check(unsafe {
@@ -187,3 +194,5 @@ impl GpuDigest {
         restore(d, &rows[..stats.rows], stats, self.1)
     }
 }
+
+mod merge;

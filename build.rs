@@ -41,6 +41,7 @@ fn main() {
     }
     println!("cargo:rerun-if-changed=src/tdigest/gpu/kernels.hip");
     println!("cargo:rerun-if-changed=src/tdigest/gpu/training.hpp");
+    println!("cargo:rerun-if-changed=src/tdigest/gpu/merge.hpp");
     println!("cargo:rerun-if-changed=src/tdigest/gpu/compress.hpp");
     build.compile("gr_tdigest_hip");
     println!(

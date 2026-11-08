@@ -37,6 +37,34 @@ impl PyGpuDigest {
     fn to_bytes<'py>(&self, py: Python<'py>) -> Bound<'py, pyo3::types::PyBytes> {
         pyo3::types::PyBytes::new(py, self.0.to_bytes())
     }
+    fn merged(&self, py: Python<'_>, other: &PyGpuDigest) -> PyResult<Self> {
+        py.detach(|| self.0.merged(&other.0))
+            .map(Self)
+            .map_err(training_error)
+    }
+    #[staticmethod]
+    #[pyo3(signature=(digests,device=None))]
+    fn merge_all(
+        py: Python<'_>,
+        digests: Vec<Py<PyGpuDigest>>,
+        device: Option<i32>,
+    ) -> PyResult<Self> {
+        let guards = digests
+            .iter()
+            .map(|d| d.try_borrow(py))
+            .collect::<Result<Vec<_>, _>>()?;
+        let snapshots = guards.iter().map(|g| &g.0).collect::<Vec<_>>();
+        py.detach(|| GpuDigest::merge_all(&snapshots, device))
+            .map(Self)
+            .map_err(training_error)
+    }
+    #[staticmethod]
+    #[pyo3(signature=(data,device=0))]
+    fn from_bytes(data: &[u8], device: i32) -> PyResult<Self> {
+        GpuDigest::from_bytes(data, device)
+            .map(Self)
+            .map_err(training_error)
+    }
     fn cdf<'py>(
         &mut self,
         py: Python<'py>,

@@ -34,6 +34,25 @@ __device__ static Cent raw_row(Row r) { return {r.mean, r.raw_weight, r.atomic};
 __device__ static bool point_underflow(Stats s) {
     return s.rows == 1 && s.min == s.max && s.min != 0. && fabs(s.sum) < DBL_MIN && s.min * s.count == s.sum;
 }
+__device__ static void append(Cent *items, size_t &k, Sum &run, Cent c) {
+    if (k && items[k - 1].mean == c.mean) {
+        run.add(c.weight);
+        Cent &last = items[k - 1];
+        last.weight += c.weight;
+        if (!isfinite(last.weight)) last.weight = run.total();
+        last.atomic &= c.atomic;
+    } else {
+        run = Sum{};
+        run.add(c.weight);
+        items[k++] = c;
+    }
+}
+__device__ static void finish(Cent *items, size_t k, Cent *work, Cent *out, Config cfg, Stats stats,
+                              Stats *result) {
+    if (!valid_stream(items, k)) return;
+    stats.rows = compress(items, k, work, out, cfg);
+    if (stats.rows && valid_stream(out, stats.rows)) *result = stats;
+}
 __global__ static void train(const Row *old, Stats prior, Config cfg, const uint64_t *keys, const double *weights,
                              size_t n, bool weighted, Cent *items, Cent *work, Cent *out, Stats *result) {
     result->rows = 0; // A nonempty batch always yields at least one row when valid.
@@ -69,22 +88,19 @@ __global__ static void train(const Row *old, Stats prior, Config cfg, const uint
             c = {key_mean(keys[j]), weights[j], 1};
             ++j;
         }
-        if (k && items[k - 1].mean == c.mean) {
-            run.add(c.weight);
-            Cent &last = items[k - 1];
-            last.weight += c.weight;
-            if (!isfinite(last.weight)) last.weight = run.total();
-            last.atomic &= c.atomic;
-        } else {
-            run = Sum{};
-            run.add(c.weight);
-            items[k++] = c;
-        }
+        append(items, k, run, c);
     }
-    if (!valid_stream(items, k)) return;
-    size_t written = compress(items, k, work, out, cfg);
-    if (!written || !valid_stream(out, written)) return;
-    *result = {sum, count, lo, hi, written};
+    finish(items, k, work, out, cfg, {sum, count, lo, hi, 0}, result);
+}
+static hipError_t run_compressor(hipStream_t stream, const void *kernel, void **args, Stats *result, Cent *out,
+                                 Cent *host, size_t limit, Stats *stats) {
+    hipError_t err;
+    if ((err = hipLaunchKernel(kernel, dim3(1), dim3(1), args, 0, stream)) ||
+        (err = hipStreamSynchronize(stream)) ||
+        (err = hipMemcpy(stats, result, sizeof(Stats), hipMemcpyDeviceToHost)))
+        return err;
+    if (stats->rows > limit) return hipErrorInvalidValue;
+    return hipMemcpy(host, out, stats->rows * sizeof(Cent), hipMemcpyDeviceToHost);
 }
 extern "C" int gr_gpu_train(Snapshot *s, Stats prior, Config cfg, const double *xs, const double *ws, size_t n,
                             Cent *output, size_t limit, Stats *stats) {
@@ -117,12 +133,7 @@ extern "C" int gr_gpu_train(Snapshot *s, Stats prior, Config cfg, const double *
             return err;
         void *training[] = {&s->rows,  &prior,   &cfg,    &sorted_keys.p, &sorted_weights.p, &n,
                             &weighted, &items.p, &work.p, &out.p,         &result.p};
-        if ((err =
-                 hipLaunchKernel(reinterpret_cast<const void *>(train), dim3(1), dim3(1), training, 0, stream)) ||
-            (err = hipStreamSynchronize(stream)) ||
-            (err = hipMemcpy(stats, result.p, sizeof(Stats), hipMemcpyDeviceToHost)))
-            return err;
-        if (stats->rows > limit) return hipErrorInvalidValue;
-        return hipMemcpy(output, out.p, stats->rows * sizeof(Cent), hipMemcpyDeviceToHost);
+        return run_compressor(stream, reinterpret_cast<const void *>(train), training, result.p, out.p, output,
+                              limit, stats);
     });
 }
