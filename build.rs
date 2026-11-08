@@ -25,7 +25,13 @@ fn main() {
             println!("cargo:rustc-link-search=native={}/lib", rocm.display());
         }
         "nvidia" => {
+            let cuda = env::var("CUDA_PATH").unwrap_or_else(|_| "/usr/local/cuda".into());
             build
+                .include(PathBuf::from(&cuda).join("include"))
+                .include(rocm.join("include"))
+                .define("__HIP_PLATFORM_NVIDIA__", None)
+                .flag("--forward-unknown-to-host-compiler")
+                .flag("-Xcompiler=-fPIC")
                 .flag("-x")
                 .flag("cu")
                 .flag("--fmad=false")
@@ -33,7 +39,6 @@ fn main() {
             if let Ok(arch) = env::var("GPU_ARCH") {
                 build.flag(format!("-arch={arch}"));
             }
-            let cuda = env::var("CUDA_PATH").unwrap_or_else(|_| "/usr/local/cuda".into());
             println!("cargo:rustc-link-search=native={cuda}/lib64");
         }
         _ => panic!("HIP_PLATFORM must be amd or nvidia"),
