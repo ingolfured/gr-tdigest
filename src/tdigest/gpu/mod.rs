@@ -52,7 +52,7 @@ fn check(code: i32) -> Result<(), String> {
 }
 
 /// Owns the uploaded rows and reuses device scratch space. Queries require exclusive access.
-pub struct GpuDigest(ptr::NonNull<c_void>, i32);
+pub struct GpuDigest(ptr::NonNull<c_void>, i32, Vec<u8>);
 // The shim selects the snapshot's device on each call; all scratch access requires &mut self.
 unsafe impl Send for GpuDigest {}
 unsafe impl Sync for GpuDigest {}
@@ -127,8 +127,13 @@ impl GpuDigest {
         Ok(Self(
             ptr::NonNull::new(handle).ok_or("HIP returned no snapshot")?,
             device,
+            raw.to_bytes(),
         ))
     }
+    pub fn to_bytes(&self) -> &[u8] {
+        &self.2
+    }
+
     /// The completed host result remains valid until the next query.
     pub fn cdf(&mut self, probes: &[f64]) -> Result<&[f64], String> {
         self.query(probes, false)
@@ -167,3 +172,6 @@ impl GpuDigest {
 
 mod array;
 pub use array::DeviceArray;
+
+mod training;
+pub use training::TrainingError;

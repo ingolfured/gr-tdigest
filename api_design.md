@@ -336,6 +336,8 @@ calls. This covers construction, immutable merge, quantile, median and trimmed
 mean in Rust and Python. An overflow error replaces historical wrapping/panicking
 behavior; explicit nonfinite observations retain the existing compatibility API.
 
-## Optional Linux GPU queries
+## Optional Linux GPU operations
 
-A HIP-enabled build exposes `gr_tdigest.gpu.GpuDigest(digest, device=0)` and the Rust `tdigest::gpu::GpuDigest`. The constructor uploads an immutable snapshot of a modern digest. `cdf` evaluates a contiguous one-dimensional float64 array and returns a host float64 array. Device selection and execution errors are reported to the caller. Existing CPU APIs and wheel builds require no GPU runtime.
+A HIP-enabled build exposes `gr_tdigest.gpu.GpuDigest(digest, device=0)` and the Rust `tdigest::gpu::GpuDigest`. The constructor uploads independent state from a modern digest. `cdf` evaluates a contiguous one-dimensional float64 array and returns a host float64 array. Device selection and execution errors are reported to the caller. Existing CPU APIs and wheel builds require no GPU runtime.
+
+For device-side construction use `gr_tdigest.gpu.from_array(values, weights=None, **options)` with a `DeviceArray`. The options match `TDigest.from_array`. The digest's `add` method accepts another resident batch and commits its result only after validation. Sorting, coalescing and compression run on the GPU. The host validates the compressed rows and prepares the new query snapshot. `to_bytes()` exports the resulting TDIG state.

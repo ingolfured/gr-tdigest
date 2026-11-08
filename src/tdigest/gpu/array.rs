@@ -15,9 +15,9 @@ unsafe extern "C" {
     ) -> i32;
 }
 pub struct DeviceArray {
-    ptr: *mut f64,
-    len: usize,
-    device: i32,
+    pub(super) ptr: *mut f64,
+    pub(super) len: usize,
+    pub(super) device: i32,
 }
 // Buffers are immutable after construction and the shim selects the owner device.
 unsafe impl Send for DeviceArray {}
@@ -28,6 +28,9 @@ impl Drop for DeviceArray {
     }
 }
 impl DeviceArray {
+    pub fn device(&self) -> i32 {
+        self.device
+    }
     fn alloc(n: usize, input: *const f64, device: i32) -> Result<Self, String> {
         let mut a = Self {
             ptr: ptr::null_mut(),

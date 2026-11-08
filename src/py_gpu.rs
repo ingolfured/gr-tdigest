@@ -1,7 +1,7 @@
 use crate::py::PyTDigest;
 use crate::tdigest::{
     frontends::FrontendDigest,
-    gpu::{DeviceArray, GpuDigest},
+    gpu::{DeviceArray, GpuDigest, TrainingError},
 };
 use numpy::{PyArray1, PyReadonlyArray1};
 use pyo3::{
@@ -24,6 +24,19 @@ impl PyGpuDigest {
         snapshot.map(Self).map_err(PyRuntimeError::new_err)
     }
 
+    #[pyo3(signature=(values, weights=None))]
+    fn add(
+        &mut self,
+        py: Python<'_>,
+        values: &PyDeviceArray,
+        weights: Option<&PyDeviceArray>,
+    ) -> PyResult<()> {
+        py.detach(|| self.0.add(&values.0, weights.map(|w| &w.0)))
+            .map_err(training_error)
+    }
+    fn to_bytes<'py>(&self, py: Python<'py>) -> Bound<'py, pyo3::types::PyBytes> {
+        pyo3::types::PyBytes::new(py, self.0.to_bytes())
+    }
     fn cdf<'py>(
         &mut self,
         py: Python<'py>,
@@ -73,6 +86,10 @@ impl PyDeviceArray {
             .map(Self)
             .map_err(PyRuntimeError::new_err)
     }
+    #[getter]
+    fn device(&self) -> i32 {
+        self.0.device()
+    }
     fn to_numpy<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyArray1<f64>>> {
         Ok(PyArray1::from_vec(
             py,
@@ -86,5 +103,12 @@ fn query_error(message: String) -> PyErr {
         PyValueError::new_err(message)
     } else {
         PyRuntimeError::new_err(message)
+    }
+}
+
+fn training_error(err: TrainingError) -> PyErr {
+    match err {
+        TrainingError::Input(s) => PyValueError::new_err(s),
+        TrainingError::Device(s) => PyRuntimeError::new_err(s),
     }
 }
