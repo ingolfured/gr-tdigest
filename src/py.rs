@@ -435,7 +435,7 @@ impl PyTDigest {
         // scalar fast-path
         if x.bind(py).is_instance_of::<PyFloat>() || x.bind(py).is_instance_of::<PyInt>() {
             let v = x.extract::<f64>(py)?;
-            let out = self.inner.cdf(&[v])[0];
+            let out = self.inner.cdf_one(v);
             return Ok(PyFloat::new(py, out).into_any().unbind());
         }
 

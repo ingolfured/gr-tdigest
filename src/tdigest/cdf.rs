@@ -1,7 +1,7 @@
 //! CDF (cumulative distribution function) evaluation for `TDigest`.
 //!
 //! Allocation-lean kernel that operates directly on the centroid slice.
-//! We keep a single `prefix` vector (running weight sums) per call and
+//! Batches share one prefix vector (running weight sums); individual probes sum directly and
 //! avoid snapshotting means/weights into separate arrays.
 //!
 //! # Semantics
@@ -26,7 +26,7 @@
 //!
 //! # Performance
 //! - Per query is **O(log n)** due to a binary search on centroid means.
-//! - A single `prefix` array is built **once per call** (O(n)) and reused.
+//! - A batch builds one prefix array (O(n)); a scalar probe sums weights without allocating a prefix.
 //! - For very large batches, we switch to Rayon parallelism.
 
 use crate::tdigest::centroids::Centroid;
@@ -42,7 +42,59 @@ use rayon::prelude::*;
 /// scalar loop is typically faster; above it, parallelism wins.
 const PAR_MIN: usize = 32_768;
 
+#[cfg(test)]
+thread_local! {
+    static DENSE_PREFIX_BUILDS: std::cell::Cell<usize> = const { std::cell::Cell::new(0) };
+}
+
+fn search<F: FloatLike + FloatCore>(cents: &[Centroid<F>], value: f64) -> Result<usize, usize> {
+    cents.binary_search_by(|c| c.mean_f64().partial_cmp(&value).unwrap())
+}
+
+// The formula needs mass preceding the hit, or preceding the left neighbor.
+fn prefix_index(position: Result<usize, usize>) -> usize {
+    match position {
+        Ok(i) => i,
+        Err(i) => i.saturating_sub(1),
+    }
+}
+
+fn sum_weights<F: FloatLike + FloatCore>(start: f64, cents: &[Centroid<F>]) -> f64 {
+    cents.iter().fold(start, |mass, c| mass + c.weight_f64())
+}
+
 impl<F: FloatLike + FloatCore> TDigest<F> {
+    pub(crate) fn cdf_one(&self, value: f64) -> f64 {
+        let cents = self.centroids();
+        if cents.is_empty() || value.is_nan() {
+            return f64::NAN;
+        }
+        if value < self.min() {
+            return 0.0;
+        }
+        if value > self.max() {
+            return 1.0;
+        }
+        let position = search(cents, value);
+        let (left, right) = cents.split_at(prefix_index(position));
+        let before = sum_weights(0.0, left);
+        let total = sum_weights(before, right);
+        if total > 0.0 && total < f64::MIN_POSITIVE {
+            return self
+                .normalized_subnormal_mass_for_queries(total)
+                .cdf_one(value);
+        }
+        cdf_at_val_fast(
+            value,
+            cents,
+            position,
+            before,
+            total,
+            self.min(),
+            self.max(),
+        )
+    }
+
     /// Estimate the CDF at each `vals[i]`, returning values in **[0, 1]**.
     ///
     /// ## Semantics
@@ -70,6 +122,11 @@ impl<F: FloatLike + FloatCore> TDigest<F> {
             return Vec::new();
         }
 
+        if let [value] = vals {
+            return vec![self.cdf_one(*value)];
+        }
+        #[cfg(test)]
+        DENSE_PREFIX_BUILDS.with(|v| v.set(v.get() + 1));
         let mut prefix: Vec<f64> = Vec::with_capacity(n);
         let mut run: f64 = 0.0;
         for c in cents {
@@ -88,28 +145,25 @@ impl<F: FloatLike + FloatCore> TDigest<F> {
         let min_v = self.min();
         let max_v = self.max();
 
-        // Main path: parallel for big batches, scalar otherwise.
-        if vals.len() >= PAR_MIN {
-            vals.par_iter()
-                .with_min_len(4096)
-                .map(|&v| {
-                    if v.is_nan() {
-                        f64::NAN
-                    } else {
-                        cdf_at_val_fast(v, cents, &prefix, count_f64, min_v, max_v)
-                    }
-                })
-                .collect()
-        } else {
-            let mut out = Vec::with_capacity(vals.len());
-            for &v in vals {
-                if v.is_nan() {
-                    out.push(f64::NAN);
-                } else {
-                    out.push(cdf_at_val_fast(v, cents, &prefix, count_f64, min_v, max_v));
-                }
+        let evaluate = |&v: &f64| {
+            if v.is_nan() {
+                return f64::NAN;
             }
-            out
+            let position = search(cents, v);
+            cdf_at_val_fast(
+                v,
+                cents,
+                position,
+                prefix[prefix_index(position)],
+                count_f64,
+                min_v,
+                max_v,
+            )
+        };
+        if vals.len() >= PAR_MIN {
+            vals.par_iter().with_min_len(4096).map(evaluate).collect()
+        } else {
+            vals.iter().map(evaluate).collect()
         }
     }
 }
@@ -129,23 +183,24 @@ fn fraction_between(value: f64, left: f64, right: f64) -> f64 {
 
 /// Optimized evaluation kernel (reference semantics).
 ///
-/// Exact hit → (prefix[idx] + 0.5*w)/N.
+/// Exact hit → (before + 0.5*w)/N.
 /// Left/right tails → guarded ramps using min/max and edge centroid half-weights.
 /// Between centroids → center-to-center interpolation with **atomic** exclusion.
 #[inline(always)]
 fn cdf_at_val_fast<F: FloatLike + FloatCore>(
     val: f64,
     cents: &[Centroid<F>],
-    prefix: &[f64],
+    position: Result<usize, usize>,
+    before: f64,
     count_f64: f64,
     min_v: f64,
     max_v: f64,
 ) -> f64 {
     let n = cents.len();
 
-    match cents.binary_search_by(|c| c.mean_f64().partial_cmp(&val).unwrap()) {
+    match position {
         // Exact centroid hit: midpoint semantics (half-weight).
-        Ok(idx) => (prefix[idx] + 0.5 * cents[idx].weight_f64()) / count_f64,
+        Ok(idx) => (before + 0.5 * cents[idx].weight_f64()) / count_f64,
 
         Err(idx) => {
             // Left of first centroid mean
@@ -196,7 +251,7 @@ fn cdf_at_val_fast<F: FloatLike + FloatCore>(
             if gap <= 0.0 {
                 // Pathological/too-close: fall back to midpoint mass to preserve monotonicity.
                 let dw = 0.5 * (wl + wr);
-                return (prefix[li] + dw) / count_f64;
+                return (before + dw) / count_f64;
             }
 
             // Atomic-aware exclusion: subtract w/2 for ANY atomic neighbor.
@@ -208,7 +263,7 @@ fn cdf_at_val_fast<F: FloatLike + FloatCore>(
             let dw_span = dw_center - left_excl - right_excl;
 
             // Base mass at left center plus any left exclusion.
-            let base = prefix[li] + wl * 0.5 + left_excl;
+            let base = before + wl * 0.5 + left_excl;
             let frac = fraction_between(val, ml, mr);
 
             (base + dw_span * frac) / count_f64
@@ -221,6 +276,21 @@ fn cdf_at_val_fast<F: FloatLike + FloatCore>(
 #[cfg(test)]
 mod tests {
     use crate::tdigest::{tdigest::TDigestBuilder, ScaleFamily};
+
+    #[test]
+    fn scalar_cdf_does_not_build_a_dense_prefix() {
+        let xs: Vec<f64> = (0..512).map(f64::from).collect();
+        let d = TDigestBuilder::new()
+            .max_size(1000)
+            .build()
+            .unwrap()
+            .merge_sorted(xs)
+            .unwrap();
+        let want = d.cdf(&[274.5, 275.5])[0];
+        super::DENSE_PREFIX_BUILDS.with(|v| v.set(0));
+        assert_eq!(d.cdf(&[274.5])[0].to_bits(), want.to_bits());
+        assert_eq!(super::DENSE_PREFIX_BUILDS.with(|v| v.get()), 0);
+    }
 
     fn exact_ecdf_for_sorted(sorted: &[f64]) -> Vec<f64> {
         let n = sorted.len();

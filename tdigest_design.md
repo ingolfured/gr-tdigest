@@ -271,7 +271,7 @@ Concatenate without mutation:
 
 `TDigest::cdf(vals)`:
 1. Empty digest -> vector of `NaN`.
-2. Build one prefix-weight array (`prefix[i] = cumulative weight before centroid i`).
+2. Multiple probes share a dense prefix array. For one probe, binary-search the means, sum to its selected centroid boundary, and continue from there to obtain the total. This preserves the original addition order without allocating the prefix array. Polars broadcasts one digest over a scalar column by evaluating the column as one batch.
 3. For each probe:
 - `NaN` probe -> `NaN`.
 - Else evaluate via `cdf_at_val_fast` (binary search by centroid mean).

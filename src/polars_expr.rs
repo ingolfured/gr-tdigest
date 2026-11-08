@@ -909,8 +909,8 @@ where
     // empty digest must keep its own NaN result rather than borrow a neighbor.
     polars_ensure!(digest_len == 1 || digest_len == values_s.len(), ComputeError:
         "tdigest.cdf: expected one digest or one digest per probe row");
-    let single_non_empty = if digest_len == 1 {
-        digests.first().cloned()
+    let broadcast_digest = if digest_len == 1 {
+        digests.first()
     } else {
         None
     };
@@ -918,25 +918,15 @@ where
     match values_s.dtype() {
         DataType::List(inner) => {
             if matches!(inner.as_ref(), DataType::Float32) {
-                cdf_on_list_out::<F, Float32Type>(
-                    &digests,
-                    digest_len,
-                    values_s.list()?,
-                    single_non_empty,
-                )
+                cdf_on_list_out::<F, Float32Type>(&digests, values_s.list()?, broadcast_digest)
             } else {
-                cdf_on_list_out::<F, Float64Type>(
-                    &digests,
-                    digest_len,
-                    values_s.list()?,
-                    single_non_empty,
-                )
+                cdf_on_list_out::<F, Float64Type>(&digests, values_s.list()?, broadcast_digest)
             }
         }
         DataType::Float32 => {
-            cdf_on_scalar_out::<F, Float32Type>(&digests, values_s, single_non_empty)
+            cdf_on_scalar_out::<F, Float32Type>(&digests, values_s, broadcast_digest)
         }
-        _ => cdf_on_scalar_out::<F, Float64Type>(&digests, values_s, single_non_empty),
+        _ => cdf_on_scalar_out::<F, Float64Type>(&digests, values_s, broadcast_digest),
     }
 }
 
@@ -968,7 +958,7 @@ fn subseries_to_f64_vec(sub: &Series) -> PolarsResult<Vec<f64>> {
 fn cdf_on_scalar_out<F, Out>(
     digests: &[TDigest<F>],
     values_s: &Series,
-    single_non_empty: Option<TDigest<F>>,
+    broadcast_digest: Option<&TDigest<F>>,
 ) -> PolarsResult<Series>
 where
     F: Copy + 'static + FloatCore + FloatLike,
@@ -993,19 +983,19 @@ where
     };
 
     // Compute using unified empty→NaN rule
-    let mut out: Vec<<Out as PolarsNumericType>::Native> = Vec::with_capacity(values_s.len());
-
-    if let Some(td0) = single_non_empty {
-        for x in vals_f64 {
-            out.push(Out::from_f64(td0.cdf_or_nan(&[x])[0]));
-        }
+    let out = if let Some(digest) = broadcast_digest {
+        digest
+            .cdf_or_nan(&vals_f64)
+            .into_iter()
+            .map(Out::from_f64)
+            .collect()
     } else {
-        for (i, x) in vals_f64.into_iter().enumerate() {
-            let td = digests.get(i).cloned().unwrap_or_default();
-            out.push(Out::from_f64(td.cdf_or_nan(&[x])[0]));
-        }
-    }
-
+        vals_f64
+            .into_iter()
+            .enumerate()
+            .map(|(i, x)| Out::from_f64(digests.get(i).map_or(f64::NAN, |td| td.cdf_one(x))))
+            .collect()
+    };
     Ok(Out::series_from_vec("", out))
 }
 
@@ -1013,9 +1003,8 @@ where
 /// Strict policy: any NULL list cell or inner NULL → ERROR.
 fn cdf_on_list_out<F, Out>(
     digests: &[TDigest<F>],
-    _digest_len: usize,
     lc: &ListChunked,
-    single_non_empty: Option<TDigest<F>>,
+    broadcast_digest: Option<&TDigest<F>>,
 ) -> PolarsResult<Series>
 where
     F: Copy + 'static + FloatCore + FloatLike,
@@ -1028,11 +1017,11 @@ where
 
     // General case: build list-per-row
     let mut rows: Vec<Series> = Vec::with_capacity(lc.len());
+    let empty = TDigest::default();
     for i in 0..lc.len() {
-        let td = match &single_non_empty {
-            Some(td0) => td0.clone(),
-            None => digests.get(i).cloned().unwrap_or_default(),
-        };
+        let td = broadcast_digest
+            .or_else(|| digests.get(i))
+            .unwrap_or(&empty);
         let sub = lc
             .get_as_series(i)
             .unwrap_or_else(|| Series::new("".into(), Vec::<f64>::new()));
