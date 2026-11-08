@@ -23,7 +23,7 @@ impl GpuDigest {
     }
     /// Merge two independent snapshots without changing either input.
     pub fn merged(&self, other: &Self) -> Result<Self, TrainingError> {
-        if self.1 != other.1 {
+        if self.device != other.device {
             return Err(Input("digests must be on the same device".into()));
         }
         let decode =
@@ -47,19 +47,19 @@ impl GpuDigest {
         b: &TDigest<F>,
     ) -> Result<Self, TrainingError> {
         if a.is_effectively_empty() {
-            return Self::upload(b, self.1).map_err(Device);
+            return Self::upload(b, self.device).map_err(Device);
         }
         if b.is_effectively_empty() {
-            return Self::upload(a, self.1).map_err(Device);
+            return Self::upload(a, self.device).map_err(Device);
         }
         let (cfg, limit) = buffer_size(a, b.centroids().len())?;
         let mut rows = vec![Cent::default(); limit];
         let mut result = Stats::default();
         check(unsafe {
             gr_gpu_merge(
-                self.0.as_ptr(),
+                self.handle.as_ptr(),
                 Stats::of(a),
-                other.0.as_ptr(),
+                other.handle.as_ptr(),
                 Stats::of(b),
                 cfg,
                 rows.as_mut_ptr(),
@@ -68,7 +68,7 @@ impl GpuDigest {
             )
         })
         .map_err(Device)?;
-        restore(a, &rows[..result.rows], result, self.1)
+        restore(a, &rows[..result.rows], result, self.device)
     }
     /// Match the frontend's left fold, including a canonical empty when no inputs are supplied.
     pub fn merge_all(inputs: &[&Self], device: Option<i32>) -> Result<Self, TrainingError> {
@@ -78,10 +78,10 @@ impl GpuDigest {
                 device.unwrap_or(0),
             );
         };
-        if device.is_some_and(|id| id != first.1) {
+        if device.is_some_and(|id| id != first.device) {
             return Err(Input("digests must be on the selected device".into()));
         }
-        let mut acc = Self::from_bytes(first.to_bytes(), first.1)?;
+        let mut acc = Self::from_bytes(first.to_bytes(), first.device)?;
         for next in tail {
             acc = acc.merged(next)?;
         }

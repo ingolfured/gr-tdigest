@@ -59,6 +59,31 @@ impl PyGpuDigest {
             .map_err(training_error)
     }
     #[staticmethod]
+    #[pyo3(signature=(groups,device=None))]
+    fn merge_groups(
+        py: Python<'_>,
+        groups: Vec<Vec<Py<Self>>>,
+        device: Option<i32>,
+    ) -> PyResult<Vec<Self>> {
+        let guards = groups
+            .iter()
+            .map(|group| {
+                group
+                    .iter()
+                    .map(|v| v.try_borrow(py))
+                    .collect::<Result<Vec<_>, _>>()
+            })
+            .collect::<Result<Vec<_>, _>>()?;
+        let groups = guards
+            .iter()
+            .map(|group| group.iter().map(|v| &v.0).collect())
+            .collect::<Vec<_>>();
+        let output = py
+            .detach(|| GpuDigest::merge_groups(&groups, device))
+            .map_err(training_error)?;
+        Ok(output.into_iter().map(Self).collect())
+    }
+    #[staticmethod]
     #[pyo3(signature=(data,device=0))]
     fn from_bytes(data: &[u8], device: i32) -> PyResult<Self> {
         GpuDigest::from_bytes(data, device)

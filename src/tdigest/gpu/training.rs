@@ -14,7 +14,8 @@ struct Cent {
     atomic: u64,
 }
 #[repr(C)]
-struct Config {
+#[derive(Clone, Copy, PartialEq, Default)]
+pub(super) struct Config {
     cap: usize,
     pins: usize,
     family: i32,
@@ -23,8 +24,8 @@ struct Config {
     delta: f64,
 }
 #[repr(C)]
-#[derive(Default)]
-struct Stats {
+#[derive(Default, Clone, Copy)]
+pub(super) struct Stats {
     sum: f64,
     count: f64,
     min: f64,
@@ -53,7 +54,7 @@ pub enum TrainingError {
 use TrainingError::{Device, Input};
 
 impl Config {
-    fn of<F: FloatLike + FloatCore>(d: &TDigest<F>) -> Self {
+    pub(super) fn of<F: FloatLike + FloatCore>(d: &TDigest<F>) -> Self {
         let (policy, pins) = match d.singleton_policy() {
             SingletonPolicy::Off => (0, 0),
             SingletonPolicy::Use => (1, 0),
@@ -77,7 +78,7 @@ impl Config {
     }
 }
 impl Stats {
-    fn of<F: FloatLike + FloatCore>(d: &TDigest<F>) -> Self {
+    pub(super) fn of<F: FloatLike + FloatCore>(d: &TDigest<F>) -> Self {
         Self {
             sum: d.sum(),
             count: d.count(),
@@ -152,7 +153,9 @@ fn restore<F: FloatLike + FloatCore>(
 impl GpuDigest {
     /// Add an observation batch atomically. Only the compressed state crosses back to the host.
     pub fn add(&mut self, xs: &DeviceArray, ws: Option<&DeviceArray>) -> Result<(), TrainingError> {
-        if xs.device != self.1 || ws.is_some_and(|w| w.device != self.1 || w.len != xs.len) {
+        if xs.device != self.device
+            || ws.is_some_and(|w| w.device != self.device || w.len != xs.len)
+        {
             return Err(Input(
                 "values and weights must share the digest device and batch length".into(),
             ));
@@ -179,7 +182,7 @@ impl GpuDigest {
         let mut stats = Stats::default();
         check(unsafe {
             gr_gpu_train(
-                self.0.as_ptr(),
+                self.handle.as_ptr(),
                 Stats::of(d),
                 cfg,
                 xs.ptr,
@@ -191,8 +194,10 @@ impl GpuDigest {
             )
         })
         .map_err(Device)?;
-        restore(d, &rows[..stats.rows], stats, self.1)
+        restore(d, &rows[..stats.rows], stats, self.device)
     }
 }
 
 mod merge;
+
+mod groups;

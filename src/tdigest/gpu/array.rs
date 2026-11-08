@@ -51,11 +51,11 @@ impl DeviceArray {
 }
 impl GpuDigest {
     fn query_device(&mut self, xs: &DeviceArray, q: bool) -> Result<DeviceArray, String> {
-        if self.1 != xs.device {
+        if self.device != xs.device {
             return Err("buffer and digest must be on the same device".into());
         }
-        let out = DeviceArray::alloc(xs.len, ptr::null(), self.1)?;
-        check(unsafe { gr_gpu_resident_query(self.0.as_ptr(), q, xs.ptr, out.ptr, xs.len) })?;
+        let out = DeviceArray::alloc(xs.len, ptr::null(), self.device)?;
+        check(unsafe { gr_gpu_resident_query(self.handle.as_ptr(), q, xs.ptr, out.ptr, xs.len) })?;
         Ok(out)
     }
     pub fn cdf_device(&mut self, x: &DeviceArray) -> Result<DeviceArray, String> {

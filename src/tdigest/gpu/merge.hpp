@@ -1,5 +1,7 @@
-__global__ static void merge_sorted(const Row *left, Stats a, const Row *right, Stats b, Config cfg, Cent *items,
-                                    Cent *work, Cent *out, Stats *result) {
+__device__ static Cent raw_row(Cent c) { return c; }
+template <class Left>
+__device__ static void merge_pair(const Left *left, Stats a, const Row *right, Stats b, Config cfg, Cent *items,
+                                  Cent *work, Cent *out, Stats *result) {
     result->rows = 0;
     Sum mass, moment, run;
     mass.add(a.count);
@@ -10,12 +12,17 @@ __global__ static void merge_sorted(const Row *left, Stats a, const Row *right, 
     if (!isfinite(stats.sum) || !isfinite(stats.count)) return;
     size_t i = 0, j = 0, k = 0;
     while (i < a.rows || j < b.rows) {
-        Row row = j == b.rows || (i < a.rows && left[i].mean <= right[j].mean) ? left[i++] : right[j++];
-        append(items, k, run, raw_row(row));
+        Cent row = j == b.rows || (i < a.rows && left[i].mean <= right[j].mean) ? raw_row(left[i++])
+                                                                                : raw_row(right[j++]);
+        append(items, k, run, row);
     }
     if (k == 1 && items[0].atomic && stats.min == stats.max && (point_underflow(a) || point_underflow(b)))
         stats.sum = items[0].mean * stats.count;
     finish(items, k, work, out, cfg, stats, result);
+}
+__global__ static void merge_sorted(const Row *left, Stats a, const Row *right, Stats b, Config cfg, Cent *items,
+                                    Cent *work, Cent *out, Stats *result) {
+    merge_pair(left, a, right, b, cfg, items, work, out, result);
 }
 extern "C" int gr_gpu_merge(Snapshot *left, Stats a, Snapshot *right, Stats b, Config cfg, Cent *output,
                             size_t limit, Stats *stats) {

@@ -11,14 +11,14 @@ struct Snapshot {
     int device;
     Row *rows = nullptr;
     double *host = nullptr, *mapped = nullptr;
-    hipStream_t stream = nullptr;
+    // Calls synchronize before returning. Share a per-thread stream across snapshots.
+    hipStream_t stream = hipStreamPerThread;
     int *invalid = nullptr;
     size_t count, capacity = 0;
     double total, count_mass, min, max;
     Snapshot(int id, size_t n, double mass, double count_mass, double lo, double hi)
         : device(id), count(n), total(mass), count_mass(count_mass), min(lo), max(hi) {}
     ~Snapshot() {
-        if (stream) (void)hipStreamDestroy(stream);
         if (host) (void)hipHostFree(host);
         if (rows) (void)hipFree(rows);
         if (invalid) (void)hipFree(invalid);
@@ -48,8 +48,6 @@ extern "C" int gr_gpu_upload(int device, const Row *rows, size_t n, double total
     return on_device(device, [&] {
         std::unique_ptr<Snapshot> s(new(std::nothrow) Snapshot(device,n,total,count_mass,lo,hi));
         if (!s) return hipErrorOutOfMemory;
-        auto stream_err = hipStreamCreateWithFlags(&s->stream, hipStreamNonBlocking);
-        if (stream_err != hipSuccess) return stream_err;
         if (n) {
             auto err = hipMalloc(&s->rows, n*sizeof(Row));
             if (err != hipSuccess) return err;
@@ -191,3 +189,4 @@ extern "C" int gr_gpu_resident_query(Snapshot *s,bool quantiles,const double *xs
 
 #include "training.hpp"
 #include "merge.hpp"
+#include "groups.hpp"

@@ -346,4 +346,4 @@ For device-side construction use `gr_tdigest.gpu.from_array(values, weights=None
 
 Java's `gr.tdigest.Gpu` calls upload TDIG input on each invocation and return ordinary Java arrays or independently owned digests. Build the native library with the `java,hip` features. The optional `gr_tdigest.gpu_polars` module provides group construction and ordered merging as TDIG Binary expressions. Query expressions take a resident snapshot and return Float64 columns. Use the existing `gr_tdigest.from_bytes` expression for conversion to the usual Polars digest struct.
 
-`TDigest.merge_groups(groups)` runs independent left folds on the Rayon pool. Results retain group and child order and match individual `merge_all` calls.
+`TDigest.merge_groups(groups)` and `GpuDigest.merge_groups(groups, device=None)` return one independent result per group in input order. Each result follows the same left fold as `merge_all`, including its empty and singleton behavior. CPU groups share the Rayon pool. GPU inputs must reside on the same device, and intermediate accumulators stay there until each group finishes. Precision and configuration can differ across groups.

@@ -52,14 +52,20 @@ fn check(code: i32) -> Result<(), String> {
 }
 
 /// Owns the uploaded rows and reuses device scratch space. Queries require exclusive access.
-pub struct GpuDigest(ptr::NonNull<c_void>, i32, Vec<u8>);
+pub struct GpuDigest {
+    handle: ptr::NonNull<c_void>,
+    device: i32,
+    wire: Vec<u8>,
+    config: training::Config,
+    stats: training::Stats,
+}
 // The shim selects the snapshot's device on each call; all scratch access requires &mut self.
 unsafe impl Send for GpuDigest {}
 unsafe impl Sync for GpuDigest {}
 impl Drop for GpuDigest {
     fn drop(&mut self) {
         unsafe {
-            gr_gpu_drop(self.0.as_ptr());
+            gr_gpu_drop(self.handle.as_ptr());
         }
     }
 }
@@ -124,14 +130,16 @@ impl GpuDigest {
             }
             return Err(error);
         }
-        Ok(Self(
-            ptr::NonNull::new(handle).ok_or("HIP returned no snapshot")?,
+        Ok(Self {
+            handle: ptr::NonNull::new(handle).ok_or("HIP returned no snapshot")?,
             device,
-            raw.to_bytes(),
-        ))
+            wire: raw.to_bytes(),
+            config: training::Config::of(raw),
+            stats: training::Stats::of(raw),
+        })
     }
     pub fn to_bytes(&self) -> &[u8] {
-        &self.2
+        &self.wire
     }
 
     /// The completed host result remains valid until the next query.
@@ -157,7 +165,7 @@ impl GpuDigest {
         let mut out = ptr::null();
         check(unsafe {
             gr_gpu_query(
-                self.0.as_ptr(),
+                self.handle.as_ptr(),
                 quantile,
                 probes.as_ptr(),
                 &mut out,
