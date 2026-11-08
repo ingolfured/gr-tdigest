@@ -279,4 +279,4 @@ Java object restoration owns an independent native handle; builder and ownership
 
 Capacity tuning counts trial clusters without building discarded centroids; final compression and public numerical settings retain their existing behavior.
 
-An [optional Linux HIP build](tests/gpu/README.md) can upload a modern digest once and evaluate batched CDF probes on a GPU.
+The optional Linux HIP build supports batched CDF and quantile queries, median, weighted construction, and merging. On the tested Radeon cards, large CDF batches were faster on GPU. Single-digest construction and ordered merging were faster on CPU. [GPU usage and hardware checks](tests/gpu/README.md).

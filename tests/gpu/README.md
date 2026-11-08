@@ -1,11 +1,24 @@
-# Linux HIP tests
+# Linux GPU backend
 
-Build from `bindings/python` with `HIP_PLATFORM=amd GPU_ARCH=gfx1100 maturin build --release --locked --features python,hip --compatibility linux` and install that wheel in an environment with NumPy and pytest. For NVIDIA choose `HIP_PLATFORM=nvidia`, a supported CUDA toolkit, HIP headers/toolchain and the matching CUDA GPU architecture (for example `GPU_ARCH=sm_75`). Both use the same kernel source. Normal CPU builds omit the `hip` feature.
+Build the wheel from `bindings/python` using `maturin build --release --locked --features python,hip --compatibility linux` with `HIP_PLATFORM` and `GPU_ARCH` set for your device. The CPU packages build without HIP.
 
-Run `python -m pytest -q tests/gpu` against the installed GPU wheel. Select a device with `GR_TDIGEST_TEST_DEVICE`. Run `python tests/gpu/bench.py --device 0` to compare full Python calls, and `cargo test --release --features hip --test gpu_native -- --nocapture` for the native Rust comparison. A missing GPU or driver fails the explicit GPU suite. NVIDIA hardware results are pending.
+```python
+import numpy as np
+from gr_tdigest.gpu import DeviceArray, GpuDigest, from_array
 
-The same snapshot provides batched `quantile` and scalar `median`. To chain kernels without moving probe/results through NumPy, upload a contiguous float64 array with `DeviceArray(values, device)`, call `cdf_device` or `quantile_device`, and explicitly call `to_numpy()` when a host result is needed. These buffers must be on the snapshot's device. Set `GR_TDIGEST_SECOND_DEVICE` to exercise the two-device rejection test.
+values = DeviceArray(np.array([1., 2., 3.]), device=0)
+digest = from_array(values, max_size=100)
+probabilities = digest.cdf_device(values)
+quantiles = digest.quantile_device(probabilities).to_numpy()
+merged = GpuDigest.merge_all([digest, digest])
+```
 
-For the native training fixture on AMD, run `/opt/rocm/bin/hipcc -std=c++17 -ffp-contract=off --offload-arch=gfx1100 tests/gpu/training_native.hip -o /tmp/gr-training` and `/tmp/gr-training 0`. Substitute the target architecture and device ordinal for your machine.
+To run Python, Polars, native Rust, compressor and Java/JNI checks, install HIP with hipCUB, the vendor toolkit and driver, Rust, uv and a JDK. From the root, run:
 
-For the full Python, Polars, native compressor, Rust and Java/JNI checks on a Linux GPU machine, run `HIP_PLATFORM=amd GPU_ARCH=gfx1100 tests/gpu/check.sh` from the root. For NVIDIA set `HIP_PLATFORM=nvidia`, `CUDA_PATH`, and `GPU_ARCH` for the rented device. The machine needs the HIP compiler and hipCUB headers, the vendor toolkit and driver, Rust, uv and a JDK. Use `GR_TDIGEST_TEST_DEVICE` for the device ordinal and `GR_TDIGEST_SECOND_DEVICE` when a second device is available. The GitHub CPU jobs do not run these hardware checks.
+```sh
+HIP_PLATFORM=amd GPU_ARCH=gfx1100 tests/gpu/check.sh
+```
+
+For NVIDIA set `HIP_PLATFORM=nvidia`, `CUDA_PATH` and the device architecture (for example `GPU_ARCH=sm_89`). The CUDA 12.8.1 build was checked for sm_89. NVIDIA hardware validation is pending. `GR_TDIGEST_TEST_DEVICE` selects the ordinal. Set `GR_TDIGEST_SECOND_DEVICE` for cross-device rejection tests. GitHub Actions runs the CPU checks.
+
+With the HIP wheel installed, run `python tests/gpu/bench.py --device 0` for CDF, `bench_training.py` for construction and `bench_merge.py` for 40-child merges. Each compares completed calls to the CPU path.

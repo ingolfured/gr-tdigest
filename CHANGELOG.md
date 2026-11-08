@@ -9,18 +9,9 @@ for the changes from 0.2.x, upgrade instructions and supported runtimes.
 
 ### Changed
 
-- Expose opt-in HIP batches in Java/JNI and Polars and provide a hardware check for both toolkit targets.
-
-- Merge resident HIP digest snapshots in input order and import canonical TDIG bytes.
-
-- Expose HIP construction, weighted updates and canonical TDIG export in Rust and Python.
-
-- Add HIP sorting and ordered centroid compression for batched training.
-
-- Add HIP quantile, median and device-resident batched queries.
-
-- Add opt-in batched CDF queries on Linux HIP devices and isolate launch errors between calls. Configure HIP include paths and shared-library compilation for NVIDIA builds.
-
+- Add an optional Linux HIP backend for batched CDF, quantile and median
+  queries, construction, weighted updates and ordered merges. Rust and Python
+  support resident data. Java/JNI and Polars expose explicit GPU operations.
 - Return checked results from modern Rust construction, merges and precision
   conversions; reject inconsistent state and unsupported arithmetic before
   replacing a digest.
