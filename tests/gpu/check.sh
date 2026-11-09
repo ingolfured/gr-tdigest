@@ -19,6 +19,7 @@ env_bin="$UV_PROJECT_ENVIRONMENT/bin"
     --compatibility linux --interpreter "$env_bin/python" --out "$wheels")
 uv pip install --reinstall --no-deps --python "$env_bin/python" "$wheels"/*.whl
 "$env_bin/python" -m pytest -q -o addopts='' tests/gpu
+cargo test --release --locked --features hip --lib merge_workspace_budget_counts_every_device_buffer
 cargo test --release --locked --features hip --test gpu_native -- --nocapture
 "${ROCM_PATH:-/opt/rocm}/bin/hipcc" -std=c++17 "${flags[@]}" tests/gpu/training_native.hip -o "$out/training-native"
 "$out/training-native" "$GR_TDIGEST_TEST_DEVICE"

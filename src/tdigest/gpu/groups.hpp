@@ -8,6 +8,7 @@ struct Group {
     size_t first, count, scratch, stride, output, limit;
     Config cfg;
 };
+static constexpr unsigned group_threads = 64;
 extern "C" const Row *gr_gpu_rows(const Snapshot *s) { return s->rows; }
 
 // Intermediate states do not visit Rust's validate_state. Apply its numeric
@@ -58,8 +59,24 @@ __global__ static void merge_round(const Group *groups, size_t n, const Child *c
     if (step + 1 == g.count && prior.rows != SIZE_MAX)
         for (size_t i = 0; i < prior.rows; ++i) results[g.output + i] = acc[i];
 }
+// One group per thread. Size a wave of work for this kernel on this device.
+extern "C" int gr_gpu_group_limits(int device, size_t *resident, size_t *free_bytes) {
+    return on_device(device, [&] {
+        if (!*resident) {
+            int units, blocks;
+            hipError_t err;
+            if ((err = hipDeviceGetAttribute(&units, hipDeviceAttributeMultiprocessorCount, device)) ||
+                (err = hipOccupancyMaxActiveBlocksPerMultiprocessor(
+                     &blocks, reinterpret_cast<const void *>(merge_round), group_threads, 0)))
+                return err;
+            *resident = std::max<size_t>(1, size_t(units) * blocks * group_threads);
+        }
+        size_t total;
+        return hipMemGetInfo(free_bytes, &total);
+    });
+}
 extern "C" int gr_gpu_groups(int device, const Group *gs, size_t n, const Child *cs, size_t count, size_t rounds,
-                             size_t scratch, size_t slots, Stats *stats, Cent *rows) {
+                             size_t scratch, size_t slots, Stats *stats, Cent *rows, bool *allocation_oom) {
     return on_device(device, [&] {
         Scratch<Group> groups;
         Scratch<Child> children;
@@ -67,8 +84,13 @@ extern "C" int gr_gpu_groups(int device, const Group *gs, size_t n, const Child 
         Scratch<Stats> states;
         hipError_t err;
         if ((err = groups.alloc(n)) || (err = children.alloc(count)) || (err = arena.alloc(scratch)) ||
-            (err = out.alloc(slots)) || (err = states.alloc(n)))
+            (err = out.alloc(slots)) || (err = states.alloc(n))) {
+            if (err == hipErrorOutOfMemory) {
+                *allocation_oom = true;
+                (void)hipGetLastError();
+            }
             return err;
+        }
         if ((err = hipMemcpy(groups.p, gs, n * sizeof(Group), hipMemcpyHostToDevice)) ||
             (err = hipMemcpy(children.p, cs, count * sizeof(Child), hipMemcpyHostToDevice)) ||
             (err = hipMemsetAsync(states.p, 0, n * sizeof(Stats), hipStreamPerThread)) ||
@@ -76,8 +98,9 @@ extern "C" int gr_gpu_groups(int device, const Group *gs, size_t n, const Child 
             return err;
         for (size_t step = 0; step < rounds; ++step) {
             void *args[] = {&groups.p, &n, &children.p, &step, &arena.p, &states.p, &out.p};
-            err = hipLaunchKernel(reinterpret_cast<const void *>(merge_round), dim3((n + 63) / 64), dim3(64), args,
-                                  0, hipStreamPerThread);
+            err = hipLaunchKernel(reinterpret_cast<const void *>(merge_round),
+                                  dim3((n + group_threads - 1) / group_threads), dim3(group_threads), args, 0,
+                                  hipStreamPerThread);
             if (err != hipSuccess) return err;
         }
         if ((err = hipStreamSynchronize(hipStreamPerThread)) ||
