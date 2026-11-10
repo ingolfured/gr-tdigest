@@ -2,6 +2,7 @@
 use crate::{TdError, TdResult};
 use ordered_float::{FloatCore, OrderedFloat};
 
+use crate::tdigest::cdf::CdfCheckpoints;
 use crate::tdigest::centroids::{is_sorted_strict_by_mean, Centroid};
 use crate::tdigest::compressor::compress_into;
 use crate::tdigest::merges::{KWayCentroidMerge, MergeByMean};
@@ -19,6 +20,7 @@ use crate::tdigest::wire::{self, WireDecodedDigest, WireError, WireVersion};
 #[derive(Debug, PartialEq, Clone)]
 pub struct TDigest<F: FloatLike + FloatCore> {
     centroids: Vec<Centroid<F>>,
+    pub(super) cdf_checkpoints: CdfCheckpoints,
     max_size: usize,
     sum: f64,   // ∑x over raw data (f64 for stability / wire)
     count: f64, // ∑w over raw data (f64 for stability / wire)
@@ -36,6 +38,7 @@ impl<F: FloatLike + FloatCore> Default for TDigest<F> {
     fn default() -> Self {
         Self {
             centroids: Vec::new(),
+            cdf_checkpoints: CdfCheckpoints::default(),
             max_size: 1000,
             sum: 0.0,
             count: 0.0,
@@ -312,6 +315,7 @@ impl<F: FloatLike + FloatCore> TDigestBuilder<F> {
             let max_size = self.override_max_size.unwrap_or(self.max_size);
             TDigest {
                 centroids: cents,
+                cdf_checkpoints: CdfCheckpoints::default(),
                 max_size,
                 sum: st.data_sum,
                 count: st.total_weight,
@@ -324,6 +328,7 @@ impl<F: FloatLike + FloatCore> TDigestBuilder<F> {
         } else {
             TDigest {
                 centroids: Vec::new(),
+                cdf_checkpoints: CdfCheckpoints::default(),
                 max_size: self.max_size,
                 sum: 0.0,
                 count: 0.0,
@@ -702,6 +707,7 @@ impl<F: FloatLike + FloatCore> TDigest<F> {
 
         let mut result = TDigest::<F> {
             centroids: Vec::new(),
+            cdf_checkpoints: CdfCheckpoints::default(),
             max_size: chosen_max_size,
             sum: 0.0,
             count: total_count,
@@ -1188,6 +1194,7 @@ impl<F: FloatLike + FloatCore> TDigest<F> {
     fn new_result_for_values(&self, values: &[F]) -> TDigest<F> {
         let mut r = TDigest::<F> {
             centroids: Vec::new(),
+            cdf_checkpoints: CdfCheckpoints::default(),
             max_size: self.max_size(),
             sum: 0.0,
             count: self.count() + (values.len() as f64),
@@ -1374,6 +1381,7 @@ mod tests {
     fn merge_result_shell(scan: &MergeScan<'_>) -> TDigest<f64> {
         TDigest::<f64> {
             centroids: Vec::new(),
+            cdf_checkpoints: CdfCheckpoints::default(),
             max_size: scan.chosen_max_size,
             sum: 0.0,
             count: scan.total_count,

@@ -26,12 +26,14 @@
 //!
 //! # Performance
 //! - Per query is **O(log n)** due to a binary search on centroid means.
-//! - A batch builds one prefix array (O(n)); a scalar probe sums weights without allocating a prefix.
+//! - Batches build one dense prefix array (O(n)). Scalar probes on digests larger than one
+//!   block lazily share sparse checkpoints, then sum at most 31 weights per lookup.
 //! - For very large batches, we switch to Rayon parallelism.
 
 use crate::tdigest::centroids::Centroid;
 use crate::tdigest::precision::FloatLike;
 use crate::tdigest::TDigest;
+use once_cell::race::OnceBox;
 use ordered_float::FloatCore;
 use rayon::iter::IndexedParallelIterator;
 use rayon::prelude::*;
@@ -44,7 +46,45 @@ const PAR_MIN: usize = 32_768;
 
 #[cfg(test)]
 thread_local! {
+    static CDF_WEIGHT_VISITS: std::cell::Cell<usize> = const { std::cell::Cell::new(0) };
     static DENSE_PREFIX_BUILDS: std::cell::Cell<usize> = const { std::cell::Cell::new(0) };
+}
+
+const BLOCK_SIZE: usize = 32;
+
+/// Scalar CDF queries reuse a running mass at each block boundary. The last
+/// entry is the total of the actual stored weights in their original order.
+#[derive(Debug, Default)]
+pub(super) struct CdfCheckpoints(OnceBox<Vec<f64>>);
+
+impl CdfCheckpoints {
+    fn get<F: FloatLike + FloatCore>(&self, cents: &[Centroid<F>]) -> &[f64] {
+        self.0.get_or_init(|| {
+            let mut sums = Vec::with_capacity(cents.len().div_ceil(BLOCK_SIZE) + 1);
+            let mut mass = 0.0;
+            for block in cents.chunks(BLOCK_SIZE) {
+                sums.push(mass);
+                mass = sum_weights(mass, block);
+            }
+            sums.push(mass);
+            Box::new(sums)
+        })
+    }
+}
+
+// Digest edits replace the state with a freshly built or cloned candidate.
+// Start all copies cold, including copies used for weight scaling. Only the
+// centroid data participates in digest equality.
+impl Clone for CdfCheckpoints {
+    fn clone(&self) -> Self {
+        Self::default()
+    }
+}
+
+impl PartialEq for CdfCheckpoints {
+    fn eq(&self, _other: &Self) -> bool {
+        true
+    }
 }
 
 fn search<F: FloatLike + FloatCore>(cents: &[Centroid<F>], value: f64) -> Result<usize, usize> {
@@ -60,6 +100,8 @@ fn prefix_index(position: Result<usize, usize>) -> usize {
 }
 
 fn sum_weights<F: FloatLike + FloatCore>(start: f64, cents: &[Centroid<F>]) -> f64 {
+    #[cfg(test)]
+    CDF_WEIGHT_VISITS.with(|v| v.set(v.get() + cents.len()));
     cents.iter().fold(start, |mass, c| mass + c.weight_f64())
 }
 
@@ -76,9 +118,17 @@ impl<F: FloatLike + FloatCore> TDigest<F> {
             return 1.0;
         }
         let position = search(cents, value);
-        let (left, right) = cents.split_at(prefix_index(position));
-        let before = sum_weights(0.0, left);
-        let total = sum_weights(before, right);
+        let index = prefix_index(position);
+        let (before, total) = if cents.len() <= BLOCK_SIZE {
+            let (left, right) = cents.split_at(index);
+            let before = sum_weights(0.0, left);
+            (before, sum_weights(before, right))
+        } else {
+            let checkpoints = self.cdf_checkpoints.get(cents);
+            let block = index / BLOCK_SIZE;
+            let before = sum_weights(checkpoints[block], &cents[block * BLOCK_SIZE..index]);
+            (before, checkpoints[checkpoints.len() - 1])
+        };
         if total > 0.0 && total < f64::MIN_POSITIVE {
             return self
                 .normalized_subnormal_mass_for_queries(total)
@@ -290,6 +340,82 @@ mod tests {
         super::DENSE_PREFIX_BUILDS.with(|v| v.set(0));
         assert_eq!(d.cdf(&[274.5])[0].to_bits(), want.to_bits());
         assert_eq!(super::DENSE_PREFIX_BUILDS.with(|v| v.get()), 0);
+    }
+
+    #[test]
+    fn repeated_scalar_cdf_visits_at_most_one_weight_block() {
+        let xs: Vec<f64> = (0..512).map(f64::from).collect();
+        let d = TDigestBuilder::new()
+            .max_size(1000)
+            .build()
+            .unwrap()
+            .merge_sorted(xs)
+            .unwrap();
+        assert!(d.centroids().len() > 32);
+        let _ = d.cdf(&[103.5]);
+        super::CDF_WEIGHT_VISITS.with(|v| v.set(0));
+        let _ = d.cdf(&[274.5]);
+        let visits = super::CDF_WEIGHT_VISITS.with(|v| v.get());
+        assert!(
+            visits <= 32,
+            "{visits} weight visits for a warm scalar CDF query"
+        );
+    }
+
+    #[test]
+    fn scalar_cdf_matches_dense_prefixes_after_edits() {
+        fn check(d: &crate::tdigest::TDigest<f64>) {
+            let probes = [-100.0, 0.0, 0.5, 30.5, 31.0, 32.0, 63.5, 127.0, 1000.0];
+            let expected = d.cdf(&probes);
+            let cold = d.clone();
+            let wire = d.to_bytes();
+            for (&x, want) in probes.iter().zip(expected) {
+                assert_eq!(d.cdf_one(x).to_bits(), want.to_bits());
+            }
+            assert_eq!(d, &cold);
+            assert_eq!(d.to_bytes(), wire);
+        }
+        let mut d = TDigestBuilder::new().max_size(256).build().unwrap();
+        for i in 0..128 {
+            d.add_weighted(i as f64, 0.1 + (i % 5) as f64 * 0.03)
+                .unwrap();
+        }
+        check(&d);
+        d.add(-50.0).unwrap();
+        check(&d);
+        d.merge(&d.clone()).unwrap();
+        check(&d);
+        d.scale_weights(0.125).unwrap();
+        check(&d);
+        d.scale_values(2.0).unwrap();
+        check(&d);
+        let bytes = d.to_bytes();
+        assert!(d.scale_weights(-1.0).is_err());
+        assert_eq!(d.to_bytes(), bytes);
+        check(&d);
+    }
+
+    #[test]
+    fn concurrent_scalar_queries_agree_with_batched_queries() {
+        let d = TDigestBuilder::new()
+            .max_size(1000)
+            .build()
+            .unwrap()
+            .merge_sorted((0..512).map(f64::from).collect())
+            .unwrap();
+        let probes = [0.0, 31.5, 32.5, 276.0, 511.0];
+        let expected = d.cdf(&probes);
+        let barrier = std::sync::Barrier::new(4);
+        std::thread::scope(|scope| {
+            for _ in 0..4 {
+                scope.spawn(|| {
+                    barrier.wait();
+                    for (&x, &want) in probes.iter().zip(&expected) {
+                        assert_eq!(d.cdf_one(x).to_bits(), want.to_bits());
+                    }
+                });
+            }
+        });
     }
 
     fn exact_ecdf_for_sorted(sorted: &[f64]) -> Vec<f64> {
