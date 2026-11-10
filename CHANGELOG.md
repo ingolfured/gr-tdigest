@@ -9,6 +9,8 @@ for the changes from 0.2.x, upgrade instructions and supported runtimes.
 
 ### Changed
 
+- Document the parked Linux HIP branch, hardware validation, and steps to resume in [GPU-PICKUP.md](GPU-PICKUP.md).
+
 - Merge independent digest groups in parallel on CPU or HIP, preserving each group’s input order. HIP batch sizes adapt to the device, available memory and centroid counts. Integral K2 batches reuse scale evaluations during capacity search. The installed-wheel matrix checks grouped CPU results on every supported runtime.
 
 - Add an optional Linux HIP backend for batched CDF, quantile and median
