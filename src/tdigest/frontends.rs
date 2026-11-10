@@ -558,6 +558,15 @@ Rebuild or cast to a shared configuration before merge.",
         }
     }
 
+    #[cfg(feature = "python")]
+    #[inline]
+    pub(crate) fn cdf_one(&self, x: f64) -> f64 {
+        match self {
+            FrontendDigest::F32(td) => td.cdf_one(x),
+            FrontendDigest::F64(td) => td.cdf_one(x),
+        }
+    }
+
     #[inline]
     pub fn cdf(&self, xs: &[f64]) -> Vec<f64> {
         match self {

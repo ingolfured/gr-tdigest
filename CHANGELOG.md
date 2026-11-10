@@ -9,6 +9,10 @@ for the changes from 0.2.x, upgrade instructions and supported runtimes.
 
 ### Changed
 
+- Reuse sparse cumulative-weight checkpoints on repeated scalar CDF queries.
+
+- Avoid allocating a cumulative-weight array for a single CDF probe and batch broadcast Polars CDF calls.
+
 - Return checked results from modern Rust construction, merges and precision
   conversions; reject inconsistent state and unsupported arithmetic before
   replacing a digest.

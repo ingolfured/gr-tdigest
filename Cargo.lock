@@ -1128,6 +1128,7 @@ dependencies = [
  "jni",
  "libc",
  "numpy",
+ "once_cell",
  "ordered-float",
  "polars",
  "polars-arrow",
